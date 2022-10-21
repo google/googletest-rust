@@ -1,0 +1,86 @@
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+[package]
+name = "googletest"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+doctest = false
+
+[dependencies]
+googletest_macro = { path = "../googletest_macro" }
+num-traits = "0.2.15"
+regex = "1.6.0"
+
+[[bin]]
+name = "custom_error_message"
+path = "tests/custom_error_message.rs"
+test = false
+
+[[bin]]
+name = "assertion_failure_in_subroutine"
+path = "tests/assertion_failure_in_subroutine.rs"
+test = false
+
+[[bin]]
+name = "failure_due_to_fail_macro"
+path = "tests/failure_due_to_fail_macro.rs"
+test = false
+
+[[bin]]
+name = "failure_due_to_fail_macro_with_empty_message"
+path = "tests/failure_due_to_fail_macro_with_empty_message.rs"
+test = false
+
+[[bin]]
+name = "failure_due_to_fail_macro_with_format_arguments"
+path = "tests/failure_due_to_fail_macro_with_format_arguments.rs"
+test = false
+
+[[bin]]
+name = "failure_due_to_returned_error"
+path = "tests/failure_due_to_returned_error.rs"
+test = false
+
+[[bin]]
+name = "first_failure_aborts"
+path = "tests/first_failure_aborts.rs"
+test = false
+
+[[bin]]
+name = "non_fatal_failure_in_subroutine"
+path = "tests/non_fatal_failure_in_subroutine.rs"
+test = false
+
+[[bin]]
+name = "simple_assertion_failure"
+path = "tests/simple_assertion_failure.rs"
+test = false
+
+[[bin]]
+name = "two_non_fatal_failures"
+path = "tests/two_non_fatal_failures.rs"
+test = false
+
+[[bin]]
+name = "verify_predicate_with_failure"
+path = "tests/verify_predicate_with_failure.rs"
+test = false
+
+[[bin]]
+name = "verify_predicate_with_failure_as_method_in_submodule"
+path = "tests/verify_predicate_with_failure_as_method_in_submodule.rs"
+test = false
