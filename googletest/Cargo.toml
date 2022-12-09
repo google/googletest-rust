@@ -14,11 +14,12 @@
 
 [package]
 name = "googletest"
-version = "0.1.0"
+version = "0.1.1"
 keywords = ["unit", "matcher", "testing", "assertions"]
 categories = ["development-tools", "development-tools::testing"]
 description = "A rich assertion and matcher library inspired by GoogleTest for C++"
 repository = "https://github.com/google/googletest-rust"
+readme = "../README.md"
 license = "Apache-2.0"
 edition = "2021"
 authors = [
