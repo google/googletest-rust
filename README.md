@@ -11,6 +11,9 @@ This library brings the rich assertion types of Google's C++ testing library
  * A new set of assertion macros offering similar functionality to those of
    [GoogleTest](https://google.github.io/googletest/primer.html#assertions).
 
+> :warning: The API is not fully stable and may still be changed until we
+> publish version 1.0.
+
 ## Assertions and matchers
 
 Most assertions are made through the macro `verify_that!` which evaluates to a
