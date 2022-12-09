@@ -52,7 +52,7 @@ pub fn gt<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug>(
     GtMatcher { expected }
 }
 
-pub struct GtMatcher<ExpectedT> {
+struct GtMatcher<ExpectedT> {
     expected: ExpectedT,
 }
 
@@ -81,7 +81,7 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{google_test, verify_that, Result};
-    use matchers::{contains_substring, displays_as, eq, err};
+    use matchers::{contains_substring, displays_as, each, eq, err};
     use std::ffi::OsString;
 
     #[google_test]
@@ -128,6 +128,36 @@ mod tests {
                 Expected: is greater than 632\n\
                 Actual: 481"
             )))
+        )
+    }
+
+    #[google_test]
+    fn gt_mismatch_combined_with_each() -> Result<()> {
+        let result = verify_that!(vec![19, 23, 11], each(gt(15)));
+
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(
+                "Value of: vec![19, 23, 11]\n\
+                Expected: only contains elements that is greater than 15\n\
+                Actual: [19, 23, 11], whose element #2 is 11, which is less than or equal to 15"
+            )))
+        )
+    }
+
+    #[google_test]
+    fn gt_describe_matches() -> Result<()> {
+        verify_that!(
+            gt::<i32, i32>(232).describe(MatcherResult::Matches),
+            eq("is greater than 232")
+        )
+    }
+
+    #[google_test]
+    fn gt_describe_does_not_match() -> Result<()> {
+        verify_that!(
+            gt::<i32, i32>(232).describe(MatcherResult::DoesNotMatch),
+            eq("is less than or equal to 232")
         )
     }
 

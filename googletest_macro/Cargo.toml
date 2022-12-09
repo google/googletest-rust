@@ -15,7 +15,15 @@
 [package]
 name = "googletest_macro"
 version = "0.1.0"
+keywords = ["unit", "matcher", "testing", "assertions"]
+categories = ["development-tools", "development-tools::testing"]
+description = "Procedural macros for GoogleTest Rust"
+repository = "https://github.com/google/googletest-rust"
+license = "Apache-2.0"
 edition = "2021"
+authors = [
+  "Bradford Hovinen <hovinen@google.com>",
+]
 
 [dependencies]
 quote = "1.0.21"

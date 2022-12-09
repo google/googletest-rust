@@ -15,13 +15,22 @@
 [package]
 name = "googletest"
 version = "0.1.0"
+keywords = ["unit", "matcher", "testing", "assertions"]
+categories = ["development-tools", "development-tools::testing"]
+description = "A rich assertion and matcher library inspired by GoogleTest for C++"
+repository = "https://github.com/google/googletest-rust"
+license = "Apache-2.0"
 edition = "2021"
+authors = [
+  "Bradford Hovinen <hovinen@google.com>",
+  "Bastien Jacot-Guillarmod <bjacotg@google.com>",
+]
 
 [lib]
 doctest = false
 
 [dependencies]
-googletest_macro = { path = "../googletest_macro" }
+googletest_macro = { path = "../googletest_macro", version = "0.1.0" }
 num-traits = "0.2.15"
 regex = "1.6.0"
 
