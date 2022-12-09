@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::cell::{RefCell, RefMut};
-use std::fmt::{Display, Error, Formatter};
+use std::fmt::{Debug, Display, Error, Formatter};
 use std::thread_local;
 
 /// The outcome hitherto of running a test.
@@ -95,7 +95,7 @@ impl TestOutcome {
 ///
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct TestAssertionFailure {
     /// A human-readable formatted string describing the error.
     pub description: String,
@@ -127,5 +127,14 @@ impl Display for TestAssertionFailure {
             writeln!(f, "{}", custom_message)?;
         }
         Ok(())
+    }
+}
+
+// The standard Rust test harness outputs the TestAssertionFailure with the
+// Debug trait. We want the output to be formatted, so we use a custom Debug
+// implementation which defers to Display.
+impl Debug for TestAssertionFailure {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        Display::fmt(self, f)
     }
 }

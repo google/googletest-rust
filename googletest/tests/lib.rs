@@ -320,6 +320,29 @@ fn fail_macro_allows_message_with_format_arguments() -> Result<()> {
     verify_that!(output, contains_substring("Failure message with argument: An argument"))
 }
 
+#[google_test]
+fn test_using_normal_test_attribute_macro_formats_failure_message_correctly() -> Result<()> {
+    let result = should_display_error_correctly_without_google_test_macro();
+
+    verify_that!(
+        // We hereby assume that the Rust test harness uses std::fmt::Debug to output the Err
+        // variant of a Result.
+        format!("{:?}", result.unwrap_err()),
+        contains_substring(
+            "\
+Value of: 1
+Expected: is equal to 2
+Actual: 1, which isn't equal to 2
+"
+        )
+    )
+}
+
+// This is not marked as a test since it deliberately fails.
+fn should_display_error_correctly_without_google_test_macro() -> Result<()> {
+    verify_that!(1, eq(2))
+}
+
 fn run_external_process_in_tests_directory(name: &'static str) -> Result<String> {
     let mut command = run_external_process(name);
     let std::process::Output { stdout, .. } = command.output().err_to_test_failure()?;
