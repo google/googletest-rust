@@ -96,6 +96,7 @@ pub mod zipped_iterator;
 #[cfg(google3)]
 pub use all_matcher::all;
 pub use anything_matcher::anything;
+pub use anything_matcher::Anything;
 pub use conjunction_matcher::AndMatcherExt;
 pub use container_eq_matcher::container_eq;
 pub use contains_matcher::contains;

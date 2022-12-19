@@ -35,7 +35,7 @@ pub fn anything<T: Debug + ?Sized>() -> impl Matcher<T> {
     Anything {}
 }
 
-struct Anything {}
+pub struct Anything {}
 
 impl<T: Debug + ?Sized> Matcher<T> for Anything {
     fn matches(&self, _: &T) -> MatcherResult {
