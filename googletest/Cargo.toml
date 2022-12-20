@@ -25,6 +25,7 @@ edition = "2021"
 authors = [
   "Bradford Hovinen <hovinen@google.com>",
   "Bastien Jacot-Guillarmod <bjacotg@google.com>",
+  "Maciej Pietrzak <mpi@google.com>",
 ]
 
 [lib]
