@@ -16,9 +16,9 @@ This library brings the rich assertion types of Google's C++ testing library
 
 ## Assertions and matchers
 
-Most assertions are made through the macro `verify_that!` which evaluates to a
-`Result<()>`. It takes two arguments: an actual value to be tested and a
-*matcher*.
+Most assertions are made through the macro [`verify_that!`] which evaluates to a
+[`Result<()>`]. It takes two arguments: an actual value to be tested and a
+[`Matcher`].
 
 Unlike other Rust assertion libraries, this library does not panic when a test
 assertion fails. Instead, a test assertion evaluates to `Result`, which the
@@ -76,7 +76,7 @@ fn strictly_between_9_and_11() -> Result<()> {
 
 ## Pattern-matching
 
-One can use the macro `matches_pattern!` to create a composite matcher for a
+One can use the macro [`matches_pattern!`] to create a composite matcher for a
 struct or enum that matches fields with other matchers:
 
 ```rust
@@ -111,8 +111,8 @@ fn struct_has_expected_values() -> Result<()> {
 ## Writing matchers
 
 One can extend the library by writing additional matchers. To do so, create a
-struct holding the matcher's data and have it implement the traits `Matcher` and
-`Display`:
+struct holding the matcher's data and have it implement the traits [`Matcher`]
+and [`Describe`]:
 
 ```rust
 struct MyEqMatcher<T> {
@@ -125,9 +125,16 @@ impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
     }
 }
 
-impl<T: Debug> Display for MyEqMatcher<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        write!(f, "equal to {:?} the way I define it", self.expected)
+impl<T: Debug> Describe for MyEqMatcher<T> {
+    fn describe(&self, matcher_result: MatcherResult) -> String {
+        match matcher_result {
+            MatcherResult::Matches => {
+                format!("is equal to {:?} the way I define it", self.expected)
+            }
+            MatcherResult::DoesNotMatch => {
+                format!("isn't equal to {:?} the way I define it", self.expected)
+            }
+        }
     }
 }
 ```
@@ -157,10 +164,10 @@ failed, but execution continues until the test completes or otherwise aborts.
 
 This is analogous to the `EXPECT_*` family of macros in GoogleTest.
 
-To make a non-fatal assertion, invoke the method `and_log_failure()` on the
+To make a non-fatal assertion, invoke the method [`and_log_failure()`] on the
 output of the assertion macro. The test must also be marked with
-`#[google_test]` instead of the Rust-standard `#[test]`. It must return
-`googletest::Result`.
+[`google_test`] instead of the Rust-standard `#[test]`. It must return
+[`Result<()>`].
 
 ```rust
 use googletest::{
@@ -212,9 +219,9 @@ thread than runs the test.
 
 ## Predicate assertions
 
-The macro `verify_pred!` provides predicate assertions analogous to GoogleTest's
-`EXPECT_PRED` family of macros. Wrap an invocation of a predicate in a
-`verify_pred!` invocation to turn that into a test assertion which passes
+The macro [`verify_pred!`] provides predicate assertions analogous to
+GoogleTest's `EXPECT_PRED` family of macros. Wrap an invocation of a predicate
+in a `verify_pred!` invocation to turn that into a test assertion which passes
 precisely when the predicate returns `true`:
 
 ```rust
@@ -236,12 +243,13 @@ stuff_is_correct(x, y) was false with
   y = 4
 ```
 
-The `verify_pred!` invocation evaluates to a `Result` just like `verify_that!`.
+The `verify_pred!` invocation evaluates to a [`Result<()>`] just like
+[`verify_that!`].
 
 ## Unconditionally generating a test failure
 
-The macro `fail!` unconditionally evaluates to a `Result` indicating a test
-failure. It can be used analogously to `verify_that!` and `verify_pred!` to
+The macro [`fail!`] unconditionally evaluates to a `Result` indicating a test
+failure. It can be used analogously to [`verify_that!`] and [`verify_pred!`] to
 cause a test to fail, with an optional formatted message:
 
 ```rust
@@ -255,3 +263,13 @@ fn always_fails() -> Result<()> {
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute
 to this project.
+
+[`and_log_failure()`]: https://docs.rs/googletest/*/googletest/trait.GoogleTestSupport.html#tymethod.and_log_failure
+[`fail!`]: https://docs.rs/googletest/*/googletest/macro.fail.html
+[`google_test`]: https://docs.rs/googletest/*/googletest/attr.google_test.html
+[`matches_pattern!`]: https://docs.rs/googletest/*/googletest/macro.matches_pattern.html
+[`verify_pred!`]: https://docs.rs/googletest/*/googletest/macro.verify_pred.html
+[`verify_that!`]: https://docs.rs/googletest/*/googletest/macro.verify_that.html
+[`Describe`]: https://docs.rs/googletest/*/googletest/matcher/trait.Describe.html
+[`Matcher`]: https://docs.rs/googletest/*/googletest/matcher/trait.Matcher.html
+[`Result<()>`]: https://docs.rs/googletest/*/googletest/type.Result.html
