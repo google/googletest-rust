@@ -129,11 +129,11 @@ macro_rules! verify_pred {
     };
 
     ([$($predicate:tt)*] $first:tt $($rest:tt)*) => {
-        verify_pred!([$($predicate)* $first] $($rest)*)
+        $crate::verify_pred!([$($predicate)* $first] $($rest)*)
     };
 
     ($first:tt $($rest:tt)*) => {
-        verify_pred!([$first] $($rest)*)
+        $crate::verify_pred!([$first] $($rest)*)
     };
 }
 
@@ -202,6 +202,41 @@ macro_rules! fail {
     };
 
     () => { fail!("Test failed") };
+}
+
+/// Matches the given value against the given matcher, panicing if it does not
+/// match.
+///
+/// This is analogous to assertions in most Rust test libraries, where a failed
+/// assertion causes a panic.
+#[macro_export]
+macro_rules! assert_that {
+    ($actual:expr, $expected:expr) => {
+        match $crate::verify_that!($actual, $expected) {
+            Ok(_) => {}
+            Err(e) => {
+                // The extra newline before the assertion failure message makes the failure a
+                // bit easier to read when there's some generic boilerplate from the panic.
+                panic!("\n{}", e);
+            }
+        }
+    };
+}
+
+/// Asserts that the given predicate applied to the given arguments returns
+/// true, panicing if it does not.
+#[macro_export]
+macro_rules! assert_pred {
+    ($($content:tt)*) => {
+        match $crate::verify_pred!($($content)*) {
+            Ok(_) => {}
+            Err(e) => {
+                // The extra newline before the assertion failure message makes the failure a
+                // bit easier to read when there's some generic boilerplate from the panic.
+                panic!("\n{}", e);
+            }
+        }
+    };
 }
 
 /// Functions for use only by the procedural macros in this module.

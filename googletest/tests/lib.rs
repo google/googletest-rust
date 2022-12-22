@@ -20,7 +20,7 @@ use googletest::{
 use googletest_macro::google_test_wrapper;
 #[cfg(google3)]
 use matchers::all;
-use matchers::{contains_substring, eq, matches_regex, not};
+use matchers::{contains_regex, contains_substring, eq, matches_regex, not};
 use std::process::Command;
 
 #[google_test]
@@ -37,6 +37,15 @@ fn should_fail_on_assertion_failure() -> Result<()> {
 }
 
 #[google_test]
+fn should_fail_on_assertion_failure_with_assert_that() -> Result<()> {
+    let status = run_external_process("simple_assertion_failure_with_assert_that")
+        .status()
+        .err_to_test_failure()?;
+
+    verify_that!(status.success(), eq(false))
+}
+
+#[google_test]
 fn should_output_failure_message_on_assertion_failure() -> Result<()> {
     let output = run_external_process_in_tests_directory("simple_assertion_failure")?;
 
@@ -47,6 +56,22 @@ fn should_output_failure_message_on_assertion_failure() -> Result<()> {
             Expected: is equal to 3\n\
             Actual: 2, which isn't equal to 3\n  \
             at .*googletest/tests/simple_assertion_failure.rs:[0-9]+:5\n"
+        )
+    )
+}
+
+#[google_test]
+fn should_output_failure_message_on_assertion_failure_with_assert_that() -> Result<()> {
+    let output =
+        run_external_process_in_tests_directory("simple_assertion_failure_with_assert_that")?;
+
+    verify_that!(
+        output,
+        contains_regex(
+            "Value of: value\n\
+            Expected: is equal to 3\n\
+            Actual: 2, which isn't equal to 3\n  \
+            at .*googletest/tests/simple_assertion_failure_with_assert_that.rs:[0-9]+:5\n"
         )
     )
 }
@@ -199,6 +224,30 @@ fn verify_pred_should_fail_test_on_failure() -> Result<()> {
 #[google_test]
 fn verify_pred_should_output_correct_failure_message() -> Result<()> {
     let output = run_external_process_in_tests_directory("verify_predicate_with_failure")?;
+
+    verify_that!(
+        output,
+        contains_substring(
+            "\
+eq_predicate(a, b) was false with
+  a = 1,
+  b = 2
+"
+        )
+    )
+}
+
+#[google_test]
+fn assert_pred_should_fail_test_on_failure() -> Result<()> {
+    let status =
+        run_external_process("assert_predicate_with_failure").status().err_to_test_failure()?;
+
+    verify_that!(status.success(), eq(false))
+}
+
+#[google_test]
+fn assert_pred_should_output_correct_failure_message() -> Result<()> {
+    let output = run_external_process_in_tests_directory("assert_predicate_with_failure")?;
 
     verify_that!(
         output,
