@@ -56,12 +56,16 @@ macro_rules! tuple {
         $matcher9:expr,
         $matcher10:expr,
         $matcher11:expr $(,)?
-    ) => {
-        $crate::internal::TupleMatcher12(
+    ) => {{
+        #[cfg(google3)]
+        use $crate::internal::TupleMatcher12;
+        #[cfg(not(google3))]
+        use $crate::matchers::tuple_matcher::internal::TupleMatcher12;
+        TupleMatcher12(
             $matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5, $matcher6, $matcher7,
             $matcher8, $matcher9, $matcher10, $matcher11,
         )
-    };
+    }};
 
     (
         $matcher0:expr,
@@ -75,12 +79,16 @@ macro_rules! tuple {
         $matcher8:expr,
         $matcher9:expr,
         $matcher10:expr $(,)?
-    ) => {
-        $crate::internal::TupleMatcher11(
+    ) => {{
+        #[cfg(google3)]
+        use $crate::internal::TupleMatcher11;
+        #[cfg(not(google3))]
+        use $crate::matchers::tuple_matcher::internal::TupleMatcher11;
+        TupleMatcher11(
             $matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5, $matcher6, $matcher7,
             $matcher8, $matcher9, $matcher10,
         )
-    };
+    }};
 
     (
         $matcher0:expr,
@@ -93,12 +101,16 @@ macro_rules! tuple {
         $matcher7:expr,
         $matcher8:expr,
         $matcher9:expr $(,)?
-    ) => {
-        $crate::internal::TupleMatcher10(
+    ) => {{
+        #[cfg(google3)]
+        use $crate::internal::TupleMatcher10;
+        #[cfg(not(google3))]
+        use $crate::matchers::tuple_matcher::internal::TupleMatcher10;
+        TupleMatcher10(
             $matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5, $matcher6, $matcher7,
             $matcher8, $matcher9,
         )
-    };
+    }};
 
     (
         $matcher0:expr,
@@ -110,12 +122,16 @@ macro_rules! tuple {
         $matcher6:expr,
         $matcher7:expr,
         $matcher8:expr $(,)?
-    ) => {
-        $crate::internal::TupleMatcher9(
+    ) => {{
+        #[cfg(google3)]
+        use $crate::internal::TupleMatcher9;
+        #[cfg(not(google3))]
+        use $crate::matchers::tuple_matcher::internal::TupleMatcher9;
+        TupleMatcher9(
             $matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5, $matcher6, $matcher7,
             $matcher8,
         )
-    };
+    }};
 
     (
         $matcher0:expr,
@@ -126,11 +142,15 @@ macro_rules! tuple {
         $matcher5:expr,
         $matcher6:expr,
         $matcher7:expr $(,)?
-    ) => {
-        $crate::internal::TupleMatcher8(
+    ) => {{
+        #[cfg(google3)]
+        use $crate::internal::TupleMatcher8;
+        #[cfg(not(google3))]
+        use $crate::matchers::tuple_matcher::internal::TupleMatcher8;
+        TupleMatcher8(
             $matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5, $matcher6, $matcher7,
         )
-    };
+    }};
 
     (
         $matcher0:expr,
@@ -140,11 +160,13 @@ macro_rules! tuple {
         $matcher4:expr,
         $matcher5:expr,
         $matcher6:expr $(,)?
-    ) => {
-        $crate::internal::TupleMatcher7(
-            $matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5, $matcher6,
-        )
-    };
+    ) => {{
+        #[cfg(google3)]
+        use $crate::internal::TupleMatcher7;
+        #[cfg(not(google3))]
+        use $crate::matchers::tuple_matcher::internal::TupleMatcher7;
+        TupleMatcher7($matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5, $matcher6)
+    }};
 
     (
         $matcher0:expr,
@@ -153,11 +175,13 @@ macro_rules! tuple {
         $matcher3:expr,
         $matcher4:expr,
         $matcher5:expr $(,)?
-    ) => {
-        $crate::internal::TupleMatcher6(
-            $matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5,
-        )
-    };
+    ) => {{
+        #[cfg(google3)]
+        use $crate::internal::TupleMatcher6;
+        #[cfg(not(google3))]
+        use $crate::matchers::tuple_matcher::internal::TupleMatcher6;
+        TupleMatcher6($matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5)
+    }};
 
     (
         $matcher0:expr,
@@ -165,39 +189,59 @@ macro_rules! tuple {
         $matcher2:expr,
         $matcher3:expr,
         $matcher4:expr $(,)?
-    ) => {
-        $crate::internal::TupleMatcher5($matcher0, $matcher1, $matcher2, $matcher3, $matcher4)
-    };
+    ) => {{
+        #[cfg(google3)]
+        use $crate::internal::TupleMatcher5;
+        #[cfg(not(google3))]
+        use $crate::matchers::tuple_matcher::internal::TupleMatcher5;
+        TupleMatcher5($matcher0, $matcher1, $matcher2, $matcher3, $matcher4)
+    }};
 
     (
         $matcher0:expr,
         $matcher1:expr,
         $matcher2:expr,
         $matcher3:expr $(,)?
-    ) => {
-        $crate::internal::TupleMatcher4($matcher0, $matcher1, $matcher2, $matcher3)
-    };
+    ) => {{
+        #[cfg(google3)]
+        use $crate::internal::TupleMatcher4;
+        #[cfg(not(google3))]
+        use $crate::matchers::tuple_matcher::internal::TupleMatcher4;
+        TupleMatcher4($matcher0, $matcher1, $matcher2, $matcher3)
+    }};
 
     (
         $matcher0:expr,
         $matcher1:expr,
         $matcher2:expr $(,)?
-    ) => {
-        $crate::internal::TupleMatcher3($matcher0, $matcher1, $matcher2)
-    };
+    ) => {{
+        #[cfg(google3)]
+        use $crate::internal::TupleMatcher3;
+        #[cfg(not(google3))]
+        use $crate::matchers::tuple_matcher::internal::TupleMatcher3;
+        TupleMatcher3($matcher0, $matcher1, $matcher2)
+    }};
 
     (
         $matcher0:expr,
         $matcher1:expr $(,)?
-    ) => {
-        $crate::internal::TupleMatcher2($matcher0, $matcher1)
-    };
+    ) => {{
+        #[cfg(google3)]
+        use $crate::internal::TupleMatcher2;
+        #[cfg(not(google3))]
+        use $crate::matchers::tuple_matcher::internal::TupleMatcher2;
+        TupleMatcher2($matcher0, $matcher1)
+    }};
 
     (
         $matcher0:expr $(,)?
-    ) => {
-        $crate::internal::TupleMatcher1($matcher0)
-    };
+    ) => {{
+        #[cfg(google3)]
+        use $crate::internal::TupleMatcher1;
+        #[cfg(not(google3))]
+        use $crate::matchers::tuple_matcher::internal::TupleMatcher1;
+        TupleMatcher1($matcher0)
+    }};
 
     () => {{
         #[cfg(google3)]
@@ -393,7 +437,6 @@ pub mod internal {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     #[cfg(not(google3))]
     use crate as googletest;
     #[cfg(not(google3))]
