@@ -35,17 +35,24 @@ pub fn contains<InnerMatcherT>(inner: InnerMatcherT) -> ContainsMatcher<InnerMat
 
 pub struct ContainsMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
-    count: Option<usize>,
+    count: Option<Box<dyn Matcher<usize>>>,
 }
 
 impl<InnerMatcherT> ContainsMatcher<InnerMatcherT> {
-    /// Configures this instance to match containers which contain exactly
-    /// `count` distinct items matching the expected value.
+    /// Configures this instance to match containers which contain a number of
+    /// matching items matched by `count`.
     ///
-    /// One can also use `times(0)` to test for the *absence* of an item
+    /// For example, to assert that exactly three matching items must be
+    /// present, use:
+    ///
+    /// ```
+    /// contains(...).times(eq(3))
+    /// ```
+    ///
+    /// One can also use `times(eq(0))` to test for the *absence* of an item
     /// matching the expected value.
-    pub fn times(mut self, count: usize) -> Self {
-        self.count = Some(count);
+    pub fn times(mut self, count: impl Matcher<usize> + 'static) -> Self {
+        self.count = Some(Box::new(count));
         self
     }
 }
@@ -66,12 +73,8 @@ where
     for<'a> &'a ContainerT: IntoIterator<Item = &'a T>,
 {
     fn matches(&self, actual: &ContainerT) -> MatcherResult {
-        if let Some(count) = self.count {
-            if count == self.count_matches(actual) {
-                MatcherResult::Matches
-            } else {
-                MatcherResult::DoesNotMatch
-            }
+        if let Some(count) = &self.count {
+            count.matches(&self.count_matches(actual))
         } else {
             for v in actual.into_iter() {
                 if matches!(self.inner.matches(&v), MatcherResult::Matches) {
@@ -84,7 +87,7 @@ where
 
     fn explain_match(&self, actual: &ContainerT) -> MatchExplanation {
         let count = self.count_matches(actual);
-        match (count, self.count) {
+        match (count, &self.count) {
             (_, Some(_)) => {
                 MatchExplanation::create(format!("which contains {} matching elements", count))
             }
@@ -98,44 +101,23 @@ where
 
 impl<InnerMatcherT: Describe> Describe for ContainsMatcher<InnerMatcherT> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
-        match (matcher_result, self.count) {
-            (MatcherResult::Matches, Some(0)) => {
-                format!(
-                    "contains no element, which {}",
-                    self.inner.describe(MatcherResult::Matches)
-                )
-            }
-            (MatcherResult::DoesNotMatch, Some(0)) => format!(
-                "contains at least one element, which {}",
-                self.inner.describe(MatcherResult::Matches)
-            ),
-            (MatcherResult::Matches, Some(1)) => {
-                format!(
-                    "contains exactly one element, which {}",
-                    self.inner.describe(MatcherResult::Matches)
-                )
-            }
-            (MatcherResult::DoesNotMatch, Some(1)) => format!(
-                "doesn't contain exactly one element, which {}",
-                self.inner.describe(MatcherResult::Matches)
-            ),
+        match (matcher_result, &self.count) {
             (MatcherResult::Matches, Some(count)) => format!(
-                "contains exactly {count} elements, which {}",
-                self.inner.describe(MatcherResult::Matches)
+                "contains n elements which {}\n  where n {}",
+                self.inner.describe(MatcherResult::Matches),
+                count.describe(MatcherResult::Matches)
             ),
             (MatcherResult::DoesNotMatch, Some(count)) => format!(
-                "doesn't contain exactly {count} elements, which {}",
-                self.inner.describe(MatcherResult::Matches)
+                "doesn't contain n elements which {}\n  where n {}",
+                self.inner.describe(MatcherResult::Matches),
+                count.describe(MatcherResult::Matches)
             ),
             (MatcherResult::Matches, None) => format!(
-                "contains at least one element, which {}",
+                "contains at least one element which {}",
                 self.inner.describe(MatcherResult::Matches)
             ),
             (MatcherResult::DoesNotMatch, None) => {
-                format!(
-                    "contains no element, which {}",
-                    self.inner.describe(MatcherResult::Matches)
-                )
+                format!("contains no element which {}", self.inner.describe(MatcherResult::Matches))
             }
         }
     }
@@ -214,7 +196,7 @@ mod tests {
 
     #[google_test]
     fn contains_matches_slice_with_repeated_value() -> Result<()> {
-        let matcher = contains(eq(1)).times(2);
+        let matcher = contains(eq(1)).times(eq(2));
 
         let result = matcher.matches(&[1, 1]);
 
@@ -223,7 +205,7 @@ mod tests {
 
     #[google_test]
     fn contains_does_not_match_slice_with_too_few_of_value() -> Result<()> {
-        let matcher = contains(eq(1)).times(2);
+        let matcher = contains(eq(1)).times(eq(2));
 
         let result = matcher.matches(&[0, 1]);
 
@@ -232,7 +214,7 @@ mod tests {
 
     #[google_test]
     fn contains_does_not_match_slice_with_too_many_of_value() -> Result<()> {
-        let matcher = contains(eq(1)).times(1);
+        let matcher = contains(eq(1)).times(eq(1));
 
         let result = matcher.matches(&[1, 1]);
 
@@ -245,24 +227,24 @@ mod tests {
 
         verify_that!(
             matcher.describe(MatcherResult::Matches),
-            eq("contains at least one element, which is equal to 1")
+            eq("contains at least one element which is equal to 1")
         )
     }
 
     #[google_test]
     fn contains_formats_with_multiplicity_when_specified() -> Result<()> {
-        let matcher = contains(eq(1)).times(2);
+        let matcher = contains(eq(1)).times(eq(2));
 
         verify_that!(
             matcher.describe(MatcherResult::Matches),
-            eq("contains exactly 2 elements, which is equal to 1")
+            eq("contains n elements which is equal to 1\n  where n is equal to 2")
         )
     }
 
     #[google_test]
     fn contains_mismatch_shows_number_of_times_element_was_found() -> Result<()> {
         verify_that!(
-            contains(eq(3)).times(1).explain_match(&vec![1, 2, 3, 3]),
+            contains(eq(3)).times(eq(1)).explain_match(&vec![1, 2, 3, 3]),
             displays_as(eq("which contains 2 matching elements"))
         )
     }
