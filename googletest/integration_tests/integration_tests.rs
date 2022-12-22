@@ -51,7 +51,7 @@ fn should_output_failure_message_on_assertion_failure() -> Result<()> {
 
     verify_that!(
         output,
-        matches_regex(
+        contains_regex(
             "Value of: value\n\
             Expected: is equal to 3\n\
             Actual: 2, which isn't equal to 3\n  \

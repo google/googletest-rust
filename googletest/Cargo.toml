@@ -87,6 +87,11 @@ path = "integration_tests/simple_assertion_failure.rs"
 test = false
 
 [[bin]]
+name = "simple_assertion_failure_with_assert_that"
+path = "tests/simple_assertion_failure_with_assert_that.rs"
+test = false
+
+[[bin]]
 name = "two_non_fatal_failures"
 path = "integration_tests/two_non_fatal_failures.rs"
 test = false

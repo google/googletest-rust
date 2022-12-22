@@ -15,14 +15,9 @@
 #[cfg(not(google3))]
 use googletest::matchers;
 use googletest::{verify_that, Result};
-use googletest_macro::google_test_wrapper;
 use matchers::eq;
 
-fn main() -> std::result::Result<(), ()> {
-    should_fail()
-}
-
-#[google_test_wrapper]
+#[test]
 fn should_fail() -> Result<()> {
     let value = 2;
     verify_that!(value, eq(3))?;
