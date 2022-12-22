@@ -85,6 +85,8 @@ pub mod subset_of_matcher;
 #[cfg(not(google3))]
 pub mod superset_of_matcher;
 #[cfg(not(google3))]
+pub mod tuple_matcher;
+#[cfg(not(google3))]
 pub mod unordered_elements_are_matcher;
 
 #[cfg(google3)]
@@ -127,5 +129,7 @@ pub use some_matcher::some;
 pub use starts_with_matcher::starts_with;
 pub use subset_of_matcher::subset_of;
 pub use superset_of_matcher::superset_of;
+#[cfg(google3)]
+pub use tuple_matcher::tuple;
 #[cfg(google3)]
 pub use unordered_elements_are_matcher::unordered_elements_are;

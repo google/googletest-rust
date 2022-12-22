@@ -84,7 +84,7 @@ macro_rules! field {
     }};
 }
 
-/// Functions for use only by the procedural macros in this module.
+/// Functions for use only by the declarative macros in this module.
 ///
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]

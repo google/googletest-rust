@@ -81,8 +81,11 @@
 /// verify_that(MyEnum::B, matches_pattern!(MyEnum::A(eq(123))))?; // Fails - wrong enum variant
 /// ```
 ///
-/// It is perfectly okay to omit fields from the pattern. The values of omitted
-/// fields then have no effect on the output of the matcher.
+/// It is perfectly okay to omit fields from a pattern with named fields. The
+/// values of omitted fields then have no effect on the output of the matcher.
+///
+/// This macro does not support plain (non-struct) tuples. Use the macro
+/// [`tuple`] for that purpose.
 ///
 /// Trailing commas are allowed (but not required) in both ordinary and tuple
 /// structs.
