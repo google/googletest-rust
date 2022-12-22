@@ -12,13 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::assert_that;
-#[cfg(not(google3))]
-use googletest::matchers;
-use matchers::eq;
+fn main() {}
 
-#[test]
-fn should_fail() {
-    let value = 2;
-    assert_that!(value, eq(3));
+#[cfg(test)]
+mod tests {
+    use googletest::assert_that;
+    #[cfg(not(google3))]
+    use googletest::matchers;
+    use matchers::eq;
+
+    #[test]
+    fn should_fail() {
+        let value = 2;
+        assert_that!(value, eq(3));
+    }
 }

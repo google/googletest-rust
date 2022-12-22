@@ -12,14 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
-use googletest::matchers;
-use googletest::{verify_that, Result};
-use matchers::eq;
+fn main() {}
 
-#[test]
-fn should_fail() -> Result<()> {
-    let value = 2;
-    verify_that!(value, eq(3))?;
-    Ok(())
+#[cfg(test)]
+mod tests {
+    #[cfg(not(google3))]
+    use googletest::matchers;
+    use googletest::{verify_that, Result};
+    use matchers::eq;
+
+    #[test]
+    fn should_fail() -> Result<()> {
+        let value = 2;
+        verify_that!(value, eq(3))?;
+        Ok(())
+    }
 }

@@ -12,15 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::assert_pred;
+fn main() {}
 
-#[test]
-fn assert_predicate_with_failure() {
-    let a = 1;
-    let b = 2;
-    assert_pred!(eq_predicate(a, b));
-}
+#[cfg(test)]
+mod tests {
+    use googletest::assert_pred;
 
-fn eq_predicate(a: i32, b: i32) -> bool {
-    a == b
+    #[test]
+    fn assert_predicate_with_failure() {
+        let a = 1;
+        let b = 2;
+        assert_pred!(eq_predicate(a, b));
+    }
+
+    fn eq_predicate(a: i32, b: i32) -> bool {
+        a == b
+    }
 }
