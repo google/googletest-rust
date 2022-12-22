@@ -37,61 +37,66 @@ num-traits = "0.2.15"
 regex = "1.6.0"
 
 [[bin]]
+name = "integration_tests"
+path = "integration_tests/integration_tests.rs"
+test = false
+
+[[bin]]
 name = "custom_error_message"
-path = "tests/custom_error_message.rs"
+path = "integration_tests/custom_error_message.rs"
 test = false
 
 [[bin]]
 name = "assertion_failure_in_subroutine"
-path = "tests/assertion_failure_in_subroutine.rs"
+path = "integration_tests/assertion_failure_in_subroutine.rs"
 test = false
 
 [[bin]]
 name = "failure_due_to_fail_macro"
-path = "tests/failure_due_to_fail_macro.rs"
+path = "integration_tests/failure_due_to_fail_macro.rs"
 test = false
 
 [[bin]]
 name = "failure_due_to_fail_macro_with_empty_message"
-path = "tests/failure_due_to_fail_macro_with_empty_message.rs"
+path = "integration_tests/failure_due_to_fail_macro_with_empty_message.rs"
 test = false
 
 [[bin]]
 name = "failure_due_to_fail_macro_with_format_arguments"
-path = "tests/failure_due_to_fail_macro_with_format_arguments.rs"
+path = "integration_tests/failure_due_to_fail_macro_with_format_arguments.rs"
 test = false
 
 [[bin]]
 name = "failure_due_to_returned_error"
-path = "tests/failure_due_to_returned_error.rs"
+path = "integration_tests/failure_due_to_returned_error.rs"
 test = false
 
 [[bin]]
 name = "first_failure_aborts"
-path = "tests/first_failure_aborts.rs"
+path = "integration_tests/first_failure_aborts.rs"
 test = false
 
 [[bin]]
 name = "non_fatal_failure_in_subroutine"
-path = "tests/non_fatal_failure_in_subroutine.rs"
+path = "integration_tests/non_fatal_failure_in_subroutine.rs"
 test = false
 
 [[bin]]
 name = "simple_assertion_failure"
-path = "tests/simple_assertion_failure.rs"
+path = "integration_tests/simple_assertion_failure.rs"
 test = false
 
 [[bin]]
 name = "two_non_fatal_failures"
-path = "tests/two_non_fatal_failures.rs"
+path = "integration_tests/two_non_fatal_failures.rs"
 test = false
 
 [[bin]]
 name = "verify_predicate_with_failure"
-path = "tests/verify_predicate_with_failure.rs"
+path = "integration_tests/verify_predicate_with_failure.rs"
 test = false
 
 [[bin]]
 name = "verify_predicate_with_failure_as_method_in_submodule"
-path = "tests/verify_predicate_with_failure_as_method_in_submodule.rs"
+path = "integration_tests/verify_predicate_with_failure_as_method_in_submodule.rs"
 test = false

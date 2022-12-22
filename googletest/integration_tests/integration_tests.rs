@@ -55,7 +55,7 @@ fn should_output_failure_message_on_assertion_failure() -> Result<()> {
             "Value of: value\n\
             Expected: is equal to 3\n\
             Actual: 2, which isn't equal to 3\n  \
-            at .*googletest/tests/simple_assertion_failure.rs:[0-9]+:5\n"
+            at .*googletest/integration_tests/simple_assertion_failure.rs:[0-9]+:5\n"
         )
     )
 }
@@ -71,7 +71,7 @@ fn should_output_failure_message_on_assertion_failure_with_assert_that() -> Resu
             "Value of: value\n\
             Expected: is equal to 3\n\
             Actual: 2, which isn't equal to 3\n  \
-            at .*googletest/tests/simple_assertion_failure_with_assert_that.rs:[0-9]+:5\n"
+            at .*googletest/integration_tests/simple_assertion_failure_with_assert_that.rs:[0-9]+:5\n"
         )
     )
 }
@@ -347,7 +347,7 @@ fn fail_macro_outputs_message() -> Result<()> {
         matches_regex(
             "\
 Expected test failure
-  at .*googletest/tests/failure_due_to_fail_macro.rs:[0-9]+:5
+  at .*googletest/integration_tests/failure_due_to_fail_macro.rs:[0-9]+:5
 "
         )
     )
