@@ -414,7 +414,7 @@ Actual: 1, which isn't equal to 2
 
     fn run_external_process(name: &'static str) -> Command {
         let command_path = format!(
-            "../{}/debug/{name}",
+            "./{}/debug/{name}",
             std::env::var("CARGO_TARGET_DIR").unwrap_or_else(|_| "target".into())
         );
         Command::new(command_path)

@@ -47,6 +47,11 @@ path = "integration_tests/custom_error_message.rs"
 test = false
 
 [[bin]]
+name = "assert_predicate_with_failure"
+path = "integration_tests/assert_predicate_with_failure.rs"
+test = false
+
+[[bin]]
 name = "assertion_failure_in_subroutine"
 path = "integration_tests/assertion_failure_in_subroutine.rs"
 test = false
