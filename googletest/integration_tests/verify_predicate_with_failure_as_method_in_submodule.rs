@@ -12,28 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::{verify_pred, Result};
-use googletest_macro::google_test_wrapper;
+fn main() {}
 
-fn main() {
-    let _ = verify_predicate_on_method_in_submodule_with_failure();
-}
+#[cfg(test)]
+mod tests {
+    use googletest::{google_test, verify_pred, Result};
 
-#[google_test_wrapper]
-fn verify_predicate_on_method_in_submodule_with_failure() -> Result<()> {
-    let a = 1;
-    let b = 2;
-    verify_pred!(a_submodule::A_STRUCT_IN_SUBMODULE.eq_predicate_as_method(a, b))
-}
-
-struct AStruct {}
-
-impl AStruct {
-    fn eq_predicate_as_method(&self, a: i32, b: i32) -> bool {
-        a == b
+    #[google_test]
+    fn verify_predicate_on_method_in_submodule_with_failure() -> Result<()> {
+        let a = 1;
+        let b = 2;
+        verify_pred!(a_submodule::A_STRUCT_IN_SUBMODULE.eq_predicate_as_method(a, b))
     }
-}
 
-mod a_submodule {
-    pub(super) static A_STRUCT_IN_SUBMODULE: super::AStruct = super::AStruct {};
+    struct AStruct {}
+
+    impl AStruct {
+        fn eq_predicate_as_method(&self, a: i32, b: i32) -> bool {
+            a == b
+        }
+    }
+
+    mod a_submodule {
+        pub(super) static A_STRUCT_IN_SUBMODULE: super::AStruct = super::AStruct {};
+    }
 }

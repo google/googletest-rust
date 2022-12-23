@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::{fail, Result};
-use googletest_macro::google_test_wrapper;
+fn main() {}
 
-fn main() -> std::result::Result<(), ()> {
-    just_fails()
-}
+#[cfg(test)]
+mod tests {
+    use googletest::{fail, Result};
 
-#[google_test_wrapper]
-fn just_fails() -> Result<()> {
-    fail!("Expected test failure")
+    #[test]
+    fn just_fails() -> Result<()> {
+        fail!("Expected test failure")
+    }
 }

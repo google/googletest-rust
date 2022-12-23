@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::{fail, GoogleTestSupport};
+fn main() {}
 
-fn main() {
-    just_fails();
-}
+#[cfg(test)]
+mod tests {
+    use googletest::{fail, google_test, GoogleTestSupport, Result};
 
-fn just_fails() {
-    fail!("Failure message with argument: {}", "An argument").and_log_failure();
+    #[google_test]
+    fn just_fails() -> Result<()> {
+        fail!("Failure message with argument: {}", "An argument").and_log_failure();
+        Ok(())
+    }
 }

@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::{verify_pred, Result};
-use googletest_macro::google_test_wrapper;
+fn main() {}
 
-fn main() -> std::result::Result<(), ()> {
-    verify_predicate_with_failure()
-}
+#[cfg(test)]
+mod tests {
+    use googletest::{google_test, verify_pred, Result};
 
-#[google_test_wrapper]
-fn verify_predicate_with_failure() -> Result<()> {
-    let a = 1;
-    let b = 2;
-    verify_pred!(eq_predicate(a, b))
-}
+    #[google_test]
+    fn verify_predicate_with_failure() -> Result<()> {
+        let a = 1;
+        let b = 2;
+        verify_pred!(eq_predicate(a, b))
+    }
 
-fn eq_predicate(a: i32, b: i32) -> bool {
-    a == b
+    fn eq_predicate(a: i32, b: i32) -> bool {
+        a == b
+    }
 }
