@@ -12,33 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
-use googletest::matchers;
-use googletest::{verify_that, GoogleTestSupport, Result};
-use googletest_macro::google_test_wrapper;
-use matchers::eq;
+fn main() {}
 
-fn main() {
-    let _ = should_fail_with_custom_error_message();
-    let _ = should_fail_with_custom_error_message_in_string();
-    let _ = should_fail_with_custom_error_message_in_closure();
-}
+#[cfg(test)]
+mod tests {
+    #[cfg(not(google3))]
+    use googletest::matchers;
+    use googletest::{verify_that, GoogleTestSupport, Result};
+    use matchers::eq;
 
-#[google_test_wrapper]
-fn should_fail_with_custom_error_message() -> Result<()> {
-    let value = 2;
-    verify_that!(value, eq(3)).failure_message("A custom error message")
-}
+    #[test]
+    fn should_fail_with_custom_error_message() -> Result<()> {
+        let value = 2;
+        verify_that!(value, eq(3)).failure_message("A custom error message")
+    }
 
-#[google_test_wrapper]
-fn should_fail_with_custom_error_message_in_string() -> Result<()> {
-    let value = 2;
-    verify_that!(value, eq(3)).failure_message("A custom error message in a String".to_string())
-}
+    #[test]
+    fn should_fail_with_custom_error_message_in_string() -> Result<()> {
+        let value = 2;
+        verify_that!(value, eq(3)).failure_message("A custom error message in a String".to_string())
+    }
 
-#[google_test_wrapper]
-fn should_fail_with_custom_error_message_in_closure() -> Result<()> {
-    let value = 2;
-    verify_that!(value, eq(3))
-        .with_failure_message(|| "A custom error message from a closure".to_string())
+    #[test]
+    fn should_fail_with_custom_error_message_in_closure() -> Result<()> {
+        let value = 2;
+        verify_that!(value, eq(3))
+            .with_failure_message(|| "A custom error message from a closure".to_string())
+    }
 }

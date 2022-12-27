@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest_macro::google_test_wrapper;
+fn main() {}
 
-fn main() -> Result<(), ()> {
-    should_fail_due_to_returned_error()
-}
+#[cfg(test)]
+mod tests {
+    use googletest::google_test;
 
-#[google_test_wrapper]
-fn should_fail_due_to_returned_error() -> Result<(), i32> {
-    Err(123)
+    #[google_test]
+    fn should_fail_due_to_returned_error() -> Result<(), i32> {
+        Err(123)
+    }
 }

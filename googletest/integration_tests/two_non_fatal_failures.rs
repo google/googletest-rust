@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
-use googletest::matchers;
-use googletest::{verify_that, GoogleTestSupport, Result};
-use googletest_macro::google_test_wrapper;
-use matchers::eq;
+fn main() {}
 
-fn main() {
-    let _ = more_than_one_failure();
-}
+#[cfg(test)]
+mod tests {
+    #[cfg(not(google3))]
+    use googletest::matchers;
+    use googletest::{google_test, verify_that, GoogleTestSupport, Result};
+    use matchers::eq;
 
-#[google_test_wrapper]
-fn more_than_one_failure() -> Result<()> {
-    let value = 2;
-    verify_that!(value, eq(3)).and_log_failure();
-    verify_that!(value, eq(4)).and_log_failure();
-    Ok(())
+    #[google_test]
+    fn more_than_one_failure() -> Result<()> {
+        let value = 2;
+        verify_that!(value, eq(3)).and_log_failure();
+        verify_that!(value, eq(4)).and_log_failure();
+        Ok(())
+    }
 }

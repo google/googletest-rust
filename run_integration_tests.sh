@@ -25,8 +25,19 @@ set -e
 INTEGRATION_TEST_BINARIES=(
   "integration_tests"
   "assert_predicate_with_failure"
+  "assertion_failure_in_subroutine"
+  "custom_error_message"
+  "failure_due_to_fail_macro"
+  "failure_due_to_fail_macro_with_empty_message"
+  "failure_due_to_fail_macro_with_format_arguments"
+  "failure_due_to_returned_error"
+  "first_failure_aborts"
+  "non_fatal_failure_in_subroutine"
   "simple_assertion_failure"
   "simple_assertion_failure_with_assert_that"
+  "two_non_fatal_failures"
+  "verify_predicate_with_failure"
+  "verify_predicate_with_failure_as_method_in_submodule"
 )
 
 cargo build

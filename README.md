@@ -1,4 +1,4 @@
-# Google Rust testing library
+# GoogleTest Rust
 
 This library brings the rich assertion types of Google's C++ testing library
 [GoogleTest](https://github.com/google/googletest) to Rust. It provides:
@@ -46,6 +46,9 @@ fn more_than_one_failure() -> Result<()> {
     verify_that!(value, eq(2)) // One can also just return the assertion result.
 }
 ```
+
+> In case one wants behaviour closer to other Rust test libraries, the macro
+> [`assert_that!`] has the same [`verify_that!`] but panics on failure.
 
 This library includes a rich set of matchers, covering:
 
@@ -268,6 +271,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute
 to this project.
 
 [`and_log_failure()`]: https://docs.rs/googletest/*/googletest/trait.GoogleTestSupport.html#tymethod.and_log_failure
+[`assert_that!`]: https://docs.rs/googletest/*/googletest/macro.assert_that.html
 [`fail!`]: https://docs.rs/googletest/*/googletest/macro.fail.html
 [`google_test`]: https://docs.rs/googletest/*/googletest/attr.google_test.html
 [`matches_pattern!`]: https://docs.rs/googletest/*/googletest/macro.matches_pattern.html

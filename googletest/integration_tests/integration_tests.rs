@@ -24,7 +24,7 @@ mod tests {
     use googletest_macro::google_test_wrapper;
     #[cfg(google3)]
     use matchers::all;
-    use matchers::{contains_regex, contains_substring, eq, matches_regex, not};
+    use matchers::{contains_regex, contains_substring, eq, not};
     use std::process::Command;
 
     #[google_test]
@@ -356,10 +356,10 @@ a_submodule :: A_STRUCT_IN_SUBMODULE.eq_predicate_as_method(a, b) was false with
 
         verify_that!(
             output,
-            matches_regex(
+            contains_regex(
                 "\
 Expected test failure
-  at .*googletest/integration_tests/failure_due_to_fail_macro.rs:[0-9]+:5
+  at .*googletest/integration_tests/failure_due_to_fail_macro.rs:[0-9]+:9
 "
             )
         )

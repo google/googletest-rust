@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
-use googletest::matchers;
-use googletest::{verify_that, Result};
-use googletest_macro::google_test_wrapper;
-use matchers::eq;
+fn main() {}
 
-fn main() -> std::result::Result<(), ()> {
-    should_fail_in_subroutine()
-}
+#[cfg(test)]
+mod tests {
+    #[cfg(not(google3))]
+    use googletest::matchers;
+    use googletest::{google_test, verify_that, Result};
+    use matchers::eq;
 
-#[google_test_wrapper]
-fn should_fail_in_subroutine() -> Result<()> {
-    assert_that_things_are_okay(2)
-}
+    #[google_test]
+    fn should_fail_in_subroutine() -> Result<()> {
+        assert_that_things_are_okay(2)
+    }
 
-fn assert_that_things_are_okay(value: i32) -> Result<()> {
-    verify_that!(value, eq(3))
+    fn assert_that_things_are_okay(value: i32) -> Result<()> {
+        verify_that!(value, eq(3))
+    }
 }
