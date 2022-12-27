@@ -21,7 +21,7 @@ pub mod matcher;
 #[cfg(not(google3))]
 pub mod matchers;
 
-pub use googletest_macro::{google_test, google_test_wrapper};
+pub use googletest_macro::google_test;
 
 use internal::test_outcome::TestAssertionFailure;
 

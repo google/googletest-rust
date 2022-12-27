@@ -54,27 +54,9 @@ pub fn google_test(
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let parsed_fn = parse_macro_input!(input as ItemFn);
-    let output = quote! {
-        #[test]
-        #[googletest::google_test_wrapper]
-        #parsed_fn
-    };
-    output.into()
-}
-
-/// Wraps the given function inside an outer function which initialises and
-/// queries the `TestOutcome` for the current test.
-///
-/// This is intended to be used only by the Google Rust test library and its own
-/// tests.
-#[proc_macro_attribute]
-pub fn google_test_wrapper(
-    _args: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    let parsed_fn = parse_macro_input!(input as ItemFn);
     let fn_name = parsed_fn.sig.ident.clone();
     let output = quote! {
+        #[test]
         fn #fn_name() -> std::result::Result<(), ()> {
             #parsed_fn
 
