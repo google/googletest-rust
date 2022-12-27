@@ -21,7 +21,6 @@ mod tests {
     use googletest::{
         google_test, verify_pred, verify_that, GoogleTestSupport, MapErrorToTestFailure, Result,
     };
-    use googletest_macro::google_test_wrapper;
     #[cfg(google3)]
     use matchers::all;
     use matchers::{contains_regex, contains_substring, eq, not};
@@ -110,14 +109,6 @@ Actual: 2, which isn't equal to 3
         verify_that!(status.success(), eq(false))
     }
 
-    // Using google_test_wrapper rather than google_test prevents this from being
-    // run as a real test, which would of course fail.
-    #[google_test_wrapper]
-    fn fails_but_continues() -> Result<()> {
-        verify_that!(2, eq(3)).and_log_failure();
-        Ok(())
-    }
-
     #[google_test]
     fn should_log_test_failures_to_stdout() -> Result<()> {
         let output = run_external_process_in_tests_directory("two_non_fatal_failures")?;
@@ -182,15 +173,6 @@ Actual: 2, which isn't equal to 3
 
     #[google_test]
     fn should_not_run_closure_with_custom_error_message_if_test_passes() -> Result<()> {
-        let result = should_pass_with_custom_error_message_in_closure();
-
-        verify_that!(result, eq(Ok(())))
-    }
-
-    // Using google_test_wrapper rather than google_test prevents this from being
-    // run as a real test.
-    #[google_test_wrapper]
-    fn should_pass_with_custom_error_message_in_closure() -> Result<()> {
         let value = 2;
         verify_that!(value, eq(2))
             .with_failure_message(|| panic!("This should not execute, since the assertion passes."))
@@ -198,25 +180,11 @@ Actual: 2, which isn't equal to 3
 
     #[google_test]
     fn should_verify_predicate_with_success() -> Result<()> {
-        let result = verify_predicate_with_success();
-
-        verify_that!(result, eq(Ok(())))
-    }
-
-    #[google_test_wrapper]
-    fn verify_predicate_with_success() -> Result<()> {
         verify_pred!(eq_predicate(1, 1))
     }
 
     #[google_test]
     fn should_verify_predicate_with_trailing_comma() -> Result<()> {
-        let result = verify_predicate_with_trailing_comma();
-
-        verify_that!(result, eq(Ok(())))
-    }
-
-    #[google_test_wrapper]
-    fn verify_predicate_with_trailing_comma() -> Result<()> {
         verify_pred!(eq_predicate(1, 1,))
     }
 
