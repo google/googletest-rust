@@ -1,0 +1,85 @@
+version: 2
+updates:
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: daily
+  rebase-strategy: disabled
+  commit-message:
+      prefix: ":seedling:"
+  open-pull-requests-limit: 3
+- package-ecosystem: gomod
+  directory: "/tools"
+  schedule:
+    interval: daily
+  rebase-strategy: disabled
+  commit-message:
+      prefix: ":seedling:"
+  open-pull-requests-limit: 3
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+      interval: "daily"
+  rebase-strategy: disabled
+  commit-message:
+      prefix: ":seedling:"
+- package-ecosystem: docker
+  directory: "/"
+  schedule:
+    interval: weekly
+  rebase-strategy: disabled
+  commit-message:
+      prefix: ":seedling:"
+  open-pull-requests-limit: 3
+- package-ecosystem: docker
+  directory: "/cron/internal/bq"
+  schedule:
+    interval: weekly
+  rebase-strategy: disabled
+  commit-message:
+      prefix: ":seedling:"
+  open-pull-requests-limit: 3
+- package-ecosystem: docker
+  directory: "/cron/internal/worker"
+  schedule:
+    interval: weekly
+  rebase-strategy: disabled
+  commit-message:
+      prefix: ":seedling:"
+- package-ecosystem: docker
+  directory: "/cron/internal/webhook"
+  schedule:
+    interval: weekly
+  rebase-strategy: disabled
+  commit-message:
+      prefix: ":seedling:"
+- package-ecosystem: docker
+  directory: "/cron/internal/controller"
+  schedule:
+    interval: weekly
+  rebase-strategy: disabled
+  commit-message:
+      prefix: ":seedling:"
+- package-ecosystem: docker
+  directory: "/cron/internal/cii"
+  schedule:
+    interval: weekly
+  rebase-strategy: disabled
+  commit-message:
+      prefix: ":seedling:"
+- package-ecosystem: docker
+  directory: "/clients/githubrepo/roundtripper/tokens/server"
+  schedule:
+    interval: weekly
+  rebase-strategy: disabled
+  commit-message:
+      prefix: ":seedling:"
+- package-ecosystem: "cargo"
+  directory: "/"
+  schedule:
+    interval: "weekly"
+  ignore:
+      # These are peer deps of Cargo and should not be automatically bumped
+      - dependency-name: "semver"
+      - dependency-name: "crates-io"
+  rebase-strategy: "disabled"
