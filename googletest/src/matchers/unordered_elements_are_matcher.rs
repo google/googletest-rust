@@ -472,35 +472,29 @@ pub mod internal {
                 .join(", ");
             match (unmatchable_actual.len(), unmatchable_expected.len()) {
                 (0, 0) => None,
-                (1, 0) => Some(format!(
-                    "whose element {} does not match any expected elements",
-                    actual_idx
-                )),
-                (_, 0) => Some(format!(
-                    "whose elements {} do not match any expected elements",
-                    actual_idx
-                )),
-                (0, 1) => {
-                    Some(format!("which no element match the expected element {}", expected_idx))
+                (1, 0) => {
+                    Some(format!("whose element {actual_idx} does not match any expected elements"))
                 }
-                (0, _) => {
-                    Some(format!("which no element match the expected elements {}", expected_idx))
+                (_, 0) => {
+                    Some(format!("whose elements {actual_idx} do not match any expected elements",))
                 }
+                (0, 1) => Some(format!(
+                    "which has no element matching the expected element {expected_idx}"
+                )),
+                (0, _) => Some(format!(
+                    "which has no elements matching the expected elements {expected_idx}"
+                )),
                 (1, 1) => Some(format!(
-                    "whose element {} does not match any expected elements and no elements match the expected element {}",
-                    actual_idx, expected_idx
+                    "whose element {actual_idx} does not match any expected elements and no elements match the expected element {expected_idx}"
                 )),
                 (_, 1) => Some(format!(
-                    "whose elements {} do not match any expected elements and no elements match the expected element {}",
-                    actual_idx, expected_idx
+                    "whose elements {actual_idx} do not match any expected elements and no elements match the expected element {expected_idx}"
                 )),
                 (1, _) => Some(format!(
-                    "whose element {} does not match any expected elements and no elements match the expected elements {}",
-                    actual_idx, expected_idx
+                    "whose element {actual_idx} does not match any expected elements and no elements match the expected elements {expected_idx}"
                 )),
                 (_, _) => Some(format!(
-                    "whose elements {} do not match any expected elements and no elements match the expected elements {}",
-                    actual_idx, expected_idx
+                    "whose elements {actual_idx} do not match any expected elements and no elements match the expected elements {expected_idx}"
                 )),
             }
         }
@@ -689,7 +683,7 @@ Actual: [1, 4, 3], whose element #1 does not match any expected elements and no 
     fn unordered_elements_are_unmatchable_expected_description_mismatch() -> Result<()> {
         verify_that!(
             unordered_elements_are![eq(1), eq(2), eq(3)].explain_match(&vec![1, 1, 3]),
-            displays_as(eq("which no element match the expected element #1"))
+            displays_as(eq("which has no element matching the expected element #1"))
         )
     }
 
@@ -733,7 +727,15 @@ Actual: [1, 4, 3], whose element #1 does not match any expected elements and no 
     fn contains_each_explains_missing_element_in_mismatch() -> Result<()> {
         verify_that!(
             contains_each![eq(2), eq(3), eq(4)].explain_match(&vec![1, 2, 3]),
-            displays_as(eq("which no element match the expected element #2"))
+            displays_as(eq("which has no element matching the expected element #2"))
+        )
+    }
+
+    #[google_test]
+    fn contains_each_explains_missing_elements_in_mismatch() -> Result<()> {
+        verify_that!(
+            contains_each![eq(2), eq(3), eq(4), eq(5)].explain_match(&vec![0, 1, 2, 3]),
+            displays_as(eq("which has no elements matching the expected elements #2, #3"))
         )
     }
 
