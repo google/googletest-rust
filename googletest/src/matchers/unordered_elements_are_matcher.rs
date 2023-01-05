@@ -12,11 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// Matches a container elements but does not require that the element order
-/// matches.
-///
-/// However, the matcher requires that there exists a 1:1 correspondence
-/// between container elements and matchers.
+/// Matches a container whose elements in any order have a 1:1 correspondence
+/// with the provided element matchers.
 ///
 /// ```rust
 /// verify_that!(vec![3, 2, 1], unordered_elements_are![eq(1), anything(), gt(0).and(lt(123))])
@@ -25,10 +22,53 @@
 macro_rules! unordered_elements_are {
     ($($matcher:expr),*) => {{
         #[cfg(google3)]
-        use $crate::internal::UnorderedElementsAre;
+        use $crate::internal::{UnorderedElementsAre, Requirements};
         #[cfg(not(google3))]
-        use $crate::matchers::unordered_elements_are_matcher::internal::UnorderedElementsAre;
-        UnorderedElementsAre::new([$(&$matcher),*])
+        use $crate::matchers::unordered_elements_are_matcher::internal::{UnorderedElementsAre, Requirements};
+        UnorderedElementsAre::new([$(&$matcher),*], Requirements::PerfectMatch)
+    }}
+}
+
+/// Matches a container containing elements matched by the given matchers.
+///
+/// To match, each given matcher must have a corresponding element in the
+/// container which it matches. There must be a mapping uniquely matching each
+/// matcher to a container element. The container can, however, contain
+/// additional elements that don't correspond to any matcher.
+///
+/// Put another way, `contains_each!` matches if there is a subset of the actual
+/// container which [`unordered_elements_are`] would match.
+///
+/// ```rust
+/// verify_that!(vec![3, 2, 1], contains_each![eq(2), ge(3)])?;   // Passes
+/// verify_that!(vec![3, 2, 1], contains_each![ge(3), ge(3)])?;   // Passes
+/// verify_that!(vec![1], contains_each![eq(1), ge(2)])?;         // Fails: container too small
+/// verify_that!(vec![3, 2, 1], contains_each![eq(1), ge(4)])?;   // Fails: second matcher unmatched
+/// verify_that!(vec![3, 2, 1], contains_each![ge(3), ge(3), ge(3)])?; // Fails: no matching
+/// ```
+///
+/// The matcher proceeds in three stages:
+///
+/// 1. It first checks whether the actual value is large enough to
+///    possibly be matched by each of the given matchers. If not, then it
+///    immediately fails explaining that the size is too small.
+///
+/// 2. It then checks whether each matcher matches at least one corresponding
+///    element in the actual container and fails if that is not the case. The
+///    failure message indicates which matcher had no corresponding element.
+///
+/// 3. Finally, it checks whether the mapping of matchers to corresponding
+///    actual elements is 1-1 and fails if that is not the case. The failure
+///    message then shows the best matching it could find, including which
+///    matchers did not have corresponding unique elements in the container.
+#[macro_export]
+macro_rules! contains_each {
+    ($($matcher:expr),*) => {{
+        #[cfg(google3)]
+        use $crate::internal::{UnorderedElementsAre, Requirements};
+        #[cfg(not(google3))]
+        use $crate::matchers::unordered_elements_are_matcher::internal::{UnorderedElementsAre, Requirements};
+        UnorderedElementsAre::new([$(&$matcher),*], Requirements::Superset)
     }}
 }
 
@@ -45,7 +85,36 @@ pub mod internal {
     #[cfg(google3)]
     use has_size::HasSize;
     use std::collections::HashSet;
-    use std::fmt::Debug;
+    use std::fmt::{Debug, Display};
+
+    /// The requirements of the mapping between matchers and actual values by
+    /// which [`UnorderedElemetnsAre`] is deemed to match its input.
+    ///
+    /// **For internal use only. API stablility is not guaranteed!**
+    #[doc(hidden)]
+    #[derive(Clone, Copy)]
+    pub enum Requirements {
+        /// The mapping from matched actual values to their corresponding
+        /// matchers must be surjective.
+        Superset,
+
+        /// There must be a 1:1 correspondence between the actual values and the
+        /// matchers.
+        PerfectMatch,
+    }
+
+    impl Display for Requirements {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Requirements::Superset => {
+                    write!(f, "superset")
+                }
+                Requirements::PerfectMatch => {
+                    write!(f, "perfect")
+                }
+            }
+        }
+    }
 
     /// This struct is meant to be used only through the
     /// `unordered_elements_are![...]` macro.
@@ -54,11 +123,12 @@ pub mod internal {
     #[doc(hidden)]
     pub struct UnorderedElementsAre<'a, T: Debug, const N: usize> {
         elements: [&'a dyn Matcher<T>; N],
+        requirements: Requirements,
     }
 
     impl<'a, T: Debug, const N: usize> UnorderedElementsAre<'a, T, N> {
-        pub fn new(elements: [&'a dyn Matcher<T>; N]) -> Self {
-            Self { elements }
+        pub fn new(elements: [&'a dyn Matcher<T>; N], requirements: Requirements) -> Self {
+            Self { elements, requirements }
         }
     }
 
@@ -77,36 +147,71 @@ pub mod internal {
         for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
     {
         fn matches(&self, actual: &ContainerT) -> MatcherResult {
-            if actual.size() != N {
-                return MatcherResult::DoesNotMatch;
-            }
-            let match_matrix = MatchMatrix::generate(actual, &self.elements);
-            if !match_matrix.find_unmatchable_elements().has_unmatchable_elements()
-                && match_matrix.find_best_match().is_full_match()
-            {
-                MatcherResult::Matches
-            } else {
-                MatcherResult::DoesNotMatch
+            match self.requirements {
+                Requirements::PerfectMatch => {
+                    if actual.size() != N {
+                        return MatcherResult::DoesNotMatch;
+                    }
+                    let match_matrix = MatchMatrix::generate(actual, &self.elements);
+                    if !match_matrix.find_unmatchable_elements().has_unmatchable_elements()
+                        && match_matrix.find_best_match().is_full_match()
+                    {
+                        MatcherResult::Matches
+                    } else {
+                        MatcherResult::DoesNotMatch
+                    }
+                }
+                Requirements::Superset => {
+                    if actual.size() < N {
+                        return MatcherResult::DoesNotMatch;
+                    }
+                    let match_matrix = MatchMatrix::generate(actual, &self.elements);
+                    if !match_matrix.find_unmatched_expected().has_unmatchable_elements()
+                        && match_matrix.find_best_match().is_superset_match()
+                    {
+                        MatcherResult::Matches
+                    } else {
+                        MatcherResult::DoesNotMatch
+                    }
+                }
             }
         }
 
         fn explain_match(&self, actual: &ContainerT) -> MatchExplanation {
-            if actual.size() != N {
-                return MatchExplanation::create(format!(
-                    "which has size {} (expected {})",
-                    actual.size(),
-                    N
-                ));
+            match self.requirements {
+                Requirements::PerfectMatch => {
+                    if actual.size() != N {
+                        return MatchExplanation::create(format!(
+                            "which has size {} (expected {})",
+                            actual.size(),
+                            N
+                        ));
+                    }
+                }
+
+                Requirements::Superset => {
+                    if actual.size() < N {
+                        return MatchExplanation::create(format!(
+                            "which has size {} (expected at least {})",
+                            actual.size(),
+                            N
+                        ));
+                    }
+                }
             }
 
             let match_matrix = MatchMatrix::generate(actual, &self.elements);
-            let unmatchable_elements = match_matrix.find_unmatchable_elements();
+            let unmatchable_elements = match self.requirements {
+                Requirements::PerfectMatch => match_matrix.find_unmatchable_elements(),
+                Requirements::Superset => match_matrix.find_unmatched_expected(),
+            };
             if let Some(unmatchable_explanation) = unmatchable_elements.get_explanation() {
                 return MatchExplanation::create(unmatchable_explanation);
             }
 
             let best_match = match_matrix.find_best_match();
-            if let Some(best_match_explanation) = best_match.get_explanation(actual, &self.elements)
+            if let Some(best_match_explanation) =
+                best_match.get_explanation(actual, &self.elements, self.requirements)
             {
                 MatchExplanation::create(best_match_explanation)
             } else {
@@ -114,10 +219,11 @@ pub mod internal {
             }
         }
     }
+
     impl<'a, T: Debug, const N: usize> Describe for UnorderedElementsAre<'a, T, N> {
         fn describe(&self, matcher_result: MatcherResult) -> String {
             format!(
-                "{} unordered elements are:\n{}",
+                "{} elements matching in any order:\n{}",
                 matcher_result.pick("contains", "doesn't contain"),
                 self.elements
                     .iter()
@@ -129,17 +235,17 @@ pub mod internal {
     }
 
     /// The bipartite matching graph between actual and expected elements.
-    struct MatchMatrix<const N: usize>([[MatcherResult; N]; N]);
+    struct MatchMatrix<const N: usize>(Vec<[MatcherResult; N]>);
 
     impl<const N: usize> MatchMatrix<N> {
-        fn generate<'a, T: Debug, ContainerT: Debug>(
+        fn generate<'a, T: Debug, ContainerT: Debug + HasSize>(
             actual: &ContainerT,
             expected: &[&'a dyn Matcher<T>; N],
         ) -> Self
         where
             for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
         {
-            let mut matrix = MatchMatrix([[MatcherResult::DoesNotMatch; N]; N]);
+            let mut matrix = MatchMatrix(vec![[MatcherResult::DoesNotMatch; N]; actual.size()]);
             for (actual_idx, actual) in actual.into_iter().enumerate() {
                 for (expected_idx, expected) in expected.iter().enumerate() {
                     matrix.0[actual_idx][expected_idx] = expected.matches(actual);
@@ -153,8 +259,11 @@ pub mod internal {
         // This is a necessary condition but not sufficient. But it is faster
         // than `find_best_match()`.
         fn find_unmatchable_elements(&self) -> UnmatchableElements<N> {
-            let unmatchable_actual =
-                self.0.map(|row| row.iter().all(|e| matches!(e, MatcherResult::DoesNotMatch)));
+            let unmatchable_actual = self
+                .0
+                .iter()
+                .map(|row| row.iter().all(|e| matches!(e, MatcherResult::DoesNotMatch)))
+                .collect();
             let mut unmatchable_expected = [false; N];
             for (col_idx, expected) in unmatchable_expected.iter_mut().enumerate() {
                 *expected = self
@@ -164,6 +273,18 @@ pub mod internal {
                     .all(|e| matches!(e, MatcherResult::DoesNotMatch));
             }
             UnmatchableElements { unmatchable_actual, unmatchable_expected }
+        }
+
+        fn find_unmatched_expected(&self) -> UnmatchableElements<N> {
+            let mut unmatchable_expected = [false; N];
+            for (col_idx, expected) in unmatchable_expected.iter_mut().enumerate() {
+                *expected = self
+                    .0
+                    .iter()
+                    .map(|row| row[col_idx])
+                    .all(|e| matches!(e, MatcherResult::DoesNotMatch));
+            }
+            UnmatchableElements { unmatchable_actual: vec![false; N], unmatchable_expected }
         }
 
         // Verifies that a full match exists.
@@ -231,7 +352,7 @@ pub mod internal {
         //   [2] "Ford-Fulkerson algorithm", Wikipedia,
         //       'http://en.wikipedia.org/wiki/Ford%E2%80%93Fulkerson_algorithm'
         fn find_best_match(&self) -> BestMatch<N> {
-            let mut actual_match: [Option<usize>; N] = [None; N];
+            let mut actual_match = vec![None; self.0.len()];
             let mut expected_match: [Option<usize>; N] = [None; N];
             // Searches the residual flow graph for a path from each actual node to
             // the sink in the residual flow graph, and if one is found, add this path
@@ -246,7 +367,7 @@ pub mod internal {
             // need to visit the actual nodes more than once looking for
             // augmented paths. The flow is known to be possible or impossible
             // by looking at the node once.
-            for actual_idx in 0..N {
+            for actual_idx in 0..self.0.len() {
                 assert!(actual_match[actual_idx].is_none());
                 let mut seen = [false; N];
                 self.try_augment(actual_idx, &mut seen, &mut actual_match, &mut expected_match);
@@ -276,7 +397,7 @@ pub mod internal {
             &self,
             actual_idx: usize,
             seen: &mut [bool; N],
-            actual_match: &mut [Option<usize>; N],
+            actual_match: &mut [Option<usize>],
             expected_match: &mut [Option<usize>; N],
         ) -> bool {
             for expected_idx in 0..N {
@@ -326,7 +447,7 @@ pub mod internal {
     /// allocation.
     /// TODO(bjacotg) Use BitArr!(for N) once generic_const_exprs is stable.
     struct UnmatchableElements<const N: usize> {
-        unmatchable_actual: [bool; N],
+        unmatchable_actual: Vec<bool>,
         unmatchable_expected: [bool; N],
     }
 
@@ -408,11 +529,15 @@ pub mod internal {
     ///  * The 0th element in actual matches the 0th element in expected.
     ///  * The 1st element in actual does not match.
     ///  * The 2nd element in actual matches the 1st element in expected.
-    struct BestMatch<const N: usize>([Option<usize>; N]);
+    struct BestMatch<const N: usize>(Vec<Option<usize>>);
 
     impl<const N: usize> BestMatch<N> {
         fn is_full_match(&self) -> bool {
             self.0.iter().all(|o| o.is_some())
+        }
+
+        fn is_superset_match(&self) -> bool {
+            self.get_unmatched_expected().is_empty()
         }
 
         fn get_matches(&self) -> Vec<(usize, usize)> {
@@ -443,6 +568,7 @@ pub mod internal {
             &self,
             actual: &ContainerT,
             expected: &[&'a dyn Matcher<T>; N],
+            requirements: Requirements,
         ) -> Option<String>
         where
             for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
@@ -452,7 +578,7 @@ pub mod internal {
                 return None;
             }
             let mut error_message =
-                "which does not have a perfect match with the expected elements.".to_string();
+                format!("which does not have a {requirements} match with the expected elements.");
 
             error_message.push_str("\n  The best match found was: ");
 
@@ -495,7 +621,7 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{google_test, verify_that, Result};
-    use matchers::{contains_substring, displays_as, eq, err, not};
+    use matchers::{contains_substring, displays_as, eq, err, ge, not};
 
     #[google_test]
     fn unordered_elements_are_matches_vector() -> Result<()> {
@@ -517,7 +643,7 @@ mod tests {
             err(displays_as(contains_substring(
                 "\
 Value of: vec![1, 4, 3]
-Expected: contains unordered elements are:
+Expected: contains elements matching in any order:
 is equal to 1
 is equal to 2
 is equal to 3
@@ -536,6 +662,14 @@ Actual: [1, 4, 3], whose element #1 does not match any expected elements and no 
     fn unordered_elements_are_matches_unordered_with_repetition() -> Result<()> {
         let value = vec![1, 2, 1, 2, 1];
         verify_that!(value, unordered_elements_are![eq(1), eq(1), eq(1), eq(2), eq(2)])
+    }
+
+    #[google_test]
+    fn unordered_elements_are_explains_mismatch_due_to_wrong_size() -> Result<()> {
+        verify_that!(
+            unordered_elements_are![eq(2), eq(3), eq(4)].explain_match(&vec![2, 3]),
+            displays_as(eq("which has size 2 (expected 3)"))
+        )
     }
 
     #[google_test]
@@ -564,6 +698,54 @@ Actual: [1, 4, 3], whose element #1 does not match any expected elements and no 
         verify_that!(
             unordered_elements_are![eq(1), eq(1), eq(3)].explain_match(&vec![1, 2, 3]),
             displays_as(eq("whose element #1 does not match any expected elements"))
+        )
+    }
+
+    #[google_test]
+    fn contains_each_matches_when_one_to_one_correspondence_present() -> Result<()> {
+        verify_that!(vec![2, 3, 4], contains_each!(eq(2), eq(3), eq(4)))
+    }
+
+    #[google_test]
+    fn contains_each_matches_when_no_matchers_present() -> Result<()> {
+        verify_that!(vec![2, 3, 4], contains_each!())
+    }
+
+    #[google_test]
+    fn contains_each_matches_when_excess_elements_present() -> Result<()> {
+        verify_that!(vec![1, 2, 3, 4], contains_each!(eq(2), eq(3), eq(4)))
+    }
+
+    #[google_test]
+    fn contains_each_does_not_match_when_matchers_are_unmatched() -> Result<()> {
+        verify_that!(vec![1, 2, 3], not(contains_each!(eq(2), eq(3), eq(4))))
+    }
+
+    #[google_test]
+    fn contains_each_explains_mismatch_due_to_wrong_size() -> Result<()> {
+        verify_that!(
+            contains_each![eq(2), eq(3), eq(4)].explain_match(&vec![2, 3]),
+            displays_as(eq("which has size 2 (expected at least 3)"))
+        )
+    }
+
+    #[google_test]
+    fn contains_each_explains_missing_element_in_mismatch() -> Result<()> {
+        verify_that!(
+            contains_each![eq(2), eq(3), eq(4)].explain_match(&vec![1, 2, 3]),
+            displays_as(eq("which no element match the expected element #2"))
+        )
+    }
+
+    #[google_test]
+    fn contains_each_explains_mismatch_due_to_no_graph_matching_found() -> Result<()> {
+        verify_that!(
+            contains_each![ge(2), ge(2)].explain_match(&vec![1, 2]),
+            displays_as(eq("which does not have a superset match with the expected elements.
+  The best match found was: 
+    Actual element 2 at index 1 matched expected element `is greater than or equal to 2` at index 0.
+    Actual element 1 at index 0 did not match any remaining expected element.
+    Expected element `is greater than or equal to 2` at index 1 did not match any remaining actual element."))
         )
     }
 }
