@@ -16,8 +16,30 @@
 /// with the provided element matchers.
 ///
 /// ```rust
-/// verify_that!(vec![3, 2, 1], unordered_elements_are![eq(1), anything(), gt(0).and(lt(123))])
+/// verify_that!(vec![3, 2, 1], unordered_elements_are![eq(1), ge(2), anything()])?;   // Passes
+/// verify_that!(vec![1], unordered_elements_are![eq(1), ge(2)])?;              // Fails: container has wrong size
+/// verify_that!(vec![3, 2, 1], unordered_elements_are![eq(1), ge(4), eq(2)])?; // Fails: second matcher not matched
+/// verify_that!(vec![3, 2, 1], unordered_elements_are![ge(3), ge(3), ge(3)])?; // Fails: no 1:1 correspondence
 /// ```
+///
+/// The matcher proceeds in three stages:
+///
+/// 1. It first checks whether the actual value is of the right size to
+///    possibly be matched by each of the given matchers. If not, then it
+///    immediately fails explaining that the size is incorrect.
+///
+/// 2. It then checks whether each matcher matches at least one corresponding
+///    element in the actual container and each element in the actual container
+///    is matched by at least one matcher. If not, it fails with a message
+///    indicating which matcher respectively container elements had no
+///    counterparts.
+///
+/// 3. Finally, it checks whether the mapping of matchers to corresponding
+///    actual elements is a 1-1 correspondence and fails if that is not the
+///    case. The failure message then shows the best matching it could find,
+///    including which matchers did not have corresponding unique elements in
+///    the container and which container elements had no corresponding
+///    matchers.
 #[macro_export]
 macro_rules! unordered_elements_are {
     ($($matcher:expr),*) => {{
