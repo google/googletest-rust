@@ -21,8 +21,9 @@
 /// verify_that!("A string", all!(starts_with("A"), ends_width("not a string")))?; // Fails
 /// ```
 ///
-/// Using this macro is equivalent to using the `and` function in the
-/// `intersection_matcher` crate:
+/// Using this macro is equivalent to using the
+/// [`and`][crate::matchers::conjunction_matcher::AndMethodExt::and] extension
+/// method:
 ///
 /// ```rust
 /// verify_that!("A string", starts_with("A").and(ends_width("string")))?; // Also passes

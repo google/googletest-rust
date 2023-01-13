@@ -17,6 +17,8 @@ pub mod all_matcher;
 #[cfg(not(google3))]
 pub mod anything_matcher;
 #[cfg(not(google3))]
+pub mod conjunction_matcher;
+#[cfg(not(google3))]
 pub mod container_eq_matcher;
 #[cfg(not(google3))]
 pub mod contains_matcher;
@@ -50,8 +52,6 @@ pub mod gt_matcher;
 pub mod has_entry_matcher;
 #[cfg(not(google3))]
 pub mod has_size;
-#[cfg(not(google3))]
-pub mod intersection_matcher;
 #[cfg(not(google3))]
 pub mod is_nan_matcher;
 #[cfg(not(google3))]
@@ -92,6 +92,7 @@ pub mod unordered_elements_are_matcher;
 #[cfg(google3)]
 pub use all_matcher::all;
 pub use anything_matcher::anything;
+pub use conjunction_matcher::AndMatcherExt;
 pub use container_eq_matcher::container_eq;
 pub use contains_matcher::contains;
 pub use contains_regex_matcher::contains_regex;
@@ -110,7 +111,6 @@ pub use field_matcher::field;
 pub use ge_matcher::ge;
 pub use gt_matcher::gt;
 pub use has_entry_matcher::has_entry;
-pub use intersection_matcher::AndMatcherExt;
 pub use is_nan_matcher::is_nan;
 pub use le_matcher::le;
 pub use lt_matcher::lt;
