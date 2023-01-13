@@ -17,12 +17,16 @@ use crate as googletest;
 use googletest::matcher::{Describe, MatchExplanation, Matcher, MatcherResult};
 use std::fmt::Debug;
 
+/// Extension trait providing the [`and`][AndMatcherExt::and] method.
 pub trait AndMatcherExt<T: Debug>: Matcher<T> {
     /// Constructs a matcher that matches both `self` and `right`.
     ///
     /// ```rust
     /// verify_that!(Struct { a: 1, b: 2 }, field!(Struct::a, eq(1)).and(field!(Struct::b, eq(2))))?;
     /// ```
+    // TODO(b/264518763): Replace the return type with impl Matcher and reduce
+    // visibility of ConjunctionMatcher once impl in return position in trait
+    // methods is stable.
     fn and<Right: Matcher<T>>(self, right: Right) -> ConjunctionMatcher<Self, Right>
     where
         Self: Sized,
@@ -33,8 +37,10 @@ pub trait AndMatcherExt<T: Debug>: Matcher<T> {
 
 impl<T: Debug, M> AndMatcherExt<T> for M where M: Matcher<T> {}
 
-// This struct should not be used directly, but through the extended method
-// Matcher<T>::and()
+/// Matcher created by [`AndMatcherExt::and`].
+///
+/// **For internal use only. API stablility is not guaranteed!**
+#[doc(hidden)]
 pub struct ConjunctionMatcher<M1, M2> {
     m1: M1,
     m2: M2,
