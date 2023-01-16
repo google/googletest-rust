@@ -14,9 +14,8 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, Matcher, MatcherResult};
+use googletest::matcher::{Describe, MatchExplanation, Matcher, MatcherResult};
 use std::fmt::Debug;
-use std::marker::PhantomData;
 
 /// Matches a `Result` containing `Ok` with a value matched by `inner`.
 ///
@@ -26,32 +25,43 @@ use std::marker::PhantomData;
 /// verify_that!(Ok("Some value"), ok(eq("Some other value")))?;   // Fails
 /// ```
 pub fn ok<T: Debug, E: Debug>(inner: impl Matcher<T>) -> impl Matcher<Result<T, E>> {
-    OkMatcher { inner, phantom_t: Default::default(), phantom_e: Default::default() }
+    OkMatcher { inner }
 }
 
-struct OkMatcher<T, E, InnerMatcherT> {
+struct OkMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
-    phantom_t: PhantomData<T>,
-    phantom_e: PhantomData<E>,
 }
 
 impl<T: Debug, E: Debug, InnerMatcherT: Matcher<T>> Matcher<Result<T, E>>
-    for OkMatcher<T, E, InnerMatcherT>
+    for OkMatcher<InnerMatcherT>
 {
     fn matches(&self, actual: &Result<T, E>) -> MatcherResult {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::DoesNotMatch)
     }
+
+    fn explain_match(&self, actual: &Result<T, E>) -> MatchExplanation {
+        match actual {
+            Ok(o) => MatchExplanation::create(format!(
+                "which is a success containing {o:?}, {}",
+                self.inner.explain_match(o)
+            )),
+            Err(_) => MatchExplanation::create("which is an error".to_string()),
+        }
+    }
 }
 
-impl<T, E, InnerMatcherT: Describe> Describe for OkMatcher<T, E, InnerMatcherT> {
+impl<InnerMatcherT: Describe> Describe for OkMatcher<InnerMatcherT> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => {
-                format!("is ok(x) where x {}", self.inner.describe(MatcherResult::Matches))
+                format!(
+                    "is a success containing a value, which {}",
+                    self.inner.describe(MatcherResult::Matches)
+                )
             }
             MatcherResult::DoesNotMatch => {
                 format!(
-                    "is err(_) or is ok(x) where x {}",
+                    "is an error or a success containing a value, which {}",
                     self.inner.describe(MatcherResult::DoesNotMatch)
                 )
             }
@@ -67,7 +77,7 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{google_test, verify_that, Result};
-    use matchers::eq;
+    use matchers::{contains_substring, displays_as, eq, err};
 
     #[google_test]
     fn ok_matches_result_with_value() -> Result<()> {
@@ -97,5 +107,27 @@ mod tests {
         let result = matcher.matches(&value);
 
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
+    }
+
+    #[google_test]
+    fn ok_full_error_message() -> Result<()> {
+        let result = verify_that!(Ok::<i32, i32>(1), ok(eq(2)));
+
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(
+                "Value of: Ok::<i32, i32>(1)\n\
+                 Expected: is a success containing a value, which is equal to 2\n\
+                 Actual: Ok(1), which is a success containing 1, which isn't equal to 2"
+            )))
+        )
+    }
+
+    #[google_test]
+    fn ok_describe_matches() -> Result<()> {
+        verify_that!(
+            ok::<i32, i32>(eq(1)).describe(MatcherResult::Matches),
+            eq("is a success containing a value, which is equal to 1")
+        )
     }
 }
