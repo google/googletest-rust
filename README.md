@@ -1,5 +1,19 @@
 # GoogleTest Rust
 
+[![crates.io][crates-badge]][crates-url]
+[![docs.rs][docs-badge]][docs-url]
+[![Apache licensed][license-badge]][license-url]
+[![Build Status][actions-badge]][actions-url]
+
+[crates-badge]: https://img.shields.io/crates/v/googletest.svg
+[crates-url]: https://crates.io/crates/googletest
+[docs-badge]: https://img.shields.io/badge/docs.rs-googletest-66c2a5
+[docs-url]: https://docs.rs/googletest/*/googletest/
+[license-badge]: https://img.shields.io/badge/license-Apache-blue.svg
+[license-url]: https://github.com/google/googletest-rust/blob/main/LICENSE
+[actions-badge]: https://github.com/google/googletest-rust/workflows/CI/badge.svg
+[actions-url]: https://github.com/google/googletest-rust/actions?query=workflow%3ACI+branch%3Amaster
+
 This library brings the rich assertion types of Google's C++ testing library
 [GoogleTest](https://github.com/google/googletest) to Rust. It provides:
 
