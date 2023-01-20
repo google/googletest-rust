@@ -62,6 +62,11 @@ path = "integration_tests/expect_that_failure.rs"
 test = false
 
 [[bin]]
+name = "expect_pred_failure"
+path = "integration_tests/expect_pred_failure.rs"
+test = false
+
+[[bin]]
 name = "failure_due_to_fail_macro"
 path = "integration_tests/failure_due_to_fail_macro.rs"
 test = false
@@ -99,6 +104,11 @@ test = false
 [[bin]]
 name = "simple_assertion_failure_with_assert_that"
 path = "integration_tests/simple_assertion_failure_with_assert_that.rs"
+test = false
+
+[[bin]]
+name = "two_expect_pred_failures"
+path = "integration_tests/two_expect_pred_failures.rs"
 test = false
 
 [[bin]]

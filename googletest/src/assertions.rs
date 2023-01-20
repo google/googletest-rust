@@ -263,6 +263,30 @@ macro_rules! expect_that {
     }};
 }
 
+/// Asserts that the given predicate applied to the given arguments returns
+/// true, failing the test but continuing execution if not.
+///
+/// This is a *non-fatal* predicate assertion: the test
+/// continues execution in the event of assertion failure.
+///
+/// This can only be invoked inside tests with the
+/// [`google_test`][crate::google_test] attribute. The assertion must occur in
+/// the same thread as that running the test itself.
+///
+/// Invoking this macro is equivalent to using
+/// [`and_log_failure`](crate::GoogleTestSupport::and_log_failure) as follows:
+///
+/// ```rust
+/// verify_pred!(predicate(...)).and_log_failure()
+/// ```
+#[macro_export]
+macro_rules! expect_pred {
+    ($($content:tt)*) => {{
+        use $crate::GoogleTestSupport;
+        $crate::verify_pred!($($content)*).and_log_failure();
+    }};
+}
+
 /// Functions for use only by the procedural macros in this module.
 ///
 /// **For internal use only. API stablility is not guaranteed!**

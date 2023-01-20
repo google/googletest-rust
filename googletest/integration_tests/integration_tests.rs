@@ -19,8 +19,8 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::{all, matchers};
     use googletest::{
-        assert_that, expect_that, google_test, verify_pred, verify_that, GoogleTestSupport,
-        MapErrorToTestFailure, Result,
+        assert_that, expect_pred, expect_that, google_test, verify_pred, verify_that,
+        GoogleTestSupport, MapErrorToTestFailure, Result,
     };
     #[cfg(google3)]
     use matchers::all;
@@ -250,6 +250,12 @@ Actual: 2, which isn't equal to 3
     }
 
     #[google_test]
+    fn should_verify_predicate_with_success_using_expect_pred() -> Result<()> {
+        expect_pred!(eq_predicate(1, 1));
+        Ok(())
+    }
+
+    #[google_test]
     fn verify_pred_should_fail_test_on_failure() -> Result<()> {
         let status =
             run_external_process("verify_predicate_with_failure").status().err_to_test_failure()?;
@@ -282,6 +288,13 @@ eq_predicate(a, b) was false with
     }
 
     #[google_test]
+    fn expect_pred_should_fail_test_on_failure() -> Result<()> {
+        let status = run_external_process("expect_pred_failure").status().err_to_test_failure()?;
+
+        verify_that!(status.success(), eq(false))
+    }
+
+    #[google_test]
     fn assert_pred_should_output_correct_failure_message() -> Result<()> {
         let output = run_external_process_in_tests_directory("assert_predicate_with_failure")?;
 
@@ -292,6 +305,38 @@ eq_predicate(a, b) was false with
 eq_predicate(a, b) was false with
   a = 1,
   b = 2
+"
+            )
+        )
+    }
+
+    #[google_test]
+    fn expect_pred_should_output_correct_failure_message() -> Result<()> {
+        let output = run_external_process_in_tests_directory("expect_pred_failure")?;
+
+        verify_that!(
+            output,
+            contains_substring(
+                "\
+eq_predicate(a, b) was false with
+  a = 1,
+  b = 2
+"
+            )
+        )
+    }
+
+    #[google_test]
+    fn expect_pred_should_output_failure_message_for_second_failure() -> Result<()> {
+        let output = run_external_process_in_tests_directory("two_expect_pred_failures")?;
+
+        verify_that!(
+            output,
+            contains_substring(
+                "\
+eq_predicate(a, b) was false with
+  a = 3,
+  b = 4
 "
             )
         )
