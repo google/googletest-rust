@@ -19,7 +19,8 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::{all, matchers};
     use googletest::{
-        google_test, verify_pred, verify_that, GoogleTestSupport, MapErrorToTestFailure, Result,
+        assert_that, expect_that, google_test, verify_pred, verify_that, GoogleTestSupport,
+        MapErrorToTestFailure, Result,
     };
     #[cfg(google3)]
     use matchers::all;
@@ -30,6 +31,20 @@ mod tests {
     fn should_pass() -> Result<()> {
         let value = 2;
         verify_that!(value, eq(2))
+    }
+
+    #[google_test]
+    fn should_pass_with_assert_that() -> Result<()> {
+        let value = 2;
+        assert_that!(value, eq(2));
+        Ok(())
+    }
+
+    #[google_test]
+    fn should_pass_with_expect_that() -> Result<()> {
+        let value = 2;
+        expect_that!(value, eq(2));
+        Ok(())
     }
 
     #[google_test]
@@ -45,6 +60,13 @@ mod tests {
         let status = run_external_process("simple_assertion_failure_with_assert_that")
             .status()
             .err_to_test_failure()?;
+
+        verify_that!(status.success(), eq(false))
+    }
+
+    #[google_test]
+    fn should_fail_on_assertion_failure_with_expect_that() -> Result<()> {
+        let status = run_external_process("expect_that_failure").status().err_to_test_failure()?;
 
         verify_that!(status.success(), eq(false))
     }
@@ -79,6 +101,41 @@ Value of: value
 Expected: is equal to 3
 Actual: 2, which isn't equal to 3
   at .*googletest/integration_tests/simple_assertion_failure_with_assert_that.rs:[0-9]+:9
+"
+            )
+        )
+    }
+
+    #[google_test]
+    fn should_output_failure_message_on_assertion_failure_with_expect_that() -> Result<()> {
+        let output = run_external_process_in_tests_directory("expect_that_failure")?;
+
+        verify_that!(
+            output,
+            contains_regex(
+                "\
+Value of: value
+Expected: is equal to 3
+Actual: 2, which isn't equal to 3
+  at .*googletest/integration_tests/expect_that_failure.rs:[0-9]+:9
+"
+            )
+        )
+    }
+
+    #[google_test]
+    fn should_output_second_failure_message_on_second_assertion_failure_with_expect_that()
+    -> Result<()> {
+        let output = run_external_process_in_tests_directory("two_expect_that_failures")?;
+
+        verify_that!(
+            output,
+            contains_regex(
+                "\
+Value of: value
+Expected: is equal to 4
+Actual: 2, which isn't equal to 4
+  at .*googletest/integration_tests/two_expect_that_failures.rs:[0-9]+:9
 "
             )
         )

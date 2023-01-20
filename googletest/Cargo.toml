@@ -42,11 +42,6 @@ path = "integration_tests/integration_tests.rs"
 test = false
 
 [[bin]]
-name = "custom_error_message"
-path = "integration_tests/custom_error_message.rs"
-test = false
-
-[[bin]]
 name = "assert_predicate_with_failure"
 path = "integration_tests/assert_predicate_with_failure.rs"
 test = false
@@ -54,6 +49,16 @@ test = false
 [[bin]]
 name = "assertion_failure_in_subroutine"
 path = "integration_tests/assertion_failure_in_subroutine.rs"
+test = false
+
+[[bin]]
+name = "custom_error_message"
+path = "integration_tests/custom_error_message.rs"
+test = false
+
+[[bin]]
+name = "expect_that_failure"
+path = "integration_tests/expect_that_failure.rs"
 test = false
 
 [[bin]]
@@ -94,6 +99,11 @@ test = false
 [[bin]]
 name = "simple_assertion_failure_with_assert_that"
 path = "integration_tests/simple_assertion_failure_with_assert_that.rs"
+test = false
+
+[[bin]]
+name = "two_expect_that_failures"
+path = "integration_tests/two_expect_that_failures.rs"
 test = false
 
 [[bin]]

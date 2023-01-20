@@ -239,6 +239,30 @@ macro_rules! assert_pred {
     };
 }
 
+/// Matches the given value against the given matcher, marking the test as
+/// failed but continuing execution if it does not match.
+///
+/// This is a *non-fatal* assertion: the test continues
+/// execution in the event of assertion failure.
+///
+/// This can only be invoked inside tests with the
+/// [`google_test`][crate::google_test] attribute. The assertion must occur in
+/// the same thread as that running the test itself.
+///
+/// Invoking this macro is equivalent to using
+/// [`and_log_failure`](crate::GoogleTestSupport::and_log_failure) as follows:
+///
+/// ```rust
+/// verify_that!(actual, expected).and_log_failure()
+/// ```
+#[macro_export]
+macro_rules! expect_that {
+    ($actual:expr, $expected:expr) => {{
+        use $crate::GoogleTestSupport;
+        $crate::verify_that!($actual, $expected).and_log_failure();
+    }};
+}
+
 /// Functions for use only by the procedural macros in this module.
 ///
 /// **For internal use only. API stablility is not guaranteed!**
