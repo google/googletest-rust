@@ -12,7 +12,7 @@
 [license-badge]: https://img.shields.io/badge/license-Apache-blue.svg
 [license-url]: https://github.com/google/googletest-rust/blob/main/LICENSE
 [actions-badge]: https://github.com/google/googletest-rust/workflows/CI/badge.svg
-[actions-url]: https://github.com/google/googletest-rust/actions?query=workflow%3ACI+branch%3Amaster
+[actions-url]: https://github.com/google/googletest-rust/actions?query=workflow%3ACI+branch%3Amain
 
 This library brings the rich assertion types of Google's C++ testing library
 [GoogleTest](https://github.com/google/googletest) to Rust. It provides:
