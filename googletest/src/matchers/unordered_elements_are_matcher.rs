@@ -42,7 +42,7 @@
 ///    matchers.
 #[macro_export]
 macro_rules! unordered_elements_are {
-    ($($matcher:expr),*) => {{
+    ($($matcher:expr),* $(,)?) => {{
         #[cfg(google3)]
         use $crate::internal::{UnorderedElementsAre, Requirements};
         #[cfg(not(google3))]
@@ -85,7 +85,7 @@ macro_rules! unordered_elements_are {
 ///    matchers did not have corresponding unique elements in the container.
 #[macro_export]
 macro_rules! contains_each {
-    ($($matcher:expr),*) => {{
+    ($($matcher:expr),* $(,)?) => {{
         #[cfg(google3)]
         use $crate::internal::{UnorderedElementsAre, Requirements};
         #[cfg(not(google3))]
@@ -130,7 +130,7 @@ macro_rules! contains_each {
 ///    container elements did not have corresponding matchers.
 #[macro_export]
 macro_rules! is_contained_in {
-    ($($matcher:expr),*) => {{
+    ($($matcher:expr),* $(,)?) => {{
         #[cfg(google3)]
         use $crate::internal::{UnorderedElementsAre, Requirements};
         #[cfg(not(google3))]
@@ -735,6 +735,12 @@ mod tests {
     }
 
     #[google_test]
+    fn unordered_elements_are_matches_vector_with_trailing_comma() -> Result<()> {
+        let value = vec![1, 2, 3];
+        verify_that!(value, unordered_elements_are![eq(1), eq(2), eq(3),])
+    }
+
+    #[google_test]
     fn unordered_elements_are_matches_size() -> Result<()> {
         let value = vec![1, 2];
         verify_that!(value, not(unordered_elements_are![eq(1), eq(2), eq(3)]))
@@ -812,6 +818,11 @@ Actual: [1, 4, 3], whose element #1 does not match any expected elements and no 
     }
 
     #[google_test]
+    fn contains_each_supports_trailing_comma() -> Result<()> {
+        verify_that!(vec![2, 3, 4], contains_each!(eq(2), eq(3), eq(4),))
+    }
+
+    #[google_test]
     fn contains_each_matches_when_no_matchers_present() -> Result<()> {
         verify_that!(vec![2, 3, 4], contains_each!())
     }
@@ -865,6 +876,11 @@ Actual: [1, 4, 3], whose element #1 does not match any expected elements and no 
     #[google_test]
     fn is_contained_in_matches_when_one_to_one_correspondence_present() -> Result<()> {
         verify_that!(vec![2, 3, 4], is_contained_in!(eq(2), eq(3), eq(4)))
+    }
+
+    #[google_test]
+    fn is_contained_supports_trailing_comma() -> Result<()> {
+        verify_that!(vec![2, 3, 4], is_contained_in!(eq(2), eq(3), eq(4),))
     }
 
     #[google_test]

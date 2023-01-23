@@ -21,7 +21,7 @@
 /// Do not use with unordered containers. Prefer unordered_elements_are!(...).
 #[macro_export]
 macro_rules! elements_are {
-    ($($matcher:expr),*) => {{
+    ($($matcher:expr),* $(,)?) => {{
         #[cfg(google3)]
         use $crate::internal::ElementsAre;
         #[cfg(not(google3))]
@@ -126,6 +126,12 @@ mod tests {
     fn elements_are_matches_vector() -> Result<()> {
         let value = vec![1, 2, 3];
         verify_that!(value, elements_are![eq(1), eq(2), eq(3)])
+    }
+
+    #[google_test]
+    fn elements_are_supports_trailing_comma() -> Result<()> {
+        let value = vec![1, 2, 3];
+        verify_that!(value, elements_are![eq(1), eq(2), eq(3),])
     }
 
     #[google_test]
