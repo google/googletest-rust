@@ -146,7 +146,7 @@ mod tests {
         let matcher = starts_with("\n");
 
         verify_that!(
-            <StartsWithMatcher<&str> as Matcher<&str>>::describe(&matcher, MatcherResult::Matches),
+            Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
             eq("starts with prefix \"\\n\"")
         )
     }

@@ -187,10 +187,7 @@ mod tests {
         let matcher = matches_regex("\n");
 
         verify_that!(
-            <MatchesRegexMatcher<&str> as Matcher<&str>>::describe(
-                &matcher,
-                MatcherResult::Matches
-            ),
+            Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
             eq("matches the regular expression \"\\n\"")
         )
     }

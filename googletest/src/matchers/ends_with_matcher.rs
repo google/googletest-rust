@@ -135,7 +135,7 @@ mod tests {
         let matcher = ends_with("\n");
 
         verify_that!(
-            <EndsWithMatcher<&str> as Matcher<&str>>::describe(&matcher, MatcherResult::Matches),
+            Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
             eq("ends with suffix \"\\n\"")
         )
     }

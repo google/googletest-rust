@@ -162,10 +162,7 @@ mod tests {
         let matcher = eq_ignoring_ascii_case("\n");
 
         verify_that!(
-            <EqIgnoringCaseMatcher<&str> as Matcher<&str>>::describe(
-                &matcher,
-                MatcherResult::Matches
-            ),
+            Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
             eq("is equal to \"\\n\" (ignoring case)")
         )
     }

@@ -127,10 +127,7 @@ mod tests {
         let matcher = contains_substring("\n");
 
         verify_that!(
-            <ContainsSubstringMatcher<&str> as Matcher<&str>>::describe(
-                &matcher,
-                MatcherResult::Matches
-            ),
+            Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
             eq("contains substring \"\\n\"")
         )
     }
