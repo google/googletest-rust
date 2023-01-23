@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// There are no visible documentation elements in this module; the declarative
+// macro is documented at the top level.
+#![doc(hidden)]
+
 /// Matches a value according to a pattern of matchers.
 ///
 /// This can be used to match arbitrary combinations of fields on structures

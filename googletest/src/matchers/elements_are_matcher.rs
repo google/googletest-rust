@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// There are no visible documentation elements in this module; the declarative
+// macro is documented at the top level.
+#![doc(hidden)]
+
 /// Matches a container's elements to each matcher in order.
 ///
 /// ```rust

@@ -12,5 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#![doc(hidden)]
+
 pub mod source_location;
 pub mod test_outcome;
