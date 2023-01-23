@@ -182,11 +182,11 @@ macro_rules! verify_pred {
 /// [`and_log_failure`](crate::GoogleTestSupport::and_log_failure).
 #[macro_export]
 macro_rules! fail {
-    ($($message:expr),+) => {
-        // Put this in an if block to instruct the compiler what both branches of the Result are.
-        // Otherwise the compiler complains that it does not know the full type of the expression
-        // result.
-        if true {
+    ($($message:expr),+) => {{
+        // We wrap this in a function so that we can annotate it with the must_use attribute.
+        // must_use on expressions is still experimental.
+        #[must_use = "The assertion result must be evaluated to affect the test result."]
+        fn create_fail_result() -> $crate::Result<()> {
             Err($crate::internal::test_outcome::TestAssertionFailure::create(format!(
                 "{}\n{}",
                 format!($($message),*),
@@ -196,10 +196,9 @@ macro_rules! fail {
                     column!(),
                 ),
             )))
-        } else {
-            Ok(())
         }
-    };
+        create_fail_result()
+    }};
 
     () => { fail!("Test failed") };
 }
@@ -305,6 +304,7 @@ pub mod internal {
     /// match.
     ///
     /// **For internal use only. API stablility is not guaranteed!**
+    #[must_use = "The assertion result must be evaluated to affect the test result."]
     pub fn check_matcher<T: Debug + ?Sized>(
         actual: &T,
         expected: impl Matcher<T>,
@@ -325,6 +325,7 @@ pub mod internal {
     /// This intended only for use by the macro [`crate::verify_pred`].
     ///
     /// **For internal use only. API stablility is not guaranteed!**
+    #[must_use = "The assertion result must be evaluated to affect the test result."]
     pub fn report_failed_predicate(
         actual_expr: &'static str,
         formatted_arguments: Vec<String>,
