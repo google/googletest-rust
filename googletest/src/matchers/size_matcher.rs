@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, Matcher, MatcherResult};
+use googletest::matcher::{Matcher, MatcherResult};
 #[cfg(not(google3))]
 use googletest::matchers::has_size::HasSize;
 #[cfg(google3)]
@@ -42,9 +42,7 @@ impl<T: Debug + HasSize, E: Matcher<usize>> Matcher<T> for SizeMatcher<E> {
     fn matches(&self, actual: &T) -> MatcherResult {
         self.expected.matches(&actual.size())
     }
-}
 
-impl<E: Describe> Describe for SizeMatcher<E> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => {

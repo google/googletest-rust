@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, Matcher, MatcherResult};
+use googletest::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 
 /// Matches the actual value exactly when the inner matcher does _not_ match.
@@ -38,9 +38,7 @@ impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<T> for NotMatcher<InnerMatcher
             MatcherResult::DoesNotMatch => MatcherResult::Matches,
         }
     }
-}
 
-impl<InnerMatcherT: Describe> Describe for NotMatcher<InnerMatcherT> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         self.inner
             .describe(matcher_result.pick(MatcherResult::DoesNotMatch, MatcherResult::Matches))

@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, MatchExplanation, Matcher, MatcherResult};
+use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -75,9 +75,7 @@ impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ValueT>>
             MatchExplanation::create(format!("which doesn't contain key {:?}", self.key))
         }
     }
-}
 
-impl<KeyT: Debug, MatcherT: Describe> Describe for HasEntryMatcher<KeyT, MatcherT> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => format!(

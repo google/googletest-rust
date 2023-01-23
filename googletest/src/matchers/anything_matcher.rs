@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, Matcher, MatcherResult};
+use googletest::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 
 /// Matches anything. This matcher always succeeds.
@@ -36,9 +36,7 @@ impl<T: Debug + ?Sized> Matcher<T> for Anything {
     fn matches(&self, _: &T) -> MatcherResult {
         MatcherResult::Matches
     }
-}
 
-impl Describe for Anything {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => "is anything".to_string(),

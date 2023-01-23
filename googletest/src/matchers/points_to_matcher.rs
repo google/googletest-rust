@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, Matcher, MatcherResult};
+use googletest::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 use std::ops::Deref;
 
@@ -49,9 +49,7 @@ where
     fn matches(&self, actual: &ActualT) -> MatcherResult {
         self.expected.matches(actual.deref())
     }
-}
 
-impl<MatcherT: Describe> Describe for PointsToMatcher<MatcherT> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         self.expected.describe(matcher_result)
     }

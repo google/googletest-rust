@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, MatchExplanation, Matcher, MatcherResult};
+use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
 use std::fmt::Debug;
 
 /// Extension trait providing the [`and`][AndMatcherExt::and] method.
@@ -68,9 +68,7 @@ impl<T: Debug, M1: Matcher<T>, M2: Matcher<T>> Matcher<T> for ConjunctionMatcher
             ),
         }
     }
-}
 
-impl<M1: Describe, M2: Describe> Describe for ConjunctionMatcher<M1, M2> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         format!("{}, and {}", self.m1.describe(matcher_result), self.m2.describe(matcher_result))
     }

@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, Matcher, MatcherResult};
+use googletest::matcher::{Matcher, MatcherResult};
 use num_traits::float::Float;
 use std::fmt::Debug;
 
@@ -29,9 +29,7 @@ impl<T: Float + Debug> Matcher<T> for IsNanMatcher {
     fn matches(&self, actual: &T) -> MatcherResult {
         if actual.is_nan() { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
     }
-}
 
-impl Describe for IsNanMatcher {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         matcher_result.pick("is NaN", "isn't NaN").to_string()
     }

@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, Matcher, MatcherResult};
+use googletest::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 use std::ops::Deref;
 
@@ -75,9 +75,7 @@ where
             MatcherResult::DoesNotMatch
         }
     }
-}
 
-impl<ExpectedT: Deref<Target = str>> Describe for EqIgnoringCaseMatcher<ExpectedT> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => {
@@ -97,7 +95,7 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{google_test, matcher::Matcher, verify_that, Result};
     use matchers::eq;
 
     #[google_test]
@@ -164,7 +162,10 @@ mod tests {
         let matcher = eq_ignoring_ascii_case("\n");
 
         verify_that!(
-            matcher.describe(MatcherResult::Matches),
+            <EqIgnoringCaseMatcher<&str> as Matcher<&str>>::describe(
+                &matcher,
+                MatcherResult::Matches
+            ),
             eq("is equal to \"\\n\" (ignoring case)")
         )
     }

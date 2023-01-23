@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, Matcher, MatcherResult};
+use googletest::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
@@ -36,9 +36,7 @@ impl<T: Debug> Matcher<Option<T>> for NoneMatcher<T> {
     fn matches(&self, actual: &Option<T>) -> MatcherResult {
         if actual.is_none() { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
     }
-}
 
-impl<T: Debug> Describe for NoneMatcher<T> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => "is none".to_string(),

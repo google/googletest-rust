@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, MatchExplanation, Matcher, MatcherResult};
+use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
 use std::fmt::Debug;
 use std::iter::zip;
 
@@ -92,6 +92,10 @@ where
     fn explain_match(&self, actual: &ContainerT) -> MatchExplanation {
         self.explain_match_impl(actual)
     }
+
+    fn describe(&self, matcher_result: MatcherResult) -> String {
+        self.describe_impl(matcher_result)
+    }
 }
 
 impl<T: PartialEq + Debug, const N: usize> Matcher<Vec<T>> for ContainerEqMatcher<[T; N]> {
@@ -106,6 +110,10 @@ impl<T: PartialEq + Debug, const N: usize> Matcher<Vec<T>> for ContainerEqMatche
     fn explain_match(&self, actual: &Vec<T>) -> MatchExplanation {
         self.explain_match_impl(actual)
     }
+
+    fn describe(&self, matcher_result: MatcherResult) -> String {
+        self.describe_impl(matcher_result)
+    }
 }
 
 impl<T: PartialEq + Debug, const N: usize> Matcher<[T]> for ContainerEqMatcher<[T; N]> {
@@ -115,6 +123,10 @@ impl<T: PartialEq + Debug, const N: usize> Matcher<[T]> for ContainerEqMatcher<[
 
     fn explain_match(&self, actual: &[T]) -> MatchExplanation {
         self.explain_match_impl(actual)
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> String {
+        self.describe_impl(matcher_result)
     }
 }
 
@@ -136,6 +148,10 @@ impl<const N: usize> Matcher<Vec<String>> for ContainerEqMatcher<[&str; N]> {
             self.get_missing_str_items(actual),
             self.get_unexpected_string_items(actual),
         )
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> String {
+        self.describe_impl(matcher_result)
     }
 }
 
@@ -168,6 +184,15 @@ where
             .into_iter()
             .filter(|i| self.expected.into_iter().find(|j| j == i).is_none())
             .collect()
+    }
+}
+
+impl<ExpectedT: Debug> ContainerEqMatcher<ExpectedT> {
+    fn describe_impl(&self, matcher_result: MatcherResult) -> String {
+        match matcher_result {
+            MatcherResult::Matches => format!("is equal to {:?}", self.expected),
+            MatcherResult::DoesNotMatch => format!("isn't equal to {:?}", self.expected),
+        }
     }
 }
 
@@ -219,15 +244,6 @@ impl<const N: usize> ContainerEqMatcher<[&str; N]> {
             .into_iter()
             .filter(|i| self.expected.into_iter().find(|j| j == &i.as_str()).is_none())
             .collect()
-    }
-}
-
-impl<T: Debug> Describe for ContainerEqMatcher<T> {
-    fn describe(&self, matcher_result: MatcherResult) -> String {
-        match matcher_result {
-            MatcherResult::Matches => format!("is equal to {:?}", self.expected),
-            MatcherResult::DoesNotMatch => format!("isn't equal to {:?}", self.expected),
-        }
     }
 }
 

@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, Matcher, MatcherResult};
+use googletest::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 use std::ops::Deref;
 
@@ -60,9 +60,7 @@ where
             MatcherResult::DoesNotMatch
         }
     }
-}
 
-impl<SubstringT: Deref<Target = str>> Describe for ContainsSubstringMatcher<SubstringT> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => format!("contains substring {:#?}", self.substring.deref()),
@@ -128,6 +126,12 @@ mod tests {
     fn contains_substring_displays_quoted_debug_of_substring() -> Result<()> {
         let matcher = contains_substring("\n");
 
-        verify_that!(matcher.describe(MatcherResult::Matches), eq("contains substring \"\\n\""))
+        verify_that!(
+            <ContainsSubstringMatcher<&str> as Matcher<&str>>::describe(
+                &matcher,
+                MatcherResult::Matches
+            ),
+            eq("contains substring \"\\n\"")
+        )
     }
 }

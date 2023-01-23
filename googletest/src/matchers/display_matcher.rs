@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, MatchExplanation, Matcher, MatcherResult};
+use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
 use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 
@@ -46,9 +46,7 @@ impl<T: Debug + Display, InnerMatcher: Matcher<String>> Matcher<T>
     fn explain_match(&self, actual: &T) -> MatchExplanation {
         MatchExplanation::create(format!("which displays as \"{}\"", actual))
     }
-}
 
-impl<T, InnerMatcherT: Matcher<String>> Describe for DisplayMatcher<T, InnerMatcherT> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => {

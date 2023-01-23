@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, MatchExplanation, Matcher, MatcherResult};
+use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
 use std::fmt::Debug;
 
 /// Matches a `Result` containing `Err` with a value matched by `inner`.
@@ -48,9 +48,7 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<E>> Matcher<Result<T, E>>
             Ok(_) => MatchExplanation::create("which is a success".to_string()),
         }
     }
-}
 
-impl<InnerMatcherT: Describe> Describe for ErrMatcher<InnerMatcherT> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => {

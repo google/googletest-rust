@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, Matcher, MatcherResult};
+use googletest::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 
 /// Matches an empty container.
@@ -55,9 +55,7 @@ where
             MatcherResult::DoesNotMatch
         }
     }
-}
 
-impl Describe for EmptyMatcher {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         matcher_result.pick("is empty", "isn't empty").to_string()
     }

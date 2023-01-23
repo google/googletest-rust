@@ -95,7 +95,7 @@ macro_rules! field {
 pub mod internal {
     #[cfg(not(google3))]
     use crate as googletest;
-    use googletest::matcher::{Describe, Matcher, MatcherResult};
+    use googletest::matcher::{Matcher, MatcherResult};
     use std::fmt::Debug;
 
     /// Creates a matcher to verify a specific field of the actual struct using
@@ -125,9 +125,7 @@ pub mod internal {
                 MatcherResult::DoesNotMatch
             }
         }
-    }
 
-    impl<O, I, M: Describe> Describe for FieldMatcher<O, I, M> {
         fn describe(&self, matcher_result: MatcherResult) -> String {
             format!(
                 "has field `{}`, which {}",
@@ -142,7 +140,7 @@ pub mod internal {
 mod tests {
     #[cfg(not(google3))]
     use crate as googletest;
-    use googletest::matcher::{Describe, MatcherResult};
+    use googletest::matcher::{Matcher, MatcherResult};
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{google_test, verify_that, Result};

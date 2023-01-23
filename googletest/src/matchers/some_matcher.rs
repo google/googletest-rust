@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, MatchExplanation, Matcher, MatcherResult};
+use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
 use std::fmt::Debug;
 
 /// Matches an `Option` containing a value matched by `inner`.
@@ -46,9 +46,7 @@ impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<Option<T>> for SomeMatcher<Inn
             (_, None) => MatchExplanation::create("which is none".to_string()),
         }
     }
-}
 
-impl<InnerMatcherT: Describe> Describe for SomeMatcher<InnerMatcherT> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => {

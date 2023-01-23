@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, Matcher, MatcherResult};
+use googletest::matcher::{Matcher, MatcherResult};
 use num_traits::{Float, FloatConst};
 use std::fmt::Debug;
 
@@ -130,9 +130,7 @@ impl<T: Debug + Float> Matcher<T> for NearMatcher<T> {
             MatcherResult::DoesNotMatch
         }
     }
-}
 
-impl<T: Debug> Describe for NearMatcher<T> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => {

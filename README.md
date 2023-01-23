@@ -131,8 +131,7 @@ fn struct_has_expected_values() -> Result<()> {
 ## Writing matchers
 
 One can extend the library by writing additional matchers. To do so, create a
-struct holding the matcher's data and have it implement the traits [`Matcher`]
-and [`Describe`]:
+struct holding the matcher's data and have it implement the trait [`Matcher`]:
 
 ```rust
 struct MyEqMatcher<T> {
@@ -143,9 +142,7 @@ impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
     fn matches(&self, actual: &A) -> MatcherResult {
         if self.expected == *actual { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
     }
-}
 
-impl<T: Debug> Describe for MyEqMatcher<T> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => {

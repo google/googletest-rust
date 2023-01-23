@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, Matcher, MatcherResult};
+use googletest::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 
 /// Matches a value equal (in the sense of `==`) to `expected`.
@@ -65,9 +65,7 @@ impl<A: Debug, T: PartialEq<A> + Debug> Matcher<A> for EqMatcher<T> {
     fn matches(&self, actual: &A) -> MatcherResult {
         if self.expected == *actual { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
     }
-}
 
-impl<T: Debug> Describe for EqMatcher<T> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => format!("is equal to {:?}", self.expected),

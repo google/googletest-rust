@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, MatchExplanation, Matcher, MatcherResult};
+use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
 use std::fmt::Debug;
 
 /// Matches an iterable type whose elements contain a value matched by `inner`.
@@ -97,9 +97,7 @@ where
             (_, None) => MatchExplanation::create("which contains a matching element".to_string()),
         }
     }
-}
 
-impl<InnerMatcherT: Describe> Describe for ContainsMatcher<InnerMatcherT> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match (matcher_result, &self.count) {
             (MatcherResult::Matches, Some(count)) => format!(
@@ -146,7 +144,7 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{google_test, matcher::Matcher, verify_that, Result};
     use matchers::{displays_as, eq};
 
     #[google_test]
@@ -226,7 +224,7 @@ mod tests {
         let matcher = contains(eq(1));
 
         verify_that!(
-            matcher.describe(MatcherResult::Matches),
+            <ContainsMatcher<_> as Matcher<Vec<i32>>>::describe(&matcher, MatcherResult::Matches),
             eq("contains at least one element which is equal to 1")
         )
     }
@@ -236,7 +234,7 @@ mod tests {
         let matcher = contains(eq(1)).times(eq(2));
 
         verify_that!(
-            matcher.describe(MatcherResult::Matches),
+            <ContainsMatcher<_> as Matcher<Vec<i32>>>::describe(&matcher, MatcherResult::Matches),
             eq("contains n elements which is equal to 1\n  where n is equal to 2")
         )
     }

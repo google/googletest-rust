@@ -54,7 +54,7 @@ pub mod internal {
     use crate as googletest;
     #[cfg(google3)]
     use anything_matcher::anything;
-    use googletest::matcher::{Describe, MatchExplanation, Matcher, MatcherResult};
+    use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
     #[cfg(not(google3))]
     use googletest::matchers::anything;
     use std::fmt::Debug;
@@ -107,9 +107,7 @@ pub mod internal {
                 }
             }
         }
-    }
 
-    impl<'a, T: Debug + ?Sized, const N: usize> Describe for AllMatcher<'a, T, N> {
         fn describe(&self, matcher_result: MatcherResult) -> String {
             match N {
                 0 => anything::<T>().describe(matcher_result),
@@ -130,10 +128,13 @@ mod tests {
     use super::*;
     #[cfg(not(google3))]
     use crate as googletest;
-    use googletest::matcher::{Describe, MatcherResult};
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, matcher::Matcher, verify_that, Result};
+    use googletest::{
+        google_test,
+        matcher::{Matcher, MatcherResult},
+        verify_that, Result,
+    };
     use matchers::{contains_substring, displays_as, ends_with, eq, not, starts_with};
 
     #[google_test]

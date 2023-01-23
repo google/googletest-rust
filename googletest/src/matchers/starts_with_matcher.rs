@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, MatchExplanation, Matcher, MatcherResult};
+use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
 use std::fmt::Debug;
 use std::ops::Deref;
 
@@ -70,8 +70,7 @@ where
             )),
         }
     }
-}
-impl<PrefixT: Deref<Target = str>> Describe for StartsWithMatcher<PrefixT> {
+
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => format!("starts with prefix {:#?}", self.prefix.deref()),
@@ -89,7 +88,7 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{google_test, matcher::Matcher, verify_that, Result};
     use matchers::eq;
 
     #[google_test]
@@ -146,6 +145,9 @@ mod tests {
     fn starts_with_displays_quoted_debug_of_substring() -> Result<()> {
         let matcher = starts_with("\n");
 
-        verify_that!(matcher.describe(MatcherResult::Matches), eq("starts with prefix \"\\n\""))
+        verify_that!(
+            <StartsWithMatcher<&str> as Matcher<&str>>::describe(&matcher, MatcherResult::Matches),
+            eq("starts with prefix \"\\n\"")
+        )
     }
 }

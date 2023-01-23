@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, MatchExplanation, Matcher, MatcherResult};
+use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
 use std::fmt::Debug;
 
 /// Matches a container all of whose items are in the given container
@@ -103,9 +103,7 @@ where
             )),
         }
     }
-}
 
-impl<T: Debug> Describe for SubsetOfMatcher<T> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => format!("is a subset of {:?}", self.superset),

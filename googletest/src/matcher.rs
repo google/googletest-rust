@@ -17,7 +17,7 @@ use crate::internal::test_outcome::TestAssertionFailure;
 use std::fmt::{Debug, Display, Formatter, Result};
 
 /// An interface for checking an arbitrary condition on a datum.
-pub trait Matcher<T: Debug + ?Sized>: Describe {
+pub trait Matcher<T: Debug + ?Sized> {
     /// Returns whether the condition matches the datum `actual`.
     ///
     /// The trait implementation defines what it means to "match". Often the
@@ -34,10 +34,7 @@ pub trait Matcher<T: Debug + ?Sized>: Describe {
     fn explain_match(&self, actual: &T) -> MatchExplanation {
         MatchExplanation::create(format!("which {}", self.describe(self.matches(actual))))
     }
-}
 
-/// An interface to describe matchers, depending on `matcher_result`.
-pub trait Describe {
     /// Returns a description of `self` or a negative description if
     /// `matcher_result` is `DoesNotMatch`.
     ///

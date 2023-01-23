@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, Matcher, MatcherResult};
+use googletest::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 use std::ops::Deref;
 
@@ -59,9 +59,7 @@ where
             MatcherResult::DoesNotMatch
         }
     }
-}
 
-impl<SuffixT: Deref<Target = str>> Describe for EndsWithMatcher<SuffixT> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => format!("ends with suffix {:#?}", self.suffix.deref()),
@@ -79,7 +77,7 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{google_test, matcher::Matcher, verify_that, Result};
     use matchers::eq;
 
     #[google_test]
@@ -136,6 +134,9 @@ mod tests {
     fn ends_with_displays_quoted_debug_of_substring() -> Result<()> {
         let matcher = ends_with("\n");
 
-        verify_that!(matcher.describe(MatcherResult::Matches), eq("ends with suffix \"\\n\""))
+        verify_that!(
+            <EndsWithMatcher<&str> as Matcher<&str>>::describe(&matcher, MatcherResult::Matches),
+            eq("ends with suffix \"\\n\"")
+        )
     }
 }

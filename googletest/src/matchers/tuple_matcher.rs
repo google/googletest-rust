@@ -263,7 +263,7 @@ macro_rules! tuple {
 pub mod internal {
     #[cfg(not(google3))]
     use crate as googletest;
-    use googletest::matcher::{Describe, MatchExplanation, Matcher, MatcherResult};
+    use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
     use std::fmt::{Debug, Write};
 
     /// Replaces the first expression with the second at compile time.
@@ -317,9 +317,7 @@ pub mod internal {
                     })*
                     MatchExplanation::create(explanation)
                 }
-            }
 
-            impl<$($matcher_type: Describe),*> Describe for $name<$($matcher_type),*> {
                 fn describe(&self, matcher_result: MatcherResult) -> String {
                     match matcher_result {
                         MatcherResult::Matches => {
@@ -463,7 +461,7 @@ mod tests {
     use googletest::matchers;
     use googletest::{
         google_test,
-        matcher::{Describe, Matcher, MatcherResult},
+        matcher::{Matcher, MatcherResult},
         verify_that, Result,
     };
     use matchers::{displays_as, eq, not};

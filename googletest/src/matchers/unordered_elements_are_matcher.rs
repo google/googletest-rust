@@ -150,7 +150,7 @@ macro_rules! is_contained_in {
 pub mod internal {
     #[cfg(not(google3))]
     use crate as googletest;
-    use googletest::matcher::{Describe, MatchExplanation, Matcher, MatcherResult};
+    use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
     #[cfg(not(google3))]
     use googletest::matchers::has_size::HasSize;
     #[cfg(google3)]
@@ -320,9 +320,7 @@ pub mod internal {
                 MatchExplanation::create("whose elements all match".to_string())
             }
         }
-    }
 
-    impl<'a, T: Debug, const N: usize> Describe for UnorderedElementsAre<'a, T, N> {
         fn describe(&self, matcher_result: MatcherResult) -> String {
             format!(
                 "{} elements matching in any order:\n{}",

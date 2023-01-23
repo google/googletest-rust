@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, Matcher, MatcherResult};
+use googletest::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 
 /// Matches a value greater (in the sense of `>`) than `expected`.
@@ -62,9 +62,7 @@ impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher<ActualT>
     fn matches(&self, actual: &ActualT) -> MatcherResult {
         if *actual > self.expected { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
     }
-}
 
-impl<ExpectedT: Debug> Describe for GtMatcher<ExpectedT> {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => format!("is greater than {:?}", self.expected),

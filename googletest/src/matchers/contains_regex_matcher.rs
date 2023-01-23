@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Describe, Matcher, MatcherResult};
+use googletest::matcher::{Matcher, MatcherResult};
 use regex::Regex;
 use std::fmt::Debug;
 use std::ops::Deref;
@@ -60,9 +60,7 @@ impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher<ActualT> for ContainsRegexMat
             MatcherResult::DoesNotMatch
         }
     }
-}
 
-impl Describe for ContainsRegexMatcher {
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => {
@@ -82,7 +80,7 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{google_test, matcher::Matcher, verify_that, Result};
     use matchers::eq;
 
     #[google_test]
@@ -131,7 +129,7 @@ mod tests {
         let matcher = contains_regex("\n");
 
         verify_that!(
-            matcher.describe(MatcherResult::Matches),
+            <ContainsRegexMatcher as Matcher<&str>>::describe(&matcher, MatcherResult::Matches),
             eq("contains the regular expression \"\\n\"")
         )
     }
