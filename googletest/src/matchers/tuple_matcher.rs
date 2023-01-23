@@ -259,8 +259,8 @@ macro_rules! tuple {
 pub mod internal {
     #[cfg(not(google3))]
     use crate as googletest;
-    use googletest::matcher::{Describe, Matcher, MatcherResult};
-    use std::fmt::Debug;
+    use googletest::matcher::{Describe, MatchExplanation, Matcher, MatcherResult};
+    use std::fmt::{Debug, Write};
 
     /// Replaces the first expression with the second at compile time.
     ///
@@ -296,6 +296,22 @@ pub mod internal {
                         }
                     })*
                     MatcherResult::Matches
+                }
+
+                fn explain_match(&self, actual: &($($field_type,)*)) -> MatchExplanation {
+                    let mut explanation = format!("which {}", self.describe(self.matches(actual)));
+                    $(match self.$field_number.matches(&actual.$field_number) {
+                        MatcherResult::Matches => {},
+                        MatcherResult::DoesNotMatch => {
+                            writeln!(
+                                &mut explanation,
+                                concat!("Element #", $field_number, " is {:?}, {}"),
+                                actual.$field_number,
+                                self.$field_number.explain_match(&actual.$field_number)
+                            ).unwrap();
+                        }
+                    })*
+                    MatchExplanation::create(explanation)
                 }
             }
 
@@ -443,10 +459,10 @@ mod tests {
     use googletest::matchers;
     use googletest::{
         google_test,
-        matcher::{Describe, MatcherResult},
+        matcher::{Describe, Matcher, MatcherResult},
         verify_that, Result,
     };
-    use matchers::{eq, not};
+    use matchers::{displays_as, eq, not};
 
     #[google_test]
     fn empty_matcher_matches_empty_tuple() -> Result<()> {
@@ -685,6 +701,33 @@ is a tuple whose values do not respectively match:
   is equal to 1,
   is equal to 2,
 ")
+        )
+    }
+
+    #[google_test]
+    fn describe_match_shows_which_tuple_element_did_not_match() -> Result<()> {
+        verify_that!(
+            tuple!(eq(1), eq(2)).explain_match(&(1, 3)),
+            displays_as(eq("\
+which is a tuple whose values do not respectively match:
+  is equal to 1,
+  is equal to 2,
+Element #1 is 3, which isn't equal to 2
+"))
+        )
+    }
+
+    #[google_test]
+    fn describe_match_shows_which_two_tuple_elements_did_not_match() -> Result<()> {
+        verify_that!(
+            tuple!(eq(1), eq(2)).explain_match(&(2, 3)),
+            displays_as(eq("\
+which is a tuple whose values do not respectively match:
+  is equal to 1,
+  is equal to 2,
+Element #0 is 2, which isn't equal to 1
+Element #1 is 3, which isn't equal to 2
+"))
         )
     }
 }
