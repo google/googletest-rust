@@ -186,10 +186,10 @@ macro_rules! fail {
         // We wrap this in a function so that we can annotate it with the must_use attribute.
         // must_use on expressions is still experimental.
         #[must_use = "The assertion result must be evaluated to affect the test result."]
-        fn create_fail_result() -> $crate::Result<()> {
+        fn create_fail_result(message: String) -> $crate::Result<()> {
             Err($crate::internal::test_outcome::TestAssertionFailure::create(format!(
                 "{}\n{}",
-                format!($($message),*),
+                message,
                 $crate::internal::source_location::SourceLocation::new(
                     file!(),
                     line!(),
@@ -197,7 +197,7 @@ macro_rules! fail {
                 ),
             )))
         }
-        create_fail_result()
+        create_fail_result(format!($($message),*))
     }};
 
     () => { fail!("Test failed") };

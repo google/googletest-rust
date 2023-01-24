@@ -20,7 +20,8 @@ mod tests {
 
     #[google_test]
     fn just_fails() -> Result<()> {
-        fail!("Failure message with argument: {}", "An argument").and_log_failure();
+        let argument = "An argument";
+        fail!("Failure message with argument: {argument}").and_log_failure();
         Ok(())
     }
 }
