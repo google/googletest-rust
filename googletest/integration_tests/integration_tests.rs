@@ -20,7 +20,7 @@ mod tests {
     use googletest::{all, matchers};
     use googletest::{
         assert_that, expect_pred, expect_that, google_test, verify_pred, verify_that,
-        GoogleTestSupport, MapErrorToTestFailure, Result,
+        GoogleTestSupport, Result,
     };
     #[cfg(google3)]
     use matchers::all;
@@ -49,24 +49,21 @@ mod tests {
 
     #[google_test]
     fn should_fail_on_assertion_failure() -> Result<()> {
-        let status =
-            run_external_process("simple_assertion_failure").status().err_to_test_failure()?;
+        let status = run_external_process("simple_assertion_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
     #[google_test]
     fn should_fail_on_assertion_failure_with_assert_that() -> Result<()> {
-        let status = run_external_process("simple_assertion_failure_with_assert_that")
-            .status()
-            .err_to_test_failure()?;
+        let status = run_external_process("simple_assertion_failure_with_assert_that").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
     #[google_test]
     fn should_fail_on_assertion_failure_with_expect_that() -> Result<()> {
-        let status = run_external_process("expect_that_failure").status().err_to_test_failure()?;
+        let status = run_external_process("expect_that_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
@@ -143,25 +140,21 @@ Actual: 2, which isn't equal to 4
 
     #[google_test]
     fn should_fail_due_to_assertion_failure_in_subroutine() -> Result<()> {
-        let status =
-            run_external_process("simple_assertion_failure").status().err_to_test_failure()?;
+        let status = run_external_process("simple_assertion_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
     #[google_test]
     fn should_fail_due_to_returned_error_in_subroutine() -> Result<()> {
-        let status =
-            run_external_process("failure_due_to_returned_error").status().err_to_test_failure()?;
+        let status = run_external_process("failure_due_to_returned_error").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
     #[google_test]
     fn should_fail_test_on_and_log_failure() -> Result<()> {
-        let status = run_external_process("non_fatal_failure_in_subroutine")
-            .status()
-            .err_to_test_failure()?;
+        let status = run_external_process("non_fatal_failure_in_subroutine").status()?;
 
         verify_that!(status.success(), eq(false))
     }
@@ -257,8 +250,7 @@ Actual: 2, which isn't equal to 3
 
     #[google_test]
     fn verify_pred_should_fail_test_on_failure() -> Result<()> {
-        let status =
-            run_external_process("verify_predicate_with_failure").status().err_to_test_failure()?;
+        let status = run_external_process("verify_predicate_with_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
@@ -281,15 +273,14 @@ eq_predicate(a, b) was false with
 
     #[google_test]
     fn assert_pred_should_fail_test_on_failure() -> Result<()> {
-        let status =
-            run_external_process("assert_predicate_with_failure").status().err_to_test_failure()?;
+        let status = run_external_process("assert_predicate_with_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
     #[google_test]
     fn expect_pred_should_fail_test_on_failure() -> Result<()> {
-        let status = run_external_process("expect_pred_failure").status().err_to_test_failure()?;
+        let status = run_external_process("expect_pred_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
@@ -414,8 +405,7 @@ a_submodule :: A_STRUCT_IN_SUBMODULE.eq_predicate_as_method(a, b) was false with
 
     #[google_test]
     fn fail_macro_causes_test_failure() -> Result<()> {
-        let status =
-            run_external_process("failure_due_to_fail_macro").status().err_to_test_failure()?;
+        let status = run_external_process("failure_due_to_fail_macro").status()?;
 
         verify_that!(status.success(), eq(false))
     }
@@ -478,8 +468,8 @@ Actual: 1, which isn't equal to 2
 
     fn run_external_process_in_tests_directory(name: &'static str) -> Result<String> {
         let mut command = run_external_process(name);
-        let std::process::Output { stdout, .. } = command.output().err_to_test_failure()?;
-        String::from_utf8(stdout).err_to_test_failure()
+        let std::process::Output { stdout, .. } = command.output()?;
+        Ok(String::from_utf8(stdout)?)
     }
 
     fn run_external_process(name: &'static str) -> Command {

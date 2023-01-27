@@ -133,31 +133,3 @@ impl<T> GoogleTestSupport for std::result::Result<T, TestAssertionFailure> {
         self
     }
 }
-
-/// Adds to `Result` support for ergonomically mapping the `Err` variant to a
-/// [`TestAssertionFailure`].
-pub trait MapErrorToTestFailure<T> {
-    /// Converts the `Err` variant of a `Result` to a [`TestAssertionFailure`].
-    ///
-    /// This allows the use of the `?` operator with any supported `Result`
-    /// inside a test or other function returning [`Result`]. For
-    /// example:
-    ///
-    /// ```rust
-    /// fn test_something() -> Result<()> {
-    ///     let output =
-    ///         std::process::Command("do_something").output()
-    ///             .err_to_test_failure()?;
-    /// }
-    /// ```
-    ///
-    /// The current implementation requires that the `Err` variant of the
-    /// `Result` implement [`std::fmt::Display`].
-    fn err_to_test_failure(self) -> Result<T>;
-}
-
-impl<T, E: std::fmt::Display> MapErrorToTestFailure<T> for std::result::Result<T, E> {
-    fn err_to_test_failure(self) -> Result<T> {
-        self.map_err(TestAssertionFailure::from_error)
-    }
-}

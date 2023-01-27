@@ -114,10 +114,6 @@ impl TestAssertionFailure {
         TestOutcome::fail_current_test();
         print!("{}", self);
     }
-
-    pub(crate) fn from_error<T: std::fmt::Display>(err: T) -> TestAssertionFailure {
-        TestAssertionFailure::create(format!("{}", err))
-    }
 }
 
 impl Display for TestAssertionFailure {
@@ -136,5 +132,11 @@ impl Display for TestAssertionFailure {
 impl Debug for TestAssertionFailure {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         Display::fmt(self, f)
+    }
+}
+
+impl<T: std::error::Error> From<T> for TestAssertionFailure {
+    fn from(value: T) -> Self {
+        TestAssertionFailure::create(format!("{value}"))
     }
 }
