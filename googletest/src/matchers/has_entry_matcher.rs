@@ -66,7 +66,7 @@ impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ValueT>>
     fn explain_match(&self, actual: &HashMap<KeyT, ValueT>) -> MatchExplanation {
         if let Some(value) = actual.get(&self.key) {
             MatchExplanation::create(format!(
-                "which contains key {:?}, but is mapped to value {:?}, {}",
+                "which contains key {:?}, but is mapped to value {:#?}, {}",
                 self.key,
                 value,
                 self.inner.explain_match(value)

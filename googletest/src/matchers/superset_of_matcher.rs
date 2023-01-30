@@ -88,7 +88,7 @@ where
             .subset
             .into_iter()
             .filter(|expected_item| actual_is_missing(actual, expected_item))
-            .map(|expected_item| format!("{expected_item:?}"))
+            .map(|expected_item| format!("{expected_item:#?}"))
             .collect();
         match missing_items.len() {
             0 => MatchExplanation::create("whose no element is missing".to_string()),
@@ -104,8 +104,8 @@ where
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => format!("is a superset of {:?}", self.subset),
-            MatcherResult::DoesNotMatch => format!("isn't a superset of {:?}", self.subset),
+            MatcherResult::Matches => format!("is a superset of {:#?}", self.subset),
+            MatcherResult::DoesNotMatch => format!("isn't a superset of {:#?}", self.subset),
         }
     }
 }
@@ -194,7 +194,11 @@ mod tests {
             err(displays_as(contains_substring(
                 "\
 Value of: vec![0, 2, 3]
-Expected: is a superset of [1, 2, 3]
+Expected: is a superset of [
+    1,
+    2,
+    3,
+]
 Actual: [
     0,
     2,
@@ -214,7 +218,11 @@ Actual: [
             err(displays_as(contains_substring(
                 "\
 Value of: vec![1, 0, 3]
-Expected: is a superset of [1, 2, 3]
+Expected: is a superset of [
+    1,
+    2,
+    3,
+]
 Actual: [
     1,
     0,
@@ -234,7 +242,11 @@ Actual: [
             err(displays_as(contains_substring(
                 "\
 Value of: vec![0, 0, 3]
-Expected: is a superset of [1, 2, 3]
+Expected: is a superset of [
+    1,
+    2,
+    3,
+]
 Actual: [
     0,
     0,

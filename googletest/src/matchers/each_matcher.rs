@@ -81,7 +81,7 @@ where
         if non_matching_elements.len() == 1 {
             let (idx, element, explanation) = non_matching_elements.remove(0);
             return MatchExplanation::create(format!(
-                "whose element #{idx} is {element:?}, {explanation}"
+                "whose element #{idx} is {element:#?}, {explanation}"
             ));
         }
 
@@ -92,7 +92,7 @@ where
             .join(", ");
         let element_explanations = non_matching_elements
             .iter()
-            .map(|&(_, element, ref explanation)| format!("{element:?}, {explanation}"))
+            .map(|&(_, element, ref explanation)| format!("{element:#?}, {explanation}"))
             .collect::<Vec<_>>()
             .join("\n");
         MatchExplanation::create(format!(
@@ -247,7 +247,10 @@ Actual: [
     [
         1,
     ],
-], whose element #0 is [1, 2], whose element #1 is 2, which isn't equal to 1
+], whose element #0 is [
+    1,
+    2,
+], whose element #1 is 2, which isn't equal to 1
 "
             )))
         )

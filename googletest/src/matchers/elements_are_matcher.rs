@@ -91,7 +91,7 @@ pub mod internal {
                 .zip(self.elements)
                 .enumerate()
                 .filter(|&(_, (a, e))| matches!(e.matches(a), MatcherResult::DoesNotMatch))
-                .map(|(idx, (a, e))| format!("element #{} is {:?}, {}", idx, a, e.explain_match(a)))
+                .map(|(idx, (a, e))| format!("element #{idx} is {a:#?}, {}", e.explain_match(a)))
                 .collect::<Vec<_>>();
             if mismatches.is_empty() {
                 MatchExplanation::create("whose elements all match".to_string())

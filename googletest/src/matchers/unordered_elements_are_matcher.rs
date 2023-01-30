@@ -692,7 +692,7 @@ pub mod internal {
             for (actual_idx, expected_idx) in self.get_matches() {
                 error_message.push_str(
                     format!(
-                        "\n    Actual element {:?} at index {actual_idx} matched expected element `{}` at index {expected_idx}.",
+                        "\n    Actual element {:#?} at index {actual_idx} matched expected element `{}` at index {expected_idx}.",
                         actual[actual_idx],
                         expected[expected_idx].describe(MatcherResult::Matches),
                     )
@@ -702,7 +702,7 @@ pub mod internal {
 
             for actual_idx in self.get_unmatched_actual() {
                 error_message.push_str(format!(
-                    "\n    Actual element {:?} at index {actual_idx} did not match any remaining expected element.",
+                    "\n    Actual element {:#?} at index {actual_idx} did not match any remaining expected element.",
                     actual[actual_idx]
                 ).as_str());
             }

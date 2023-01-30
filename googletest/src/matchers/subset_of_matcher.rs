@@ -88,7 +88,7 @@ where
             .into_iter()
             .enumerate()
             .filter(|&(_, actual_item)| self.expected_is_missing(actual_item))
-            .map(|(idx, actual_item)| format!("{actual_item:?} at #{idx}"))
+            .map(|(idx, actual_item)| format!("{actual_item:#?} at #{idx}"))
             .collect::<Vec<_>>();
 
         match unexpected_elements.len() {
@@ -106,8 +106,8 @@ where
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => format!("is a subset of {:?}", self.superset),
-            MatcherResult::DoesNotMatch => format!("isn't a subset of {:?}", self.superset),
+            MatcherResult::Matches => format!("is a subset of {:#?}", self.superset),
+            MatcherResult::DoesNotMatch => format!("isn't a subset of {:#?}", self.superset),
         }
     }
 }
@@ -195,7 +195,11 @@ mod tests {
             err(displays_as(contains_substring(
                 "\
 Value of: vec![0, 2, 3]
-Expected: is a subset of [1, 2, 3]
+Expected: is a subset of [
+    1,
+    2,
+    3,
+]
 Actual: [
     0,
     2,
@@ -215,7 +219,11 @@ Actual: [
             err(displays_as(contains_substring(
                 "\
 Value of: vec![1, 0, 3]
-Expected: is a subset of [1, 2, 3]
+Expected: is a subset of [
+    1,
+    2,
+    3,
+]
 Actual: [
     1,
     0,
@@ -235,7 +243,11 @@ Actual: [
             err(displays_as(contains_substring(
                 "\
 Value of: vec![0, 0, 3]
-Expected: is a subset of [1, 2, 3]
+Expected: is a subset of [
+    1,
+    2,
+    3,
+]
 Actual: [
     0,
     0,

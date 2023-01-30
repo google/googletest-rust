@@ -40,7 +40,7 @@ impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<Option<T>> for SomeMatcher<Inn
     fn explain_match(&self, actual: &Option<T>) -> MatchExplanation {
         match (self.matches(actual), actual) {
             (_, Some(t)) => MatchExplanation::create(format!(
-                "which contains {t:?}, {}",
+                "which contains {t:#?}, {}",
                 self.inner.explain_match(t)
             )),
             (_, None) => MatchExplanation::create("which is none".to_string()),

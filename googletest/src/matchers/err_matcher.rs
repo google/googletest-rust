@@ -42,7 +42,7 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<E>> Matcher<Result<T, E>>
     fn explain_match(&self, actual: &Result<T, E>) -> MatchExplanation {
         match actual {
             Err(e) => MatchExplanation::create(format!(
-                "which is an error containing {e:?}, {}",
+                "which is an error containing {e:#?}, {}",
                 self.inner.explain_match(e)
             )),
             Ok(_) => MatchExplanation::create("which is a success".to_string()),
