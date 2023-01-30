@@ -37,9 +37,9 @@ Most assertions are made through the macro [`verify_that!`] which evaluates to a
 [`Result<()>`]. It takes two arguments: an actual value to be tested and a
 [`Matcher`].
 
-Unlike other Rust assertion libraries, this library does not panic when a test
-assertion fails. Instead, a test assertion evaluates to `Result`, which the
-caller can choose to handle by:
+Unlike the macros used in other test assertion libraries in Rust, `verify_that!`
+does not panic when the test assertion fails. Instead, it evaluates to `Result`,
+which the caller can choose to handle by:
 
  * Returning immediately from the function with the `?` operator (a *fatal*
    assertion), or
@@ -62,7 +62,8 @@ fn more_than_one_failure() -> Result<()> {
 ```
 
 > In case one wants behaviour closer to other Rust test libraries, the macro
-> [`assert_that!`] has the same [`verify_that!`] but panics on failure.
+> [`assert_that!`] has the same parameters as [`verify_that!`] but panics on
+> failure.
 
 This library includes a rich set of matchers, covering:
 
