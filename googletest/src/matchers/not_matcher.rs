@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Matcher, MatcherResult};
+use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
 use std::fmt::Debug;
 
 /// Matches the actual value exactly when the inner matcher does _not_ match.
@@ -39,6 +39,10 @@ impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<T> for NotMatcher<InnerMatcher
         }
     }
 
+    fn explain_match(&self, actual: &T) -> MatchExplanation {
+        self.inner.explain_match(actual)
+    }
+
     fn describe(&self, matcher_result: MatcherResult) -> String {
         self.inner
             .describe(matcher_result.pick(MatcherResult::DoesNotMatch, MatcherResult::Matches))
@@ -53,7 +57,7 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{google_test, verify_that, Result};
-    use matchers::eq;
+    use matchers::{container_eq, contains_substring, displays_as, eq, err};
 
     #[google_test]
     fn matches_when_inner_matcher_does_not_match() -> Result<()> {
@@ -71,5 +75,21 @@ mod tests {
         let result = matcher.matches(&1);
 
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
+    }
+
+    #[google_test]
+    fn match_explanation_references_actual_value() -> Result<()> {
+        let result = verify_that!(*&[1], not(container_eq([1])));
+
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(
+                "\
+Actual: [
+    1,
+], which contains all the elements
+"
+            )))
+        )
     }
 }

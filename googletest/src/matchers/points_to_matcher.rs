@@ -14,7 +14,7 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Matcher, MatcherResult};
+use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
 use std::fmt::Debug;
 use std::ops::Deref;
 
@@ -50,6 +50,10 @@ where
         self.expected.matches(actual.deref())
     }
 
+    fn explain_match(&self, actual: &ActualT) -> MatchExplanation {
+        self.expected.explain_match(actual.deref())
+    }
+
     fn describe(&self, matcher_result: MatcherResult) -> String {
         self.expected.describe(matcher_result)
     }
@@ -63,7 +67,7 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{google_test, verify_that, Result};
-    use matchers::eq;
+    use matchers::{container_eq, contains_substring, displays_as, eq, err};
     use std::rc::Rc;
 
     #[google_test]
@@ -79,5 +83,21 @@ mod tests {
     #[google_test]
     fn points_to_matches_box_of_owned_string_with_string_reference() -> Result<()> {
         verify_that!(Rc::new("A string".to_string()), points_to(eq("A string")))
+    }
+
+    #[google_test]
+    fn match_explanation_references_actual_value() -> Result<()> {
+        let result = verify_that!(&vec![1], points_to(container_eq([])));
+
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(
+                "\
+Actual: [
+    1,
+], which contains the unexpected element 1
+"
+            )))
+        )
     }
 }
