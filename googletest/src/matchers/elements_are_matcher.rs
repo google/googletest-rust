@@ -106,7 +106,11 @@ pub mod internal {
                 matcher_result.pick("has", "doesn't have"),
                 self.elements
                     .iter()
-                    .map(|m| m.describe(MatcherResult::Matches))
+                    .enumerate()
+                    .map(|(index, matcher)| format!(
+                        "    {index}: {}",
+                        matcher.describe(MatcherResult::Matches)
+                    ))
                     .collect::<Vec<_>>()
                     .join("\n")
             )
@@ -151,9 +155,9 @@ mod tests {
                 "\
 Value of: vec![1, 4, 3]
 Expected: has elements:
-is equal to 1
-is equal to 2
-is equal to 3
+    0: is equal to 1
+    1: is equal to 2
+    2: is equal to 3
 Actual: [
     1,
     4,
