@@ -95,7 +95,7 @@ macro_rules! field {
 pub mod internal {
     #[cfg(not(google3))]
     use crate as googletest;
-    use googletest::matcher::{Matcher, MatcherResult};
+    use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
     use std::fmt::Debug;
 
     /// Creates a matcher to verify a specific field of the actual struct using
@@ -103,26 +103,43 @@ pub mod internal {
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub fn field_matcher<O: Debug, I: Debug, InnerMatcher: Matcher<I>>(
-        field_accessor: fn(&O) -> Option<&I>,
+    pub fn field_matcher<OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<InnerT>>(
+        field_accessor: fn(&OuterT) -> Option<&InnerT>,
         field_path: &'static str,
         inner: InnerMatcher,
-    ) -> impl Matcher<O> {
+    ) -> impl Matcher<OuterT> {
         FieldMatcher { field_accessor, field_path, inner }
     }
 
-    struct FieldMatcher<O, I, InnerMatcher> {
-        field_accessor: fn(&O) -> Option<&I>,
+    struct FieldMatcher<OuterT, InnerT, InnerMatcher> {
+        field_accessor: fn(&OuterT) -> Option<&InnerT>,
         field_path: &'static str,
         inner: InnerMatcher,
     }
 
-    impl<O: Debug, I: Debug, InnerMatcher: Matcher<I>> Matcher<O> for FieldMatcher<O, I, InnerMatcher> {
-        fn matches(&self, actual: &O) -> MatcherResult {
+    impl<OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<InnerT>> Matcher<OuterT>
+        for FieldMatcher<OuterT, InnerT, InnerMatcher>
+    {
+        fn matches(&self, actual: &OuterT) -> MatcherResult {
             if let Some(value) = (self.field_accessor)(actual) {
                 self.inner.matches(value)
             } else {
                 MatcherResult::DoesNotMatch
+            }
+        }
+
+        fn explain_match(&self, actual: &OuterT) -> MatchExplanation {
+            if let Some(actual) = (self.field_accessor)(actual) {
+                MatchExplanation::create(format!(
+                    "which has field `{}`, {}",
+                    self.field_path,
+                    self.inner.explain_match(actual)
+                ))
+            } else {
+                // TODO(hovinen): This message could be misinterpreted to mean that there were a
+                // typo in the field, when it actually means that the actual value uses the
+                // wrong enum variant. Reword this appropriately.
+                MatchExplanation::create(format!("which has no field `{}`", self.field_path))
             }
         }
 
@@ -144,7 +161,7 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{google_test, verify_that, Result};
-    use matchers::{eq, not};
+    use matchers::{container_eq, contains_substring, displays_as, eq, err, not};
 
     #[derive(Debug)]
     struct IntField {
@@ -185,6 +202,7 @@ mod tests {
             pub field: i32,
         }
     }
+
     #[google_test]
     fn struct_in_other_module_matches() -> Result<()> {
         verify_that!(sub::SubStruct { field: 32 }, field!(sub::SubStruct.field, eq(32)))
@@ -210,7 +228,25 @@ mod tests {
     }
 
     #[google_test]
-    fn does_not_match_enum_value_with_wrong_enum_value() -> Result<()> {
+    fn shows_correct_failure_message_for_wrong_struct_entry() -> Result<()> {
+        #[derive(Debug)]
+        struct AStruct {
+            a: Vec<u32>,
+        }
+        let value = AStruct { a: vec![1] };
+
+        let result = verify_that!(value, field!(AStruct.a, container_eq([])));
+
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(
+                "which has field `a`, which contains the unexpected element 1"
+            )))
+        )
+    }
+
+    #[google_test]
+    fn does_not_match_enum_value_with_wrong_enum_variant() -> Result<()> {
         #[derive(Debug)]
         enum AnEnum {
             #[allow(dead_code)] // This variant is intentionally unused.
@@ -220,6 +256,23 @@ mod tests {
         let value = AnEnum::AnotherValue;
 
         verify_that!(value, not(field!(AnEnum::AValue.0, eq(123))))
+    }
+
+    #[google_test]
+    fn shows_correct_failure_message_for_wrong_enum_value() -> Result<()> {
+        #[derive(Debug)]
+        enum AnEnum {
+            #[allow(dead_code)] // This variant is intentionally unused.
+            AValue {
+                a: u32,
+            },
+            AnotherValue,
+        }
+        let value = AnEnum::AnotherValue;
+
+        let result = verify_that!(value, field!(AnEnum::AValue.a, eq(123)));
+
+        verify_that!(result, err(displays_as(contains_substring("which has no field `a`"))))
     }
 
     #[google_test]
