@@ -135,9 +135,13 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: HashMap::from([(0, 0)])\n\
-            Expected: contains key 1, which value is equal to 0\n\
-            Actual: {0: 0}, which doesn't contain key 1"
+                "\
+Value of: HashMap::from([(0, 0)])
+Expected: contains key 1, which value is equal to 0
+Actual: {
+    0: 0,
+}, which doesn't contain key 1
+"
             )))
         )
     }
@@ -149,9 +153,13 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: HashMap::from([(0, 0)])\n\
-            Expected: contains key 0, which value is equal to 1\n\
-            Actual: {0: 0}, which contains key 0, but is mapped to value 0, which isn't equal to 1"
+                "\
+Value of: HashMap::from([(0, 0)])
+Expected: contains key 0, which value is equal to 1
+Actual: {
+    0: 0,
+}, which contains key 0, but is mapped to value 0, which isn't equal to 1
+"
             )))
         )
     }

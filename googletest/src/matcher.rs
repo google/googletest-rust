@@ -61,7 +61,7 @@ pub(crate) fn create_assertion_failure<T: Debug + ?Sized>(
     TestAssertionFailure::create(format!(
         "Value of: {}\n\
              Expected: {}\n\
-             Actual: {:?}, {}\n\
+             Actual: {:#?}, {}\n\
              {}",
         actual_expr,
         matcher.describe(MatcherResult::Matches),

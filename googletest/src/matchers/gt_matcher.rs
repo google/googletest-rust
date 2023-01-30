@@ -122,9 +122,10 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: 481\n\
-                Expected: is greater than 632\n\
-                Actual: 481"
+                "\
+Value of: 481
+Expected: is greater than 632
+Actual: 481"
             )))
         )
     }
@@ -136,9 +137,15 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: vec![19, 23, 11]\n\
-                Expected: only contains elements that is greater than 15\n\
-                Actual: [19, 23, 11], whose element #2 is 11, which is less than or equal to 15"
+                "\
+Value of: vec![19, 23, 11]\n\
+Expected: only contains elements that is greater than 15\n\
+Actual: [
+    19,
+    23,
+    11,
+], whose element #2 is 11, which is less than or equal to 15
+"
             )))
         )
     }

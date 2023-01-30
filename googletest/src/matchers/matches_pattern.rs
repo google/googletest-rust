@@ -460,9 +460,13 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: actual\n\
-                Expected: has field `a_field`, which is equal to 234\n\
-                Actual: AStruct { a_field: 123 }, which has field `a_field`, which isn't equal to 234"
+                "\
+Value of: actual
+Expected: has field `a_field`, which is equal to 234
+Actual: AStruct {
+    a_field: 123,
+}, which has field `a_field`, which isn't equal to 234
+"
             )))
         )
     }
@@ -483,11 +487,16 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: actual\n\
-                Expected: has field `a_field`, which is equal to 234 and\n\
-                has field `another_field`, which is equal to 123\n\
-                Actual: AStruct { a_field: 123, another_field: 234 }, which has field `a_field`, which isn't equal to 234 AND\n\
-                which has field `another_field`, which isn't equal to 123"
+                "\
+Value of: actual
+Expected: has field `a_field`, which is equal to 234 and
+has field `another_field`, which is equal to 123
+Actual: AStruct {
+    a_field: 123,
+    another_field: 234,
+}, which has field `a_field`, which isn't equal to 234 AND
+which has field `another_field`, which isn't equal to 123
+"
             )))
         )
     }

@@ -88,7 +88,7 @@ where
             .into_iter()
             .enumerate()
             .filter(|&(_, actual_item)| self.expected_is_missing(actual_item))
-            .map(|(idx, actual_item)| format!("{:?} at #{}", actual_item, idx))
+            .map(|(idx, actual_item)| format!("{actual_item:?} at #{idx}"))
             .collect::<Vec<_>>();
 
         match unexpected_elements.len() {
@@ -193,9 +193,15 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: vec![0, 2, 3]\n\
-                Expected: is a subset of [1, 2, 3]\n\
-                Actual: [0, 2, 3], whose element 0 at #0 is unexpected"
+                "\
+Value of: vec![0, 2, 3]
+Expected: is a subset of [1, 2, 3]
+Actual: [
+    0,
+    2,
+    3,
+], whose element 0 at #0 is unexpected
+"
             )))
         )
     }
@@ -207,9 +213,15 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: vec![1, 0, 3]\n\
-                Expected: is a subset of [1, 2, 3]\n\
-                Actual: [1, 0, 3], whose element 0 at #1 is unexpected"
+                "\
+Value of: vec![1, 0, 3]
+Expected: is a subset of [1, 2, 3]
+Actual: [
+    1,
+    0,
+    3,
+], whose element 0 at #1 is unexpected
+"
             )))
         )
     }
@@ -221,9 +233,15 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: vec![0, 0, 3]\n\
-                Expected: is a subset of [1, 2, 3]\n\
-                Actual: [0, 0, 3], whose elements 0 at #0, 0 at #1 are unexpected"
+                "\
+Value of: vec![0, 0, 3]
+Expected: is a subset of [1, 2, 3]
+Actual: [
+    0,
+    0,
+    3,
+], whose elements 0 at #0, 0 at #1 are unexpected
+"
             )))
         )
     }

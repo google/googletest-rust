@@ -192,9 +192,15 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: vec![0, 2, 3]\n\
-                Expected: is a superset of [1, 2, 3]\n\
-                Actual: [0, 2, 3], whose element 1 is missing"
+                "\
+Value of: vec![0, 2, 3]
+Expected: is a superset of [1, 2, 3]
+Actual: [
+    0,
+    2,
+    3,
+], whose element 1 is missing
+"
             )))
         )
     }
@@ -206,9 +212,15 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: vec![1, 0, 3]\n\
-                Expected: is a superset of [1, 2, 3]\n\
-                Actual: [1, 0, 3], whose element 2 is missing"
+                "\
+Value of: vec![1, 0, 3]
+Expected: is a superset of [1, 2, 3]
+Actual: [
+    1,
+    0,
+    3,
+], whose element 2 is missing
+"
             )))
         )
     }
@@ -220,9 +232,15 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: vec![0, 0, 3]\n\
-                Expected: is a superset of [1, 2, 3]\n\
-                Actual: [0, 0, 3], whose elements 1, 2 are missing"
+                "\
+Value of: vec![0, 0, 3]
+Expected: is a superset of [1, 2, 3]
+Actual: [
+    0,
+    0,
+    3,
+], whose elements 1, 2 are missing
+"
             )))
         )
     }

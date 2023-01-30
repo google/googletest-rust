@@ -114,9 +114,13 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: Err::<i32, i32>(1)\n\
-                 Expected: is an error containing a value, which is equal to 2\n\
-                 Actual: Err(1), which is an error containing 1, which isn't equal to 2"
+                "\
+Value of: Err::<i32, i32>(1)
+Expected: is an error containing a value, which is equal to 2
+Actual: Err(
+    1,
+), which is an error containing 1, which isn't equal to 2
+"
             )))
         )
     }

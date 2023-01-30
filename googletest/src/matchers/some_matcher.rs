@@ -105,9 +105,13 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: Some(2)\n\
-                 Expected: is some(x), where x is equal to 1\n\
-                 Actual: Some(2), which contains 2, which isn't equal to 1"
+                "\
+Value of: Some(2)
+Expected: is some(x), where x is equal to 1
+Actual: Some(
+    2,
+), which contains 2, which isn't equal to 1
+"
             )))
         )
     }

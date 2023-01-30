@@ -201,11 +201,17 @@ mod tests {
         verify_that!(
             format!("{}", result.unwrap_err()).as_str(),
             contains_substring(
-                "Value of: vec![1, 2, 3]\n\
-                Expected: has elements satisfying respectively:\n\
-                is equal to 1\n\
-                is equal to 2\n\
-                Actual: [1, 2, 3], which has size 3 (expected 2)"
+                "\
+Value of: vec![1, 2, 3]
+Expected: has elements satisfying respectively:
+is equal to 1
+is equal to 2
+Actual: [
+    1,
+    2,
+    3,
+], which has size 3 (expected 2)
+"
             )
         )
     }
@@ -217,12 +223,18 @@ mod tests {
         verify_that!(
             format!("{}", result.unwrap_err()).as_str(),
             contains_substring(
-                "Value of: vec![1, 2, 3]\n\
-                Expected: has elements satisfying respectively:\n\
-                is equal to 2\n\
-                is equal to 2\n\
-                is equal to 3\n\
-                Actual: [1, 2, 3], whose element #0 is 1, which isn't equal to 2"
+                "\
+Value of: vec![1, 2, 3]
+Expected: has elements satisfying respectively:
+is equal to 2
+is equal to 2
+is equal to 3
+Actual: [
+    1,
+    2,
+    3,
+], whose element #0 is 1, which isn't equal to 2
+"
             )
         )
     }
@@ -234,12 +246,18 @@ mod tests {
         verify_that!(
             format!("{}", result.unwrap_err()).as_str(),
             contains_substring(
-                "Value of: vec![1, 2, 3]\n\
-                Expected: has elements satisfying respectively:\n\
-                is equal to 1\n\
-                is equal to 3\n\
-                is equal to 3\n\
-                Actual: [1, 2, 3], whose element #1 is 2, which isn't equal to 3"
+                "\
+Value of: vec![1, 2, 3]
+Expected: has elements satisfying respectively:
+is equal to 1
+is equal to 3
+is equal to 3
+Actual: [
+    1,
+    2,
+    3,
+], whose element #1 is 2, which isn't equal to 3
+"
             )
         )
     }
@@ -252,13 +270,19 @@ mod tests {
         verify_that!(
             format!("{}", result.unwrap_err()).as_str(),
             contains_substring(
-                "Value of: vec![1, 2, 3]\n\
-                Expected: has elements satisfying respectively:\n\
-                is equal to 2\n\
-                is equal to 3\n\
-                is equal to 3\n\
-                Actual: [1, 2, 3], whose element #0 is 1, which isn't equal to 2 and\n\
-                element #1 is 2, which isn't equal to 3"
+                "\
+Value of: vec![1, 2, 3]
+Expected: has elements satisfying respectively:
+is equal to 2
+is equal to 3
+is equal to 3
+Actual: [
+    1,
+    2,
+    3,
+], whose element #0 is 1, which isn't equal to 2 and
+element #1 is 2, which isn't equal to 3
+"
             )
         )
     }

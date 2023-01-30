@@ -24,7 +24,7 @@ mod tests {
     };
     #[cfg(google3)]
     use matchers::all;
-    use matchers::{contains_regex, contains_substring, eq, not};
+    use matchers::{anything, contains_regex, contains_substring, displays_as, eq, err, not};
     use std::process::Command;
 
     #[google_test]
@@ -464,6 +464,29 @@ Actual: 1, which isn't equal to 2
     // This is not marked as a test since it deliberately fails.
     fn should_display_error_correctly_without_google_test_macro() -> Result<()> {
         verify_that!(1, eq(2))
+    }
+
+    #[google_test]
+    fn failure_message_uses_pretty_print_for_actual_value() -> Result<()> {
+        #[derive(Debug)]
+        #[allow(unused)]
+        struct NontrivialStruct {
+            a: i32,
+            b: i32,
+        }
+        let value = NontrivialStruct { a: 1, b: 2 };
+        let failed_assertion_result = verify_that!(value, not(anything()));
+
+        verify_that!(
+            failed_assertion_result,
+            err(displays_as(contains_substring(
+                "\
+Actual: NontrivialStruct {
+    a: 1,
+    b: 2,
+}"
+            )))
+        )
     }
 
     fn run_external_process_in_tests_directory(name: &'static str) -> Result<String> {

@@ -81,24 +81,22 @@ where
         if non_matching_elements.len() == 1 {
             let (idx, element, explanation) = non_matching_elements.remove(0);
             return MatchExplanation::create(format!(
-                "whose element #{} is {:?}, {}",
-                idx, element, explanation
+                "whose element #{idx} is {element:?}, {explanation}"
             ));
         }
 
         let failed_indexes = non_matching_elements
             .iter()
-            .map(|&(idx, _, _)| format!("#{}", idx))
+            .map(|&(idx, _, _)| format!("#{idx}"))
             .collect::<Vec<_>>()
             .join(", ");
         let element_explanations = non_matching_elements
             .iter()
-            .map(|&(_, element, ref explanation)| format!("{:?}, {}", element, explanation))
+            .map(|&(_, element, ref explanation)| format!("{element:?}, {explanation}"))
             .collect::<Vec<_>>()
             .join("\n");
         MatchExplanation::create(format!(
-            "whose elements {} don't match\n{}",
-            failed_indexes, element_explanations
+            "whose elements {failed_indexes} don't match\n{element_explanations}"
         ))
     }
 
@@ -177,9 +175,15 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: vec![0, 2, 3]\n\
-                Expected: only contains elements that is greater than 0\n\
-                Actual: [0, 2, 3], whose element #0 is 0, which is less than or equal to 0"
+                "\
+Value of: vec![0, 2, 3]
+Expected: only contains elements that is greater than 0\n\
+Actual: [
+    0,
+    2,
+    3,
+], whose element #0 is 0, which is less than or equal to 0
+"
             )))
         )
     }
@@ -191,9 +195,15 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: vec![1, 0, 3]\n\
-                Expected: only contains elements that is greater than 0\n\
-                Actual: [1, 0, 3], whose element #1 is 0, which is less than or equal to 0"
+                "\
+Value of: vec![1, 0, 3]
+Expected: only contains elements that is greater than 0
+Actual: [
+    1,
+    0,
+    3,
+], whose element #1 is 0, which is less than or equal to 0
+"
             )))
         )
     }
@@ -205,11 +215,17 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: vec![0, 1, 3]\n\
-                Expected: only contains elements that is greater than 1\n\
-                Actual: [0, 1, 3], whose elements #0, #1 don't match\n\
-                0, which is less than or equal to 1\n\
-                1, which is less than or equal to 1"
+                "\
+Value of: vec![0, 1, 3]
+Expected: only contains elements that is greater than 1
+Actual: [
+    0,
+    1,
+    3,
+], whose elements #0, #1 don't match
+0, which is less than or equal to 1
+1, which is less than or equal to 1
+"
             )))
         )
     }
@@ -220,9 +236,19 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: vec![vec! [1, 2], vec! [1]]\n\
-                Expected: only contains elements that only contains elements that is equal to 1\n\
-                Actual: [[1, 2], [1]], whose element #0 is [1, 2], whose element #1 is 2, which isn't equal to 1"
+                "\
+Value of: vec![vec! [1, 2], vec! [1]]
+Expected: only contains elements that only contains elements that is equal to 1
+Actual: [
+    [
+        1,
+        2,
+    ],
+    [
+        1,
+    ],
+], whose element #0 is [1, 2], whose element #1 is 2, which isn't equal to 1
+"
             )))
         )
     }

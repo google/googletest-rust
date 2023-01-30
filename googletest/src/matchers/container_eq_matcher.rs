@@ -140,7 +140,7 @@ impl<const N: usize> Matcher<Vec<String>> for ContainerEqMatcher<[&str; N]> {
                 return MatcherResult::DoesNotMatch;
             }
         }
-        return MatcherResult::Matches;
+        MatcherResult::Matches
     }
 
     fn explain_match(&self, actual: &Vec<String>) -> MatchExplanation {
@@ -170,20 +170,14 @@ where
     where
         for<'a> &'a ActualT: IntoIterator<Item = &'a T>,
     {
-        self.expected
-            .into_iter()
-            .filter(|i| actual.into_iter().find(|j| j == i).is_none())
-            .collect()
+        self.expected.into_iter().filter(|&i| !actual.into_iter().any(|j| j == i)).collect()
     }
 
     fn get_unexpected_items<'a, ActualT: ?Sized>(&self, actual: &'a ActualT) -> Vec<&'a T>
     where
         for<'b> &'b ActualT: IntoIterator<Item = &'b T>,
     {
-        actual
-            .into_iter()
-            .filter(|i| self.expected.into_iter().find(|j| j == i).is_none())
-            .collect()
+        actual.into_iter().filter(|&i| !self.expected.into_iter().any(|j| j == i)).collect()
     }
 }
 
@@ -205,8 +199,7 @@ fn build_explanation<T: Debug, U: Debug>(missing: Vec<T>, unexpected: Vec<U>) ->
             unexpected[0]
         )),
         (0, _) => MatchExplanation::create(format!(
-            "which contains the unexpected elements {:?}",
-            unexpected
+            "which contains the unexpected elements {unexpected:?}",
         )),
         (1, 0) => {
             MatchExplanation::create(format!("which is missing the element {:?}", missing[0]))
@@ -216,17 +209,16 @@ fn build_explanation<T: Debug, U: Debug>(missing: Vec<T>, unexpected: Vec<U>) ->
             missing[0], unexpected[0]
         )),
         (1, _) => MatchExplanation::create(format!(
-            "which is missing the element {:?} and contains the unexpected elements {:?}",
-            missing[0], unexpected
+            "which is missing the element {:?} and contains the unexpected elements {unexpected:?}",
+            missing[0]
         )),
-        (_, 0) => MatchExplanation::create(format!("which is missing the elements {:?}", missing)),
+        (_, 0) => MatchExplanation::create(format!("which is missing the elements {missing:?}")),
         (_, 1) => MatchExplanation::create(format!(
-            "which is missing the elements {:?} and contains the unexpected element {:?}",
-            missing, unexpected[0]
+            "which is missing the elements {missing:?} and contains the unexpected element {:?}",
+            unexpected[0]
         )),
         (_, _) => MatchExplanation::create(format!(
-            "which is missing the elements {:?} and contains the unexpected elements {:?}",
-            missing, unexpected
+            "which is missing the elements {missing:?} and contains the unexpected elements {unexpected:?}",
         )),
     }
 }
@@ -281,9 +273,15 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: vec![1, 3, 2]\n\
-                Expected: is equal to [1, 2, 3]\n\
-                Actual: [1, 3, 2], which contains all the elements"
+                "\
+Value of: vec![1, 3, 2]
+Expected: is equal to [1, 2, 3]
+Actual: [
+    1,
+    3,
+    2,
+], which contains all the elements
+"
             )))
         )
     }

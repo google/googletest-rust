@@ -692,11 +692,9 @@ pub mod internal {
             for (actual_idx, expected_idx) in self.get_matches() {
                 error_message.push_str(
                     format!(
-                        "\n    Actual element {:?} at index {} matched expected element `{}` at index {}.",
+                        "\n    Actual element {:?} at index {actual_idx} matched expected element `{}` at index {expected_idx}.",
                         actual[actual_idx],
-                        actual_idx,
                         expected[expected_idx].describe(MatcherResult::Matches),
-                        expected_idx
                     )
                     .as_str(),
                 );
@@ -704,14 +702,14 @@ pub mod internal {
 
             for actual_idx in self.get_unmatched_actual() {
                 error_message.push_str(format!(
-                    "\n    Actual element {:?} at index {} did not match any remaining expected element.",
-                    actual[actual_idx], actual_idx
+                    "\n    Actual element {:?} at index {actual_idx} did not match any remaining expected element.",
+                    actual[actual_idx]
                 ).as_str());
             }
             for expected_idx in self.get_unmatched_expected() {
                 error_message.push_str(format!(
-                    "\n    Expected element `{}` at index {} did not match any remaining actual element.",
-                    expected[expected_idx].describe(MatcherResult::Matches), expected_idx
+                    "\n    Expected element `{}` at index {expected_idx} did not match any remaining actual element.",
+                    expected[expected_idx].describe(MatcherResult::Matches)
                 ).as_str());
             }
 
@@ -760,7 +758,11 @@ Expected: contains elements matching in any order:
 is equal to 1
 is equal to 2
 is equal to 3
-Actual: [1, 4, 3], whose element #1 does not match any expected elements and no elements match the expected element #1"
+Actual: [
+    1,
+    4,
+    3,
+], whose element #1 does not match any expected elements and no elements match the expected element #1"
             )))
         )
     }

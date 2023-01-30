@@ -148,12 +148,18 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(
-                "Value of: vec![1, 4, 3]\n\
-                Expected: has elements:\n\
-                is equal to 1\n\
-                is equal to 2\n\
-                is equal to 3\n\
-                Actual: [1, 4, 3], whose element #1 is 4, which isn't equal to 2"
+                "\
+Value of: vec![1, 4, 3]
+Expected: has elements:
+is equal to 1
+is equal to 2
+is equal to 3
+Actual: [
+    1,
+    4,
+    3,
+], whose element #1 is 4, which isn't equal to 2
+"
             )))
         )
     }
