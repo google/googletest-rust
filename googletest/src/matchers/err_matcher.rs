@@ -42,7 +42,7 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<E>> Matcher<Result<T, E>>
     fn explain_match(&self, actual: &Result<T, E>) -> MatchExplanation {
         match actual {
             Err(e) => MatchExplanation::create(format!(
-                "which is an error containing {e:#?}, {}",
+                "which is an error {}",
                 self.inner.explain_match(e)
             )),
             Ok(_) => MatchExplanation::create("which is a success".to_string()),
@@ -52,14 +52,11 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<E>> Matcher<Result<T, E>>
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => {
-                format!(
-                    "is an error containing a value, which {}",
-                    self.inner.describe(MatcherResult::Matches)
-                )
+                format!("is an error which {}", self.inner.describe(MatcherResult::Matches))
             }
             MatcherResult::DoesNotMatch => {
                 format!(
-                    "is a success or is an error containing a value, which {}",
+                    "is a success or is an error containing a value which {}",
                     self.inner.describe(MatcherResult::DoesNotMatch)
                 )
             }
@@ -116,10 +113,10 @@ mod tests {
             err(displays_as(contains_substring(
                 "\
 Value of: Err::<i32, i32>(1)
-Expected: is an error containing a value, which is equal to 2
+Expected: is an error which is equal to 2
 Actual: Err(
     1,
-), which is an error containing 1, which isn't equal to 2
+), which is an error which isn't equal to 2
 "
             )))
         )
@@ -129,7 +126,7 @@ Actual: Err(
     fn err_describe_matches() -> Result<()> {
         verify_that!(
             err::<i32, i32>(eq(1)).describe(MatcherResult::Matches),
-            eq("is an error containing a value, which is equal to 1")
+            eq("is an error which is equal to 1")
         )
     }
 }

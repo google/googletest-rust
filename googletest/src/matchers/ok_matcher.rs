@@ -42,7 +42,7 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<T>> Matcher<Result<T, E>>
     fn explain_match(&self, actual: &Result<T, E>) -> MatchExplanation {
         match actual {
             Ok(o) => MatchExplanation::create(format!(
-                "which is a success containing {o:#?}, {}",
+                "which is a success {}",
                 self.inner.explain_match(o)
             )),
             Err(_) => MatchExplanation::create("which is an error".to_string()),
@@ -119,7 +119,7 @@ Value of: Ok::<i32, i32>(1)
 Expected: is a success containing a value, which is equal to 2
 Actual: Ok(
     1,
-), which is a success containing 1, which isn't equal to 2
+), which is a success which isn't equal to 2
 "
             )))
         )

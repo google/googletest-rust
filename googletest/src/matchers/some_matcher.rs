@@ -40,21 +40,21 @@ impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<Option<T>> for SomeMatcher<Inn
     fn explain_match(&self, actual: &Option<T>) -> MatchExplanation {
         match (self.matches(actual), actual) {
             (_, Some(t)) => MatchExplanation::create(format!(
-                "which contains {t:#?}, {}",
+                "which has a value {}",
                 self.inner.explain_match(t)
             )),
-            (_, None) => MatchExplanation::create("which is none".to_string()),
+            (_, None) => MatchExplanation::create("which is None".to_string()),
         }
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => {
-                format!("is some(x), where x {}", self.inner.describe(MatcherResult::Matches))
+                format!("has a value which {}", self.inner.describe(MatcherResult::Matches))
             }
             MatcherResult::DoesNotMatch => {
                 format!(
-                    "is none or some(x), where x {}",
+                    "is None or has a value which {}",
                     self.inner.describe(MatcherResult::DoesNotMatch)
                 )
             }
@@ -107,10 +107,10 @@ mod tests {
             err(displays_as(contains_substring(
                 "\
 Value of: Some(2)
-Expected: is some(x), where x is equal to 1
+Expected: has a value which is equal to 1
 Actual: Some(
     2,
-), which contains 2, which isn't equal to 1
+), which has a value which isn't equal to 1
 "
             )))
         )
@@ -120,7 +120,7 @@ Actual: Some(
     fn some_describe_matches() -> Result<()> {
         verify_that!(
             some(eq(1)).describe(MatcherResult::Matches),
-            eq("is some(x), where x is equal to 1")
+            eq("has a value which is equal to 1")
         )
     }
 
@@ -128,20 +128,20 @@ Actual: Some(
     fn some_describe_does_not_match() -> Result<()> {
         verify_that!(
             some(eq(1)).describe(MatcherResult::DoesNotMatch),
-            eq("is none or some(x), where x isn't equal to 1")
+            eq("is None or has a value which isn't equal to 1")
         )
     }
 
     #[google_test]
     fn some_explain_match_with_none() -> Result<()> {
-        verify_that!(some(eq(1)).explain_match(&None), displays_as(eq("which is none")))
+        verify_that!(some(eq(1)).explain_match(&None), displays_as(eq("which is None")))
     }
 
     #[google_test]
     fn some_explain_match_with_some_success() -> Result<()> {
         verify_that!(
             some(eq(1)).explain_match(&Some(1)),
-            displays_as(eq("which contains 1, which is equal to 1"))
+            displays_as(eq("which has a value which is equal to 1"))
         )
     }
 
@@ -149,7 +149,7 @@ Actual: Some(
     fn some_explain_match_with_some_fail() -> Result<()> {
         verify_that!(
             some(eq(1)).explain_match(&Some(2)),
-            displays_as(eq("which contains 2, which isn't equal to 1"))
+            displays_as(eq("which has a value which isn't equal to 1"))
         )
     }
 }
