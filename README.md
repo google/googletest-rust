@@ -182,21 +182,19 @@ failed, but execution continues until the test completes or otherwise aborts.
 
 This is analogous to the `EXPECT_*` family of macros in GoogleTest.
 
-To make a non-fatal assertion, invoke the method [`and_log_failure()`] on the
-output of the assertion macro. The test must also be marked with
-[`google_test`] instead of the Rust-standard `#[test]`. It must return
-[`Result<()>`].
+To make a non-fatal assertion, use the macro [`expect_that!`]. The test must
+also be marked with [`google_test`] instead of the Rust-standard `#[test]`. It
+must return [`Result<()>`].
 
 ```rust
 use googletest::{
-    google_test, matchers::eq, verify_that, GoogleTestSupport, Result
+    expect_that, google_test, matchers::eq, Result
 };
 
 #[google_test]
 fn more_than_one_failure() -> Result<()> {
     let value = 2;
-    verify_that!(value, eq(3)).and_log_failure();  // Just marks the test as
-                                                   // having failed.
+    expect_that!(value, eq(3));  // Just marks the test as having failed.
     verify_that!(value, eq(2))?;  // Passes, but the test already failed.
     Ok(())
 }
@@ -262,7 +260,8 @@ stuff_is_correct(x, y) was false with
 ```
 
 The `verify_pred!` invocation evaluates to a [`Result<()>`] just like
-[`verify_that!`].
+[`verify_that!`]. There is also a macro [`expect_pred!`] to make a non-fatal
+predicaticate assertion.
 
 ## Unconditionally generating a test failure
 
@@ -284,6 +283,8 @@ to this project.
 
 [`and_log_failure()`]: https://docs.rs/googletest/*/googletest/trait.GoogleTestSupport.html#tymethod.and_log_failure
 [`assert_that!`]: https://docs.rs/googletest/*/googletest/macro.assert_that.html
+[`expect_pred!`]: https://docs.rs/googletest/*/googletest/macro.expect_pred.html
+[`expect_that!`]: https://docs.rs/googletest/*/googletest/macro.expect_that.html
 [`fail!`]: https://docs.rs/googletest/*/googletest/macro.fail.html
 [`google_test`]: https://docs.rs/googletest/*/googletest/attr.google_test.html
 [`matches_pattern!`]: https://docs.rs/googletest/*/googletest/macro.matches_pattern.html
