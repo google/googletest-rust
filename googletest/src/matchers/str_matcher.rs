@@ -32,6 +32,12 @@ use std::ops::Deref;
 /// verify_that!("Some value".to_string(), contains_substring("value"))?;   // Passes
 /// verify_that!("Some value", contains_substring("value".to_string()))?;   // Passes
 /// ```
+///
+/// > Note on memory use: In most cases, this matcher does not allocate memory
+/// > when matching strings. However, it must allocate copies of both the actual
+/// > and expected values when matching strings while
+/// > [`ignoring_ascii_case`][StrMatcherConfigurator::ignoring_ascii_case] is
+/// > set.
 pub fn contains_substring<T>(expected: T) -> StrMatcher<T> {
     StrMatcher {
         configuration: Configuration { mode: MatchMode::Contains, ..Default::default() },
@@ -292,6 +298,8 @@ enum CasePolicy {
 impl Configuration {
     // The entry point for all string matching. StrMatcher::matches redirects
     // immediately to this function.
+    //
+    // This takes into account all aspects including IndentationPolicy.
     fn do_strings_match(&self, expected: &str, actual: &str) -> bool {
         match self.indentation_policy {
             IndentationPolicy::Respect => self.are_strings_equivalent(expected, actual),
@@ -301,6 +309,8 @@ impl Configuration {
         }
     }
 
+    // This takes into account leading and trailing whitespace, CasePolicy, and
+    // MatchMode. It ignores IndentationPolicy.
     fn are_strings_equivalent(&self, expected: &str, actual: &str) -> bool {
         let (expected, actual) =
             match (self.ignore_leading_whitespace, self.ignore_trailing_whitespace) {
@@ -314,8 +324,12 @@ impl Configuration {
                 CasePolicy::Respect => expected == actual,
                 CasePolicy::IgnoreAscii => expected.eq_ignore_ascii_case(actual),
             },
-            // TODO(b/266919284): Support self.case_policy in this branch.
-            MatchMode::Contains => actual.contains(expected),
+            MatchMode::Contains => match self.case_policy {
+                CasePolicy::Respect => actual.contains(expected),
+                CasePolicy::IgnoreAscii => {
+                    actual.to_ascii_lowercase().contains(&expected.to_ascii_lowercase())
+                }
+            },
         }
     }
 
@@ -846,6 +860,12 @@ Some text
     #[google_test]
     fn matches_string_containing_expected_value_in_contains_mode() -> Result<()> {
         verify_that!("Some string", contains_substring("str"))
+    }
+
+    #[google_test]
+    fn matches_string_containing_expected_value_in_contains_mode_while_ignoring_ascii_case()
+    -> Result<()> {
+        verify_that!("Some string", contains_substring("STR").ignoring_ascii_case())
     }
 
     #[google_test]
