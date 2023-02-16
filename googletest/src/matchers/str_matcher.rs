@@ -76,6 +76,64 @@ pub trait StrMatcherConfigurator<T> {
     /// value.
     fn ignoring_outer_whitespace(self) -> StrMatcher<T>;
 
+    /// Configures the matcher to ignore uniform indentation in both the
+    /// expected and actual values.
+    ///
+    /// Uniform indentation is defined as the maximimal prefix consisting only
+    /// of ordinary space (' ') characters common to every line. The actual and
+    /// expected value may additionally have one empty initial line and one
+    /// final line consisting only of space characters which are both
+    /// ignored.
+    ///
+    /// Lines are as defined in
+    /// [`str::lines`](https://doc.rust-lang.org/std/primitive.str.html#method.lines) and can be
+    /// terminated in the Unix or DOS styles.
+    ///
+    /// ```rust
+    /// // Passes:
+    /// let value = "
+    /// Some text
+    /// Some more text
+    ///    Some indented text";
+    /// verify_that!(
+    ///     value,
+    //      eq("
+    ///         Some text
+    ///         Some more text
+    ///            Some indented text
+    ///     ").ignoring_uniform_indentation()
+    /// )?;
+    ///
+    /// // Passes:
+    /// let value = "
+    ///    Some text
+    ///    Some more text
+    ///       Some indented text
+    /// ";
+    /// verify_that!(
+    ///     value,
+    //      eq("
+    /// Some text
+    /// Some more text
+    ///    Some indented text
+    ///     ").ignoring_uniform_indentation()
+    /// )?;
+    ///
+    /// // Fails due to inconsistent indentation:
+    /// let value = "
+    ///   Some text
+    ///     Some more text
+    ///       Some indented text";
+    /// verify_that!(
+    ///     value,
+    //      eq("
+    ///            Some text
+    ///         Some more text
+    ///            Some indented text").ignoring_uniform_indentation()
+    /// )?;
+    /// ```
+    fn ignoring_uniform_indentation(self) -> StrMatcher<T>;
+
     /// Configures the matcher to ignore ASCII case when comparing values.
     ///
     /// This uses the same rules for case as
@@ -141,6 +199,14 @@ impl<T, MatcherT: Into<StrMatcher<T>>> StrMatcherConfigurator<T> for MatcherT {
         StrMatcher { configuration: existing.configuration.ignoring_outer_whitespace(), ..existing }
     }
 
+    fn ignoring_uniform_indentation(self) -> StrMatcher<T> {
+        let existing = self.into();
+        StrMatcher {
+            configuration: existing.configuration.ignoring_uniform_indentation(),
+            ..existing
+        }
+    }
+
     fn ignoring_ascii_case(self) -> StrMatcher<T> {
         let existing = self.into();
         StrMatcher { configuration: existing.configuration.ignoring_ascii_case(), ..existing }
@@ -173,7 +239,15 @@ impl<T> StrMatcher<T> {
 struct Configuration {
     ignore_leading_whitespace: bool,
     ignore_trailing_whitespace: bool,
+    indentation_policy: IndentationPolicy,
     case_policy: CasePolicy,
+}
+
+#[derive(Default)]
+enum IndentationPolicy {
+    #[default]
+    Respect,
+    IgnoreUniform,
 }
 
 #[derive(Default)]
@@ -187,6 +261,35 @@ impl Configuration {
     // The entry point for all string matching. StrMatcher::matches redirects
     // immediately to this function.
     fn do_strings_match(&self, expected: &str, actual: &str) -> bool {
+        match self.indentation_policy {
+            IndentationPolicy::Respect => self.are_strings_equivalent(expected, actual),
+            IndentationPolicy::IgnoreUniform => {
+                let expected = Self::strip_initial_and_final_blank_lines(expected);
+                let expected_lines = expected.lines();
+                let actual = Self::strip_initial_and_final_blank_lines(actual);
+                let actual_lines = actual.lines();
+                if expected_lines.clone().count() != actual_lines.clone().count() {
+                    return false;
+                }
+                let expected_lines_prefix_len =
+                    Self::common_indentation_prefix_len(expected_lines.clone());
+                let actual_lines_prefix_len =
+                    Self::common_indentation_prefix_len(actual_lines.clone());
+                // TODO(b/266919284): Take self.ignore_*_whitespace into account as well.
+                for (expected, actual) in expected_lines.zip(actual_lines) {
+                    if !self.are_strings_equivalent(
+                        &expected[expected_lines_prefix_len..],
+                        &actual[actual_lines_prefix_len..],
+                    ) {
+                        return false;
+                    }
+                }
+                true
+            }
+        }
+    }
+
+    fn are_strings_equivalent(&self, expected: &str, actual: &str) -> bool {
         let (expected, actual) =
             match (self.ignore_leading_whitespace, self.ignore_trailing_whitespace) {
                 (true, true) => (expected.trim(), actual.trim()),
@@ -200,25 +303,34 @@ impl Configuration {
         }
     }
 
+    fn common_indentation_prefix_len<'a>(lines: impl IntoIterator<Item = &'a str>) -> usize {
+        lines.into_iter().filter_map(|l| l.find(|c: char| c != ' ')).min().unwrap_or(0)
+    }
+
+    fn strip_initial_and_final_blank_lines(value: &str) -> &str {
+        let value = value.strip_prefix('\n').unwrap_or(value);
+        value.trim_end_matches(' ').strip_suffix('\n').unwrap_or(value)
+    }
+
     // StrMatcher::describe redirects immediately to this function.
     fn describe(&self, matcher_result: MatcherResult, expected: &str) -> String {
-        let whitespace_addendum =
-            match (self.ignore_leading_whitespace, self.ignore_trailing_whitespace) {
-                (true, true) => "ignoring leading and trailing whitespace",
-                (true, false) => "ignoring leading whitespace",
-                (false, true) => "ignoring trailing whitespace",
-                (false, false) => "",
-            };
-        let case_addendum = match self.case_policy {
-            CasePolicy::Respect => "",
-            CasePolicy::IgnoreAscii => "ignoring ASCII case",
-        };
-        let extra = match (whitespace_addendum, case_addendum) {
-            ("", "") => "".into(),
-            (_, "") => format!(" ({whitespace_addendum})"),
-            ("", _) => format!(" ({case_addendum})"),
-            (_, _) => format!(" ({whitespace_addendum}, {case_addendum})"),
-        };
+        let mut addenda = Vec::with_capacity(3);
+        match (self.ignore_leading_whitespace, self.ignore_trailing_whitespace) {
+            (true, true) => addenda.push("ignoring leading and trailing whitespace"),
+            (true, false) => addenda.push("ignoring leading whitespace"),
+            (false, true) => addenda.push("ignoring trailing whitespace"),
+            (false, false) => {}
+        }
+        match self.indentation_policy {
+            IndentationPolicy::Respect => {}
+            IndentationPolicy::IgnoreUniform => addenda.push("ignoring uniform indentation"),
+        }
+        match self.case_policy {
+            CasePolicy::Respect => {}
+            CasePolicy::IgnoreAscii => addenda.push("ignoring ASCII case"),
+        }
+        let extra =
+            if !addenda.is_empty() { format!(" ({})", addenda.join(", ")) } else { "".into() };
         match matcher_result {
             MatcherResult::Matches => format!("is equal to {expected:?}{extra}"),
             MatcherResult::DoesNotMatch => format!("isn't equal to {expected:?}{extra}"),
@@ -235,6 +347,10 @@ impl Configuration {
 
     fn ignoring_outer_whitespace(self) -> Self {
         Self { ignore_leading_whitespace: true, ignore_trailing_whitespace: true, ..self }
+    }
+
+    fn ignoring_uniform_indentation(self) -> Self {
+        Self { indentation_policy: IndentationPolicy::IgnoreUniform, ..self }
     }
 
     fn ignoring_ascii_case(self) -> Self {
@@ -339,6 +455,85 @@ mod tests {
     }
 
     #[google_test]
+    fn ignores_uniform_indent_in_expected_when_requested() -> Result<()> {
+        let value = "
+Some text
+Some more text
+";
+        let matcher = StrMatcher::with_default_config(
+            "
+                Some text
+                Some more text
+            ",
+        );
+        verify_that!(value, matcher.ignoring_uniform_indentation())
+    }
+
+    #[google_test]
+    fn ignores_uniform_indent_in_actual_when_requested() -> Result<()> {
+        let value = "
+            Some text
+            Some more text
+               Some indented text
+        ";
+        let matcher = StrMatcher::with_default_config(
+            "
+Some text
+Some more text
+   Some indented text
+            ",
+        );
+        verify_that!(value, matcher.ignoring_uniform_indentation())
+    }
+
+    #[google_test]
+    fn remains_sensitive_to_nonuniform_indent_when_ignoring_uniform_indent() -> Result<()> {
+        let value = "
+    Some text
+  Some more text
+   Some indented text
+        ";
+        let matcher = StrMatcher::with_default_config(
+            "
+             Some text
+                Some more text
+                   Some indented text
+            ",
+        );
+        verify_that!(value, not(matcher.ignoring_uniform_indentation()))
+    }
+
+    #[google_test]
+    fn ignores_initial_and_final_empty_lines_when_ignoring_uniform_indent() -> Result<()> {
+        let value = "Some text
+Some more text";
+        let matcher = StrMatcher::with_default_config(
+            "
+                Some text
+                Some more text
+            ",
+        );
+        verify_that!(value, matcher.ignoring_uniform_indentation())
+    }
+
+    #[google_test]
+    fn does_not_match_values_with_differing_number_of_lines_when_ignoring_uniform_indent()
+    -> Result<()> {
+        let value = "
+            Some text
+            Some text
+            Some text
+        ";
+        let matcher = StrMatcher::with_default_config(
+            "
+                Some text
+                Some text
+            ",
+        );
+        verify_that!(value, not(matcher.ignoring_uniform_indentation()))
+    }
+
+    #[google_test]
     fn respects_ascii_case_by_default() -> Result<()> {
         let matcher = StrMatcher::with_default_config("A string");
         verify_that!("A STRING", not(matcher))
@@ -368,6 +563,19 @@ mod tests {
     #[google_test]
     fn allows_ignoring_ascii_case_from_eq() -> Result<()> {
         verify_that!("A string", eq("A STRING").ignoring_ascii_case())
+    }
+
+    #[google_test]
+    fn allows_ignoring_uniform_indent_from_eq() -> Result<()> {
+        verify_that!("Some text", eq("   Some text").ignoring_uniform_indentation())
+    }
+
+    #[google_test]
+    fn allows_ignoring_uniform_indent_and_ignoring_ascii_case() -> Result<()> {
+        verify_that!(
+            "Some text",
+            eq("   SOME TEXT").ignoring_uniform_indentation().ignoring_ascii_case()
+        )
     }
 
     #[google_test]
@@ -443,6 +651,27 @@ mod tests {
         verify_that!(
             Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
             eq("is equal to \"A string\" (ignoring leading whitespace, ignoring ASCII case)")
+        )
+    }
+
+    #[google_test]
+    fn describes_itself_for_matching_result_ignoring_uniform_indentation() -> Result<()> {
+        let matcher = StrMatcher::with_default_config("A string").ignoring_uniform_indentation();
+        verify_that!(
+            Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
+            eq("is equal to \"A string\" (ignoring uniform indentation)")
+        )
+    }
+
+    #[google_test]
+    fn describes_itself_for_matching_result_ignoring_ascii_case_and_uniform_indentation()
+    -> Result<()> {
+        let matcher = StrMatcher::with_default_config("A string")
+            .ignoring_uniform_indentation()
+            .ignoring_ascii_case();
+        verify_that!(
+            Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
+            eq("is equal to \"A string\" (ignoring uniform indentation, ignoring ASCII case)")
         )
     }
 }
