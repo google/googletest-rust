@@ -25,8 +25,6 @@ pub mod contains_matcher;
 #[cfg(not(google3))]
 pub mod contains_regex_matcher;
 #[cfg(not(google3))]
-pub mod contains_substring_matcher;
-#[cfg(not(google3))]
 pub mod disjunction_matcher;
 #[cfg(not(google3))]
 pub mod display_matcher;
@@ -98,7 +96,6 @@ pub use conjunction_matcher::AndMatcherExt;
 pub use container_eq_matcher::container_eq;
 pub use contains_matcher::contains;
 pub use contains_regex_matcher::contains_regex;
-pub use contains_substring_matcher::contains_substring;
 pub use disjunction_matcher::OrMatcherExt;
 pub use display_matcher::displays_as;
 pub use each_matcher::each;
@@ -129,6 +126,7 @@ pub use pointwise_matcher::pointwise;
 pub use size_matcher::size;
 pub use some_matcher::some;
 pub use starts_with_matcher::starts_with;
+pub use str_matcher::contains_substring;
 pub use subset_of_matcher::subset_of;
 pub use superset_of_matcher::superset_of;
 #[cfg(google3)]

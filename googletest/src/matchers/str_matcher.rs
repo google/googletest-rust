@@ -21,6 +21,24 @@ use googletest::matchers::eq_matcher;
 use std::fmt::Debug;
 use std::ops::Deref;
 
+/// Matches a string containing a given substring.
+///
+/// Both the actual value and the expected substring may be either a `String` or
+/// a string reference.
+///
+/// ```rust
+/// verify_that!("Some value", contains_substring("Some"))?;  // Passes
+/// verify_that!("Another value", contains_substring("Some"))?;   // Fails
+/// verify_that!("Some value".to_string(), contains_substring("value"))?;   // Passes
+/// verify_that!("Some value", contains_substring("value".to_string()))?;   // Passes
+/// ```
+pub fn contains_substring<T>(expected: T) -> StrMatcher<T> {
+    StrMatcher {
+        configuration: Configuration { mode: MatchMode::Contains, ..Default::default() },
+        expected,
+    }
+}
+
 /// Extension trait to configure [StrMatcher].
 ///
 /// Matchers which match against string values and, through configuration,
@@ -152,8 +170,10 @@ pub trait StrMatcherConfigurator<T> {
 /// A matcher which matches equality or containment of a string-like value in a
 /// configurable way.
 ///
-/// Use the matcher methods [`eq`][googletest::matchers::eq_matcher::eq] et al.
-/// to instantiate this.
+/// The following matcher methods instantiate this:
+///
+///  * [`eq`][crate::matchers::eq_matcher::eq],
+///  * [`contains_substring`].
 pub struct StrMatcher<T> {
     expected: T,
     configuration: Configuration,
@@ -237,10 +257,18 @@ impl<T> StrMatcher<T> {
 // The default value represents exact equality of the strings.
 #[derive(Default)]
 struct Configuration {
+    mode: MatchMode,
     ignore_leading_whitespace: bool,
     ignore_trailing_whitespace: bool,
     indentation_policy: IndentationPolicy,
     case_policy: CasePolicy,
+}
+
+#[derive(Default)]
+enum MatchMode {
+    #[default]
+    Equals,
+    Contains,
 }
 
 #[derive(Default)]
@@ -264,6 +292,8 @@ impl Configuration {
         match self.indentation_policy {
             IndentationPolicy::Respect => self.are_strings_equivalent(expected, actual),
             IndentationPolicy::IgnoreUniform => {
+                // TODO(b/266919284): This behaves incorrectly when self.mode is not Equals,
+                // since it would apply the mode separately to each line.
                 let expected = Self::strip_initial_and_final_blank_lines(expected);
                 let expected_lines = expected.lines();
                 let actual = Self::strip_initial_and_final_blank_lines(actual);
@@ -297,9 +327,13 @@ impl Configuration {
                 (false, true) => (expected.trim_end(), actual.trim_end()),
                 (false, false) => (expected, actual),
             };
-        match self.case_policy {
-            CasePolicy::Respect => expected == actual,
-            CasePolicy::IgnoreAscii => expected.eq_ignore_ascii_case(actual),
+        match self.mode {
+            MatchMode::Equals => match self.case_policy {
+                CasePolicy::Respect => expected == actual,
+                CasePolicy::IgnoreAscii => expected.eq_ignore_ascii_case(actual),
+            },
+            // TODO(b/266919284): Support self.case_policy in this branch.
+            MatchMode::Contains => actual.contains(expected),
         }
     }
 
@@ -331,10 +365,17 @@ impl Configuration {
         }
         let extra =
             if !addenda.is_empty() { format!(" ({})", addenda.join(", ")) } else { "".into() };
-        match matcher_result {
-            MatcherResult::Matches => format!("is equal to {expected:?}{extra}"),
-            MatcherResult::DoesNotMatch => format!("isn't equal to {expected:?}{extra}"),
-        }
+        let match_mode_description = match self.mode {
+            MatchMode::Equals => match matcher_result {
+                MatcherResult::Matches => "is equal to",
+                MatcherResult::DoesNotMatch => "isn't equal to",
+            },
+            MatchMode::Contains => match matcher_result {
+                MatcherResult::Matches => "contains a substring",
+                MatcherResult::DoesNotMatch => "does not contain a substring",
+            },
+        };
+        format!("{match_mode_description} {expected:?}{extra}")
     }
 
     fn ignoring_leading_whitespace(self) -> Self {
@@ -579,6 +620,11 @@ Some more text";
     }
 
     #[google_test]
+    fn matches_string_containing_expected_value_in_contains_mode() -> Result<()> {
+        verify_that!("Some string", contains_substring("str"))
+    }
+
+    #[google_test]
     fn describes_itself_for_matching_result() -> Result<()> {
         let matcher = StrMatcher::with_default_config("A string");
         verify_that!(
@@ -672,6 +718,24 @@ Some more text";
         verify_that!(
             Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
             eq("is equal to \"A string\" (ignoring uniform indentation, ignoring ASCII case)")
+        )
+    }
+
+    #[google_test]
+    fn describes_itself_for_matching_result_in_contains_mode() -> Result<()> {
+        let matcher = contains_substring("A string");
+        verify_that!(
+            Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
+            eq("contains a substring \"A string\"")
+        )
+    }
+
+    #[google_test]
+    fn describes_itself_for_non_matching_result_in_contains_mode() -> Result<()> {
+        let matcher = contains_substring("A string");
+        verify_that!(
+            Matcher::<&str>::describe(&matcher, MatcherResult::DoesNotMatch),
+            eq("does not contain a substring \"A string\"")
         )
     }
 }
