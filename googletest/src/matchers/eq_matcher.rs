@@ -53,12 +53,15 @@ use std::fmt::Debug;
 ///
 /// You can find the standard library PartialEq implementation in
 /// <https://doc.rust-lang.org/core/cmp/trait.PartialEq.html#implementors>
-pub fn eq<A: Debug, T: PartialEq<A> + Debug>(expected: T) -> impl Matcher<A> {
+pub fn eq<T>(expected: T) -> EqMatcher<T> {
     EqMatcher { expected }
 }
 
-struct EqMatcher<T> {
-    expected: T,
+/// A matcher which matches a value equal to `expected`.
+///
+/// See [`eq`].
+pub struct EqMatcher<T> {
+    pub(crate) expected: T,
 }
 
 impl<A: Debug, T: PartialEq<A> + Debug> Matcher<A> for EqMatcher<T> {

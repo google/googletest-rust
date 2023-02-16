@@ -83,6 +83,8 @@ pub mod some_matcher;
 #[cfg(not(google3))]
 pub mod starts_with_matcher;
 #[cfg(not(google3))]
+pub mod str_matcher;
+#[cfg(not(google3))]
 pub mod subset_of_matcher;
 #[cfg(not(google3))]
 pub mod superset_of_matcher;
