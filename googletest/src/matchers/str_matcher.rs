@@ -64,6 +64,25 @@ pub fn starts_with<T>(expected: T) -> StrMatcher<T> {
     }
 }
 
+/// Matches a string which ends with the given suffix.
+///
+/// Both the actual value and the expected suffix may be either a `String` or
+/// a string reference.
+///
+/// ```rust
+/// verify_that!("Some value", ends_with("value"))?;  // Passes
+/// verify_that!("Some value", ends_with("other value"))?;   // Fails
+/// verify_that!("Some value", ends_with("Some"))?;  // Fails
+/// verify_that!("Some value".to_string(), ends_with("value"))?;   // Passes
+/// verify_that!("Some value", ends_with("value".to_string()))?;   // Passes
+/// ```
+pub fn ends_with<T>(expected: T) -> StrMatcher<T> {
+    StrMatcher {
+        configuration: Configuration { mode: MatchMode::EndsWith, ..Default::default() },
+        expected,
+    }
+}
+
 /// Extension trait to configure [StrMatcher].
 ///
 /// Matchers which match against string values and, through configuration,
@@ -300,6 +319,7 @@ enum MatchMode {
     Equals,
     Contains,
     StartsWith,
+    EndsWith,
 }
 
 #[derive(Default, Clone)]
@@ -353,6 +373,10 @@ impl Configuration {
             },
             MatchMode::StartsWith => match self.case_policy {
                 CasePolicy::Respect => actual.starts_with(expected),
+                CasePolicy::IgnoreAscii => todo!(),
+            },
+            MatchMode::EndsWith => match self.case_policy {
+                CasePolicy::Respect => actual.ends_with(expected),
                 CasePolicy::IgnoreAscii => todo!(),
             },
         }
@@ -486,6 +510,10 @@ impl Configuration {
             MatchMode::StartsWith => match matcher_result {
                 MatcherResult::Matches => "starts with prefix",
                 MatcherResult::DoesNotMatch => "does not start with",
+            },
+            MatchMode::EndsWith => match matcher_result {
+                MatcherResult::Matches => "ends with suffix",
+                MatcherResult::DoesNotMatch => "does not end with",
             },
         };
         format!("{match_mode_description} {expected:?}{extra}")
@@ -913,6 +941,21 @@ Some text
     }
 
     #[google_test]
+    fn ends_with_matches_string_reference_with_suffix() -> Result<()> {
+        verify_that!("Some value", ends_with("value"))
+    }
+
+    #[google_test]
+    fn ends_with_does_not_match_string_without_suffix() -> Result<()> {
+        verify_that!("Some value", not(ends_with("other value")))
+    }
+
+    #[google_test]
+    fn ends_with_does_not_match_string_with_substring_not_at_end() -> Result<()> {
+        verify_that!("Some value", not(ends_with("Some")))
+    }
+
+    #[google_test]
     fn describes_itself_for_matching_result() -> Result<()> {
         let matcher = StrMatcher::with_default_config("A string");
         verify_that!(
@@ -1042,6 +1085,24 @@ Some text
         verify_that!(
             Matcher::<&str>::describe(&matcher, MatcherResult::DoesNotMatch),
             eq("does not start with \"A string\"")
+        )
+    }
+
+    #[google_test]
+    fn describes_itself_for_matching_result_in_ends_with_mode() -> Result<()> {
+        let matcher = ends_with("A string");
+        verify_that!(
+            Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
+            eq("ends with suffix \"A string\"")
+        )
+    }
+
+    #[google_test]
+    fn describes_itself_for_non_matching_result_in_ends_with_mode() -> Result<()> {
+        let matcher = ends_with("A string");
+        verify_that!(
+            Matcher::<&str>::describe(&matcher, MatcherResult::DoesNotMatch),
+            eq("does not end with \"A string\"")
         )
     }
 }

@@ -35,8 +35,6 @@ pub mod elements_are_matcher;
 #[cfg(not(google3))]
 pub mod empty_matcher;
 #[cfg(not(google3))]
-pub mod ends_with_matcher;
-#[cfg(not(google3))]
 pub mod eq_matcher;
 #[cfg(not(google3))]
 pub mod err_matcher;
@@ -100,7 +98,6 @@ pub use each_matcher::each;
 #[cfg(google3)]
 pub use elements_are_matcher::elements_are;
 pub use empty_matcher::empty;
-pub use ends_with_matcher::ends_with;
 pub use eq_matcher::eq;
 pub use err_matcher::err;
 #[cfg(google3)]
@@ -123,7 +120,7 @@ pub use points_to_matcher::points_to;
 pub use pointwise_matcher::pointwise;
 pub use size_matcher::size;
 pub use some_matcher::some;
-pub use str_matcher::{contains_substring, starts_with};
+pub use str_matcher::{contains_substring, ends_with, starts_with};
 pub use subset_of_matcher::subset_of;
 pub use superset_of_matcher::superset_of;
 #[cfg(google3)]
