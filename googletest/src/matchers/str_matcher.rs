@@ -19,6 +19,7 @@ use googletest::matcher::{Matcher, MatcherResult};
 #[cfg(not(google3))]
 use googletest::matchers::eq_matcher;
 use std::fmt::Debug;
+use std::iter::Peekable;
 use std::ops::Deref;
 
 /// Matches a string containing a given substring.
@@ -198,6 +199,11 @@ pub trait StrMatcherConfigurator<T> {
     ///            Some indented text").ignoring_uniform_indentation()
     /// )?;
     /// ```
+    ///
+    /// Note on memory: This results in heap memory allocation proportional to the
+    /// number of lines in the expected value when used with the
+    /// [`contains_substring`] and [`ends_with`] matchers. It does not allocate
+    /// any non-stack memory in other cases.
     fn ignoring_uniform_indentation(self) -> StrMatcher<T>;
 
     /// Configures the matcher to ignore ASCII case when comparing values.
@@ -212,6 +218,13 @@ pub trait StrMatcherConfigurator<T> {
     ///
     /// This is **not guaranteed** to match strings with differing upper/lower
     /// case characters outside of the codepoints 0-127 covered by ASCII.
+    ///
+    /// Note on memory: This results in heap memory allocation due to copying
+    /// both the expected and actual values when used with the
+    /// [`contains_substring`] matcher. When
+    /// [`ignoring_uniform_indentation`][Self::ignoring_uniform_indentation] is
+    /// also used, this applies separately to each line of the expected and
+    /// actual values. No heap allocation is needed in other cases.
     fn ignoring_ascii_case(self) -> StrMatcher<T>;
 }
 
@@ -323,6 +336,24 @@ enum MatchMode {
     EndsWith,
 }
 
+impl MatchMode {
+    fn to_initial_mode(&self) -> Self {
+        match self {
+            Self::Equals | Self::StartsWith => Self::Equals,
+            Self::Contains => Self::EndsWith,
+            _ => todo!("b/266919284"),
+        }
+    }
+
+    fn to_final_mode(&self) -> Self {
+        match self {
+            Self::Equals => Self::Equals,
+            Self::StartsWith | Self::Contains => Self::StartsWith,
+            _ => todo!("b/266919284"),
+        }
+    }
+}
+
 #[derive(Default, Clone)]
 enum IndentationPolicy {
     #[default]
@@ -398,10 +429,113 @@ impl Configuration {
         let expected_lines = expected.lines();
         let actual_lines = actual.lines();
 
-        if expected_lines.clone().count() != actual_lines.clone().count() {
+        if matches!(self.mode, MatchMode::Equals)
+            && expected_lines.clone().count() != actual_lines.clone().count()
+        {
             return false;
         }
 
+        match self.mode {
+            MatchMode::Equals | MatchMode::StartsWith => {
+                self.compare_lines_from_start_ignoring_uniform_indent(expected_lines, actual_lines)
+            }
+            MatchMode::Contains => {
+                self.compare_lines_ignoring_uniform_indent(expected_lines, actual_lines)
+            }
+            _ => todo!("b/266919284"),
+        }
+    }
+
+    fn common_indentation_prefix_len<'a>(lines: impl IntoIterator<Item = &'a str>) -> usize {
+        lines.into_iter().filter_map(|l| l.find(|c: char| c != ' ')).min().unwrap_or(0)
+    }
+
+    fn strip_initial_and_final_blank_lines<'a>(&self, mut value: &'a str) -> &'a str {
+        if self.ignore_leading_whitespace {
+            // Strip all leading lines which consist only of whitespace. Any leading space
+            // characters on the first line with non-whitespace characters must be included
+            // in calculating the uniform indentation, so we can't use trim_start(). The
+            // initial configuration from to_initial_configuration() will handle the rest.
+
+            // N.B. This handles both Unix and DOS-style newlines since the \n character
+            // terminates the newline in both cases.
+            while let Some(first_newline_index) = value.find('\n') {
+                if value[..first_newline_index].trim() != "" {
+                    break;
+                }
+                value = &value[first_newline_index + 1..];
+            }
+        }
+        if self.ignore_trailing_whitespace {
+            value.trim_end()
+        } else {
+            let value = value.strip_prefix('\n').unwrap_or(value);
+            value.trim_end_matches(' ').strip_suffix('\n').unwrap_or(value)
+        }
+    }
+
+    fn compare_lines_ignoring_uniform_indent<'a, T: Iterator<Item = &'a str> + Clone>(
+        &self,
+        expected_lines: T,
+        actual_lines: impl Iterator<Item = &'a str> + Clone,
+    ) -> bool {
+        let expected_lines_prefix_len = Self::common_indentation_prefix_len(expected_lines.clone());
+        let actual_lines_prefix_len = Self::common_indentation_prefix_len(actual_lines.clone());
+        let mut expected_iters: Vec<Peekable<T>> = Vec::new();
+        let expected_lines = expected_lines.peekable();
+        let initial_configuration = self.to_initial_configuration();
+        let middle_configuration = self.to_middle_configuration();
+        let final_configuration = self.to_final_configuration();
+        for actual in actual_lines {
+            let mut new_expected_iters = Vec::new();
+            let mut first_expected_iter = expected_lines.clone();
+            match first_expected_iter.next() {
+                Some(expected) => {
+                    let configuration = match first_expected_iter.peek() {
+                        Some(_) => initial_configuration.clone(),
+                        None => self.clone(),
+                    };
+                    if configuration.are_strings_equivalent(
+                        &expected[expected_lines_prefix_len..],
+                        &actual[actual_lines_prefix_len..],
+                    ) {
+                        new_expected_iters.push(first_expected_iter);
+                    }
+                }
+                None => {
+                    // Expected string is empty, so it always matches.
+                    return true;
+                }
+            }
+            for mut expected_iter in expected_iters.drain(..) {
+                match expected_iter.next() {
+                    Some(expected) => {
+                        let configuration = match expected_iter.peek() {
+                            Some(_) => middle_configuration.clone(),
+                            None => final_configuration.clone(),
+                        };
+                        if configuration.are_strings_equivalent(
+                            &expected[expected_lines_prefix_len..],
+                            &actual[actual_lines_prefix_len..],
+                        ) {
+                            new_expected_iters.push(expected_iter);
+                        }
+                    }
+                    None => {
+                        return true;
+                    }
+                }
+            }
+            expected_iters = new_expected_iters;
+        }
+        expected_iters.into_iter().any(|mut i| i.next().is_none())
+    }
+
+    fn compare_lines_from_start_ignoring_uniform_indent<'a, T: Iterator<Item = &'a str> + Clone>(
+        &self,
+        expected_lines: T,
+        actual_lines: impl Iterator<Item = &'a str> + Clone,
+    ) -> bool {
         let expected_lines_prefix_len = Self::common_indentation_prefix_len(expected_lines.clone());
         let actual_lines_prefix_len = Self::common_indentation_prefix_len(actual_lines.clone());
         let mut expected_actual = expected_lines.zip(actual_lines).peekable();
@@ -446,44 +580,25 @@ impl Configuration {
         }
     }
 
-    fn common_indentation_prefix_len<'a>(lines: impl IntoIterator<Item = &'a str>) -> usize {
-        lines.into_iter().filter_map(|l| l.find(|c: char| c != ' ')).min().unwrap_or(0)
-    }
-
-    fn strip_initial_and_final_blank_lines<'a>(&self, mut value: &'a str) -> &'a str {
-        if self.ignore_leading_whitespace {
-            // Strip all leading lines which consist only of whitespace. Any leading space
-            // characters on the first line with non-whitespace characters must be included
-            // in calculating the uniform indentation, so we can't use trim_start(). The
-            // initial configuration from to_initial_configuration() will handle the rest.
-
-            // N.B. This handles both Unix and DOS-style newlines since the \n character
-            // terminates the newline in both cases.
-            while let Some(first_newline_index) = value.find('\n') {
-                if value[..first_newline_index].trim() != "" {
-                    break;
-                }
-                value = &value[first_newline_index + 1..];
-            }
-        }
-        if self.ignore_trailing_whitespace {
-            value.trim_end()
-        } else {
-            let value = value.strip_prefix('\n').unwrap_or(value);
-            value.trim_end_matches(' ').strip_suffix('\n').unwrap_or(value)
-        }
-    }
-
     fn to_initial_configuration(&self) -> Self {
-        Self { ignore_trailing_whitespace: false, ..self.clone() }
+        Self {
+            ignore_trailing_whitespace: false,
+            mode: self.mode.to_initial_mode(),
+            ..self.clone()
+        }
     }
 
     fn to_middle_configuration(&self) -> Self {
-        Self { ignore_leading_whitespace: false, ignore_trailing_whitespace: false, ..self.clone() }
+        Self {
+            ignore_leading_whitespace: false,
+            ignore_trailing_whitespace: false,
+            mode: MatchMode::Equals,
+            ..self.clone()
+        }
     }
 
     fn to_final_configuration(&self) -> Self {
-        Self { ignore_leading_whitespace: false, ..self.clone() }
+        Self { ignore_leading_whitespace: false, mode: self.mode.to_final_mode(), ..self.clone() }
     }
 
     // StrMatcher::describe redirects immediately to this function.
@@ -933,6 +1048,164 @@ Some text
     }
 
     #[google_test]
+    fn contains_ignores_uniform_indent_in_single_line_expected_when_requested() -> Result<()> {
+        let value = "
+Some text
+Some more text
+Some other text
+";
+        verify_that!(
+            value,
+            contains_substring(
+                "
+                    Some more text
+                "
+            )
+            .ignoring_uniform_indentation()
+        )
+    }
+
+    #[google_test]
+    fn contains_ignores_uniform_indent_in_multi_line_expected_when_requested() -> Result<()> {
+        let value = "
+Some text
+Some more text
+Some other text
+Some other more text
+";
+        verify_that!(
+            value,
+            contains_substring(
+                "
+                    Some more text
+                    Some other text
+                "
+            )
+            .ignoring_uniform_indentation()
+        )
+    }
+
+    #[google_test]
+    fn contains_can_match_partial_string_in_initial_line_when_ignoring_uniform_indent() -> Result<()>
+    {
+        let value = "
+Some text
+Some more text
+Some other text
+";
+        verify_that!(
+            value,
+            contains_substring(
+                "
+                    more text
+                    Some other text
+                "
+            )
+            .ignoring_uniform_indentation()
+        )
+    }
+
+    #[google_test]
+    fn contains_can_match_partial_string_in_final_line_when_ignoring_uniform_indent() -> Result<()>
+    {
+        let value = "
+Some text
+Some more text
+Some other text
+";
+        verify_that!(
+            value,
+            contains_substring(
+                "
+                    Some text
+                    Some more
+                "
+            )
+            .ignoring_uniform_indentation()
+        )
+    }
+
+    #[google_test]
+    fn contains_does_not_match_when_initial_line_does_not_end_with_text() -> Result<()> {
+        let value = "
+Some text
+Some more text
+Some other text
+";
+        verify_that!(
+            value,
+            not(contains_substring(
+                "
+                    Some
+                    Some other
+                "
+            )
+            .ignoring_uniform_indentation())
+        )
+    }
+
+    #[google_test]
+    fn contains_does_not_match_when_final_line_does_not_start_with_text() -> Result<()> {
+        let value = "
+Some text
+Some more text
+Some other text
+";
+        verify_that!(
+            value,
+            not(contains_substring(
+                "
+                    Some more text
+                    other text
+                "
+            )
+            .ignoring_uniform_indentation())
+        )
+    }
+
+    #[google_test]
+    fn contains_does_not_match_when_middle_line_does_not_start_with_text() -> Result<()> {
+        let value = "
+Some text
+Some more text
+Some other text
+Some more other txt
+";
+        verify_that!(
+            value,
+            not(contains_substring(
+                "
+                    Some more text
+                    other text
+                    Some more other txt
+                "
+            )
+            .ignoring_uniform_indentation())
+        )
+    }
+
+    #[google_test]
+    fn contains_does_not_match_when_middle_line_does_not_end_with_text() -> Result<()> {
+        let value = "
+Some text
+Some more text
+Some other text
+Some more other txt
+";
+        verify_that!(
+            value,
+            not(contains_substring(
+                "
+                    Some more text
+                    Some other
+                    Some more other txt
+                "
+            )
+            .ignoring_uniform_indentation())
+        )
+    }
+
+    #[google_test]
     fn starts_with_matches_string_reference_with_prefix() -> Result<()> {
         verify_that!("Some value", starts_with("Some"))
     }
@@ -960,6 +1233,81 @@ Some text
     #[google_test]
     fn starts_with_does_not_match_string_with_substring_not_at_beginning() -> Result<()> {
         verify_that!("Some value", not(starts_with("value")))
+    }
+
+    #[google_test]
+    fn starts_with_ignores_uniform_indent_in_single_line_expected_when_requested() -> Result<()> {
+        let value = "
+Some text
+Some more text
+";
+        verify_that!(
+            value,
+            starts_with(
+                "
+                    Some text
+                "
+            )
+            .ignoring_uniform_indentation()
+        )
+    }
+
+    #[google_test]
+    fn starts_with_ignores_uniform_indent_in_multi_line_expected_when_requested() -> Result<()> {
+        let value = "
+Some text
+Some more text
+Some other text
+";
+        verify_that!(
+            value,
+            starts_with(
+                "
+                    Some text
+                    Some more text
+                "
+            )
+            .ignoring_uniform_indentation()
+        )
+    }
+
+    #[google_test]
+    fn starts_with_can_match_partial_string_in_final_line_when_ignoring_uniform_indent()
+    -> Result<()> {
+        let value = "
+Some text
+Some more text
+Some other text
+";
+        verify_that!(
+            value,
+            starts_with(
+                "
+                    Some text
+                    Some more
+                "
+            )
+            .ignoring_uniform_indentation()
+        )
+    }
+
+    #[google_test]
+    fn starts_with_only_matches_full_initial_line_when_ignoring_uniform_indent() -> Result<()> {
+        let value = "
+Some text
+Some more text
+Some other text
+";
+        verify_that!(
+            value,
+            not(starts_with(
+                "
+                    Some
+                    Some more text
+                "
+            )
+            .ignoring_uniform_indentation())
+        )
     }
 
     #[google_test]
