@@ -77,8 +77,6 @@ pub mod size_matcher;
 #[cfg(not(google3))]
 pub mod some_matcher;
 #[cfg(not(google3))]
-pub mod starts_with_matcher;
-#[cfg(not(google3))]
 pub mod str_matcher;
 #[cfg(not(google3))]
 pub mod subset_of_matcher;
@@ -125,8 +123,7 @@ pub use points_to_matcher::points_to;
 pub use pointwise_matcher::pointwise;
 pub use size_matcher::size;
 pub use some_matcher::some;
-pub use starts_with_matcher::starts_with;
-pub use str_matcher::contains_substring;
+pub use str_matcher::{contains_substring, starts_with};
 pub use subset_of_matcher::subset_of;
 pub use superset_of_matcher::superset_of;
 #[cfg(google3)]

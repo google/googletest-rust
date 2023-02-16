@@ -45,6 +45,25 @@ pub fn contains_substring<T>(expected: T) -> StrMatcher<T> {
     }
 }
 
+/// Matches a string which starts with the given prefix.
+///
+/// Both the actual value and the expected prefix may be either a `String` or
+/// a string reference.
+///
+/// ```rust
+/// verify_that!("Some value", starts_with("Some"))?;  // Passes
+/// verify_that!("Another value", starts_with("Some"))?;   // Fails
+/// verify_that!("Some value", starts_with("value"))?;  // Fails
+/// verify_that!("Some value".to_string(), starts_with("Some"))?;   // Passes
+/// verify_that!("Some value", starts_with("Some".to_string()))?;   // Passes
+/// ```
+pub fn starts_with<T>(expected: T) -> StrMatcher<T> {
+    StrMatcher {
+        configuration: Configuration { mode: MatchMode::StartsWith, ..Default::default() },
+        expected,
+    }
+}
+
 /// Extension trait to configure [StrMatcher].
 ///
 /// Matchers which match against string values and, through configuration,
@@ -183,7 +202,8 @@ pub trait StrMatcherConfigurator<T> {
 /// The following matcher methods instantiate this:
 ///
 ///  * [`eq`][crate::matchers::eq_matcher::eq],
-///  * [`contains_substring`].
+///  * [`contains_substring`],
+///  * [`starts_with`].
 pub struct StrMatcher<T> {
     expected: T,
     configuration: Configuration,
@@ -279,6 +299,7 @@ enum MatchMode {
     #[default]
     Equals,
     Contains,
+    StartsWith,
 }
 
 #[derive(Default, Clone)]
@@ -329,6 +350,10 @@ impl Configuration {
                 CasePolicy::IgnoreAscii => {
                     actual.to_ascii_lowercase().contains(&expected.to_ascii_lowercase())
                 }
+            },
+            MatchMode::StartsWith => match self.case_policy {
+                CasePolicy::Respect => actual.starts_with(expected),
+                CasePolicy::IgnoreAscii => todo!(),
             },
         }
     }
@@ -457,6 +482,10 @@ impl Configuration {
             MatchMode::Contains => match matcher_result {
                 MatcherResult::Matches => "contains a substring",
                 MatcherResult::DoesNotMatch => "does not contain a substring",
+            },
+            MatchMode::StartsWith => match matcher_result {
+                MatcherResult::Matches => "starts with prefix",
+                MatcherResult::DoesNotMatch => "does not start with",
             },
         };
         format!("{match_mode_description} {expected:?}{extra}")
@@ -869,6 +898,21 @@ Some text
     }
 
     #[google_test]
+    fn starts_with_matches_string_reference_with_prefix() -> Result<()> {
+        verify_that!("Some value", starts_with("Some"))
+    }
+
+    #[google_test]
+    fn starts_with_does_not_match_string_without_prefix() -> Result<()> {
+        verify_that!("Some value", not(starts_with("Another")))
+    }
+
+    #[google_test]
+    fn starts_with_does_not_match_string_with_substring_not_at_beginning() -> Result<()> {
+        verify_that!("Some value", not(starts_with("value")))
+    }
+
+    #[google_test]
     fn describes_itself_for_matching_result() -> Result<()> {
         let matcher = StrMatcher::with_default_config("A string");
         verify_that!(
@@ -980,6 +1024,24 @@ Some text
         verify_that!(
             Matcher::<&str>::describe(&matcher, MatcherResult::DoesNotMatch),
             eq("does not contain a substring \"A string\"")
+        )
+    }
+
+    #[google_test]
+    fn describes_itself_for_matching_result_in_starts_with_mode() -> Result<()> {
+        let matcher = starts_with("A string");
+        verify_that!(
+            Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
+            eq("starts with prefix \"A string\"")
+        )
+    }
+
+    #[google_test]
+    fn describes_itself_for_non_matching_result_in_starts_with_mode() -> Result<()> {
+        let matcher = starts_with("A string");
+        verify_that!(
+            Matcher::<&str>::describe(&matcher, MatcherResult::DoesNotMatch),
+            eq("does not start with \"A string\"")
         )
     }
 }
