@@ -75,6 +75,20 @@ pub trait StrMatcherConfigurator<T> {
     /// equivalent to invoking [`str::trim`] on both the expected and actual
     /// value.
     fn ignoring_outer_whitespace(self) -> StrMatcher<T>;
+
+    /// Configures the matcher to ignore ASCII case when comparing values.
+    ///
+    /// This uses the same rules for case as
+    /// [`str::eq_ignore_ascii_case`][https://doc.rust-lang.org/std/primitive.str.html#method.eq_ignore_ascii_case].
+    ///
+    /// ```rust
+    /// verify_that!("Some value", eq_ignoring_ascii_case("SOME VALUE"))?;  // Passes
+    /// verify_that!("Another value", eq_ignoring_ascii_case("Some value"))?;   // Fails
+    /// ```
+    ///
+    /// This is **not guaranteed** to match strings with differing upper/lower
+    /// case characters outside of the codepoints 0-127 covered by ASCII.
+    fn ignoring_ascii_case(self) -> StrMatcher<T>;
 }
 
 /// A matcher which matches equality or containment of a string-like value in a
@@ -126,6 +140,11 @@ impl<T, MatcherT: Into<StrMatcher<T>>> StrMatcherConfigurator<T> for MatcherT {
         let existing = self.into();
         StrMatcher { configuration: existing.configuration.ignoring_outer_whitespace(), ..existing }
     }
+
+    fn ignoring_ascii_case(self) -> StrMatcher<T> {
+        let existing = self.into();
+        StrMatcher { configuration: existing.configuration.ignoring_ascii_case(), ..existing }
+    }
 }
 
 impl<T: Deref<Target = str>> From<EqMatcher<T>> for StrMatcher<T> {
@@ -154,6 +173,14 @@ impl<T> StrMatcher<T> {
 struct Configuration {
     ignore_leading_whitespace: bool,
     ignore_trailing_whitespace: bool,
+    case_policy: CasePolicy,
+}
+
+#[derive(Default)]
+enum CasePolicy {
+    #[default]
+    Respect,
+    IgnoreAscii,
 }
 
 impl Configuration {
@@ -167,16 +194,30 @@ impl Configuration {
                 (false, true) => (expected.trim_end(), actual.trim_end()),
                 (false, false) => (expected, actual),
             };
-        expected == actual
+        match self.case_policy {
+            CasePolicy::Respect => expected == actual,
+            CasePolicy::IgnoreAscii => expected.eq_ignore_ascii_case(actual),
+        }
     }
 
     // StrMatcher::describe redirects immediately to this function.
     fn describe(&self, matcher_result: MatcherResult, expected: &str) -> String {
-        let extra = match (self.ignore_leading_whitespace, self.ignore_trailing_whitespace) {
-            (true, true) => " (ignoring leading and trailing whitespace)",
-            (true, false) => " (ignoring leading whitespace)",
-            (false, true) => " (ignoring trailing whitespace)",
-            (false, false) => "",
+        let whitespace_addendum =
+            match (self.ignore_leading_whitespace, self.ignore_trailing_whitespace) {
+                (true, true) => "ignoring leading and trailing whitespace",
+                (true, false) => "ignoring leading whitespace",
+                (false, true) => "ignoring trailing whitespace",
+                (false, false) => "",
+            };
+        let case_addendum = match self.case_policy {
+            CasePolicy::Respect => "",
+            CasePolicy::IgnoreAscii => "ignoring ASCII case",
+        };
+        let extra = match (whitespace_addendum, case_addendum) {
+            ("", "") => "".into(),
+            (_, "") => format!(" ({whitespace_addendum})"),
+            ("", _) => format!(" ({case_addendum})"),
+            (_, _) => format!(" ({whitespace_addendum}, {case_addendum})"),
         };
         match matcher_result {
             MatcherResult::Matches => format!("is equal to {expected:?}{extra}"),
@@ -194,6 +235,10 @@ impl Configuration {
 
     fn ignoring_outer_whitespace(self) -> Self {
         Self { ignore_leading_whitespace: true, ignore_trailing_whitespace: true, ..self }
+    }
+
+    fn ignoring_ascii_case(self) -> Self {
+        Self { case_policy: CasePolicy::IgnoreAscii, ..self }
     }
 }
 
@@ -294,6 +339,18 @@ mod tests {
     }
 
     #[google_test]
+    fn respects_ascii_case_by_default() -> Result<()> {
+        let matcher = StrMatcher::with_default_config("A string");
+        verify_that!("A STRING", not(matcher))
+    }
+
+    #[google_test]
+    fn ignores_ascii_case_when_requested() -> Result<()> {
+        let matcher = StrMatcher::with_default_config("A string");
+        verify_that!("A STRING", matcher.ignoring_ascii_case())
+    }
+
+    #[google_test]
     fn allows_ignoring_leading_whitespace_from_eq() -> Result<()> {
         verify_that!("A string", eq(" \n\tA string").ignoring_leading_whitespace())
     }
@@ -306,6 +363,11 @@ mod tests {
     #[google_test]
     fn allows_ignoring_outer_whitespace_from_eq() -> Result<()> {
         verify_that!("A string", eq(" \n\tA string \n\t").ignoring_outer_whitespace())
+    }
+
+    #[google_test]
+    fn allows_ignoring_ascii_case_from_eq() -> Result<()> {
+        verify_that!("A string", eq("A STRING").ignoring_ascii_case())
     }
 
     #[google_test]
@@ -360,6 +422,27 @@ mod tests {
         verify_that!(
             Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
             eq("is equal to \"A string\" (ignoring leading and trailing whitespace)")
+        )
+    }
+
+    #[google_test]
+    fn describes_itself_for_matching_result_ignoring_ascii_case() -> Result<()> {
+        let matcher = StrMatcher::with_default_config("A string").ignoring_ascii_case();
+        verify_that!(
+            Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
+            eq("is equal to \"A string\" (ignoring ASCII case)")
+        )
+    }
+
+    #[google_test]
+    fn describes_itself_for_matching_result_ignoring_ascii_case_and_leading_whitespace()
+    -> Result<()> {
+        let matcher = StrMatcher::with_default_config("A string")
+            .ignoring_leading_whitespace()
+            .ignoring_ascii_case();
+        verify_that!(
+            Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
+            eq("is equal to \"A string\" (ignoring leading whitespace, ignoring ASCII case)")
         )
     }
 }
