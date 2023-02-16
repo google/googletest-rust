@@ -222,7 +222,8 @@ pub trait StrMatcherConfigurator<T> {
 ///
 ///  * [`eq`][crate::matchers::eq_matcher::eq],
 ///  * [`contains_substring`],
-///  * [`starts_with`].
+///  * [`starts_with`],
+///  * [`ends_with`].
 pub struct StrMatcher<T> {
     expected: T,
     configuration: Configuration,
@@ -373,11 +374,17 @@ impl Configuration {
             },
             MatchMode::StartsWith => match self.case_policy {
                 CasePolicy::Respect => actual.starts_with(expected),
-                CasePolicy::IgnoreAscii => todo!(),
+                CasePolicy::IgnoreAscii => {
+                    actual.len() >= expected.len()
+                        && actual[..expected.len()].eq_ignore_ascii_case(expected)
+                }
             },
             MatchMode::EndsWith => match self.case_policy {
                 CasePolicy::Respect => actual.ends_with(expected),
-                CasePolicy::IgnoreAscii => todo!(),
+                CasePolicy::IgnoreAscii => {
+                    actual.len() >= expected.len()
+                        && actual[actual.len() - expected.len()..].eq_ignore_ascii_case(expected)
+                }
             },
         }
     }
@@ -931,6 +938,21 @@ Some text
     }
 
     #[google_test]
+    fn starts_with_matches_string_reference_with_prefix_ignoring_ascii_case() -> Result<()> {
+        verify_that!("Some value", starts_with("SOME").ignoring_ascii_case())
+    }
+
+    #[google_test]
+    fn starts_with_does_not_match_wrong_prefix_ignoring_ascii_case() -> Result<()> {
+        verify_that!("Some value", not(starts_with("OTHER").ignoring_ascii_case()))
+    }
+
+    #[google_test]
+    fn ends_with_does_not_match_short_string_ignoring_ascii_case() -> Result<()> {
+        verify_that!("Some", not(starts_with("OTHER").ignoring_ascii_case()))
+    }
+
+    #[google_test]
     fn starts_with_does_not_match_string_without_prefix() -> Result<()> {
         verify_that!("Some value", not(starts_with("Another")))
     }
@@ -943,6 +965,21 @@ Some text
     #[google_test]
     fn ends_with_matches_string_reference_with_suffix() -> Result<()> {
         verify_that!("Some value", ends_with("value"))
+    }
+
+    #[google_test]
+    fn ends_with_matches_string_reference_with_suffix_ignoring_ascii_case() -> Result<()> {
+        verify_that!("Some value", ends_with("VALUE").ignoring_ascii_case())
+    }
+
+    #[google_test]
+    fn ends_with_does_not_match_wrong_suffix_ignoring_ascii_case() -> Result<()> {
+        verify_that!("Some value", not(ends_with("OTHER").ignoring_ascii_case()))
+    }
+
+    #[google_test]
+    fn ends_with_does_not_match_too_short_string_ignoring_ascii_case() -> Result<()> {
+        verify_that!("Some", not(ends_with("OTHER").ignoring_ascii_case()))
     }
 
     #[google_test]
