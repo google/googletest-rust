@@ -41,6 +41,21 @@ pub trait StrMatcherConfigurator<T> {
     /// equivalent to invoking [`str::trim_start`] on both the expected and
     /// actual value.
     fn ignoring_leading_whitespace(self) -> StrMatcher<T>;
+
+    /// Configures the matcher to ignore any trailing whitespace in either the
+    /// actual or the expected value.
+    ///
+    /// Whitespace is defined as in [`str::trim_end`][https://doc.rust-lang.org/std/primitive.str.html#method.trim_end].
+    ///
+    /// ```rust
+    /// verify_that!("A string", eq("A string   ").ignoring_trailing_whitespace())?; // Passes
+    /// verify_that!("A string   ", eq("A string").ignoring_trailing_whitespace())?; // Passes
+    /// ```
+    ///
+    /// When all other configuration options are left as the defaults, this is
+    /// equivalent to invoking [`str::trim_end`] on both the expected and
+    /// actual value.
+    fn ignoring_trailing_whitespace(self) -> StrMatcher<T>;
 }
 
 /// A matcher which matches equality or containment of a string-like value in a
@@ -79,6 +94,14 @@ impl<T, MatcherT: Into<StrMatcher<T>>> StrMatcherConfigurator<T> for MatcherT {
             ..existing
         }
     }
+
+    fn ignoring_trailing_whitespace(self) -> StrMatcher<T> {
+        let existing = self.into();
+        StrMatcher {
+            configuration: existing.configuration.ignoring_trailing_whitespace(),
+            ..existing
+        }
+    }
 }
 
 impl<T: Deref<Target = str>> From<EqMatcher<T>> for StrMatcher<T> {
@@ -106,23 +129,29 @@ impl<T> StrMatcher<T> {
 #[derive(Default)]
 struct Configuration {
     ignore_leading_whitespace: bool,
+    ignore_trailing_whitespace: bool,
 }
 
 impl Configuration {
     // The entry point for all string matching. StrMatcher::matches redirects
     // immediately to this function.
     fn do_strings_match(&self, expected: &str, actual: &str) -> bool {
-        let (expected, actual) = match self.ignore_leading_whitespace {
-            true => (expected.trim_start(), actual.trim_start()),
-            false => (expected, actual),
-        };
+        let (expected, actual) =
+            match (self.ignore_leading_whitespace, self.ignore_trailing_whitespace) {
+                (true, _) => (expected.trim_start(), actual.trim_start()),
+                (false, true) => (expected.trim_end(), actual.trim_end()),
+                (false, false) => (expected.deref(), actual),
+            };
         expected == actual
     }
 
     // StrMatcher::describe redirects immediately to this function.
     fn describe(&self, matcher_result: MatcherResult, expected: &str) -> String {
-        let extra =
-            if self.ignore_leading_whitespace { " (ignoring leading whitespace)" } else { "" };
+        let extra = match (self.ignore_leading_whitespace, self.ignore_trailing_whitespace) {
+            (true, _) => " (ignoring leading whitespace)",
+            (false, true) => " (ignoring trailing whitespace)",
+            (false, false) => "",
+        };
         match matcher_result {
             MatcherResult::Matches => format!("is equal to {expected:?}{extra}"),
             MatcherResult::DoesNotMatch => format!("isn't equal to {expected:?}{extra}"),
@@ -131,6 +160,10 @@ impl Configuration {
 
     fn ignoring_leading_whitespace(self) -> Self {
         Self { ignore_leading_whitespace: true, ..self }
+    }
+
+    fn ignoring_trailing_whitespace(self) -> Self {
+        Self { ignore_trailing_whitespace: true, ..self }
     }
 }
 
@@ -189,8 +222,43 @@ mod tests {
     }
 
     #[google_test]
+    fn remains_sensitive_to_trailing_whitespace_when_ignoring_leading_whitespace() -> Result<()> {
+        let matcher = StrMatcher::with_default_config("A string \n\t");
+        verify_that!("A string", not(matcher.ignoring_leading_whitespace()))
+    }
+
+    #[google_test]
+    fn ignores_trailing_whitespace_in_expected_when_requested() -> Result<()> {
+        let matcher = StrMatcher::with_default_config("A string \n\t");
+        verify_that!("A string", matcher.ignoring_trailing_whitespace())
+    }
+
+    #[google_test]
+    fn ignores_trailing_whitespace_in_actual_when_requested() -> Result<()> {
+        let matcher = StrMatcher::with_default_config("A string");
+        verify_that!("A string \n\t", matcher.ignoring_trailing_whitespace())
+    }
+
+    #[google_test]
+    fn does_not_match_unequal_remaining_string_when_ignoring_trailing_whitespace() -> Result<()> {
+        let matcher = StrMatcher::with_default_config("Another string \n\t");
+        verify_that!("A string", not(matcher.ignoring_trailing_whitespace()))
+    }
+
+    #[google_test]
+    fn remains_sensitive_to_leading_whitespace_when_ignoring_trailing_whitespace() -> Result<()> {
+        let matcher = StrMatcher::with_default_config(" \n\tA string");
+        verify_that!("A string", not(matcher.ignoring_trailing_whitespace()))
+    }
+
+    #[google_test]
     fn allows_ignoring_leading_whitespace_from_eq() -> Result<()> {
         verify_that!("A string", eq(" \n\tA string").ignoring_leading_whitespace())
+    }
+
+    #[google_test]
+    fn allows_ignoring_trailing_whitespace_from_eq() -> Result<()> {
+        verify_that!("A string", eq("A string \n\t").ignoring_trailing_whitespace())
     }
 
     #[google_test]
@@ -226,6 +294,15 @@ mod tests {
         verify_that!(
             Matcher::<&str>::describe(&matcher, MatcherResult::DoesNotMatch),
             eq("isn't equal to \"A string\" (ignoring leading whitespace)")
+        )
+    }
+
+    #[google_test]
+    fn describes_itself_for_matching_result_ignoring_trailing_whitespace() -> Result<()> {
+        let matcher = StrMatcher::with_default_config("A string").ignoring_trailing_whitespace();
+        verify_that!(
+            Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
+            eq("is equal to \"A string\" (ignoring trailing whitespace)")
         )
     }
 }
