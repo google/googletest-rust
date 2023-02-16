@@ -39,8 +39,6 @@ pub mod empty_matcher;
 #[cfg(not(google3))]
 pub mod ends_with_matcher;
 #[cfg(not(google3))]
-pub mod eq_ignoring_ascii_case_matcher;
-#[cfg(not(google3))]
 pub mod eq_matcher;
 #[cfg(not(google3))]
 pub mod err_matcher;
@@ -108,7 +106,6 @@ pub use each_matcher::each;
 pub use elements_are_matcher::elements_are;
 pub use empty_matcher::empty;
 pub use ends_with_matcher::ends_with;
-pub use eq_ignoring_ascii_case_matcher::eq_ignoring_ascii_case;
 pub use eq_matcher::eq;
 pub use err_matcher::err;
 #[cfg(google3)]
