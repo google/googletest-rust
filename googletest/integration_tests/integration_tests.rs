@@ -22,6 +22,7 @@ mod tests {
         assert_that, expect_pred, expect_that, google_test, verify_pred, verify_that,
         GoogleTestSupport, Result,
     };
+    use indoc::indoc;
     #[cfg(google3)]
     use matchers::all;
     use matchers::{anything, contains_regex, contains_substring, displays_as, eq, err, not};
@@ -74,14 +75,11 @@ mod tests {
 
         verify_that!(
             output,
-            contains_regex(
-                "\
-Value of: value
-Expected: is equal to 3
-Actual: 2, which isn't equal to 3
-  at .*googletest/integration_tests/simple_assertion_failure.rs:[0-9]+:9
-"
-            )
+            contains_regex(indoc! {"
+                Value of: value
+                Expected: is equal to 3
+                Actual: 2, which isn't equal to 3
+                  at .*googletest/integration_tests/simple_assertion_failure.rs:[0-9]+:9"})
         )
     }
 
@@ -92,14 +90,12 @@ Actual: 2, which isn't equal to 3
 
         verify_that!(
             output,
-            contains_regex(
-                "\
-Value of: value
-Expected: is equal to 3
-Actual: 2, which isn't equal to 3
-  at .*googletest/integration_tests/simple_assertion_failure_with_assert_that.rs:[0-9]+:9
-"
-            )
+            contains_regex(indoc! {"
+                Value of: value
+                Expected: is equal to 3
+                Actual: 2, which isn't equal to 3
+                  at .*googletest/integration_tests/simple_assertion_failure_with_assert_that.rs:[0-9]+:9
+                "})
         )
     }
 
@@ -109,14 +105,12 @@ Actual: 2, which isn't equal to 3
 
         verify_that!(
             output,
-            contains_regex(
-                "\
-Value of: value
-Expected: is equal to 3
-Actual: 2, which isn't equal to 3
-  at .*googletest/integration_tests/expect_that_failure.rs:[0-9]+:9
-"
-            )
+            contains_regex(indoc! {"
+                Value of: value
+                Expected: is equal to 3
+                Actual: 2, which isn't equal to 3
+                  at .*googletest/integration_tests/expect_that_failure.rs:[0-9]+:9
+                "})
         )
     }
 
@@ -127,14 +121,12 @@ Actual: 2, which isn't equal to 3
 
         verify_that!(
             output,
-            contains_regex(
-                "\
-Value of: value
-Expected: is equal to 4
-Actual: 2, which isn't equal to 4
-  at .*googletest/integration_tests/two_expect_that_failures.rs:[0-9]+:9
-"
-            )
+            contains_regex(indoc! {"
+                Value of: value
+                Expected: is equal to 4
+                Actual: 2, which isn't equal to 4
+                  at .*googletest/integration_tests/two_expect_that_failures.rs:[0-9]+:9
+                "})
         )
     }
 
@@ -166,18 +158,14 @@ Actual: 2, which isn't equal to 4
         verify_that!(
             output,
             all!(
-                contains_substring(
-                    "\
-Expected: is equal to 3
-Actual: 2, which isn't equal to 3
-"
-                ),
-                contains_substring(
-                    "\
-Expected: is equal to 4
-Actual: 2, which isn't equal to 4
-"
-                )
+                contains_substring(indoc! {"
+                    Expected: is equal to 3
+                    Actual: 2, which isn't equal to 3
+                    "}),
+                contains_substring(indoc! {"
+                    Expected: is equal to 4
+                    Actual: 2, which isn't equal to 4
+                    "})
             )
         )
     }
@@ -188,12 +176,10 @@ Actual: 2, which isn't equal to 4
 
         verify_that!(
             output,
-            not(contains_substring(
-                "\
-Expected: is equal to 4
-Actual: 2, which isn't equal to 4
-"
-            ))
+            not(contains_substring(indoc! {"
+                Expected: is equal to 4
+                Actual: 2, which isn't equal to 4
+                "}))
         )
     }
 
@@ -203,12 +189,10 @@ Actual: 2, which isn't equal to 4
 
         verify_that!(
             output,
-            contains_substring(
-                "\
-Expected: is equal to 3
-Actual: 2, which isn't equal to 3
-"
-            )
+            contains_substring(indoc! {"
+                Expected: is equal to 3
+                Actual: 2, which isn't equal to 3
+                "})
         )
     }
 
@@ -261,13 +245,11 @@ Actual: 2, which isn't equal to 3
 
         verify_that!(
             output,
-            contains_substring(
-                "\
-eq_predicate(a, b) was false with
-  a = 1,
-  b = 2
-"
-            )
+            contains_substring(indoc! {"
+                eq_predicate(a, b) was false with
+                  a = 1,
+                  b = 2
+                "})
         )
     }
 
@@ -291,13 +273,11 @@ eq_predicate(a, b) was false with
 
         verify_that!(
             output,
-            contains_substring(
-                "\
-eq_predicate(a, b) was false with
-  a = 1,
-  b = 2
-"
-            )
+            contains_substring(indoc! {"
+                eq_predicate(a, b) was false with
+                  a = 1,
+                  b = 2
+                "})
         )
     }
 
@@ -307,13 +287,11 @@ eq_predicate(a, b) was false with
 
         verify_that!(
             output,
-            contains_substring(
-                "\
-eq_predicate(a, b) was false with
-  a = 1,
-  b = 2
-"
-            )
+            contains_substring(indoc! {"
+                eq_predicate(a, b) was false with
+                  a = 1,
+                  b = 2
+                "})
         )
     }
 
@@ -323,13 +301,11 @@ eq_predicate(a, b) was false with
 
         verify_that!(
             output,
-            contains_substring(
-                "\
-eq_predicate(a, b) was false with
-  a = 3,
-  b = 4
-"
-            )
+            contains_substring(indoc! {"
+                eq_predicate(a, b) was false with
+                  a = 3,
+                  b = 4
+                "})
         )
     }
 
@@ -393,13 +369,11 @@ eq_predicate(a, b) was false with
 
         verify_that!(
             output,
-            contains_substring(
-                "\
-a_submodule :: A_STRUCT_IN_SUBMODULE.eq_predicate_as_method(a, b) was false with
-  a = 1,
-  b = 2
-"
-            )
+            contains_substring(indoc! {"
+                a_submodule :: A_STRUCT_IN_SUBMODULE.eq_predicate_as_method(a, b) was false with
+                  a = 1,
+                  b = 2
+                "})
         )
     }
 
@@ -416,12 +390,10 @@ a_submodule :: A_STRUCT_IN_SUBMODULE.eq_predicate_as_method(a, b) was false with
 
         verify_that!(
             output,
-            contains_regex(
-                "\
-Expected test failure
-  at .*googletest/integration_tests/failure_due_to_fail_macro.rs:[0-9]+:9
-"
-            )
+            contains_regex(indoc! {"
+                Expected test failure
+                  at .*googletest/integration_tests/failure_due_to_fail_macro.rs:[0-9]+:9
+                "})
         )
     }
 
@@ -451,13 +423,11 @@ Expected test failure
             // We hereby assume that the Rust test harness uses std::fmt::Debug to output the Err
             // variant of a Result.
             format!("{:?}", result.unwrap_err()),
-            contains_substring(
-                "\
-Value of: 1
-Expected: is equal to 2
-Actual: 1, which isn't equal to 2
-"
-            )
+            contains_substring(indoc! {"
+                Value of: 1
+                Expected: is equal to 2
+                Actual: 1, which isn't equal to 2
+                "})
         )
     }
 
@@ -479,13 +449,11 @@ Actual: 1, which isn't equal to 2
 
         verify_that!(
             failed_assertion_result,
-            err(displays_as(contains_substring(
-                "\
-Actual: NontrivialStruct {
-    a: 1,
-    b: 2,
-}"
-            )))
+            err(displays_as(contains_substring(indoc! {"
+                Actual: NontrivialStruct {
+                    a: 1,
+                    b: 2,
+                }"})))
         )
     }
 

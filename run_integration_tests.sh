@@ -46,6 +46,6 @@ INTEGRATION_TEST_BINARIES=(
 
 cargo build
 for binary in ${INTEGRATION_TEST_BINARIES[@]}; do
-  cargo rustc -p googletest --bin $binary -- --test
+  cargo rustc -p googletest --bin $binary --features indoc -- --test
 done
 ./target/debug/integration_tests
