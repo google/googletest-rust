@@ -67,6 +67,14 @@
 /// ```
 #[macro_export]
 macro_rules! field {
+    ($($t:tt)*) => { $crate::field_internal!($($t)*) }
+}
+
+// Internal-only macro created so that the macro definition does not appear in
+// generated documentation.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! field_internal {
     ($($t:ident)::+.$field:tt, $m:expr) => {{
         #[cfg(google3)]
         use $crate::internal::field_matcher;

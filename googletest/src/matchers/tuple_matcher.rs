@@ -47,6 +47,14 @@
 /// fields of tuple structs, structs, and enums, use [`matches_pattern`].
 #[macro_export]
 macro_rules! tuple {
+    ($($t:tt)*) => { $crate::tuple_internal!($($t)*) }
+}
+
+// Internal-only macro created so that the macro definition does not appear in
+// generated documentation.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! tuple_internal {
     (
         $matcher0:expr,
         $matcher1:expr,
