@@ -26,15 +26,6 @@ pub trait Matcher<T: Debug + ?Sized> {
     /// the `==` operator) to the value `actual`.
     fn matches(&self, actual: &T) -> MatcherResult;
 
-    /// Prepares a [`MatchExplanation`] describing how the expected value
-    /// encoded in this instance matches or does not match the given value
-    /// `actual`.
-    ///
-    /// The default implementation relies on [`Describe::describe`].
-    fn explain_match(&self, actual: &T) -> MatchExplanation {
-        MatchExplanation::create(format!("which {}", self.describe(self.matches(actual))))
-    }
-
     /// Returns a description of `self` or a negative description if
     /// `matcher_result` is `DoesNotMatch`.
     ///
@@ -42,9 +33,100 @@ pub trait Matcher<T: Debug + ?Sized> {
     /// value matching, respectively not matching, this matcher should have.
     /// The subject of the verb phrase is the value being matched.
     ///
-    /// For example, eq(7).describe(MatcherResult::Matches) prints "is equal to
-    /// 7".
+    /// The output appears next to `Expected` in an assertion failure message.
+    /// For example:
+    ///
+    /// ```
+    /// Value of: ...
+    /// Expected: is equal to 7
+    ///           ^^^^^^^^^^^^^
+    /// Actual: ...
+    /// ```
+    ///
+    /// When the matcher contains one or more inner matchers, the implementation
+    /// should invoke [`describe`] on the inner matchers to complete the
+    /// description. It should place the inner description at a point where a
+    /// verb phrase would fit. For example, the matcher
+    /// [`some`][crate::matchers::some] implements `describe` as follows:
+    ///
+    /// ```
+    /// fn describe(&self, matcher_result: MatcherResult) -> String {
+    ///     match matcher_result {
+    ///         MatcherResult::Matches => {
+    ///             format!("has a value which {}", self.inner.describe(MatcherResult::Matches))
+    ///               //  Inner matcher invocation: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ///         }
+    ///         MatcherResult::DoesNotMatch => {...} // Similar to the above
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// The output expectation differs from that of
+    /// [`explain_match`][Self::explain_match] in that it is a verb phrase
+    /// (beginning with a verb like "is") rather than a relative clause
+    /// (beginning with "which" or "whose"). This difference is because the
+    /// output of `explain_match` is always used adjectivally to describe the
+    /// actual value, while `describe` is used in contexts where a relative
+    /// clause would not make sense.
     fn describe(&self, matcher_result: MatcherResult) -> String;
+
+    /// Prepares a [`MatchExplanation`] describing how the expected value
+    /// encoded in this instance matches or does not match the given value
+    /// `actual`.
+    ///
+    /// This should be in the form of a relative clause, i.e. something starting
+    /// with a relative pronoun such as "which" or "whose". It will appear next
+    /// to the actual value in an assertion failure. For example:
+    ///
+    /// ```
+    /// Value of: ...
+    /// Expected: ...
+    /// Actual: ["Something"], which does not contain "Something else"
+    ///                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    /// ```
+    ///
+    /// The default implementation relies on [`describe`][Self::describe]. Thus
+    /// it does not make any use of the actual value itself, but rather only
+    /// whether the value is matched.
+    ///
+    /// Override the default implementation to provide additional context on why
+    /// a particular value matched or did not match. For example, the
+    /// [`container_eq`][crate::matchers::container_eq] matcher displays
+    /// information on which elements of the actual value were not present in
+    /// the expected value and vice versa.
+    ///
+    /// This implementation should be overridden in any matcher which contains
+    /// one or more inner matchers. The implementation should invoke
+    /// `explain_match` on the inner matchers, so that the generated match
+    /// explanation also reflects their implementation. Without this, the match
+    /// explanation of the inner matchers will not be able to make use of the
+    /// actual value at all.
+    ///
+    /// For example, the `explain_match` implementation of the matcher
+    /// [`points_to`][crate::matchers::points_to] defers immediately to the
+    /// inner matcher and appears as follows:
+    ///
+    /// ```
+    /// fn explain_match(&self, actual: &ActualT) -> MatchExplanation {
+    ///     self.expected.explain_match(actual.deref())
+    /// }
+    /// ```
+    ///
+    /// The matcher can also provide some additional context before deferring to
+    /// an inner matcher. In that case it should invoke `explain_match` on the
+    /// inner matcher at a point where a relative clause would fit. For example:
+    ///
+    /// ```
+    /// fn explain_match(&self, actual: &ActualT) -> MatchExplanation {
+    ///     MatchExplanation::create(
+    ///         format!("which points to a value {}", self.expected.explain_match(actual.deref())
+    ///             //   ^^^^^^^^^^^^^^^^^^^^ Expands to "points to a value which ..."
+    ///     )
+    /// }
+    /// ```
+    fn explain_match(&self, actual: &T) -> MatchExplanation {
+        MatchExplanation::create(format!("which {}", self.describe(self.matches(actual))))
+    }
 }
 
 /// Constructs a [`TestAssertionFailure`] reporting that the given `matcher`
