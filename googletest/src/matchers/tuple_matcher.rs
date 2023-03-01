@@ -43,8 +43,9 @@
 /// automatically inherit the `Debug` trait from their members, so are generally
 /// not supported; see [Rust by Example](https://doc.rust-lang.org/rust-by-example/primitives/tuples.html#tuples).
 ///
-/// This macro is the analogue of [`matches_pattern`] for tuples. To match on
-/// fields of tuple structs, structs, and enums, use [`matches_pattern`].
+/// This macro is the analogue of [`matches_pattern`][crate::matches_pattern]
+/// for tuples. To match on fields of tuple structs, structs, and enums, use
+/// [`matches_pattern`][crate::matches_pattern].
 #[macro_export]
 macro_rules! tuple {
     ($($t:tt)*) => { $crate::tuple_internal!($($t)*) }

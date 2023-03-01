@@ -92,7 +92,7 @@ pub trait StrMatcherConfigurator<T> {
     /// Configures the matcher to ignore any leading whitespace in either the
     /// actual or the expected value.
     ///
-    /// Whitespace is defined as in [`str::trim_start`][https://doc.rust-lang.org/std/primitive.str.html#method.trim_start].
+    /// Whitespace is defined as in [`str::trim_start`].
     ///
     /// ```rust
     /// verify_that!("A string", eq("   A string").ignoring_leading_whitespace())?; // Passes
@@ -102,12 +102,14 @@ pub trait StrMatcherConfigurator<T> {
     /// When all other configuration options are left as the defaults, this is
     /// equivalent to invoking [`str::trim_start`] on both the expected and
     /// actual value.
+    ///
+    /// [`str::trim_start`]: https://doc.rust-lang.org/std/primitive.str.html#method.trim_start
     fn ignoring_leading_whitespace(self) -> StrMatcher<T>;
 
     /// Configures the matcher to ignore any trailing whitespace in either the
     /// actual or the expected value.
     ///
-    /// Whitespace is defined as in [`str::trim_end`][https://doc.rust-lang.org/std/primitive.str.html#method.trim_end].
+    /// Whitespace is defined as in [`str::trim_end`].
     ///
     /// ```rust
     /// verify_that!("A string", eq("A string   ").ignoring_trailing_whitespace())?; // Passes
@@ -117,12 +119,14 @@ pub trait StrMatcherConfigurator<T> {
     /// When all other configuration options are left as the defaults, this is
     /// equivalent to invoking [`str::trim_end`] on both the expected and
     /// actual value.
+    ///
+    /// [`str::trim_end`]: https://doc.rust-lang.org/std/primitive.str.html#method.trim_end
     fn ignoring_trailing_whitespace(self) -> StrMatcher<T>;
 
     /// Configures the matcher to ignore both leading and trailing whitespace in
     /// either the actual or the expected value.
     ///
-    /// Whitespace is defined as in [`str::trim`][https://doc.rust-lang.org/std/primitive.str.html#method.trim].
+    /// Whitespace is defined as in [`str::trim`].
     ///
     /// ```rust
     /// verify_that!("A string", eq("   A string   ").ignoring_outer_whitespace())?; // Passes
@@ -136,12 +140,13 @@ pub trait StrMatcherConfigurator<T> {
     /// When all other configuration options are left as the defaults, this is
     /// equivalent to invoking [`str::trim`] on both the expected and actual
     /// value.
+    ///
+    /// [`str::trim`]: https://doc.rust-lang.org/std/primitive.str.html#method.trim
     fn ignoring_outer_whitespace(self) -> StrMatcher<T>;
 
     /// Configures the matcher to ignore ASCII case when comparing values.
     ///
-    /// This uses the same rules for case as
-    /// [`str::eq_ignore_ascii_case`][https://doc.rust-lang.org/std/primitive.str.html#method.eq_ignore_ascii_case].
+    /// This uses the same rules for case as [`str::eq_ignore_ascii_case`].
     ///
     /// ```rust
     /// verify_that!("Some value", eq_ignoring_ascii_case("SOME VALUE"))?;  // Passes
@@ -150,6 +155,8 @@ pub trait StrMatcherConfigurator<T> {
     ///
     /// This is **not guaranteed** to match strings with differing upper/lower
     /// case characters outside of the codepoints 0-127 covered by ASCII.
+    ///
+    /// [`str::eq_ignore_ascii_case`]: https://doc.rust-lang.org/std/primitive.str.html#method.eq_ignore_ascii_case
     fn ignoring_ascii_case(self) -> StrMatcher<T>;
 }
 

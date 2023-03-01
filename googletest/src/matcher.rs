@@ -44,7 +44,7 @@ pub trait Matcher<T: Debug + ?Sized> {
     /// ```
     ///
     /// When the matcher contains one or more inner matchers, the implementation
-    /// should invoke [`describe`] on the inner matchers to complete the
+    /// should invoke [`Self::describe`] on the inner matchers to complete the
     /// description. It should place the inner description at a point where a
     /// verb phrase would fit. For example, the matcher
     /// [`some`][crate::matchers::some] implements `describe` as follows:
@@ -119,7 +119,7 @@ pub trait Matcher<T: Debug + ?Sized> {
     /// ```
     /// fn explain_match(&self, actual: &ActualT) -> MatchExplanation {
     ///     MatchExplanation::create(
-    ///         format!("which points to a value {}", self.expected.explain_match(actual.deref())
+    ///         format!("which points to a value {}", self.expected.explain_match(actual.deref()))
     ///             //   ^^^^^^^^^^^^^^^^^^^^ Expands to "points to a value which ..."
     ///     )
     /// }

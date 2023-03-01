@@ -24,3 +24,7 @@ jobs:
       run: cargo test --verbose
     - name: Run integration tests
       run: /bin/bash ./run_integration_tests.sh
+    - name: Check documentation
+      env:
+        RUSTDOCFLAGS: -D warnings
+      run: cargo doc

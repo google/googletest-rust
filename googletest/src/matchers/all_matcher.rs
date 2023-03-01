@@ -26,7 +26,7 @@
 /// ```
 ///
 /// Using this macro is equivalent to using the
-/// [`and`][crate::matchers::conjunction_matcher::AndMethodExt::and] extension
+/// [`and`][crate::matchers::conjunction_matcher::AndMatcherExt::and] extension
 /// method:
 ///
 /// ```rust

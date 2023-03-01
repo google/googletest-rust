@@ -51,7 +51,7 @@
 /// }))
 /// ```
 ///
-/// One can use the alias [`pat`] to make this less verbose:
+/// One can use the alias [`pat`][crate::pat] to make this less verbose:
 ///
 /// ```rust
 /// verify_that!(my_struct, matches_pattern!(MyStruct {

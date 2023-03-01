@@ -28,7 +28,7 @@ use std::fmt::Debug;
 ///
 /// Note: even if the Rust compiler should be able to infer the type of
 /// the closure argument, it is likely that it won't.
-/// See https://github.com/rust-lang/rust/issues/12679 for update on this issue.
+/// See <https://github.com/rust-lang/rust/issues/12679> for update on this issue.
 /// This is easily fixed by explicitly declaring the type of the argument
 pub fn predicate<T: Debug + ?Sized, P>(
     predicate: P,
@@ -55,7 +55,7 @@ impl<P> PredicateMatcher<P, NoDescription, NoDescription> {
     ///
     /// This is optional as it only provides value when the test fails.
     ///
-    /// Description can be passed by &str, String of Fn() -> Into<String>
+    /// Description can be passed by `&str`, `String` or `Fn() -> Into<String>`.
     pub fn with_description<D1: PredicateDescription, D2: PredicateDescription>(
         self,
         positive_description: D1,
@@ -74,9 +74,10 @@ pub struct PredicateMatcher<P, D1, D2> {
     negative_description: D2,
 }
 
-/// A trait to allow [`with_description`] to accept multiple types.
+/// A trait to allow [`PredicateMatcher::with_description`] to accept multiple
+/// types.
 ///
-/// See [`with_description`]
+/// See [`PredicateMatcher::with_description`]
 pub trait PredicateDescription {
     fn to_description(&self) -> String;
 }
