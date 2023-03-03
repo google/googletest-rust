@@ -18,6 +18,9 @@
 
 /// Matches a value which all of the given matchers match.
 ///
+/// Each argument is a [`Matcher`][crate::matcher::Matcher] which matches
+/// against the actual value.
+///
 /// For example:
 ///
 /// ```

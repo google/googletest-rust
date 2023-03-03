@@ -18,6 +18,10 @@
 
 /// Matches a tuple whose elements are matched by each of the given matchers.
 ///
+/// This takes as arguments sequence of [`Matcher`][crate::matcher::Matcher]
+/// corresponding to the tuple against which it matches. Each matcher is
+/// applied to the corresponding tuple element.
+///
 /// ```
 /// verify_that((123, 456), tuple!(eq(123), eq(456)))?; // Passes
 /// verify_that((123, 456), tuple!(eq(123), eq(0)))?; // Fails: second matcher does not match

@@ -26,6 +26,13 @@
 /// verify_that!(vec![3, 2, 1], unordered_elements_are![ge(3), ge(3), ge(3)])?; // Fails: no 1:1 correspondence
 /// ```
 ///
+/// The actual value must be a container implementing [`IntoIterator`] and
+/// [`HasSize`][crate::matchers::has_size::HasSize]. This includes all common
+/// containers in the Rust standard library.
+///
+/// This matcher does not support matching directly against an [`Iterator`]. To
+/// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
+///
 /// The matcher proceeds in three stages:
 ///
 /// 1. It first checks whether the actual value is of the right size to
@@ -44,6 +51,11 @@
 ///    including which matchers did not have corresponding unique elements in
 ///    the container and which container elements had no corresponding
 ///    matchers.
+///
+/// [`IntoIterator`]: https://doc.rust-lang.org/std/iter/trait.IntoIterator.html
+/// [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
+/// [`Iterator::collect`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect
+/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 #[macro_export]
 macro_rules! unordered_elements_are {
     ($($matcher:expr),* $(,)?) => {{
@@ -73,6 +85,13 @@ macro_rules! unordered_elements_are {
 /// verify_that!(vec![3, 2, 1], contains_each![ge(3), ge(3), ge(3)])?; // Fails: no matching
 /// ```
 ///
+/// The actual value must be a container implementing [`IntoIterator`] and
+/// [`HasSize`][crate::matchers::has_size::HasSize]. This includes all common
+/// containers in the Rust standard library.
+///
+/// This matcher does not support matching directly against an [`Iterator`]. To
+/// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
+///
 /// The matcher proceeds in three stages:
 ///
 /// 1. It first checks whether the actual value is large enough to
@@ -87,6 +106,11 @@ macro_rules! unordered_elements_are {
 ///    actual elements is 1-1 and fails if that is not the case. The failure
 ///    message then shows the best matching it could find, including which
 ///    matchers did not have corresponding unique elements in the container.
+///
+/// [`IntoIterator`]: https://doc.rust-lang.org/std/iter/trait.IntoIterator.html
+/// [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
+/// [`Iterator::collect`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect
+/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 #[macro_export]
 macro_rules! contains_each {
     ($($matcher:expr),* $(,)?) => {{
@@ -118,6 +142,13 @@ macro_rules! contains_each {
 /// verify_that!(vec![3, 1], is_contained_in![ge(3), ge(3), ge(3)])?; // Fails: no matching
 /// ```
 ///
+/// The actual value must be a container implementing [`IntoIterator`] and
+/// [`HasSize`][crate::matchers::has_size::HasSize]. This includes all common
+/// containers in the Rust standard library.
+///
+/// This matcher does not support matching directly against an [`Iterator`]. To
+/// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
+///
 /// The matcher proceeds in three stages:
 ///
 /// 1. It first checks whether the actual value is too large to
@@ -132,6 +163,11 @@ macro_rules! contains_each {
 ///    matchers is 1-1 and fails if that is not the case. The failure
 ///    message then shows the best matching it could find, including which
 ///    container elements did not have corresponding matchers.
+///
+/// [`IntoIterator`]: https://doc.rust-lang.org/std/iter/trait.IntoIterator.html
+/// [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
+/// [`Iterator::collect`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect
+/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 #[macro_export]
 macro_rules! is_contained_in {
     ($($matcher:expr),* $(,)?) => {{

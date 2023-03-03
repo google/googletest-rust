@@ -18,11 +18,29 @@
 
 /// Matches a container's elements to each matcher in order.
 ///
+/// This macro produces a matcher against a container. It takes as arguments a
+/// sequence of matchers each of which should respectively match the
+/// corresponding element of the actual value.
+///
 /// ```
-/// verify_that!(vec![1,2,3], elements_are![eq(1), anything(), gt(0).and(lt(123))])
+/// verify_that!(vec![1, 2, 3], elements_are![eq(1), anything(), gt(0).and(lt(123))])
 /// ```
 ///
-/// Do not use with unordered containers. Prefer `unordered_elements_are!(...)`.
+/// The actual value must be a container implementing [`IntoIterator`] and
+/// [`HasSize`][crate::matchers::has_size::HasSize]. This includes all common
+/// containers in the Rust standard library.
+///
+/// This matcher does not support matching directly against an [`Iterator`]. To
+/// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
+///
+/// Do not use this with unordered containers, since that will lead to flaky
+/// tests. Use [`unordered_elements_are!`][crate::unordered_elements_are]
+/// instead.
+///
+/// [`IntoIterator`]: https://doc.rust-lang.org/std/iter/trait.IntoIterator.html
+/// [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
+/// [`Iterator::collect`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect
+/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 #[macro_export]
 macro_rules! elements_are {
     ($($matcher:expr),* $(,)?) => {{
@@ -75,7 +93,7 @@ pub mod internal {
         for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
     {
         fn matches(&self, actual: &ContainerT) -> MatcherResult {
-            if actual.size() != self.elements.size() {
+            if actual.size() != self.elements.len() {
                 return MatcherResult::DoesNotMatch;
             }
             for (a, e) in actual.into_iter().zip(self.elements) {
@@ -87,7 +105,7 @@ pub mod internal {
         }
 
         fn explain_match(&self, actual: &ContainerT) -> MatchExplanation {
-            if actual.size() != self.elements.size() {
+            if actual.size() != self.elements.len() {
                 return MatchExplanation::create(format!("whose size is {}", actual.size(),));
             }
             let mismatches = actual
@@ -137,6 +155,17 @@ mod tests {
     fn elements_are_matches_vector() -> Result<()> {
         let value = vec![1, 2, 3];
         verify_that!(value, elements_are![eq(1), eq(2), eq(3)])
+    }
+
+    #[google_test]
+    fn elements_are_matches_slice() -> Result<()> {
+        let value = &[1, 2, 3];
+        verify_that!(*value, elements_are![eq(1), eq(2), eq(3)])
+    }
+
+    #[google_test]
+    fn elements_are_matches_array() -> Result<()> {
+        verify_that!([1, 2, 3], elements_are![eq(1), eq(2), eq(3)])
     }
 
     #[google_test]

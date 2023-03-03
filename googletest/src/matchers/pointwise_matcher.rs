@@ -29,21 +29,31 @@
 /// verify_that!(value, pointwise!(le, [1, 1, 3]))?; // Fails
 /// ```
 ///
-/// The actual value must be a container implementing `IntoIterator`.
+/// The actual value must be a container implementing [`IntoIterator`] and
+/// [`HasSize`][crate::matchers::has_size::HasSize]. This includes all common
+/// containers in the Rust standard library.
+///
+/// This matcher does not support matching directly against an [`Iterator`]. To
+/// match against an iterator, use [`Iterator::collect`] to build a [`Vec`]
+/// first.
 ///
 /// The second argument can be any value implementing `IntoIterator`, such as a
 /// `Vec` or an array. The container does not have to have the same type as the
 /// actual value, but the value type must be the same.
 ///
-/// **Note for users of the
-/// [`Pointwise` matcher](https://google.github.io/googletest/reference/matchers.html#container-matchers)
-/// in C++ GoogleTest:**
+/// **Note for users of the [`Pointwise`] matcher in C++ GoogleTest:**
 ///
 /// This macro differs from `Pointwise` in that the first parameter is not a
 /// matcher which matches a pair but rather the name of a function of one
 /// argument whose output is a matcher. This means that one can use standard
 /// matchers like `eq`, `le`, and so on with `pointwise!` but certain C++ tests
 /// using `Pointwise` will require some extra work to port.
+///
+/// [`IntoIterator`]: https://doc.rust-lang.org/std/iter/trait.IntoIterator.html
+/// [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
+/// [`Iterator::collect`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect
+/// [`Pointwise`]: https://google.github.io/googletest/reference/matchers.html#container-matchers
+/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 #[macro_export]
 macro_rules! pointwise {
     ($matcher:expr, $container:expr) => {{
@@ -89,7 +99,7 @@ pub mod internal {
         for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
     {
         fn matches(&self, actual: &ContainerT) -> MatcherResult {
-            if actual.size() != self.matchers.size() {
+            if actual.size() != self.matchers.len() {
                 return MatcherResult::DoesNotMatch;
             }
             for (element, matcher) in actual.into_iter().zip(&self.matchers) {
@@ -101,11 +111,11 @@ pub mod internal {
         }
 
         fn explain_match(&self, actual: &ContainerT) -> MatchExplanation {
-            if actual.size() != self.matchers.size() {
+            if actual.size() != self.matchers.len() {
                 return MatchExplanation::create(format!(
                     "which has size {} (expected {})",
                     actual.size(),
-                    self.matchers.size()
+                    self.matchers.len()
                 ));
             }
 

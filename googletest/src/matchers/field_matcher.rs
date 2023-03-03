@@ -19,6 +19,11 @@
 /// Matches a structure or enum with a given field which is matched by a given
 /// matcher.
 ///
+/// This takes two arguments:
+///
+///  * a specification of the field against which to match, and
+///  * an inner [`Matcher`][crate::matcher::Matcher] to apply to that field.
+///
 /// For example:
 ///
 /// ```

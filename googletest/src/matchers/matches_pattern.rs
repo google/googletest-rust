@@ -18,6 +18,10 @@
 
 /// Matches a value according to a pattern of matchers.
 ///
+/// This takes as an argument a specification similar to a struct or enum
+/// initialiser, where each value is a [`Matcher`][crate::matcher::Matcher]
+/// which is applied to the corresponding field.
+///
 /// This can be used to match arbitrary combinations of fields on structures
 /// using arbitrary matchers:
 ///
@@ -30,6 +34,20 @@
 /// verify_that!(my_struct, matches_pattern!(MyStruct {
 ///     a_field: starts_with("Something"),
 ///     another_field: ends_with("else"),
+/// }))
+/// ```
+///
+/// It is not required to include all named fields in the specification:
+///
+/// ```
+/// struct MyStruct {
+///     a_field: String,
+///     another_field: String,
+/// }
+///
+/// verify_that!(my_struct, matches_pattern!(MyStruct {
+///     a_field: starts_with("Something"),
+///     // another_field is missing, so it may be anything.
 /// }))
 /// ```
 ///
