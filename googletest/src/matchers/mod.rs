@@ -25,6 +25,8 @@ pub mod contains_matcher;
 #[cfg(not(google3))]
 pub mod contains_regex_matcher;
 #[cfg(not(google3))]
+pub mod description;
+#[cfg(not(google3))]
 pub mod disjunction_matcher;
 #[cfg(not(google3))]
 pub mod display_matcher;

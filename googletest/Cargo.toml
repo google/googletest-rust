@@ -38,6 +38,9 @@ num-traits = "0.2.15"
 regex = "1.6.0"
 indoc = { version = "1", optional = true }
 
+[dev-dependencies]
+indoc = "1"
+
 [[bin]]
 name = "integration_tests"
 path = "integration_tests/integration_tests.rs"

@@ -41,7 +41,11 @@ macro_rules! elements_are {
 pub mod internal {
     #[cfg(not(google3))]
     use crate as googletest;
+    #[cfg(google3)]
+    use description::Description;
     use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
+    #[cfg(not(google3))]
+    use googletest::matchers::description::Description;
     #[cfg(not(google3))]
     use googletest::matchers::has_size::HasSize;
     #[cfg(google3)]
@@ -91,12 +95,14 @@ pub mod internal {
                 .zip(self.elements)
                 .enumerate()
                 .filter(|&(_, (a, e))| matches!(e.matches(a), MatcherResult::DoesNotMatch))
-                .map(|(idx, (a, e))| format!("element #{idx} is {a:#?}, {}", e.explain_match(a)))
-                .collect::<Vec<_>>();
+                .map(|(idx, (a, e))| format!("element #{idx} is {a:?}, {}", e.explain_match(a)))
+                .collect::<Description>();
             if mismatches.is_empty() {
                 MatchExplanation::create("whose elements all match".to_string())
+            } else if mismatches.len() == 1 {
+                MatchExplanation::create(format!("where {mismatches}"))
             } else {
-                MatchExplanation::create(format!("whose {}", mismatches.join(" and\n")))
+                MatchExplanation::create(format!("where:\n{}", mismatches.bullet_list().indent()))
             }
         }
 
@@ -104,15 +110,13 @@ pub mod internal {
             format!(
                 "{} elements:\n{}",
                 matcher_result.pick("has", "doesn't have"),
-                self.elements
+                &self
+                    .elements
                     .iter()
+                    .map(|matcher| matcher.describe(MatcherResult::Matches))
+                    .collect::<Description>()
                     .enumerate()
-                    .map(|(index, matcher)| format!(
-                        "    {index}: {}",
-                        matcher.describe(MatcherResult::Matches)
-                    ))
-                    .collect::<Vec<_>>()
-                    .join("\n")
+                    .indent()
             )
         }
     }
@@ -126,6 +130,7 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{google_test, verify_that, Result};
+    use indoc::indoc;
     use matchers::{contains_substring, displays_as, eq, err, not};
 
     #[google_test]
@@ -151,20 +156,57 @@ mod tests {
         let result = verify_that!(vec![1, 4, 3], elements_are![eq(1), eq(2), eq(3)]);
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: vec![1, 4, 3]
-Expected: has elements:
-    0: is equal to 1
-    1: is equal to 2
-    2: is equal to 3
-Actual: [
-    1,
-    4,
-    3,
-], whose element #1 is 4, which isn't equal to 2
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: vec![1, 4, 3]
+                Expected: has elements:
+                  0. is equal to 1
+                  1. is equal to 2
+                  2. is equal to 3
+                Actual: [
+                    1,
+                    4,
+                    3,
+                ], where element #1 is 4, which isn't equal to 2"
+            ))))
+        )
+    }
+
+    #[google_test]
+    fn elements_are_produces_correct_failure_message_nested() -> Result<()> {
+        let result = verify_that!(
+            vec![vec![0, 1], vec![1, 2]],
+            elements_are![elements_are![eq(1), eq(2)], elements_are![eq(2), eq(3)]]
+        );
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: vec![vec! [0, 1], vec! [1, 2]]
+                Expected: has elements:
+                  0. has elements:
+                       0. is equal to 1
+                       1. is equal to 2
+                  1. has elements:
+                       0. is equal to 2
+                       1. is equal to 3
+                Actual: [
+                    [
+                        0,
+                        1,
+                    ],
+                    [
+                        1,
+                        2,
+                    ],
+                ], where:
+                  * element #0 is [0, 1], where:
+                      * element #0 is 0, which isn't equal to 1
+                      * element #1 is 1, which isn't equal to 2
+                  * element #1 is [1, 2], where:
+                      * element #0 is 1, which isn't equal to 2
+                      * element #1 is 2, which isn't equal to 3"
+            ))))
         )
     }
 
