@@ -20,7 +20,7 @@ use std::marker::PhantomData;
 
 /// Matches an `Option` containing `None`.
 ///
-/// ```rust
+/// ```
 /// verify_that!(None, none())?;   // Passes
 /// verify_that!(Some("Some value"), none())?;  // Fails
 /// ```

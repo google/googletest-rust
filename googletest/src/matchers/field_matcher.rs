@@ -21,7 +21,7 @@
 ///
 /// For example:
 ///
-/// ```rust
+/// ```
 /// struct IntField {
 ///   int: i32
 /// }
@@ -30,7 +30,7 @@
 ///
 /// Tuple structs are also supported via the index syntax:
 ///
-/// ```rust
+/// ```
 /// struct IntField(i32)
 /// verify_that!(IntField(32), field!(IntField.0, eq(32)))?;
 /// ```
@@ -38,7 +38,7 @@
 /// Enums are also supported, in which case only the specified variant is
 /// matched:
 ///
-/// ```rust
+/// ```
 /// enum MyEnum {
 ///     A(i32),
 ///     B,
@@ -49,7 +49,7 @@
 ///
 /// The structure or enum may also be referenced from a separate module:
 ///
-/// ```rust
+/// ```
 /// mod a_module {
 ///     struct AStruct(i32);
 /// }
@@ -58,7 +58,7 @@
 ///
 /// Nested structures are *not supported*, however:
 ///
-/// ```rust
+/// ```
 /// struct InnerStruct(i32);
 /// struct OuterStruct {
 ///     inner: InnerStruct,

@@ -26,7 +26,7 @@ use std::fmt::Debug;
 /// `ActualT` and `ExpectedT` can each be any container a reference to which
 /// implements `IntoIterator`. They need not be the same container type.
 ///
-/// ```rust
+/// ```
 /// let value: Vec<i32> = vec![1, 2, 3];
 /// verify_that!(value, subset_of([1, 2, 3, 4]))?;  // Passes
 /// verify_that!(value, subset_of([1, 2]))?;  // Fails: 3 is not in the superset
@@ -37,7 +37,7 @@ use std::fmt::Debug;
 ///
 /// Item multiplicity in both the actual and expected containers is ignored:
 ///
-/// ```rust
+/// ```
 /// let value: Vec<i32> = vec![0, 0, 1];
 /// verify_that!(value, subset_of([0, 1]))?;  // Passes
 /// verify_that!(value, subset_of([0, 1, 1]))?;  // Passes
@@ -45,7 +45,7 @@ use std::fmt::Debug;
 ///
 /// One can also verify the contents of a slice by dereferencing it:
 ///
-/// ```rust
+/// ```
 /// let value = &[1, 2, 3];
 /// verify_that!(*value, subset_of([1, 2, 3]))?;
 /// ```

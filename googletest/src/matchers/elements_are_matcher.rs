@@ -18,7 +18,7 @@
 
 /// Matches a container's elements to each matcher in order.
 ///
-/// ```rust
+/// ```
 /// verify_that!(vec![1,2,3], elements_are![eq(1), anything(), gt(0).and(lt(123))])
 /// ```
 ///

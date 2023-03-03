@@ -19,7 +19,7 @@
 /// Matches a container whose elements in any order have a 1:1 correspondence
 /// with the provided element matchers.
 ///
-/// ```rust
+/// ```
 /// verify_that!(vec![3, 2, 1], unordered_elements_are![eq(1), ge(2), anything()])?;   // Passes
 /// verify_that!(vec![1], unordered_elements_are![eq(1), ge(2)])?;              // Fails: container has wrong size
 /// verify_that!(vec![3, 2, 1], unordered_elements_are![eq(1), ge(4), eq(2)])?; // Fails: second matcher not matched
@@ -65,7 +65,7 @@ macro_rules! unordered_elements_are {
 /// Put another way, `contains_each!` matches if there is a subset of the actual
 /// container which [`unordered_elements_are`] would match.
 ///
-/// ```rust
+/// ```
 /// verify_that!(vec![3, 2, 1], contains_each![eq(2), ge(3)])?;   // Passes
 /// verify_that!(vec![3, 2, 1], contains_each![ge(3), ge(3)])?;   // Passes
 /// verify_that!(vec![1], contains_each![eq(1), ge(2)])?;         // Fails: container too small
@@ -110,7 +110,7 @@ macro_rules! contains_each {
 /// Put another way, `is_contained_in!` matches if there is a subset of the
 /// matchers which would match with [`unordered_elements_are`].
 ///
-/// ```rust
+/// ```
 /// verify_that!(vec![2, 1], is_contained_in![eq(1), ge(2)])?;   // Passes
 /// verify_that!(vec![2, 1], is_contained_in![ge(1), ge(1)])?;   // Passes
 /// verify_that!(vec![1, 2, 3], is_contained_in![eq(1), ge(2)])?; // Fails: container too large

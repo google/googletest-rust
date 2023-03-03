@@ -26,7 +26,7 @@ use std::ops::Deref;
 /// Both the actual value and the expected substring may be either a `String` or
 /// a string reference.
 ///
-/// ```rust
+/// ```
 /// verify_that!("Some value", contains_substring("Some"))?;  // Passes
 /// verify_that!("Another value", contains_substring("Some"))?;   // Fails
 /// verify_that!("Some value".to_string(), contains_substring("value"))?;   // Passes
@@ -50,7 +50,7 @@ pub fn contains_substring<T>(expected: T) -> StrMatcher<T> {
 /// Both the actual value and the expected prefix may be either a `String` or
 /// a string reference.
 ///
-/// ```rust
+/// ```
 /// verify_that!("Some value", starts_with("Some"))?;  // Passes
 /// verify_that!("Another value", starts_with("Some"))?;   // Fails
 /// verify_that!("Some value", starts_with("value"))?;  // Fails
@@ -69,7 +69,7 @@ pub fn starts_with<T>(expected: T) -> StrMatcher<T> {
 /// Both the actual value and the expected suffix may be either a `String` or
 /// a string reference.
 ///
-/// ```rust
+/// ```
 /// verify_that!("Some value", ends_with("value"))?;  // Passes
 /// verify_that!("Some value", ends_with("other value"))?;   // Fails
 /// verify_that!("Some value", ends_with("Some"))?;  // Fails
@@ -94,7 +94,7 @@ pub trait StrMatcherConfigurator<T> {
     ///
     /// Whitespace is defined as in [`str::trim_start`].
     ///
-    /// ```rust
+    /// ```
     /// verify_that!("A string", eq("   A string").ignoring_leading_whitespace())?; // Passes
     /// verify_that!("   A string", eq("A string").ignoring_leading_whitespace())?; // Passes
     /// ```
@@ -111,7 +111,7 @@ pub trait StrMatcherConfigurator<T> {
     ///
     /// Whitespace is defined as in [`str::trim_end`].
     ///
-    /// ```rust
+    /// ```
     /// verify_that!("A string", eq("A string   ").ignoring_trailing_whitespace())?; // Passes
     /// verify_that!("A string   ", eq("A string").ignoring_trailing_whitespace())?; // Passes
     /// ```
@@ -128,7 +128,7 @@ pub trait StrMatcherConfigurator<T> {
     ///
     /// Whitespace is defined as in [`str::trim`].
     ///
-    /// ```rust
+    /// ```
     /// verify_that!("A string", eq("   A string   ").ignoring_outer_whitespace())?; // Passes
     /// verify_that!("   A string   ", eq("A string").ignoring_outer_whitespace())?; // Passes
     /// ```
@@ -148,7 +148,7 @@ pub trait StrMatcherConfigurator<T> {
     ///
     /// This uses the same rules for case as [`str::eq_ignore_ascii_case`].
     ///
-    /// ```rust
+    /// ```
     /// verify_that!("Some value", eq_ignoring_ascii_case("SOME VALUE"))?;  // Passes
     /// verify_that!("Another value", eq_ignoring_ascii_case("Some value"))?;   // Fails
     /// ```
