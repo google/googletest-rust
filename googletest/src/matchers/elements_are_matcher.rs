@@ -22,7 +22,7 @@
 /// verify_that!(vec![1,2,3], elements_are![eq(1), anything(), gt(0).and(lt(123))])
 /// ```
 ///
-/// Do not use with unordered containers. Prefer unordered_elements_are!(...).
+/// Do not use with unordered containers. Prefer `unordered_elements_are!(...)`.
 #[macro_export]
 macro_rules! elements_are {
     ($($matcher:expr),* $(,)?) => {{
