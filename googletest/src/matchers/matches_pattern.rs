@@ -21,7 +21,7 @@
 /// This can be used to match arbitrary combinations of fields on structures
 /// using arbitrary matchers:
 ///
-/// ```rust
+/// ```
 /// struct MyStruct {
 ///     a_field: String,
 ///     another_field: String,
@@ -35,7 +35,7 @@
 ///
 /// One can use it recursively to match nested structures:
 ///
-/// ```rust
+/// ```
 /// struct MyStruct {
 ///     a_nested_struct: MyInnerStruct,
 /// }
@@ -53,7 +53,7 @@
 ///
 /// One can use the alias [`pat`][crate::pat] to make this less verbose:
 ///
-/// ```rust
+/// ```
 /// verify_that!(my_struct, matches_pattern!(MyStruct {
 ///     a_nested_struct: pat!(MyInnerStruct {
 ///         a_field: starts_with("Something"),
@@ -64,7 +64,7 @@
 /// One can also match tuple structs with up to 10 fields. In this case, all
 /// fields must have matchers:
 ///
-/// ```rust
+/// ```
 /// struct MyTupleStruct(String, String);
 ///
 /// verify_that!(
@@ -75,7 +75,7 @@
 ///
 /// One can also match enum values:
 ///
-/// ```rust
+/// ```
 /// enum MyEnum {
 ///     A(u32),
 ///     B,

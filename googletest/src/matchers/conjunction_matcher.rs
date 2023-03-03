@@ -21,7 +21,7 @@ use std::fmt::Debug;
 pub trait AndMatcherExt<T: Debug>: Matcher<T> {
     /// Constructs a matcher that matches both `self` and `right`.
     ///
-    /// ```rust
+    /// ```
     /// verify_that!(Struct { a: 1, b: 2 }, field!(Struct::a, eq(1)).and(field!(Struct::b, eq(2))))?;
     /// ```
     // TODO(b/264518763): Replace the return type with impl Matcher and reduce

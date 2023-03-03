@@ -21,7 +21,7 @@ use std::marker::PhantomData;
 /// Matches the string representation of types that implement `Display`.
 ///
 ///
-/// ```rust
+/// ```
 /// let result: impl Display = ...;
 /// verify_that!(result, displays_as(eq(format!("{}", result))))?;
 /// ```

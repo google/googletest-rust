@@ -19,7 +19,7 @@ use std::fmt::Debug;
 
 /// Matches the actual value exactly when the inner matcher does _not_ match.
 ///
-/// ```rust
+/// ```
 /// verify_that!(0, not(eq(1)))?; // Passes
 /// verify_that!(0, not(eq(0)))?; // Fails
 /// ```

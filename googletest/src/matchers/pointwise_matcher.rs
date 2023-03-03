@@ -23,7 +23,7 @@
 /// For example, the following matches a container of integers each of which
 /// does not exceed the given upper bounds:
 ///
-/// ```rust
+/// ```
 /// let value = vec![1, 2, 3];
 /// verify_that!(value, pointwise!(le, [1, 3, 3]))?; // Passes
 /// verify_that!(value, pointwise!(le, [1, 1, 3]))?; // Fails

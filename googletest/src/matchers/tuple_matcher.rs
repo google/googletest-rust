@@ -18,7 +18,7 @@
 
 /// Matches a tuple whose elements are matched by each of the given matchers.
 ///
-/// ```rust
+/// ```
 /// verify_that((123, 456), tuple!(eq(123), eq(456)))?; // Passes
 /// verify_that((123, 456), tuple!(eq(123), eq(0)))?; // Fails: second matcher does not match
 /// ```
@@ -26,7 +26,7 @@
 /// Matchers must correspond to the actual tuple in count and type. Otherwise
 /// the test will fail to compile.
 ///
-/// ```rust
+/// ```
 /// verify_that((123, 456), tuple!(eq(123)))?; // Does not compile: wrong tuple size
 /// verify_that((123, "A string"), tuple!(eq(123), eq(456)))?; // Does not compile: wrong type
 /// ```
@@ -35,7 +35,7 @@
 /// [`anything`][crate::matchers::anything] for fields which are not relevant
 /// for the test.
 ///
-/// ```rust
+/// ```
 /// verify_that((123, 456), tuple!(eq(123), anything()))
 /// ```
 ///

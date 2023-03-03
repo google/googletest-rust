@@ -23,7 +23,7 @@ use std::fmt::Debug;
 /// by `inner`. Use the method [`ContainsMatcher::times`] to constrain the
 /// matched containers to a specific number of matching elements.
 ///
-/// ```rust
+/// ```
 /// verify_that!(["Some value"], contains(eq("Some value")))?;  // Passes
 /// verify_that!(vec!["Some value"], contains(eq("Some value")))?;  // Passes
 /// verify_that!([], contains(eq("Some value")))?;   // Fails

@@ -19,7 +19,7 @@ use std::fmt::Debug;
 
 /// Creates a matcher based on the predicate provided.
 ///
-/// ```rust
+/// ```
 /// verify_that!(3, predicate(|x: &i32| x % 2 == 1))?;  // Passes
 /// ```
 ///
@@ -48,7 +48,7 @@ impl<P> PredicateMatcher<P, NoDescription, NoDescription> {
     ///
     /// For example, to make sure the error message is more useful
     ///
-    /// ```rust
+    /// ```
     /// predicate(|x: &i32| x % 2 == 1)
     ///   .with_description("is odd", "is even")
     /// ```

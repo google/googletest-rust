@@ -19,7 +19,7 @@ use std::fmt::Debug;
 
 /// Matches a `Result` containing `Ok` with a value matched by `inner`.
 ///
-/// ```rust
+/// ```
 /// verify_that!(Ok("Some value"), ok(eq("Some value")))?;  // Passes
 /// verify_that!(Err("An error"), ok(eq("An error")))?;   // Fails
 /// verify_that!(Ok("Some value"), ok(eq("Some other value")))?;   // Fails

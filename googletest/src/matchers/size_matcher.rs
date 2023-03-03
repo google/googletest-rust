@@ -26,7 +26,7 @@ use std::fmt::Debug;
 /// `T` must be a container and implement the [`HasSize`] trait so that the size
 /// can be extracted.
 ///
-/// ```rust
+/// ```
 /// let value = vec![1,2,3];
 /// verify_that!(value, size(eq(3)))?;
 /// ```

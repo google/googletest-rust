@@ -21,7 +21,7 @@ use std::fmt::Debug;
 ///
 /// `T` can be any container such that `&T` implements `IntoIterator`.
 ///
-/// ```rust
+/// ```
 /// let value: Vec<i32> = vec![];
 /// verify_that!(value, empty())?;
 /// let value: HashSet<i32> = HashSet::new();
@@ -30,7 +30,7 @@ use std::fmt::Debug;
 ///
 /// One can also check whether a slice is empty by dereferencing it:
 ///
-/// ```rust
+/// ```
 /// let value = &[];
 /// verify_that!(*value, empty())?;
 /// ```
