@@ -26,6 +26,7 @@ authors = [
   "Bradford Hovinen <hovinen@google.com>",
   "Bastien Jacot-Guillarmod <bjacotg@google.com>",
   "Maciej Pietrzak <mpi@google.com>",
+  "Martin Geisler <mgeisler@google.com>",
 ]
 
 [lib]
