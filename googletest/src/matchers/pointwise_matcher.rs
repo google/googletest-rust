@@ -72,16 +72,16 @@ macro_rules! pointwise {
 pub mod internal {
     #[cfg(not(google3))]
     use crate as googletest;
+    #[cfg(not(google3))]
+    use crate::matchers::zipped_iterator::zip;
     #[cfg(google3)]
     use description::Description;
     use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
     #[cfg(not(google3))]
     use googletest::matchers::description::Description;
-    #[cfg(not(google3))]
-    use googletest::matchers::has_size::HasSize;
-    #[cfg(google3)]
-    use has_size::HasSize;
     use std::fmt::Debug;
+    #[cfg(google3)]
+    use zipped_iterator::zip;
 
     /// This struct is meant to be used only through the `pointwise` macro.
     ///
@@ -97,48 +97,52 @@ pub mod internal {
         }
     }
 
-    impl<T: Debug, MatcherT: Matcher<T>, ContainerT: ?Sized + HasSize + Debug> Matcher<ContainerT>
+    impl<T: Debug, MatcherT: Matcher<T>, ContainerT: ?Sized + Debug> Matcher<ContainerT>
         for PointwiseMatcher<MatcherT>
     where
         for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
     {
         fn matches(&self, actual: &ContainerT) -> MatcherResult {
-            if actual.size() != self.matchers.len() {
-                return MatcherResult::DoesNotMatch;
-            }
-            for (element, matcher) in actual.into_iter().zip(&self.matchers) {
+            let mut zipped_iterator = zip(actual.into_iter(), self.matchers.iter());
+            for (element, matcher) in zipped_iterator.by_ref() {
                 if matches!(matcher.matches(element), MatcherResult::DoesNotMatch) {
                     return MatcherResult::DoesNotMatch;
                 }
             }
-            MatcherResult::Matches
+            if zipped_iterator.has_size_mismatch() {
+                MatcherResult::DoesNotMatch
+            } else {
+                MatcherResult::Matches
+            }
         }
 
         fn explain_match(&self, actual: &ContainerT) -> MatchExplanation {
-            if actual.size() != self.matchers.len() {
-                return MatchExplanation::create(format!(
-                    "which has size {} (expected {})",
-                    actual.size(),
-                    self.matchers.len()
-                ));
-            }
-
             // TODO(b/260819741) This code duplicates elements_are_matcher.rs. Consider
             // extract as a separate library. (or implement pointwise! with
             // elements_are)
-            let mismatches = actual
-                .into_iter()
-                .zip(self.matchers.iter())
-                .enumerate()
-                .filter(|&(_, (a, e))| matches!(e.matches(a), MatcherResult::DoesNotMatch))
-                .map(|(idx, (a, e))| format!("element #{idx} is {a:#?}, {}", e.explain_match(a)))
-                .collect::<Description>();
+            let actual_iterator = actual.into_iter();
+            let mut zipped_iterator = zip(actual_iterator, self.matchers.iter());
+            let mut mismatches = Vec::new();
+            for (idx, (a, e)) in zipped_iterator.by_ref().enumerate() {
+                if matches!(e.matches(a), MatcherResult::DoesNotMatch) {
+                    mismatches.push(format!("element #{idx} is {a:?}, {}", e.explain_match(a)));
+                }
+            }
             if mismatches.is_empty() {
-                MatchExplanation::create("which matches all elements".to_string())
+                if !zipped_iterator.has_size_mismatch() {
+                    MatchExplanation::create("which matches all elements".to_string())
+                } else {
+                    MatchExplanation::create(format!(
+                        "which has size {} (expected {})",
+                        zipped_iterator.left_size(),
+                        self.matchers.len()
+                    ))
+                }
             } else if mismatches.len() == 1 {
-                MatchExplanation::create(format!("where {mismatches}"))
+                MatchExplanation::create(format!("where {}", mismatches[0]))
             } else {
-                MatchExplanation::create(format!("where:\n{}", mismatches.indent().bullet_list()))
+                let mismatches = mismatches.into_iter().collect::<Description>();
+                MatchExplanation::create(format!("where:\n{}", mismatches.bullet_list().indent()))
             }
         }
 
@@ -183,6 +187,13 @@ mod tests {
     fn pointwise_matches_two_elements_with_array() -> Result<()> {
         let value = vec![1, 2];
         verify_that!(value, pointwise!(lt, [2, 3]))
+    }
+
+    #[google_test]
+    fn pointwise_matches_two_element_slice() -> Result<()> {
+        let value = vec![1, 2];
+        let slice = value.as_slice();
+        verify_that!(*slice, pointwise!(lt, [2, 3]))
     }
 
     #[google_test]
