@@ -26,9 +26,8 @@
 /// verify_that!(vec![3, 2, 1], unordered_elements_are![ge(3), ge(3), ge(3)])?; // Fails: no 1:1 correspondence
 /// ```
 ///
-/// The actual value must be a container implementing [`IntoIterator`] and
-/// [`HasSize`][crate::matchers::has_size::HasSize]. This includes all common
-/// containers in the Rust standard library.
+/// The actual value must be a container implementing [`IntoIterator`]. This
+/// includes standard containers, slices (when dereferenced) and arrays.
 ///
 /// This matcher does not support matching directly against an [`Iterator`]. To
 /// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
@@ -85,9 +84,8 @@ macro_rules! unordered_elements_are {
 /// verify_that!(vec![3, 2, 1], contains_each![ge(3), ge(3), ge(3)])?; // Fails: no matching
 /// ```
 ///
-/// The actual value must be a container implementing [`IntoIterator`] and
-/// [`HasSize`][crate::matchers::has_size::HasSize]. This includes all common
-/// containers in the Rust standard library.
+/// The actual value must be a container implementing [`IntoIterator`]. This
+/// includes standard containers, slices (when dereferenced) and arrays.
 ///
 /// This matcher does not support matching directly against an [`Iterator`]. To
 /// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
@@ -185,6 +183,10 @@ macro_rules! is_contained_in {
 pub mod internal {
     #[cfg(not(google3))]
     use crate as googletest;
+    #[cfg(not(google3))]
+    use crate::matchers::count_elements::count_elements;
+    #[cfg(google3)]
+    use count_elements::count_elements;
     #[cfg(google3)]
     use description::Description;
     use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
@@ -574,25 +576,6 @@ pub mod internal {
             }
             false
         }
-    }
-
-    /// Counts the number of elements in `value`.
-    ///
-    /// This uses [`Iterator::size_hint`] when that function returns an
-    /// unambiguous answer, i.e., the upper bound exists and the lower and upper
-    /// bounds agree. Otherwise it iterates through `value` and counts the
-    /// elements.
-    fn count_elements<T, ContainerT: ?Sized>(value: &ContainerT) -> usize
-    where
-        for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
-    {
-        let iterator = value.into_iter();
-        if let (lower, Some(higher)) = iterator.size_hint() {
-            if lower == higher {
-                return lower;
-            }
-        }
-        iterator.count()
     }
 
     /// The list of elements that do not match any element in the corresponding

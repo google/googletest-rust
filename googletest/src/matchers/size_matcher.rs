@@ -14,23 +14,37 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
-use googletest::matcher::{Matcher, MatcherResult};
 #[cfg(not(google3))]
-use googletest::matchers::has_size::HasSize;
+use crate::matchers::count_elements::count_elements;
 #[cfg(google3)]
-use has_size::HasSize;
+use count_elements::count_elements;
+use googletest::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 
 /// Matches a container whose size matches `expected`.
 ///
-/// `T` must be a container and implement the [`HasSize`] trait so that the size
-/// can be extracted.
+/// This matches against a container over which one can iterate. This includes
+/// the standard Rust containers, arrays, and (when dereferenced) slices.
 ///
 /// ```
-/// let value = vec![1,2,3];
-/// verify_that!(value, size(eq(3)))?;
+/// let array = [1,2,3];
+/// verify_that!(array, size(eq(3)))?;
+/// let vec = vec![1,2,3];
+/// verify_that!(vec, size(eq(3)))?;
+/// let slice = value.as_slice();
+/// verify_that!(*slice, size(eq(3)))?;
 /// ```
-pub fn size<T: HasSize + Debug, E: Matcher<usize>>(expected: E) -> impl Matcher<T> {
+///
+/// The parameter `expected` can be any integer numeric matcher.
+///
+/// ```
+/// let vec = vec![1,2,3];
+/// verify_that!(vec, size(gt(1)))?;
+/// ```
+pub fn size<T: Debug + ?Sized, E: Matcher<usize>>(expected: E) -> impl Matcher<T>
+where
+    for<'b> &'b T: IntoIterator,
+{
     SizeMatcher { expected }
 }
 
@@ -38,9 +52,12 @@ struct SizeMatcher<E> {
     expected: E,
 }
 
-impl<T: Debug + HasSize, E: Matcher<usize>> Matcher<T> for SizeMatcher<E> {
+impl<T: Debug + ?Sized, E: Matcher<usize>> Matcher<T> for SizeMatcher<E>
+where
+    for<'b> &'b T: IntoIterator,
+{
     fn matches(&self, actual: &T) -> MatcherResult {
-        self.expected.matches(&actual.size())
+        self.expected.matches(&count_elements(actual))
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
@@ -75,9 +92,22 @@ mod tests {
     }
 
     #[google_test]
-    fn size_matcher_match_slice() -> Result<()> {
+    fn size_matcher_match_array_reference() -> Result<()> {
         let value = &[1, 2, 3];
-        verify_that!(&value[0..1], size(eq(1)))
+        verify_that!(*value, size(eq(3)))
+    }
+
+    #[google_test]
+    fn size_matcher_match_slice_of_array() -> Result<()> {
+        let value = &[1, 2, 3];
+        verify_that!(value[0..1], size(eq(1)))
+    }
+
+    #[google_test]
+    fn size_matcher_match_slice_of_vec() -> Result<()> {
+        let value = vec![1, 2, 3];
+        let slice = value.as_slice();
+        verify_that!(*slice, size(eq(3)))
     }
 
     #[google_test]

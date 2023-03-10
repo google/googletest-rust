@@ -29,9 +29,8 @@
 /// verify_that!(value, pointwise!(le, [1, 1, 3]))?; // Fails
 /// ```
 ///
-/// The actual value must be a container implementing [`IntoIterator`] and
-/// [`HasSize`][crate::matchers::has_size::HasSize]. This includes all common
-/// containers in the Rust standard library.
+/// The actual value must be a container implementing [`IntoIterator`]. This
+/// includes standard containers, slices (when dereferenced) and arrays.
 ///
 /// This matcher does not support matching directly against an [`Iterator`]. To
 /// match against an iterator, use [`Iterator::collect`] to build a [`Vec`]

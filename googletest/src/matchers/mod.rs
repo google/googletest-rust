@@ -25,6 +25,8 @@ pub mod contains_matcher;
 #[cfg(not(google3))]
 pub mod contains_regex_matcher;
 #[cfg(not(google3))]
+pub mod count_elements;
+#[cfg(not(google3))]
 pub mod description;
 #[cfg(not(google3))]
 pub mod disjunction_matcher;
@@ -48,8 +50,6 @@ pub mod ge_matcher;
 pub mod gt_matcher;
 #[cfg(not(google3))]
 pub mod has_entry_matcher;
-#[cfg(not(google3))]
-pub mod has_size;
 #[cfg(not(google3))]
 pub mod is_nan_matcher;
 #[cfg(not(google3))]
