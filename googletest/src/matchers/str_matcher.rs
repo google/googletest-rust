@@ -149,8 +149,8 @@ pub trait StrMatcherConfigurator<T> {
     /// This uses the same rules for case as [`str::eq_ignore_ascii_case`].
     ///
     /// ```
-    /// verify_that!("Some value", eq_ignoring_ascii_case("SOME VALUE"))?;  // Passes
-    /// verify_that!("Another value", eq_ignoring_ascii_case("Some value"))?;   // Fails
+    /// verify_that!("Some value", eq("SOME VALUE").ignoring_ascii_case())?;  // Passes
+    /// verify_that!("Another value", eq("Some value").ignoring_ascii_case())?;   // Fails
     /// ```
     ///
     /// This is **not guaranteed** to match strings with differing upper/lower
