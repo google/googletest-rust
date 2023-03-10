@@ -142,9 +142,8 @@ macro_rules! contains_each {
 /// verify_that!(vec![3, 1], is_contained_in![ge(3), ge(3), ge(3)])?; // Fails: no matching
 /// ```
 ///
-/// The actual value must be a container implementing [`IntoIterator`] and
-/// [`HasSize`][crate::matchers::has_size::HasSize]. This includes all common
-/// containers in the Rust standard library.
+/// The actual value must be a container implementing [`IntoIterator`]. This
+/// includes standard containers, slices (when dereferenced) and arrays.
 ///
 /// This matcher does not support matching directly against an [`Iterator`]. To
 /// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
@@ -191,10 +190,6 @@ pub mod internal {
     use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
     #[cfg(not(google3))]
     use googletest::matchers::description::Description;
-    #[cfg(not(google3))]
-    use googletest::matchers::has_size::HasSize;
-    #[cfg(google3)]
-    use has_size::HasSize;
     use std::collections::HashSet;
     use std::fmt::{Debug, Display};
 
@@ -259,7 +254,7 @@ pub mod internal {
     // one expected element and vice versa.
     // 3. `UnorderedElementsAre` verifies that a perfect matching exists using
     // Ford-Fulkerson.
-    impl<'a, T: Debug, ContainerT: Debug + HasSize, const N: usize> Matcher<ContainerT>
+    impl<'a, T: Debug, ContainerT: Debug + ?Sized, const N: usize> Matcher<ContainerT>
         for UnorderedElementsAre<'a, T, N>
     where
         for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
@@ -267,9 +262,6 @@ pub mod internal {
         fn matches(&self, actual: &ContainerT) -> MatcherResult {
             match self.requirements {
                 Requirements::PerfectMatch => {
-                    if actual.size() != N {
-                        return MatcherResult::DoesNotMatch;
-                    }
                     let match_matrix = MatchMatrix::generate(actual, &self.elements);
                     if !match_matrix.find_unmatchable_elements().has_unmatchable_elements()
                         && match_matrix.find_best_match().is_full_match()
@@ -280,9 +272,6 @@ pub mod internal {
                     }
                 }
                 Requirements::Superset => {
-                    if actual.size() < N {
-                        return MatcherResult::DoesNotMatch;
-                    }
                     let match_matrix = MatchMatrix::generate(actual, &self.elements);
                     if !match_matrix.find_unmatched_expected().has_unmatchable_elements()
                         && match_matrix.find_best_match().is_superset_match()
@@ -293,9 +282,6 @@ pub mod internal {
                     }
                 }
                 Requirements::Subset => {
-                    if actual.size() > N {
-                        return MatcherResult::DoesNotMatch;
-                    }
                     let match_matrix = MatchMatrix::generate(actual, &self.elements);
                     if !match_matrix.find_unmatched_actual().has_unmatchable_elements()
                         && match_matrix.find_best_match().is_subset_match()
@@ -309,33 +295,31 @@ pub mod internal {
         }
 
         fn explain_match(&self, actual: &ContainerT) -> MatchExplanation {
+            let actual_size = count_elements(actual);
             match self.requirements {
                 Requirements::PerfectMatch => {
-                    if actual.size() != N {
+                    if actual_size != N {
                         return MatchExplanation::create(format!(
                             "which has size {} (expected {})",
-                            actual.size(),
-                            N
+                            actual_size, N
                         ));
                     }
                 }
 
                 Requirements::Superset => {
-                    if actual.size() < N {
+                    if actual_size < N {
                         return MatchExplanation::create(format!(
                             "which has size {} (expected at least {})",
-                            actual.size(),
-                            N
+                            actual_size, N
                         ));
                     }
                 }
 
                 Requirements::Subset => {
-                    if actual.size() > N {
+                    if actual_size > N {
                         return MatchExplanation::create(format!(
                             "which has size {} (expected at most {})",
-                            actual.size(),
-                            N
+                            actual_size, N
                         ));
                     }
                 }
@@ -379,14 +363,15 @@ pub mod internal {
     struct MatchMatrix<const N: usize>(Vec<[MatcherResult; N]>);
 
     impl<const N: usize> MatchMatrix<N> {
-        fn generate<'a, T: Debug, ContainerT: Debug + HasSize>(
+        fn generate<'a, T: Debug, ContainerT: Debug + ?Sized>(
             actual: &ContainerT,
             expected: &[&'a dyn Matcher<T>; N],
         ) -> Self
         where
             for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
         {
-            let mut matrix = MatchMatrix(vec![[MatcherResult::DoesNotMatch; N]; actual.size()]);
+            let mut matrix =
+                MatchMatrix(vec![[MatcherResult::DoesNotMatch; N]; count_elements(actual)]);
             for (actual_idx, actual) in actual.into_iter().enumerate() {
                 for (expected_idx, expected) in expected.iter().enumerate() {
                     matrix.0[actual_idx][expected_idx] = expected.matches(actual);
@@ -591,6 +576,25 @@ pub mod internal {
         }
     }
 
+    /// Counts the number of elements in `value`.
+    ///
+    /// This uses [`Iterator::size_hint`] when that function returns an
+    /// unambiguous answer, i.e., the upper bound exists and the lower and upper
+    /// bounds agree. Otherwise it iterates through `value` and counts the
+    /// elements.
+    fn count_elements<T, ContainerT: ?Sized>(value: &ContainerT) -> usize
+    where
+        for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
+    {
+        let iterator = value.into_iter();
+        if let (lower, Some(higher)) = iterator.size_hint() {
+            if lower == higher {
+                return lower;
+            }
+        }
+        iterator.count()
+    }
+
     /// The list of elements that do not match any element in the corresponding
     /// set.
     /// These lists are represented as fixed sized bit set to avoid
@@ -707,7 +711,7 @@ pub mod internal {
             (0..N).filter(|expected_idx| !matched_expected.contains(expected_idx)).collect()
         }
 
-        fn get_explanation<'a, T: Debug, ContainerT: Debug>(
+        fn get_explanation<'a, T: Debug, ContainerT: Debug + ?Sized>(
             &self,
             actual: &ContainerT,
             expected: &[&'a dyn Matcher<T>; N],
@@ -771,6 +775,13 @@ mod tests {
     fn unordered_elements_are_matches_vector() -> Result<()> {
         let value = vec![1, 2, 3];
         verify_that!(value, unordered_elements_are![eq(1), eq(2), eq(3)])
+    }
+
+    #[google_test]
+    fn unordered_elements_are_matches_slice() -> Result<()> {
+        let value = vec![1, 2, 3];
+        let slice = value.as_slice();
+        verify_that!(*slice, unordered_elements_are![eq(1), eq(2), eq(3)])
     }
 
     #[google_test]
