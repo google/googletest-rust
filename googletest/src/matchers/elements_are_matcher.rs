@@ -113,9 +113,6 @@ pub mod internal {
 
         fn explain_match(&self, actual: &ContainerT) -> MatchExplanation {
             let actual_iterator = actual.into_iter();
-            // TODO(b/271570144): This is a lower bound and not an actual value, so fix it
-            // to use the real number of elements in actual.
-            let actual_size = actual_iterator.size_hint().0;
             let mut zipped_iterator = zip(actual_iterator, self.elements.iter());
             let mut mismatches = Vec::new();
             for (idx, (a, e)) in zipped_iterator.by_ref().enumerate() {
@@ -127,7 +124,10 @@ pub mod internal {
                 if !zipped_iterator.has_size_mismatch() {
                     MatchExplanation::create("whose elements all match".to_string())
                 } else {
-                    MatchExplanation::create(format!("whose size is {}", actual_size))
+                    MatchExplanation::create(format!(
+                        "whose size is {}",
+                        zipped_iterator.left_size()
+                    ))
                 }
             } else if mismatches.len() == 1 {
                 let mismatches = mismatches.into_iter().collect::<Description>();

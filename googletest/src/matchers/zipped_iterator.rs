@@ -6,7 +6,7 @@
 ///
 /// [`Iterator::zip`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.zip
 pub(crate) fn zip<I1, I2>(left: I1, right: I2) -> ZippedIterator<I1, I2> {
-    ZippedIterator { left, right, has_size_mismatch: false }
+    ZippedIterator { left, right, has_size_mismatch: false, consumed_elements: 0 }
 }
 
 /// An iterator over pairs of the elements of two constituent iterators, which
@@ -21,9 +21,10 @@ pub(crate) struct ZippedIterator<I1, I2> {
     left: I1,
     right: I2,
     has_size_mismatch: bool,
+    consumed_elements: usize,
 }
 
-impl<I1, I2> ZippedIterator<I1, I2> {
+impl<I1: Iterator, I2> ZippedIterator<I1, I2> {
     /// Returns whether a mismatch in the two sizes of the two iterators was
     /// detected during iteration.
     ///
@@ -35,6 +36,14 @@ impl<I1, I2> ZippedIterator<I1, I2> {
     pub(crate) fn has_size_mismatch(&self) -> bool {
         self.has_size_mismatch
     }
+
+    /// Returns the number of elements in the left iterator.
+    ///
+    /// This iterates through the remainder of the left iterator if necessary in
+    /// order to get the true number of elements. It therefore consumes `self`.
+    pub(crate) fn left_size(mut self) -> usize {
+        self.consumed_elements + self.left.by_ref().count()
+    }
 }
 
 impl<I1: Iterator, I2: Iterator> Iterator for ZippedIterator<I1, I2> {
@@ -42,12 +51,21 @@ impl<I1: Iterator, I2: Iterator> Iterator for ZippedIterator<I1, I2> {
 
     fn next(&mut self) -> Option<(I1::Item, I2::Item)> {
         match (self.left.next(), self.right.next()) {
-            (Some(v1), Some(v2)) => Some((v1, v2)),
-            (None, None) => None,
-            _ => {
+            (Some(v1), Some(v2)) => {
+                self.consumed_elements += 1;
+                Some((v1, v2))
+            }
+            (Some(_), None) => {
+                // Consumed elements counts only elements from self.left
+                self.consumed_elements += 1;
                 self.has_size_mismatch = true;
                 None
             }
+            (None, Some(_)) => {
+                self.has_size_mismatch = true;
+                None
+            }
+            (None, None) => None,
         }
     }
 }
