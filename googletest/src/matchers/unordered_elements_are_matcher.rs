@@ -186,7 +186,11 @@ macro_rules! is_contained_in {
 pub mod internal {
     #[cfg(not(google3))]
     use crate as googletest;
+    #[cfg(google3)]
+    use description::Description;
     use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
+    #[cfg(not(google3))]
+    use googletest::matchers::description::Description;
     #[cfg(not(google3))]
     use googletest::matchers::has_size::HasSize;
     #[cfg(google3)]
@@ -363,13 +367,10 @@ pub mod internal {
                 matcher_result.pick("contains", "doesn't contain"),
                 self.elements
                     .iter()
+                    .map(|matcher| matcher.describe(MatcherResult::Matches))
+                    .collect::<Description>()
                     .enumerate()
-                    .map(|(index, matcher)| format!(
-                        "    {index}: {}",
-                        matcher.describe(MatcherResult::Matches)
-                    ))
-                    .collect::<Vec<_>>()
-                    .join("\n")
+                    .indent()
             )
         }
     }
@@ -687,23 +688,18 @@ pub mod internal {
             self.get_unmatched_expected().is_empty()
         }
 
-        fn get_matches(&self) -> Vec<(usize, usize)> {
-            self.0
-                .iter()
-                .enumerate()
-                .filter_map(|(actual_idx, maybe_expected_idx)| {
-                    maybe_expected_idx.map(|expected_idx| (actual_idx, expected_idx))
-                })
-                .collect()
+        fn get_matches(&self) -> impl Iterator<Item = (usize, usize)> + '_ {
+            self.0.iter().enumerate().filter_map(|(actual_idx, maybe_expected_idx)| {
+                maybe_expected_idx.map(|expected_idx| (actual_idx, expected_idx))
+            })
         }
 
-        fn get_unmatched_actual(&self) -> Vec<usize> {
+        fn get_unmatched_actual(&self) -> impl Iterator<Item = usize> + '_ {
             self.0
                 .iter()
                 .enumerate()
                 .filter(|&(_, o)| o.is_none())
                 .map(|(actual_idx, _)| actual_idx)
-                .collect()
         }
 
         fn get_unmatched_expected(&self) -> Vec<usize> {
@@ -729,31 +725,33 @@ pub mod internal {
 
             error_message.push_str("\n  The best match found was: ");
 
-            for (actual_idx, expected_idx) in self.get_matches() {
-                error_message.push_str(
-                    format!(
-                        "\n    Actual element {:#?} at index {actual_idx} matched expected element `{}` at index {expected_idx}.",
-                        actual[actual_idx],
-                        expected[expected_idx].describe(MatcherResult::Matches),
-                    )
-                    .as_str(),
-                );
-            }
+            let matches = self.get_matches().map(|(actual_idx, expected_idx)|{
+                format!(
+                    "Actual element {:?} at index {actual_idx} matched expected element `{}` at index {expected_idx}.",
+                    actual[actual_idx],
+                    expected[expected_idx].describe(MatcherResult::Matches),
+            )});
 
-            for actual_idx in self.get_unmatched_actual() {
-                error_message.push_str(format!(
-                    "\n    Actual element {:#?} at index {actual_idx} did not match any remaining expected element.",
+            let unmatched_actual = self.get_unmatched_actual().map(|actual_idx| {
+                format!(
+                    "Actual element {:#?} at index {actual_idx} did not match any remaining expected element.",
                     actual[actual_idx]
-                ).as_str());
-            }
-            for expected_idx in self.get_unmatched_expected() {
-                error_message.push_str(format!(
-                    "\n    Expected element `{}` at index {expected_idx} did not match any remaining actual element.",
-                    expected[expected_idx].describe(MatcherResult::Matches)
-                ).as_str());
-            }
+                )
+            });
 
-            Some(error_message)
+            let unmatched_expected = self.get_unmatched_expected().into_iter().map(|expected_idx|{format!(
+                "Expected element `{}` at index {expected_idx} did not match any remaining actual element.",
+                expected[expected_idx].describe(MatcherResult::Matches)
+            )});
+
+            let best_match = matches
+                .chain(unmatched_actual)
+                .chain(unmatched_expected)
+                .collect::<Description>()
+                .indent();
+            Some(format!(
+                "which does not have a {requirements} match with the expected elements. The best match found was:\n{best_match}"
+            ))
         }
     }
 }
@@ -766,6 +764,7 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{google_test, verify_that, Result};
+    use indoc::indoc;
     use matchers::{contains_substring, displays_as, eq, err, ge, not};
 
     #[google_test]
@@ -791,19 +790,19 @@ mod tests {
         let result = verify_that!(vec![1, 4, 3], unordered_elements_are![eq(1), eq(2), eq(3)]);
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: vec![1, 4, 3]
-Expected: contains elements matching in any order:
-    0: is equal to 1
-    1: is equal to 2
-    2: is equal to 3
-Actual: [
-    1,
-    4,
-    3,
-], whose element #1 does not match any expected elements and no elements match the expected element #1"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: vec![1, 4, 3]
+                Expected: contains elements matching in any order:
+                  0. is equal to 1
+                  1. is equal to 2
+                  2. is equal to 3
+                Actual: [
+                    1,
+                    4,
+                    3,
+                ], whose element #1 does not match any expected elements and no elements match the expected element #1"
+                ))))
         )
     }
 
@@ -831,12 +830,14 @@ Actual: [
     fn unordered_elements_are_description_no_full_match() -> Result<()> {
         verify_that!(
             unordered_elements_are![eq(1), eq(2), eq(2)].explain_match(&vec![1, 1, 2]),
-            displays_as(eq("which does not have a perfect match with the expected elements.
-  The best match found was: 
-    Actual element 1 at index 0 matched expected element `is equal to 1` at index 0.
-    Actual element 2 at index 2 matched expected element `is equal to 2` at index 1.
-    Actual element 1 at index 1 did not match any remaining expected element.
-    Expected element `is equal to 2` at index 2 did not match any remaining actual element."))
+            displays_as(eq(indoc!(
+                "
+                which does not have a perfect match with the expected elements. The best match found was:
+                  Actual element 1 at index 0 matched expected element `is equal to 1` at index 0.
+                  Actual element 2 at index 2 matched expected element `is equal to 2` at index 1.
+                  Actual element 1 at index 1 did not match any remaining expected element.
+                  Expected element `is equal to 2` at index 2 did not match any remaining actual element."
+            )))
         )
     }
 
@@ -909,12 +910,13 @@ Actual: [
     fn contains_each_explains_mismatch_due_to_no_graph_matching_found() -> Result<()> {
         verify_that!(
             contains_each![ge(2), ge(2)].explain_match(&vec![1, 2]),
-            displays_as(eq("which does not have a superset match with the expected elements.
-  The best match found was: 
-    Actual element 2 at index 1 matched expected element `is greater than or equal to 2` at index 0.
-    Actual element 1 at index 0 did not match any remaining expected element.
-    Expected element `is greater than or equal to 2` at index 1 did not match any remaining actual element."))
-        )
+            displays_as(eq(indoc!(
+                "
+                which does not have a superset match with the expected elements. The best match found was:
+                  Actual element 2 at index 1 matched expected element `is greater than or equal to 2` at index 0.
+                  Actual element 1 at index 0 did not match any remaining expected element.
+                  Expected element `is greater than or equal to 2` at index 1 did not match any remaining actual element."))
+        ))
     }
 
     #[google_test]
@@ -970,11 +972,12 @@ Actual: [
     fn is_contained_in_explains_mismatch_due_to_no_graph_matching_found() -> Result<()> {
         verify_that!(
             is_contained_in![ge(1), ge(3)].explain_match(&vec![1, 2]),
-            displays_as(eq("which does not have a subset match with the expected elements.
-  The best match found was: 
-    Actual element 1 at index 0 matched expected element `is greater than or equal to 1` at index 0.
-    Actual element 2 at index 1 did not match any remaining expected element.
-    Expected element `is greater than or equal to 3` at index 1 did not match any remaining actual element."))
-        )
+            displays_as(eq(indoc!(
+                "
+                which does not have a subset match with the expected elements. The best match found was:
+                  Actual element 1 at index 0 matched expected element `is greater than or equal to 1` at index 0.
+                  Actual element 2 at index 1 did not match any remaining expected element.
+                  Expected element `is greater than or equal to 3` at index 1 did not match any remaining actual element."))
+        ))
     }
 }

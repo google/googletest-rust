@@ -57,9 +57,13 @@ pub mod internal {
     use crate as googletest;
     #[cfg(google3)]
     use anything_matcher::anything;
+    #[cfg(google3)]
+    use description::Description;
     use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
     #[cfg(not(google3))]
     use googletest::matchers::anything;
+    #[cfg(not(google3))]
+    use googletest::matchers::description::Description;
     use std::fmt::Debug;
 
     /// A matcher which matches an input value matched by all matchers in the
@@ -105,8 +109,12 @@ pub mod internal {
                             matches!(component.matches(actual), MatcherResult::DoesNotMatch)
                         })
                         .map(|component| format!("{}", component.explain_match(actual)))
-                        .collect::<Vec<_>>();
-                    MatchExplanation::create(failures.join(" AND\n"))
+                        .collect::<Description>();
+                    if failures.len() == 1 {
+                        MatchExplanation::create(format!("{}", failures))
+                    } else {
+                        MatchExplanation::create(format!("\n{}", failures.bullet_list().indent()))
+                    }
                 }
             }
         }
@@ -115,12 +123,22 @@ pub mod internal {
             match N {
                 0 => anything::<T>().describe(matcher_result),
                 1 => self.components[0].describe(matcher_result),
-                _ => self
-                    .components
-                    .iter()
-                    .map(|m| m.describe(matcher_result))
-                    .collect::<Vec<_>>()
-                    .join(matcher_result.pick(" and\n", " or\n")),
+                _ => {
+                    let properties = self
+                        .components
+                        .iter()
+                        .map(|m| m.describe(matcher_result))
+                        .collect::<Description>()
+                        .bullet_list()
+                        .indent();
+                    format!(
+                        "{}:\n{properties}",
+                        matcher_result.pick(
+                            "has all the following properties",
+                            "has at least one of the following properties"
+                        )
+                    )
+                }
             }
         }
     }
@@ -138,7 +156,8 @@ mod tests {
         matcher::{Matcher, MatcherResult},
         verify_that, Result,
     };
-    use matchers::{contains_substring, displays_as, ends_with, eq, not, starts_with};
+    use indoc::indoc;
+    use matchers::{contains_substring, displays_as, ends_with, eq, err, not, starts_with};
 
     #[google_test]
     fn matches_any_value_when_list_is_empty() -> Result<()> {
@@ -181,7 +200,12 @@ mod tests {
 
         verify_that!(
             matcher.describe(MatcherResult::Matches),
-            eq("starts with prefix \"A\" and\nends with suffix \"string\"")
+            eq(indoc!(
+                "
+                has all the following properties:
+                  * starts with prefix \"A\"
+                  * ends with suffix \"string\""
+            ))
         )
     }
 
@@ -222,7 +246,7 @@ mod tests {
         verify_that!(
             all!(starts_with("One"), starts_with("Two")).explain_match("Three"),
             displays_as(eq(
-                "which does not start with \"One\" AND\nwhich does not start with \"Two\""
+                "\n  * which does not start with \"One\"\n  * which does not start with \"Two\""
             ))
         )
     }
@@ -230,5 +254,25 @@ mod tests {
     #[google_test]
     fn mismatch_description_empty_matcher() -> Result<()> {
         verify_that!(all!().explain_match("Three"), displays_as(eq("which is anything")))
+    }
+
+    #[google_test]
+    fn all_multiple_failed_assertions() -> Result<()> {
+        let result = verify_that!(4, all![eq(1), eq(2), eq(3)]);
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: 4
+                Expected: has all the following properties:
+                  * is equal to 1
+                  * is equal to 2
+                  * is equal to 3
+                Actual: 4, 
+                  * which isn't equal to 1
+                  * which isn't equal to 2
+                  * which isn't equal to 3"
+            ))))
+        )
     }
 }

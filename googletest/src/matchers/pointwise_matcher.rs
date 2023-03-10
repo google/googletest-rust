@@ -72,7 +72,11 @@ macro_rules! pointwise {
 pub mod internal {
     #[cfg(not(google3))]
     use crate as googletest;
+    #[cfg(google3)]
+    use description::Description;
     use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
+    #[cfg(not(google3))]
+    use googletest::matchers::description::Description;
     #[cfg(not(google3))]
     use googletest::matchers::has_size::HasSize;
     #[cfg(google3)]
@@ -128,11 +132,13 @@ pub mod internal {
                 .enumerate()
                 .filter(|&(_, (a, e))| matches!(e.matches(a), MatcherResult::DoesNotMatch))
                 .map(|(idx, (a, e))| format!("element #{idx} is {a:#?}, {}", e.explain_match(a)))
-                .collect::<Vec<_>>();
+                .collect::<Description>();
             if mismatches.is_empty() {
                 MatchExplanation::create("which matches all elements".to_string())
+            } else if mismatches.len() == 1 {
+                MatchExplanation::create(format!("where {mismatches}"))
             } else {
-                MatchExplanation::create(format!("whose {}", mismatches.join(" and\n")))
+                MatchExplanation::create(format!("where:\n{}", mismatches.indent().bullet_list()))
             }
         }
 
@@ -143,8 +149,9 @@ pub mod internal {
                 self.matchers
                     .iter()
                     .map(|m| m.describe(MatcherResult::Matches))
-                    .collect::<Vec<_>>()
-                    .join("\n")
+                    .collect::<Description>()
+                    .enumerate()
+                    .indent()
             )
         }
     }
@@ -157,7 +164,8 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{google_test, verify_that, Result};
-    use matchers::{contains_substring, eq, lt, not};
+    use indoc::indoc;
+    use matchers::{contains_substring, displays_as, eq, err, lt, not};
 
     #[google_test]
     fn pointwise_matches_single_element() -> Result<()> {
@@ -209,20 +217,20 @@ mod tests {
         let result = verify_that!(vec![1, 2, 3], pointwise!(eq, vec![1, 2]));
 
         verify_that!(
-            format!("{}", result.unwrap_err()).as_str(),
-            contains_substring(
-                "\
-Value of: vec![1, 2, 3]
-Expected: has elements satisfying respectively:
-is equal to 1
-is equal to 2
-Actual: [
-    1,
-    2,
-    3,
-], which has size 3 (expected 2)
-"
-            )
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: vec![1, 2, 3]
+                Expected: has elements satisfying respectively:
+                  0. is equal to 1
+                  1. is equal to 2
+                Actual: [
+                    1,
+                    2,
+                    3,
+                ], which has size 3 (expected 2)
+                "
+            ))))
         )
     }
 
@@ -231,21 +239,21 @@ Actual: [
         let result = verify_that!(vec![1, 2, 3], pointwise!(eq, vec![2, 2, 3]));
 
         verify_that!(
-            format!("{}", result.unwrap_err()).as_str(),
-            contains_substring(
-                "\
-Value of: vec![1, 2, 3]
-Expected: has elements satisfying respectively:
-is equal to 2
-is equal to 2
-is equal to 3
-Actual: [
-    1,
-    2,
-    3,
-], whose element #0 is 1, which isn't equal to 2
-"
-            )
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: vec![1, 2, 3]
+                Expected: has elements satisfying respectively:
+                  0. is equal to 2
+                  1. is equal to 2
+                  2. is equal to 3
+                Actual: [
+                    1,
+                    2,
+                    3,
+                ], where element #0 is 1, which isn't equal to 2
+                "
+            ))))
         )
     }
 
@@ -254,21 +262,21 @@ Actual: [
         let result = verify_that!(vec![1, 2, 3], pointwise!(eq, vec![1, 3, 3]));
 
         verify_that!(
-            format!("{}", result.unwrap_err()).as_str(),
-            contains_substring(
-                "\
-Value of: vec![1, 2, 3]
-Expected: has elements satisfying respectively:
-is equal to 1
-is equal to 3
-is equal to 3
-Actual: [
-    1,
-    2,
-    3,
-], whose element #1 is 2, which isn't equal to 3
-"
-            )
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: vec![1, 2, 3]
+                Expected: has elements satisfying respectively:
+                  0. is equal to 1
+                  1. is equal to 3
+                  2. is equal to 3
+                Actual: [
+                    1,
+                    2,
+                    3,
+                ], where element #1 is 2, which isn't equal to 3
+                "
+            ))))
         )
     }
 
@@ -278,22 +286,22 @@ Actual: [
         let result = verify_that!(vec![1, 2, 3], pointwise!(eq, vec![2, 3, 3]));
 
         verify_that!(
-            format!("{}", result.unwrap_err()).as_str(),
-            contains_substring(
-                "\
-Value of: vec![1, 2, 3]
-Expected: has elements satisfying respectively:
-is equal to 2
-is equal to 3
-is equal to 3
-Actual: [
-    1,
-    2,
-    3,
-], whose element #0 is 1, which isn't equal to 2 and
-element #1 is 2, which isn't equal to 3
-"
-            )
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: vec![1, 2, 3]
+                Expected: has elements satisfying respectively:
+                  0. is equal to 2
+                  1. is equal to 3
+                  2. is equal to 3
+                Actual: [
+                    1,
+                    2,
+                    3,
+                ], where:
+                  * element #0 is 1, which isn't equal to 2
+                  * element #1 is 2, which isn't equal to 3"
+            ))))
         )
     }
 }

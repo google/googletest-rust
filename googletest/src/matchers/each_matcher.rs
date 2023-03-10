@@ -14,7 +14,11 @@
 
 #[cfg(not(google3))]
 use crate as googletest;
+#[cfg(google3)]
+use description::Description;
 use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
+#[cfg(not(google3))]
+use googletest::matchers::description::Description;
 use std::fmt::Debug;
 
 /// Matches a container all of whose elements are matched by the matcher
@@ -81,7 +85,7 @@ where
         if non_matching_elements.len() == 1 {
             let (idx, element, explanation) = non_matching_elements.remove(0);
             return MatchExplanation::create(format!(
-                "whose element #{idx} is {element:#?}, {explanation}"
+                "whose element #{idx} is {element:?}, {explanation}"
             ));
         }
 
@@ -92,9 +96,9 @@ where
             .join(", ");
         let element_explanations = non_matching_elements
             .iter()
-            .map(|&(_, element, ref explanation)| format!("{element:#?}, {explanation}"))
-            .collect::<Vec<_>>()
-            .join("\n");
+            .map(|&(_, element, ref explanation)| format!("{element:?}, {explanation}"))
+            .collect::<Description>()
+            .indent();
         MatchExplanation::create(format!(
             "whose elements {failed_indexes} don't match\n{element_explanations}"
         ))
@@ -123,6 +127,7 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{google_test, verify_that, Result};
+    use indoc::indoc;
     use matchers::{contains_substring, displays_as, eq, err, gt, not};
     use std::collections::HashSet;
 
@@ -174,17 +179,16 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: vec![0, 2, 3]
-Expected: only contains elements that is greater than 0\n\
-Actual: [
-    0,
-    2,
-    3,
-], whose element #0 is 0, which is less than or equal to 0
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: vec![0, 2, 3]
+                Expected: only contains elements that is greater than 0
+                Actual: [
+                    0,
+                    2,
+                    3,
+                ], whose element #0 is 0, which is less than or equal to 0"
+            ))))
         )
     }
 
@@ -194,17 +198,16 @@ Actual: [
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: vec![1, 0, 3]
-Expected: only contains elements that is greater than 0
-Actual: [
-    1,
-    0,
-    3,
-], whose element #1 is 0, which is less than or equal to 0
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: vec![1, 0, 3]
+                Expected: only contains elements that is greater than 0
+                Actual: [
+                    1,
+                    0,
+                    3,
+                ], whose element #1 is 0, which is less than or equal to 0"
+            ))))
         )
     }
 
@@ -214,19 +217,18 @@ Actual: [
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: vec![0, 1, 3]
-Expected: only contains elements that is greater than 1
-Actual: [
-    0,
-    1,
-    3,
-], whose elements #0, #1 don't match
-0, which is less than or equal to 1
-1, which is less than or equal to 1
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: vec![0, 1, 3]
+                Expected: only contains elements that is greater than 1
+                Actual: [
+                    0,
+                    1,
+                    3,
+                ], whose elements #0, #1 don't match
+                  0, which is less than or equal to 1
+                  1, which is less than or equal to 1"
+            ))))
         )
     }
     #[google_test]
@@ -235,24 +237,20 @@ Actual: [
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: vec![vec! [1, 2], vec! [1]]
-Expected: only contains elements that only contains elements that is equal to 1
-Actual: [
-    [
-        1,
-        2,
-    ],
-    [
-        1,
-    ],
-], whose element #0 is [
-    1,
-    2,
-], whose element #1 is 2, which isn't equal to 1
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: vec![vec! [1, 2], vec! [1]]
+                Expected: only contains elements that only contains elements that is equal to 1
+                Actual: [
+                    [
+                        1,
+                        2,
+                    ],
+                    [
+                        1,
+                    ],
+                ], whose element #0 is [1, 2], whose element #1 is 2, which isn't equal to 1"
+            ))))
         )
     }
 }

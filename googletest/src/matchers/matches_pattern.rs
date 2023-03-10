@@ -379,6 +379,7 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{google_test, verify_that, Result};
+    use indoc::indoc;
     use matchers::{contains_substring, displays_as, eq, err, not};
 
     #[google_test]
@@ -509,21 +510,21 @@ Actual: AStruct {
             actual,
             matches_pattern!(AStruct { a_field: eq(234), another_field: eq(123) })
         );
-        // TODO(bjacotg) Improve this error message. The format is not obvious.
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: actual
-Expected: has field `a_field`, which is equal to 234 and
-has field `another_field`, which is equal to 123
-Actual: AStruct {
-    a_field: 123,
-    another_field: 234,
-}, which has field `a_field`, which isn't equal to 234 AND
-which has field `another_field`, which isn't equal to 123
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: actual
+                Expected: has all the following properties:
+                  * has field `a_field`, which is equal to 234
+                  * has field `another_field`, which is equal to 123
+                Actual: AStruct {
+                    a_field: 123,
+                    another_field: 234,
+                }, 
+                  * which has field `a_field`, which isn't equal to 234
+                  * which has field `another_field`, which isn't equal to 123"
+            ))))
         )
     }
 
