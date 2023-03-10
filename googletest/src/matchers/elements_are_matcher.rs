@@ -26,9 +26,14 @@
 /// verify_that!(vec![1, 2, 3], elements_are![eq(1), anything(), gt(0).and(lt(123))])
 /// ```
 ///
-/// The actual value must be a container implementing [`IntoIterator`] and
-/// [`HasSize`][crate::matchers::has_size::HasSize]. This includes all common
-/// containers in the Rust standard library.
+/// The actual value must be a container implementing [`IntoIterator`]. This
+/// includes standard containers, slices (when dereferenced) and arrays.
+///
+/// ```
+/// let vector = vec![1, 2, 3];
+/// let slice = vector.as_slice();
+/// verify_that!(*slice, elements_are![eq(1), anything(), gt(0).and(lt(123))])
+/// ```
 ///
 /// This matcher does not support matching directly against an [`Iterator`]. To
 /// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
@@ -59,16 +64,16 @@ macro_rules! elements_are {
 pub mod internal {
     #[cfg(not(google3))]
     use crate as googletest;
+    #[cfg(not(google3))]
+    use crate::matchers::zipped_iterator::zip;
     #[cfg(google3)]
     use description::Description;
     use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
     #[cfg(not(google3))]
     use googletest::matchers::description::Description;
-    #[cfg(not(google3))]
-    use googletest::matchers::has_size::HasSize;
-    #[cfg(google3)]
-    use has_size::HasSize;
     use std::fmt::Debug;
+    #[cfg(google3)]
+    use zipped_iterator::zip;
 
     /// This struct is meant to be used only by the macro `elements_are!`.
     ///
@@ -88,38 +93,47 @@ pub mod internal {
         }
     }
 
-    impl<'a, T: Debug, ContainerT: Debug + HasSize> Matcher<ContainerT> for ElementsAre<'a, T>
+    impl<'a, T: Debug, ContainerT: Debug + ?Sized> Matcher<ContainerT> for ElementsAre<'a, T>
     where
         for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
     {
         fn matches(&self, actual: &ContainerT) -> MatcherResult {
-            if actual.size() != self.elements.len() {
-                return MatcherResult::DoesNotMatch;
-            }
-            for (a, e) in actual.into_iter().zip(self.elements) {
+            let mut zipped_iterator = zip(actual.into_iter(), self.elements.iter());
+            for (a, e) in zipped_iterator.by_ref() {
                 if matches!(e.matches(a), MatcherResult::DoesNotMatch) {
                     return MatcherResult::DoesNotMatch;
                 }
             }
-            MatcherResult::Matches
+            if !zipped_iterator.has_size_mismatch() {
+                MatcherResult::Matches
+            } else {
+                MatcherResult::DoesNotMatch
+            }
         }
 
         fn explain_match(&self, actual: &ContainerT) -> MatchExplanation {
-            if actual.size() != self.elements.len() {
-                return MatchExplanation::create(format!("whose size is {}", actual.size(),));
+            let actual_iterator = actual.into_iter();
+            // TODO(b/271570144): This is a lower bound and not an actual value, so fix it
+            // to use the real number of elements in actual.
+            let actual_size = actual_iterator.size_hint().0;
+            let mut zipped_iterator = zip(actual_iterator, self.elements.iter());
+            let mut mismatches = Vec::new();
+            for (idx, (a, e)) in zipped_iterator.by_ref().enumerate() {
+                if matches!(e.matches(a), MatcherResult::DoesNotMatch) {
+                    mismatches.push(format!("element #{idx} is {a:?}, {}", e.explain_match(a)));
+                }
             }
-            let mismatches = actual
-                .into_iter()
-                .zip(self.elements)
-                .enumerate()
-                .filter(|&(_, (a, e))| matches!(e.matches(a), MatcherResult::DoesNotMatch))
-                .map(|(idx, (a, e))| format!("element #{idx} is {a:?}, {}", e.explain_match(a)))
-                .collect::<Description>();
             if mismatches.is_empty() {
-                MatchExplanation::create("whose elements all match".to_string())
+                if !zipped_iterator.has_size_mismatch() {
+                    MatchExplanation::create("whose elements all match".to_string())
+                } else {
+                    MatchExplanation::create(format!("whose size is {}", actual_size))
+                }
             } else if mismatches.len() == 1 {
+                let mismatches = mismatches.into_iter().collect::<Description>();
                 MatchExplanation::create(format!("where {mismatches}"))
             } else {
+                let mismatches = mismatches.into_iter().collect::<Description>();
                 MatchExplanation::create(format!("where:\n{}", mismatches.bullet_list().indent()))
             }
         }
@@ -159,8 +173,9 @@ mod tests {
 
     #[google_test]
     fn elements_are_matches_slice() -> Result<()> {
-        let value = &[1, 2, 3];
-        verify_that!(*value, elements_are![eq(1), eq(2), eq(3)])
+        let value = vec![1, 2, 3];
+        let slice = value.as_slice();
+        verify_that!(*slice, elements_are![eq(1), eq(2), eq(3)])
     }
 
     #[google_test]

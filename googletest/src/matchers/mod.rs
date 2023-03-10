@@ -88,6 +88,8 @@ pub mod superset_of_matcher;
 pub mod tuple_matcher;
 #[cfg(not(google3))]
 pub mod unordered_elements_are_matcher;
+#[cfg(not(google3))]
+pub mod zipped_iterator;
 
 #[cfg(google3)]
 pub use all_matcher::all;
