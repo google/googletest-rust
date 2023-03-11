@@ -132,7 +132,7 @@ macro_rules! matches_pattern_internal {
         [$($struct_name:tt)*],
         { $field_name:ident : $matcher:expr, $($rest:tt)* }
     ) => {
-        matches_pattern_internal!(
+        $crate::matches_pattern_internal!(
             all!(field!($($struct_name)*.$field_name, $matcher)),
             [$($struct_name)*],
             { $($rest)* }
@@ -155,7 +155,7 @@ macro_rules! matches_pattern_internal {
         [$($struct_name:tt)*],
         { $field_name:ident : $matcher:expr, $($rest:tt)* }
     ) => {
-        matches_pattern_internal!(
+        $crate::matches_pattern_internal!(
             all!(
                 $($processed)*,
                 field!($($struct_name)*.$field_name, $matcher)
@@ -187,7 +187,7 @@ macro_rules! matches_pattern_internal {
         [$($struct_name:tt)*],
         ($matcher:expr, $($rest:tt)*)
     ) => {
-        matches_pattern_internal!(
+        $crate::matches_pattern_internal!(
             all!(
                 field!($($struct_name)*.0, $matcher)
             ),
@@ -218,7 +218,7 @@ macro_rules! matches_pattern_internal {
         1,
         ($matcher:expr, $($rest:tt)*)
     ) => {
-        matches_pattern_internal!(
+        $crate::matches_pattern_internal!(
             all!(
                 $($processed)*,
                 field!($($struct_name)*.1, $matcher)
@@ -235,7 +235,7 @@ macro_rules! matches_pattern_internal {
         2,
         ($matcher:expr, $($rest:tt)*)
     ) => {
-        matches_pattern_internal!(
+        $crate::matches_pattern_internal!(
             all!(
                 $($processed)*,
                 field!($($struct_name)*.2, $matcher)
@@ -252,7 +252,7 @@ macro_rules! matches_pattern_internal {
         3,
         ($matcher:expr, $($rest:tt)*)
     ) => {
-        matches_pattern_internal!(
+        $crate::matches_pattern_internal!(
             all!(
                 $($processed)*,
                 field!($($struct_name)*.3, $matcher)
@@ -269,7 +269,7 @@ macro_rules! matches_pattern_internal {
         4,
         ($matcher:expr, $($rest:tt)*)
     ) => {
-        matches_pattern_internal!(
+        $crate::matches_pattern_internal!(
             all!(
                 $($processed)*,
                 field!($($struct_name)*.4, $matcher)
@@ -286,7 +286,7 @@ macro_rules! matches_pattern_internal {
         5,
         ($matcher:expr, $($rest:tt)*)
     ) => {
-        matches_pattern_internal!(
+        $crate::matches_pattern_internal!(
             all!(
                 $($processed)*,
                 field!($($struct_name)*.5, $matcher)
@@ -303,7 +303,7 @@ macro_rules! matches_pattern_internal {
         6,
         ($matcher:expr, $($rest:tt)*)
     ) => {
-        matches_pattern_internal!(
+        $crate::matches_pattern_internal!(
             all!(
                 $($processed)*,
                 field!($($struct_name)*.6, $matcher)
@@ -320,7 +320,7 @@ macro_rules! matches_pattern_internal {
         7,
         ($matcher:expr, $($rest:tt)*)
     ) => {
-        matches_pattern_internal!(
+        $crate::matches_pattern_internal!(
             all!(
                 $($processed)*,
                 field!($($struct_name)*.7, $matcher)
@@ -337,7 +337,7 @@ macro_rules! matches_pattern_internal {
         8,
         ($matcher:expr, $($rest:tt)*)
     ) => {
-        matches_pattern_internal!(
+        $crate::matches_pattern_internal!(
             all!(
                 $($processed)*,
                 field!($($struct_name)*.8, $matcher)
@@ -349,7 +349,7 @@ macro_rules! matches_pattern_internal {
     };
 
     ([$($struct_name:tt)*], $first:tt $($rest:tt)*) => {
-        matches_pattern_internal!([$($struct_name)* $first], $($rest)*)
+        $crate::matches_pattern_internal!([$($struct_name)* $first], $($rest)*)
     };
 
     ($first:tt $($rest:tt)*) => {{
@@ -362,14 +362,14 @@ macro_rules! matches_pattern_internal {
         #[cfg(google3)]
         #[allow(unused)]
         use field_matcher::field;
-        matches_pattern_internal!([$first], $($rest)*)
+        $crate::matches_pattern_internal!([$first], $($rest)*)
     }};
 }
 
 /// An alias for [`matches_pattern`].
 #[macro_export]
 macro_rules! pat {
-    ($($t:tt)*) => { matches_pattern_internal!($($t)*) }
+    ($($t:tt)*) => { $crate::matches_pattern_internal!($($t)*) }
 }
 
 #[cfg(test)]
