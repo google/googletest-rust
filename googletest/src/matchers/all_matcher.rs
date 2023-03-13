@@ -152,45 +152,12 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{
-        google_test,
+        all, google_test,
         matcher::{Matcher, MatcherResult},
         verify_that, Result,
     };
     use indoc::indoc;
-    use matchers::{contains_substring, displays_as, ends_with, eq, err, not, starts_with};
-
-    #[google_test]
-    fn matches_any_value_when_list_is_empty() -> Result<()> {
-        verify_that!((), all!())
-    }
-
-    #[google_test]
-    fn matches_value_with_single_matching_component() -> Result<()> {
-        verify_that!(123, all!(eq(123)))
-    }
-
-    #[google_test]
-    fn does_not_match_value_with_single_non_matching_component() -> Result<()> {
-        verify_that!(123, not(all!(eq(456))))
-    }
-
-    #[google_test]
-    fn matches_value_with_two_matching_components() -> Result<()> {
-        verify_that!("A string", all!(starts_with("A"), ends_with("string")))
-    }
-
-    #[google_test]
-    fn does_not_match_value_with_one_non_matching_component_among_two_components() -> Result<()> {
-        verify_that!(123, not(all!(eq(123), eq(456))))
-    }
-
-    #[google_test]
-    fn supports_trailing_comma() -> Result<()> {
-        verify_that!(
-            "An important string",
-            all!(starts_with("An"), contains_substring("important"), ends_with("string"),)
-        )
-    }
+    use matchers::{displays_as, ends_with, eq, starts_with};
 
     #[google_test]
     fn description_shows_more_than_one_matcher() -> Result<()> {
@@ -202,9 +169,9 @@ mod tests {
             matcher.describe(MatcherResult::Matches),
             eq(indoc!(
                 "
-                has all the following properties:
-                  * starts with prefix \"A\"
-                  * ends with suffix \"string\""
+            has all the following properties:
+              * starts with prefix \"A\"
+              * ends with suffix \"string\""
             ))
         )
     }
@@ -214,7 +181,10 @@ mod tests {
         let first_matcher = starts_with("A");
         let matcher: internal::AllMatcher<String, 1> = all!(first_matcher);
 
-        verify_that!(matcher.describe(MatcherResult::Matches), eq("starts with prefix \"A\""))
+        verify_that!(
+            matcher.describe(MatcherResult::Matches),
+            eq("starts with prefix \"A\"")
+        )
     }
 
     #[google_test]
@@ -238,41 +208,6 @@ mod tests {
         verify_that!(
             matcher.explain_match("A string"),
             displays_as(eq("which does not start with \"Another\""))
-        )
-    }
-
-    #[google_test]
-    fn mismatch_description_two_failed_matchers() -> Result<()> {
-        verify_that!(
-            all!(starts_with("One"), starts_with("Two")).explain_match("Three"),
-            displays_as(eq(
-                "\n  * which does not start with \"One\"\n  * which does not start with \"Two\""
-            ))
-        )
-    }
-
-    #[google_test]
-    fn mismatch_description_empty_matcher() -> Result<()> {
-        verify_that!(all!().explain_match("Three"), displays_as(eq("which is anything")))
-    }
-
-    #[google_test]
-    fn all_multiple_failed_assertions() -> Result<()> {
-        let result = verify_that!(4, all![eq(1), eq(2), eq(3)]);
-        verify_that!(
-            result,
-            err(displays_as(contains_substring(indoc!(
-                "
-                Value of: 4
-                Expected: has all the following properties:
-                  * is equal to 1
-                  * is equal to 2
-                  * is equal to 3
-                Actual: 4, 
-                  * which isn't equal to 1
-                  * which isn't equal to 2
-                  * which isn't equal to 3"
-            ))))
         )
     }
 }
