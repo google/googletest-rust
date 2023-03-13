@@ -40,7 +40,7 @@ regex = "1.6.0"
 indoc = { version = "2", optional = true }
 
 [dev-dependencies]
-indoc = "1"
+indoc = "2"
 
 [[bin]]
 name = "integration_tests"
