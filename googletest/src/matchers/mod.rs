@@ -115,7 +115,7 @@ pub use is_nan_matcher::is_nan;
 pub use le_matcher::le;
 pub use lt_matcher::lt;
 #[cfg(google3)]
-pub use matches_pattern::matches_pattern;
+pub use matches_pattern::{matches_pattern, pat};
 pub use matches_regex_matcher::matches_regex;
 pub use near_matcher::{approx_eq, near};
 pub use none_matcher::none;
