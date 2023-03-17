@@ -134,4 +134,4 @@ pub use superset_of_matcher::superset_of;
 #[cfg(google3)]
 pub use tuple_matcher::tuple;
 #[cfg(google3)]
-pub use unordered_elements_are_matcher::{contains_each, unordered_elements_are};
+pub use unordered_elements_are_matcher::{contains_each, is_contained_in, unordered_elements_are};
