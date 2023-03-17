@@ -26,3 +26,15 @@ information on using pull requests.
 
 This project follows [Google's Open Source Community
 Guidelines](https://opensource.google/conduct/).
+
+## Running the autoformatter rustfmt
+
+This repository uses a custom configuration for rustfmt which currently requires
+that one run the *nightly* version:
+
+```
+cargo +nightly fmt
+```
+
+The stable version will generate error messages and modify a lot of the
+existing formatting, obscuring any real changes you are making.
