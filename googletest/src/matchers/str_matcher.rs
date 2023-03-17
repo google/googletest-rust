@@ -18,6 +18,7 @@ use eq_matcher::EqMatcher;
 use googletest::matcher::{Matcher, MatcherResult};
 #[cfg(not(google3))]
 use googletest::matchers::eq_matcher;
+use std::borrow::Cow;
 use std::fmt::Debug;
 use std::ops::Deref;
 
@@ -88,7 +89,7 @@ pub fn ends_with<T>(expected: T) -> StrMatcher<T> {
 /// Matchers which match against string values and, through configuration,
 /// specialise to [StrMatcher] implement this trait. Currently that only
 /// includes [EqMatcher] and [StrMatcher].
-pub trait StrMatcherConfigurator<T> {
+pub trait StrMatcherConfigurator<ExpectedT> {
     /// Configures the matcher to ignore any leading whitespace in either the
     /// actual or the expected value.
     ///
@@ -104,7 +105,7 @@ pub trait StrMatcherConfigurator<T> {
     /// actual value.
     ///
     /// [`str::trim_start`]: https://doc.rust-lang.org/std/primitive.str.html#method.trim_start
-    fn ignoring_leading_whitespace(self) -> StrMatcher<T>;
+    fn ignoring_leading_whitespace(self) -> StrMatcher<ExpectedT>;
 
     /// Configures the matcher to ignore any trailing whitespace in either the
     /// actual or the expected value.
@@ -121,7 +122,7 @@ pub trait StrMatcherConfigurator<T> {
     /// actual value.
     ///
     /// [`str::trim_end`]: https://doc.rust-lang.org/std/primitive.str.html#method.trim_end
-    fn ignoring_trailing_whitespace(self) -> StrMatcher<T>;
+    fn ignoring_trailing_whitespace(self) -> StrMatcher<ExpectedT>;
 
     /// Configures the matcher to ignore both leading and trailing whitespace in
     /// either the actual or the expected value.
@@ -142,7 +143,7 @@ pub trait StrMatcherConfigurator<T> {
     /// value.
     ///
     /// [`str::trim`]: https://doc.rust-lang.org/std/primitive.str.html#method.trim
-    fn ignoring_outer_whitespace(self) -> StrMatcher<T>;
+    fn ignoring_outer_whitespace(self) -> StrMatcher<ExpectedT>;
 
     /// Configures the matcher to ignore ASCII case when comparing values.
     ///
@@ -157,7 +158,28 @@ pub trait StrMatcherConfigurator<T> {
     /// case characters outside of the codepoints 0-127 covered by ASCII.
     ///
     /// [`str::eq_ignore_ascii_case`]: https://doc.rust-lang.org/std/primitive.str.html#method.eq_ignore_ascii_case
-    fn ignoring_ascii_case(self) -> StrMatcher<T>;
+    fn ignoring_ascii_case(self) -> StrMatcher<ExpectedT>;
+
+    /// Configures the matcher to match only strings which otherwise satisfy the
+    /// conditions a number times matched by the matcher `times`.
+    ///
+    /// ```
+    /// verify_that!("Some value\nSome value", contains_substring("value").times(eq(2)))?; // Passes
+    /// verify_that!("Some value", contains_substring("value").times(eq(2)))?; // Fails
+    /// ```
+    ///
+    /// The matched substrings must be disjoint from one another to be counted.
+    /// For example:
+    ///
+    /// ```
+    /// // Fails: substrings distinct but not disjoint!
+    /// verify_that!("ababab", contains_substring("abab").times(eq(2)))?;
+    /// ```
+    ///
+    /// This is only meaningful when the matcher was constructed with
+    /// [`contains_substring`]. This method will panic when it is used with any
+    /// other matcher construction.
+    fn times(self, times: impl Matcher<usize> + 'static) -> StrMatcher<ExpectedT>;
 }
 
 /// A matcher which matches equality or containment of a string-like value in a
@@ -169,8 +191,8 @@ pub trait StrMatcherConfigurator<T> {
 ///  * [`contains_substring`],
 ///  * [`starts_with`],
 ///  * [`ends_with`].
-pub struct StrMatcher<T> {
-    expected: T,
+pub struct StrMatcher<ExpectedT> {
+    expected: ExpectedT,
     configuration: Configuration,
 }
 
@@ -192,8 +214,10 @@ where
     }
 }
 
-impl<T, MatcherT: Into<StrMatcher<T>>> StrMatcherConfigurator<T> for MatcherT {
-    fn ignoring_leading_whitespace(self) -> StrMatcher<T> {
+impl<ExpectedT, MatcherT: Into<StrMatcher<ExpectedT>>> StrMatcherConfigurator<ExpectedT>
+    for MatcherT
+{
+    fn ignoring_leading_whitespace(self) -> StrMatcher<ExpectedT> {
         let existing = self.into();
         StrMatcher {
             configuration: existing.configuration.ignoring_leading_whitespace(),
@@ -201,7 +225,7 @@ impl<T, MatcherT: Into<StrMatcher<T>>> StrMatcherConfigurator<T> for MatcherT {
         }
     }
 
-    fn ignoring_trailing_whitespace(self) -> StrMatcher<T> {
+    fn ignoring_trailing_whitespace(self) -> StrMatcher<ExpectedT> {
         let existing = self.into();
         StrMatcher {
             configuration: existing.configuration.ignoring_trailing_whitespace(),
@@ -209,14 +233,22 @@ impl<T, MatcherT: Into<StrMatcher<T>>> StrMatcherConfigurator<T> for MatcherT {
         }
     }
 
-    fn ignoring_outer_whitespace(self) -> StrMatcher<T> {
+    fn ignoring_outer_whitespace(self) -> StrMatcher<ExpectedT> {
         let existing = self.into();
         StrMatcher { configuration: existing.configuration.ignoring_outer_whitespace(), ..existing }
     }
 
-    fn ignoring_ascii_case(self) -> StrMatcher<T> {
+    fn ignoring_ascii_case(self) -> StrMatcher<ExpectedT> {
         let existing = self.into();
         StrMatcher { configuration: existing.configuration.ignoring_ascii_case(), ..existing }
+    }
+
+    fn times(self, times: impl Matcher<usize> + 'static) -> StrMatcher<ExpectedT> {
+        let existing = self.into();
+        if !matches!(existing.configuration.mode, MatchMode::Contains) {
+            panic!("The times() configurator is only meaningful with contains_substring().");
+        }
+        StrMatcher { configuration: existing.configuration.times(times), ..existing }
     }
 }
 
@@ -242,12 +274,13 @@ impl<T> StrMatcher<T> {
 // parameterised, saving compilation time and binary size on monomorphisation.
 //
 // The default value represents exact equality of the strings.
-#[derive(Default, Clone)]
+#[derive(Default)]
 struct Configuration {
     mode: MatchMode,
     ignore_leading_whitespace: bool,
     ignore_trailing_whitespace: bool,
     case_policy: CasePolicy,
+    times: Option<Box<dyn Matcher<usize>>>,
 }
 
 #[derive(Default, Clone)]
@@ -283,10 +316,11 @@ impl Configuration {
                 CasePolicy::IgnoreAscii => expected.eq_ignore_ascii_case(actual),
             },
             MatchMode::Contains => match self.case_policy {
-                CasePolicy::Respect => actual.contains(expected),
-                CasePolicy::IgnoreAscii => {
-                    actual.to_ascii_lowercase().contains(&expected.to_ascii_lowercase())
-                }
+                CasePolicy::Respect => self.does_containment_match(actual, expected),
+                CasePolicy::IgnoreAscii => self.does_containment_match(
+                    actual.to_ascii_lowercase().as_str(),
+                    expected.to_ascii_lowercase().as_str(),
+                ),
             },
             MatchMode::StartsWith => match self.case_policy {
                 CasePolicy::Respect => actual.starts_with(expected),
@@ -304,18 +338,35 @@ impl Configuration {
             },
         }
     }
+
+    // Returns whether actual contains expected a number of times matched by the
+    // matcher self.times. Does not take other configuration into account.
+    fn does_containment_match(&self, actual: &str, expected: &str) -> bool {
+        if let Some(times) = self.times.as_ref() {
+            // Split returns an iterator over the "boundaries" left and right of the
+            // substring to be matched, of which there is one more than the number of
+            // substrings.
+            matches!(times.matches(&(actual.split(expected).count() - 1)), MatcherResult::Matches)
+        } else {
+            actual.contains(expected)
+        }
+    }
+
     // StrMatcher::describe redirects immediately to this function.
     fn describe(&self, matcher_result: MatcherResult, expected: &str) -> String {
-        let mut addenda = Vec::with_capacity(3);
+        let mut addenda: Vec<Cow<'static, str>> = Vec::with_capacity(3);
         match (self.ignore_leading_whitespace, self.ignore_trailing_whitespace) {
-            (true, true) => addenda.push("ignoring leading and trailing whitespace"),
-            (true, false) => addenda.push("ignoring leading whitespace"),
-            (false, true) => addenda.push("ignoring trailing whitespace"),
+            (true, true) => addenda.push("ignoring leading and trailing whitespace".into()),
+            (true, false) => addenda.push("ignoring leading whitespace".into()),
+            (false, true) => addenda.push("ignoring trailing whitespace".into()),
             (false, false) => {}
         }
         match self.case_policy {
             CasePolicy::Respect => {}
-            CasePolicy::IgnoreAscii => addenda.push("ignoring ASCII case"),
+            CasePolicy::IgnoreAscii => addenda.push("ignoring ASCII case".into()),
+        }
+        if let Some(times) = self.times.as_ref() {
+            addenda.push(format!("count {}", times.describe(matcher_result)).into());
         }
         let extra =
             if !addenda.is_empty() { format!(" ({})", addenda.join(", ")) } else { "".into() };
@@ -355,6 +406,10 @@ impl Configuration {
     fn ignoring_ascii_case(self) -> Self {
         Self { case_policy: CasePolicy::IgnoreAscii, ..self }
     }
+
+    fn times(self, times: impl Matcher<usize> + 'static) -> Self {
+        Self { times: Some(Box::new(times)), ..self }
+    }
 }
 
 #[cfg(test)]
@@ -365,7 +420,7 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{google_test, verify_that, Result};
-    use matchers::{eq, not};
+    use matchers::{eq, gt, not};
 
     #[google_test]
     fn matches_string_reference_with_equal_string_reference() -> Result<()> {
@@ -494,6 +549,21 @@ mod tests {
     fn matches_string_containing_expected_value_in_contains_mode_while_ignoring_ascii_case()
     -> Result<()> {
         verify_that!("Some string", contains_substring("STR").ignoring_ascii_case())
+    }
+
+    #[google_test]
+    fn contains_substring_matches_correct_number_of_substrings() -> Result<()> {
+        verify_that!("Some string", contains_substring("str").times(eq(1)))
+    }
+
+    #[google_test]
+    fn contains_substring_does_not_match_incorrect_number_of_substrings() -> Result<()> {
+        verify_that!("Some string\nSome string", not(contains_substring("string").times(eq(1))))
+    }
+
+    #[google_test]
+    fn contains_substring_does_not_match_when_substrings_overlap() -> Result<()> {
+        verify_that!("ababab", not(contains_substring("abab").times(eq(2))))
     }
 
     #[google_test]
@@ -647,6 +717,15 @@ mod tests {
         verify_that!(
             Matcher::<&str>::describe(&matcher, MatcherResult::DoesNotMatch),
             eq("does not contain a substring \"A string\"")
+        )
+    }
+
+    #[google_test]
+    fn describes_itself_with_count_number() -> Result<()> {
+        let matcher = contains_substring("A string").times(gt(2));
+        verify_that!(
+            Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
+            eq("contains a substring \"A string\" (count is greater than 2)")
         )
     }
 
