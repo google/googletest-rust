@@ -206,23 +206,27 @@ as [rstest](https://crates.io/crates/rstest). Just apply both attribute macros
 to the test:
 
 ```rust
+#[google_test]
 #[rstest]
 #[case(1)]
 #[case(2)]
 #[case(3)]
-#[google_test]
 fn rstest_works_with_google_test(#[case] value: u32) -> Result<()> {
    verify_that!(value, gt(0))
 }
 ```
+
+Make sure to put `#[google_test]` *before* `#[rstest]`. Otherwise the annotated
+test will run twice, since both macros will attempt to register a test with the
+Rust test harness.
 
 The macro also works together with
 [async tests with Tokio](https://docs.rs/tokio/latest/tokio/attr.test.html) in
 the same way:
 
 ```rust
-#[tokio::test]
 #[google_test]
+#[tokio::test]
 async fn should_work_with_tokio() -> Result<()> {
     verify_that!(3, gt(0))
 }

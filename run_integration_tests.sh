@@ -34,6 +34,7 @@ INTEGRATION_TEST_BINARIES=(
   "failure_due_to_fail_macro_with_format_arguments"
   "failure_due_to_returned_error"
   "first_failure_aborts"
+  "google_test_with_rstest"
   "non_fatal_failure_in_subroutine"
   "simple_assertion_failure"
   "simple_assertion_failure_with_assert_that"
@@ -46,6 +47,6 @@ INTEGRATION_TEST_BINARIES=(
 
 cargo build
 for binary in ${INTEGRATION_TEST_BINARIES[@]}; do
-  cargo rustc -p googletest --bin $binary --features indoc -- --test
+  cargo rustc -p googletest --bin $binary --features indoc,rstest -- --test
 done
 ./target/debug/integration_tests

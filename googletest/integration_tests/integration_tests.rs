@@ -17,7 +17,7 @@ fn main() {}
 #[cfg(test)]
 mod tests {
     #[cfg(not(google3))]
-    use googletest::{all, matchers};
+    use googletest::{all, matchers, matchers::str_matcher};
     use googletest::{
         assert_that, expect_pred, expect_that, google_test, verify_pred, verify_that,
         GoogleTestSupport, Result,
@@ -27,6 +27,7 @@ mod tests {
     use matchers::all;
     use matchers::{anything, contains_regex, contains_substring, displays_as, eq, err, not};
     use std::process::Command;
+    use str_matcher::StrMatcherConfigurator;
 
     #[google_test]
     fn should_pass() -> Result<()> {
@@ -454,6 +455,20 @@ mod tests {
                     a: 1,
                     b: 2,
                 }"})))
+        )
+    }
+
+    #[google_test]
+    fn test_with_google_test_and_rstest_runs_only_once() -> Result<()> {
+        let output = run_external_process_in_tests_directory("google_test_with_rstest")?;
+
+        expect_that!(
+            output,
+            contains_substring("tests::test_should_work_with_rstest_second").times(eq(1))
+        );
+        verify_that!(
+            output,
+            contains_substring("tests::test_should_work_with_qualified_rstest_second").times(eq(1))
         )
     }
 

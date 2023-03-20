@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use quote::quote;
-use syn::{parse_macro_input, ItemFn};
+use syn::{parse_macro_input, Attribute, ItemFn, ReturnType};
 
 /// Marks a test to be run by the Google Rust test runner.
 ///
@@ -53,18 +53,46 @@ pub fn google_test(
     _args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let parsed_fn = parse_macro_input!(input as ItemFn);
-    let fn_name = parsed_fn.sig.ident.clone();
-    let output = quote! {
-        #[test]
-        fn #fn_name() -> std::result::Result<(), ()> {
-            #parsed_fn
-
+    let mut parsed_fn = parse_macro_input!(input as ItemFn);
+    let attrs = parsed_fn.attrs.drain(..).collect::<Vec<_>>();
+    let (mut sig, block) = (parsed_fn.sig, parsed_fn.block);
+    let ReturnType::Type(_, output_type) = sig.output.clone() else {
+        return quote! {
+            compile_error!(
+                "Test function with the #[google_test] attribute must return googletest::Result<()>"
+            );
+        }.into();
+    };
+    sig.output = ReturnType::Default;
+    let function = quote! {
+        #(#attrs)*
+        #sig -> std::result::Result<(), ()> {
+            let test = move || #block;
             use googletest::internal::test_outcome::TestOutcome;
             TestOutcome::init_current_test_outcome();
-            let result = #fn_name();
+            let result: #output_type = test();
             TestOutcome::close_current_test_outcome(result)
         }
     };
+    let output = if attrs.iter().any(is_test_attribute) {
+        function
+    } else {
+        quote! {
+            #[test]
+            #function
+        }
+    };
     output.into()
+}
+
+fn is_test_attribute(attr: &Attribute) -> bool {
+    let Some(first_segment) = attr.path.segments.first() else {
+        return false;
+    };
+    let Some(last_segment) = attr.path.segments.last() else {
+        return false;
+    };
+    first_segment.ident == "rstest"
+        && last_segment.ident == "rstest"
+        && attr.path.segments.len() <= 2
 }

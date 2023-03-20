@@ -38,6 +38,7 @@ googletest_macro = { path = "../googletest_macro", version = "0.4.1" }
 num-traits = "0.2.15"
 regex = "1.6.0"
 indoc = { version = "2", optional = true }
+rstest = { version = "0.16.0", optional = true }
 
 [dev-dependencies]
 indoc = "1"
@@ -97,6 +98,12 @@ test = false
 name = "first_failure_aborts"
 path = "integration_tests/first_failure_aborts.rs"
 test = false
+
+[[bin]]
+name = "google_test_with_rstest"
+path = "integration_tests/google_test_with_rstest.rs"
+test = false
+required-feature = ["rstest"]
 
 [[bin]]
 name = "non_fatal_failure_in_subroutine"
