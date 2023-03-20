@@ -140,7 +140,7 @@ struct MyEqMatcher<T> {
 
 impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
     fn matches(&self, actual: &A) -> MatcherResult {
-        if self.expected == *actual { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
+         (self.expected == *actual).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {

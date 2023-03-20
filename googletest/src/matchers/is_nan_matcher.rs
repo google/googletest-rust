@@ -27,11 +27,11 @@ struct IsNanMatcher;
 
 impl<T: Float + Debug> Matcher<T> for IsNanMatcher {
     fn matches(&self, actual: &T) -> MatcherResult {
-        if actual.is_nan() { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
+        actual.is_nan().into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
-        matcher_result.pick("is NaN", "isn't NaN").to_string()
+        if matcher_result.into() { "is NaN" } else { "isn't NaN" }.to_string()
     }
 }
 

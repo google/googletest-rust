@@ -34,7 +34,7 @@ struct NoneMatcher<T> {
 
 impl<T: Debug> Matcher<Option<T>> for NoneMatcher<T> {
     fn matches(&self, actual: &Option<T>) -> MatcherResult {
-        if actual.is_none() { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
+        (actual.is_none()).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {

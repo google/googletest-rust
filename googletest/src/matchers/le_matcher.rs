@@ -60,7 +60,7 @@ impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher<ActualT>
     for LeMatcher<ExpectedT>
 {
     fn matches(&self, actual: &ActualT) -> MatcherResult {
-        if *actual <= self.expected { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
+        (*actual <= self.expected).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {

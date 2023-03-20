@@ -162,19 +162,33 @@ pub enum MatcherResult {
     DoesNotMatch,
 }
 
-impl MatcherResult {
-    /// Returns `matches_value` if the `self` is `Matches`, otherwise
-    /// `does_not_match_value`.
-    ///
-    /// This is a helper method to simplify `Describe` implementation.
-    pub fn pick<T>(&self, matches_value: T, does_not_match_value: T) -> T {
-        match self {
-            MatcherResult::Matches => matches_value,
-            MatcherResult::DoesNotMatch => does_not_match_value,
+impl From<bool> for MatcherResult {
+    fn from(b: bool) -> Self {
+        if b { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
+    }
+}
+
+impl From<MatcherResult> for bool {
+    fn from(matcher_result: MatcherResult) -> Self {
+        match matcher_result {
+            MatcherResult::Matches => true,
+            MatcherResult::DoesNotMatch => false,
         }
     }
 }
 
+impl MatcherResult {
+    /// Returns `true` if `self` is [`MatcherResult::Matches`], otherwise
+    /// `false`.
+    ///
+    /// This delegates to `Into<bool>` but coerce the return type to `bool`
+    /// instead only calling `into()`. This is useful in `if
+    /// !matcher_result.into()`, which requires a constraint on the result
+    /// type of `into()` to compile.
+    pub fn into_bool(self) -> bool {
+        self.into()
+    }
+}
 /// Human-readable explanation of why a value was matched or not matched by a
 /// matcher.
 ///

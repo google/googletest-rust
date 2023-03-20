@@ -54,11 +54,7 @@ pub struct ContainsRegexMatcher {
 
 impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher<ActualT> for ContainsRegexMatcher {
     fn matches(&self, actual: &ActualT) -> MatcherResult {
-        if self.regex.is_match(actual.as_ref()) {
-            MatcherResult::Matches
-        } else {
-            MatcherResult::DoesNotMatch
-        }
+        self.regex.is_match(actual.as_ref()).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {

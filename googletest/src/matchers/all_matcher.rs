@@ -105,9 +105,7 @@ pub mod internal {
                     let failures = self
                         .components
                         .iter()
-                        .filter(|component| {
-                            matches!(component.matches(actual), MatcherResult::DoesNotMatch)
-                        })
+                        .filter(|component| !component.matches(actual).into_bool())
                         .map(|component| format!("{}", component.explain_match(actual)))
                         .collect::<Description>();
                     if failures.len() == 1 {
@@ -133,10 +131,11 @@ pub mod internal {
                         .indent();
                     format!(
                         "{}:\n{properties}",
-                        matcher_result.pick(
-                            "has all the following properties",
+                        if matcher_result.into() {
+                            "has all the following properties"
+                        } else {
                             "has at least one of the following properties"
-                        )
+                        }
                     )
                 }
             }

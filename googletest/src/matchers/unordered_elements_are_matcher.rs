@@ -350,7 +350,7 @@ pub mod internal {
         fn describe(&self, matcher_result: MatcherResult) -> String {
             format!(
                 "{} elements matching in any order:\n{}",
-                matcher_result.pick("contains", "doesn't contain"),
+                if matcher_result.into() { "contains" } else { "doesn't contain" },
                 self.elements
                     .iter()
                     .map(|matcher| matcher.describe(MatcherResult::Matches))
@@ -387,18 +387,11 @@ pub mod internal {
         // This is a necessary condition but not sufficient. But it is faster
         // than `find_best_match()`.
         fn find_unmatchable_elements(&self) -> UnmatchableElements<N> {
-            let unmatchable_actual = self
-                .0
-                .iter()
-                .map(|row| row.iter().all(|e| matches!(e, MatcherResult::DoesNotMatch)))
-                .collect();
+            let unmatchable_actual =
+                self.0.iter().map(|row| row.iter().all(|&e| !e.into_bool())).collect();
             let mut unmatchable_expected = [false; N];
             for (col_idx, expected) in unmatchable_expected.iter_mut().enumerate() {
-                *expected = self
-                    .0
-                    .iter()
-                    .map(|row| row[col_idx])
-                    .all(|e| matches!(e, MatcherResult::DoesNotMatch));
+                *expected = self.0.iter().map(|row| row[col_idx]).all(|e| !e.into_bool());
             }
             UnmatchableElements { unmatchable_actual, unmatchable_expected }
         }
@@ -406,21 +399,14 @@ pub mod internal {
         fn find_unmatched_expected(&self) -> UnmatchableElements<N> {
             let mut unmatchable_expected = [false; N];
             for (col_idx, expected) in unmatchable_expected.iter_mut().enumerate() {
-                *expected = self
-                    .0
-                    .iter()
-                    .map(|row| row[col_idx])
-                    .all(|e| matches!(e, MatcherResult::DoesNotMatch));
+                *expected = self.0.iter().map(|row| row[col_idx]).all(|e| !e.into_bool());
             }
             UnmatchableElements { unmatchable_actual: vec![false; N], unmatchable_expected }
         }
 
         fn find_unmatched_actual(&self) -> UnmatchableElements<N> {
-            let unmatchable_actual = self
-                .0
-                .iter()
-                .map(|row| row.iter().all(|e| matches!(e, MatcherResult::DoesNotMatch)))
-                .collect();
+            let unmatchable_actual =
+                self.0.iter().map(|row| row.iter().all(|e| !e.into_bool())).collect();
             UnmatchableElements { unmatchable_actual, unmatchable_expected: [false; N] }
         }
 
@@ -541,7 +527,7 @@ pub mod internal {
                 if seen[expected_idx] {
                     continue;
                 }
-                if matches!(self.0[actual_idx][expected_idx], MatcherResult::DoesNotMatch) {
+                if !self.0[actual_idx][expected_idx].into_bool() {
                     continue;
                 }
                 // There is an edge between `actual_idx` and `expected_idx`.

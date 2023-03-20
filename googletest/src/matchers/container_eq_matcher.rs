@@ -86,7 +86,7 @@ where
     for<'a> &'a ContainerT: IntoIterator<Item = &'a T>,
 {
     fn matches(&self, actual: &ContainerT) -> MatcherResult {
-        if *actual == self.expected { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
+        (*actual == self.expected).into()
     }
 
     fn explain_match(&self, actual: &ContainerT) -> MatchExplanation {
@@ -100,11 +100,7 @@ where
 
 impl<T: PartialEq + Debug, const N: usize> Matcher<Vec<T>> for ContainerEqMatcher<[T; N]> {
     fn matches(&self, actual: &Vec<T>) -> MatcherResult {
-        if actual.as_slice() == self.expected {
-            MatcherResult::Matches
-        } else {
-            MatcherResult::DoesNotMatch
-        }
+        (actual.as_slice() == self.expected).into()
     }
 
     fn explain_match(&self, actual: &Vec<T>) -> MatchExplanation {
@@ -118,7 +114,7 @@ impl<T: PartialEq + Debug, const N: usize> Matcher<Vec<T>> for ContainerEqMatche
 
 impl<T: PartialEq + Debug, const N: usize> Matcher<[T]> for ContainerEqMatcher<[T; N]> {
     fn matches(&self, actual: &[T]) -> MatcherResult {
-        if actual == self.expected { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
+        (actual == self.expected).into()
     }
 
     fn explain_match(&self, actual: &[T]) -> MatchExplanation {

@@ -77,7 +77,7 @@ where
             count.matches(&self.count_matches(actual))
         } else {
             for v in actual.into_iter() {
-                if matches!(self.inner.matches(&v), MatcherResult::Matches) {
+                if self.inner.matches(v).into() {
                     return MatcherResult::Matches;
                 }
             }
@@ -129,7 +129,7 @@ impl<InnerMatcherT> ContainsMatcher<InnerMatcherT> {
     {
         let mut count = 0;
         for v in actual.into_iter() {
-            if matches!(self.inner.matches(&v), MatcherResult::Matches) {
+            if self.inner.matches(v).into() {
                 count += 1;
             }
         }

@@ -44,8 +44,11 @@ impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<T> for NotMatcher<InnerMatcher
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
-        self.inner
-            .describe(matcher_result.pick(MatcherResult::DoesNotMatch, MatcherResult::Matches))
+        self.inner.describe(if matcher_result.into() {
+            MatcherResult::DoesNotMatch
+        } else {
+            MatcherResult::Matches
+        })
     }
 }
 

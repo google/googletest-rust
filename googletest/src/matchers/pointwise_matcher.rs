@@ -104,7 +104,7 @@ pub mod internal {
         fn matches(&self, actual: &ContainerT) -> MatcherResult {
             let mut zipped_iterator = zip(actual.into_iter(), self.matchers.iter());
             for (element, matcher) in zipped_iterator.by_ref() {
-                if matches!(matcher.matches(element), MatcherResult::DoesNotMatch) {
+                if !matcher.matches(element).into_bool() {
                     return MatcherResult::DoesNotMatch;
                 }
             }
@@ -123,7 +123,7 @@ pub mod internal {
             let mut zipped_iterator = zip(actual_iterator, self.matchers.iter());
             let mut mismatches = Vec::new();
             for (idx, (a, e)) in zipped_iterator.by_ref().enumerate() {
-                if matches!(e.matches(a), MatcherResult::DoesNotMatch) {
+                if !e.matches(a).into_bool() {
                     mismatches.push(format!("element #{idx} is {a:?}, {}", e.explain_match(a)));
                 }
             }
@@ -148,7 +148,7 @@ pub mod internal {
         fn describe(&self, matcher_result: MatcherResult) -> String {
             format!(
                 "{} elements satisfying respectively:\n{}",
-                matcher_result.pick("has", "doesn't have"),
+                if matcher_result.into() { "has" } else { "doesn't have" },
                 self.matchers
                     .iter()
                     .map(|m| m.describe(MatcherResult::Matches))

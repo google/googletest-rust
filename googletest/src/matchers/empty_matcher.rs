@@ -49,15 +49,11 @@ where
     for<'a> &'a T: IntoIterator,
 {
     fn matches(&self, actual: &T) -> MatcherResult {
-        if actual.into_iter().next().is_none() {
-            MatcherResult::Matches
-        } else {
-            MatcherResult::DoesNotMatch
-        }
+        actual.into_iter().next().is_none().into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
-        matcher_result.pick("is empty", "isn't empty").to_string()
+        if matcher_result.into() { "is empty" } else { "isn't empty" }.to_string()
     }
 }
 

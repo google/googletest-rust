@@ -202,11 +202,7 @@ where
     ActualT: AsRef<str> + Debug + ?Sized,
 {
     fn matches(&self, actual: &ActualT) -> MatcherResult {
-        if self.configuration.do_strings_match(self.expected.deref(), actual.as_ref()) {
-            MatcherResult::Matches
-        } else {
-            MatcherResult::DoesNotMatch
-        }
+        self.configuration.do_strings_match(self.expected.deref(), actual.as_ref()).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {

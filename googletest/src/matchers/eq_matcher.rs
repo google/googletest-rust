@@ -66,7 +66,7 @@ pub struct EqMatcher<T> {
 
 impl<A: Debug, T: PartialEq<A> + Debug> Matcher<A> for EqMatcher<T> {
     fn matches(&self, actual: &A) -> MatcherResult {
-        if self.expected == *actual { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
+        (self.expected == *actual).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {

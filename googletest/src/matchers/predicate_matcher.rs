@@ -113,7 +113,7 @@ where
     for<'a> P: Fn(&'a T) -> bool,
 {
     fn matches(&self, actual: &T) -> MatcherResult {
-        if (self.predicate)(actual) { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
+        (self.predicate)(actual).into()
     }
 
     fn describe(&self, result: MatcherResult) -> String {
@@ -130,7 +130,7 @@ where
     for<'a> P: Fn(&'a T) -> bool,
 {
     fn matches(&self, actual: &T) -> MatcherResult {
-        if (self.predicate)(actual) { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
+        (self.predicate)(actual).into()
     }
 
     fn describe(&self, result: MatcherResult) -> String {
