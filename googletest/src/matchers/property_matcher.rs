@@ -95,7 +95,7 @@ macro_rules! property_internal {
     }};
 }
 
-/// Functions for use only by the declarative macros in this module.
+/// Items for use only by the declarative macros in this module.
 ///
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]

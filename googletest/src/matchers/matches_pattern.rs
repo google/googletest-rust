@@ -79,6 +79,46 @@
 /// }))
 /// ```
 ///
+/// In addition to fields, one can match on the outputs of methods
+/// ("properties"):
+///
+/// ```
+/// impl MyStruct {
+///     fn get_a_field(&self) -> String {...}
+/// }
+///
+/// verify_that!(my_struct, matches_pattern!(MyStruct {
+///     get_a_field(): starts_with("Something"),
+/// }))
+/// ```
+///
+/// These may also include extra parameters you pass in:
+///
+/// ```
+/// impl MyStruct {
+///     fn append_to_a_field(&self, suffix: &str) -> String {...}
+/// }
+///
+/// verify_that!(my_struct, matches_pattern!(MyStruct {
+///     append_to_a_field("a suffix"): ends_with("a suffix"),
+/// }))
+/// ```
+///
+/// If the method returns a reference, precede it with the keyword `ref`:
+///
+/// ```
+/// impl MyStruct {
+///     fn get_a_field_ref(&self) -> &String {...}
+/// }
+///
+/// verify_that!(my_struct, matches_pattern!(MyStruct {
+///     ref get_a_field_ref(): starts_with("Something"),
+/// }))
+/// ```
+///
+/// > Note: At the moment, this does not work properly with methods returning
+/// > string references or slices.
+///
 /// One can also match tuple structs with up to 10 fields. In this case, all
 /// fields must have matchers:
 ///
@@ -130,10 +170,46 @@ macro_rules! matches_pattern_internal {
 
     (
         [$($struct_name:tt)*],
+        { $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
+    ) => {
+        all!(property!($($struct_name)*.$property_name($($argument),*), $matcher))
+    };
+
+    (
+        [$($struct_name:tt)*],
+        { ref $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
+    ) => {
+        all!(property!(ref $($struct_name)*.$property_name($($argument),*), $matcher))
+    };
+
+    (
+        [$($struct_name:tt)*],
         { $field_name:ident : $matcher:expr, $($rest:tt)* }
     ) => {
         $crate::matches_pattern_internal!(
             all!(field!($($struct_name)*.$field_name, $matcher)),
+            [$($struct_name)*],
+            { $($rest)* }
+        )
+    };
+
+    (
+        [$($struct_name:tt)*],
+        { $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr, $($rest:tt)* }
+    ) => {
+        $crate::matches_pattern_internal!(
+            all!(property!($($struct_name)*.$property_name($($argument),*), $matcher)),
+            [$($struct_name)*],
+            { $($rest)* }
+        )
+    };
+
+    (
+        [$($struct_name:tt)*],
+        { ref $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr, $($rest:tt)* }
+    ) => {
+        $crate::matches_pattern_internal!(
+            all!(property!(ref $($struct_name)*.$property_name($($argument),*), $matcher)),
             [$($struct_name)*],
             { $($rest)* }
         )
@@ -147,6 +223,28 @@ macro_rules! matches_pattern_internal {
         all!(
             $($processed)*,
             field!($($struct_name)*.$field_name, $matcher)
+        )
+    };
+
+    (
+        all!($($processed:tt)*),
+        [$($struct_name:tt)*],
+        { $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
+    ) => {
+        all!(
+            $($processed)*,
+            property!($($struct_name)*.$property_name($($argument),*), $matcher)
+        )
+    };
+
+    (
+        all!($($processed:tt)*),
+        [$($struct_name:tt)*],
+        { ref $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
+    ) => {
+        all!(
+            $($processed)*,
+            property!(ref $($struct_name)*.$property_name($($argument),*), $matcher)
         )
     };
 
@@ -168,11 +266,30 @@ macro_rules! matches_pattern_internal {
     (
         all!($($processed:tt)*),
         [$($struct_name:tt)*],
-        { $field_name:ident : $matcher:expr }
+        { $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr, $($rest:tt)* }
     ) => {
-        all!(
-            $($processed)*,
-            field!($($struct_name)*.$field_name, $matcher)
+        $crate::matches_pattern_internal!(
+            all!(
+                $($processed)*,
+                property!($($struct_name)*.$property_name($($argument),*), $matcher)
+            ),
+            [$($struct_name)*],
+            { $($rest)* }
+        )
+    };
+
+    (
+        all!($($processed:tt)*),
+        [$($struct_name:tt)*],
+        { ref $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr, $($rest:tt)* }
+    ) => {
+        $crate::matches_pattern_internal!(
+            all!(
+                $($processed)*,
+                property!(ref $($struct_name)*.$property_name($($argument),*), $matcher)
+            ),
+            [$($struct_name)*],
+            { $($rest)* }
         )
     };
 
@@ -355,13 +472,16 @@ macro_rules! matches_pattern_internal {
     ($first:tt $($rest:tt)*) => {{
         #[cfg(not(google3))]
         #[allow(unused)]
-        use $crate::{all, field};
+        use $crate::{all, field, property};
         #[cfg(google3)]
         #[allow(unused)]
         use all_matcher::all;
         #[cfg(google3)]
         #[allow(unused)]
         use field_matcher::field;
+        #[cfg(google3)]
+        #[allow(unused)]
+        use property_matcher::property;
         $crate::matches_pattern_internal!([$first], $($rest)*)
     }};
 }
