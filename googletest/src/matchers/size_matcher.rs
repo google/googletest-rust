@@ -18,7 +18,7 @@ use crate as googletest;
 use crate::matchers::count_elements::count_elements;
 #[cfg(google3)]
 use count_elements::count_elements;
-use googletest::matcher::{Matcher, MatcherResult};
+use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
 use std::fmt::Debug;
 
 /// Matches a container whose size matches `expected`.
@@ -70,6 +70,15 @@ where
             }
         }
     }
+
+    fn explain_match(&self, actual: &T) -> MatchExplanation {
+        let actual_size = count_elements(actual);
+        MatchExplanation::create(format!(
+            "which has size {}, {}",
+            actual_size,
+            self.expected.explain_match(&actual_size)
+        ))
+    }
 }
 
 #[cfg(test)]
@@ -80,7 +89,8 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{google_test, verify_that, Result};
-    use matchers::eq;
+    use indoc::indoc;
+    use matchers::{contains_substring, displays_as, eq, err};
     use std::collections::{
         BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque,
     };
@@ -156,5 +166,46 @@ mod tests {
     fn size_matcher_match_vecdeque() -> Result<()> {
         let value = VecDeque::from([1, 2, 3]);
         verify_that!(value, size(eq(3)))
+    }
+
+    #[google_test]
+    fn size_matcher_explain_match() -> Result<()> {
+        struct TestMatcher;
+        impl<T: Debug> Matcher<T> for TestMatcher {
+            fn matches(&self, _: &T) -> MatcherResult {
+                false.into()
+            }
+
+            fn describe(&self, _: MatcherResult) -> String {
+                "called described".into()
+            }
+
+            fn explain_match(&self, _: &T) -> MatchExplanation {
+                MatchExplanation::create("called explain_match".into())
+            }
+        }
+        verify_that!(
+            size(TestMatcher {}).explain_match(&[1, 2, 3]),
+            displays_as(eq("which has size 3, called explain_match"))
+        )
+    }
+
+    #[google_test]
+    fn size_matcher_error_message() -> Result<()> {
+        let result = verify_that!(vec![1, 2, 3, 4], size(eq(3)));
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: vec![1, 2, 3, 4]
+                Expected: has size, which is equal to 3
+                Actual: [
+                    1,
+                    2,
+                    3,
+                    4,
+                ], which has size 4, which isn't equal to 3"
+            ))))
+        )
     }
 }
