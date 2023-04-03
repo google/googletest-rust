@@ -86,13 +86,13 @@ pub fn google_test(
 }
 
 fn is_test_attribute(attr: &Attribute) -> bool {
-    let Some(first_segment) = attr.path.segments.first() else {
+    let Some(first_segment) = attr.path().segments.first() else {
         return false;
     };
-    let Some(last_segment) = attr.path.segments.last() else {
+    let Some(last_segment) = attr.path().segments.last() else {
         return false;
     };
     first_segment.ident == "rstest"
         && last_segment.ident == "rstest"
-        && attr.path.segments.len() <= 2
+        && attr.path().segments.len() <= 2
 }
