@@ -70,6 +70,9 @@
 /// }
 /// verify_that(value, field!(OuterStruct.inner.0, eq(32)))?; // Does not compile
 /// ```
+///
+/// See also the macro [`property`][crate::property] for an analogous mechanism
+/// to extract a datum by invoking a method.
 #[macro_export]
 macro_rules! field {
     ($($t:tt)*) => { $crate::field_internal!($($t)*) }

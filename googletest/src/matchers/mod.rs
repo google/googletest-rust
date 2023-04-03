@@ -75,6 +75,8 @@ pub mod pointwise_matcher;
 #[cfg(not(google3))]
 pub mod predicate_matcher;
 #[cfg(not(google3))]
+pub mod property_matcher;
+#[cfg(not(google3))]
 pub mod size_matcher;
 #[cfg(not(google3))]
 pub mod some_matcher;
@@ -124,8 +126,9 @@ pub use ok_matcher::ok;
 pub use points_to_matcher::points_to;
 #[cfg(google3)]
 pub use pointwise_matcher::pointwise;
-#[cfg(google3)]
 pub use predicate_matcher::{predicate, PredicateMatcher};
+#[cfg(google3)]
+pub use property_matcher::property;
 pub use size_matcher::size;
 pub use some_matcher::some;
 pub use str_matcher::{contains_substring, ends_with, starts_with};
