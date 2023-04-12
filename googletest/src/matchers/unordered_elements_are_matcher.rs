@@ -195,42 +195,6 @@ pub mod internal {
     use std::collections::HashSet;
     use std::fmt::{Debug, Display};
 
-    /// The requirements of the mapping between matchers and actual values by
-    /// which [`UnorderedElemetnsAre`] is deemed to match its input.
-    ///
-    /// **For internal use only. API stablility is not guaranteed!**
-    #[doc(hidden)]
-    #[derive(Clone, Copy)]
-    pub enum Requirements {
-        /// There must be a 1:1 correspondence between the actual values and the
-        /// matchers.
-        PerfectMatch,
-
-        /// The mapping from matched actual values to their corresponding
-        /// matchers must be surjective.
-        Superset,
-
-        /// The mapping from matchers to matched actual values must be
-        /// surjective.
-        Subset,
-    }
-
-    impl Display for Requirements {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            match self {
-                Requirements::PerfectMatch => {
-                    write!(f, "perfect")
-                }
-                Requirements::Superset => {
-                    write!(f, "superset")
-                }
-                Requirements::Subset => {
-                    write!(f, "subset")
-                }
-            }
-        }
-    }
-
     /// This struct is meant to be used only through the
     /// `unordered_elements_are![...]` macro.
     ///
@@ -262,89 +226,30 @@ pub mod internal {
         for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
     {
         fn matches(&self, actual: &ContainerT) -> MatcherResult {
-            match self.requirements {
-                Requirements::PerfectMatch => {
-                    let match_matrix = MatchMatrix::generate(actual, &self.elements);
-                    if !match_matrix.find_unmatchable_elements().has_unmatchable_elements()
-                        && match_matrix.find_best_match().is_full_match()
-                    {
-                        MatcherResult::Matches
-                    } else {
-                        MatcherResult::DoesNotMatch
-                    }
-                }
-                Requirements::Superset => {
-                    let match_matrix = MatchMatrix::generate(actual, &self.elements);
-                    if !match_matrix.find_unmatched_expected().has_unmatchable_elements()
-                        && match_matrix.find_best_match().is_superset_match()
-                    {
-                        MatcherResult::Matches
-                    } else {
-                        MatcherResult::DoesNotMatch
-                    }
-                }
-                Requirements::Subset => {
-                    let match_matrix = MatchMatrix::generate(actual, &self.elements);
-                    if !match_matrix.find_unmatched_actual().has_unmatchable_elements()
-                        && match_matrix.find_best_match().is_subset_match()
-                    {
-                        MatcherResult::Matches
-                    } else {
-                        MatcherResult::DoesNotMatch
-                    }
-                }
-            }
+            let match_matrix = MatchMatrix::generate(actual, &self.elements);
+            match_matrix.is_match_for(self.requirements).into()
         }
 
         fn explain_match(&self, actual: &ContainerT) -> MatchExplanation {
-            let actual_size = count_elements(actual);
-            match self.requirements {
-                Requirements::PerfectMatch => {
-                    if actual_size != N {
-                        return MatchExplanation::create(format!(
-                            "which has size {} (expected {})",
-                            actual_size, N
-                        ));
-                    }
-                }
-
-                Requirements::Superset => {
-                    if actual_size < N {
-                        return MatchExplanation::create(format!(
-                            "which has size {} (expected at least {})",
-                            actual_size, N
-                        ));
-                    }
-                }
-
-                Requirements::Subset => {
-                    if actual_size > N {
-                        return MatchExplanation::create(format!(
-                            "which has size {} (expected at most {})",
-                            actual_size, N
-                        ));
-                    }
-                }
+            if let Some(size_mismatch_explanation) =
+                self.requirements.explain_size_mismatch(actual, N)
+            {
+                return size_mismatch_explanation;
             }
 
             let match_matrix = MatchMatrix::generate(actual, &self.elements);
-            let unmatchable_elements = match self.requirements {
-                Requirements::PerfectMatch => match_matrix.find_unmatchable_elements(),
-                Requirements::Superset => match_matrix.find_unmatched_expected(),
-                Requirements::Subset => match_matrix.find_unmatched_actual(),
-            };
-            if let Some(unmatchable_explanation) = unmatchable_elements.get_explanation() {
-                return MatchExplanation::create(unmatchable_explanation);
+            if let Some(unmatchable_explanation) =
+                match_matrix.explain_unmatchable(self.requirements)
+            {
+                return unmatchable_explanation;
             }
 
             let best_match = match_matrix.find_best_match();
-            if let Some(best_match_explanation) =
-                best_match.get_explanation(actual, &self.elements, self.requirements)
-            {
-                MatchExplanation::create(best_match_explanation)
-            } else {
-                MatchExplanation::create("whose elements all match".to_string())
-            }
+            MatchExplanation::create(
+                best_match
+                    .get_explanation(actual, &self.elements, self.requirements)
+                    .unwrap_or("whose elements all match".to_string()),
+            )
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> String {
@@ -358,6 +263,79 @@ pub mod internal {
                     .enumerate()
                     .indent()
             )
+        }
+    }
+
+    /// The requirements of the mapping between matchers and actual values by
+    /// which [`UnorderedElemetnsAre`] is deemed to match its input.
+    ///
+    /// **For internal use only. API stablility is not guaranteed!**
+    #[doc(hidden)]
+    #[derive(Clone, Copy)]
+    pub enum Requirements {
+        /// There must be a 1:1 correspondence between the actual values and the
+        /// matchers.
+        PerfectMatch,
+
+        /// The mapping from matched actual values to their corresponding
+        /// matchers must be surjective.
+        Superset,
+
+        /// The mapping from matchers to matched actual values must be
+        /// surjective.
+        Subset,
+    }
+
+    impl Requirements {
+        fn explain_size_mismatch<ContainerT: ?Sized>(
+            &self,
+            actual: &ContainerT,
+            expected_size: usize,
+        ) -> Option<MatchExplanation>
+        where
+            for<'b> &'b ContainerT: IntoIterator,
+        {
+            let actual_size = count_elements(actual);
+            match self {
+                Requirements::PerfectMatch if actual_size != expected_size => {
+                    Some(MatchExplanation::create(format!(
+                        "which has size {} (expected {})",
+                        actual_size, expected_size
+                    )))
+                }
+
+                Requirements::Superset if actual_size < expected_size => {
+                    Some(MatchExplanation::create(format!(
+                        "which has size {} (expected at least {})",
+                        actual_size, expected_size
+                    )))
+                }
+
+                Requirements::Subset if actual_size > expected_size => {
+                    Some(MatchExplanation::create(format!(
+                        "which has size {} (expected at most {})",
+                        actual_size, expected_size
+                    )))
+                }
+
+                _ => None,
+            }
+        }
+    }
+
+    impl Display for Requirements {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Requirements::PerfectMatch => {
+                    write!(f, "perfect")
+                }
+                Requirements::Superset => {
+                    write!(f, "superset")
+                }
+                Requirements::Subset => {
+                    write!(f, "subset")
+                }
+            }
         }
     }
 
@@ -380,6 +358,32 @@ pub mod internal {
                 }
             }
             matrix
+        }
+
+        fn is_match_for(&self, requirements: Requirements) -> bool {
+            match requirements {
+                Requirements::PerfectMatch => {
+                    !self.find_unmatchable_elements().has_unmatchable_elements()
+                        && self.find_best_match().is_full_match()
+                }
+                Requirements::Superset => {
+                    !self.find_unmatched_expected().has_unmatchable_elements()
+                        && self.find_best_match().is_superset_match()
+                }
+                Requirements::Subset => {
+                    !self.find_unmatched_actual().has_unmatchable_elements()
+                        && self.find_best_match().is_subset_match()
+                }
+            }
+        }
+
+        fn explain_unmatchable(&self, requirements: Requirements) -> Option<MatchExplanation> {
+            let unmatchable_elements = match requirements {
+                Requirements::PerfectMatch => self.find_unmatchable_elements(),
+                Requirements::Superset => self.find_unmatched_expected(),
+                Requirements::Subset => self.find_unmatched_actual(),
+            };
+            unmatchable_elements.get_explanation().map(MatchExplanation::create)
         }
 
         // Verifies that each actual matches at least one expected and that
