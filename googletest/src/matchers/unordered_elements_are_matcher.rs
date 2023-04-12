@@ -127,6 +127,16 @@ macro_rules! unordered_elements_are {
 /// The actual value must be a container implementing [`IntoIterator`]. This
 /// includes standard containers, slices (when dereferenced) and arrays.
 ///
+/// This can also match against [`HashMap`][std::collections::HashMap] and
+/// similar collections. The arguments are a sequence of pairs of matchers
+/// corresponding to the keys and their respective values.
+///
+/// ```
+/// let value: HashMap<u32, &'static str> =
+///     HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
+/// verify_that!(value, contains_each![(eq(2), eq("Two")), (eq(1), eq("One"))])
+/// ```
+///
 /// This matcher does not support matching directly against an [`Iterator`]. To
 /// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
 ///
@@ -151,6 +161,31 @@ macro_rules! unordered_elements_are {
 /// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 #[macro_export]
 macro_rules! contains_each {
+    ($(,)?) => {{
+        #[cfg(google3)]
+        use $crate::internal::{UnorderedElementsAreMatcher, Requirements};
+        #[cfg(not(google3))]
+        use $crate::matchers::unordered_elements_are_matcher::internal::{
+            UnorderedElementsAreMatcher, Requirements
+        };
+        UnorderedElementsAreMatcher::new([], Requirements::Superset)
+    }};
+
+    // TODO: Consider an alternative map-like syntax here similar to that used in
+    // https://crates.io/crates/maplit.
+    ($(($key_matcher:expr, $value_matcher:expr)),* $(,)?) => {{
+        #[cfg(google3)]
+        use $crate::internal::{UnorderedElementsOfMapAreMatcher, Requirements};
+        #[cfg(not(google3))]
+        use $crate::matchers::unordered_elements_are_matcher::internal::{
+            UnorderedElementsOfMapAreMatcher, Requirements
+        };
+        UnorderedElementsOfMapAreMatcher::new(
+            [$((&$key_matcher, &$value_matcher)),*],
+            Requirements::Superset
+        )
+    }};
+
     ($($matcher:expr),* $(,)?) => {{
         #[cfg(google3)]
         use $crate::internal::{UnorderedElementsAreMatcher, Requirements};
@@ -185,6 +220,18 @@ macro_rules! contains_each {
 /// The actual value must be a container implementing [`IntoIterator`]. This
 /// includes standard containers, slices (when dereferenced) and arrays.
 ///
+/// This can also match against [`HashMap`][std::collections::HashMap] and
+/// similar collections. The arguments are a sequence of pairs of matchers
+/// corresponding to the keys and their respective values.
+///
+/// ```
+/// let value: HashMap<u32, &'static str> = HashMap::from_iter([(1, "One"), (2, "Two")]);
+/// verify_that!(
+///     value,
+///     is_contained_in![(eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three"))]
+/// )
+/// ```
+///
 /// This matcher does not support matching directly against an [`Iterator`]. To
 /// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
 ///
@@ -209,6 +256,31 @@ macro_rules! contains_each {
 /// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
 #[macro_export]
 macro_rules! is_contained_in {
+    ($(,)?) => {{
+        #[cfg(google3)]
+        use $crate::internal::{UnorderedElementsAreMatcher, Requirements};
+        #[cfg(not(google3))]
+        use $crate::matchers::unordered_elements_are_matcher::internal::{
+            UnorderedElementsAreMatcher, Requirements
+        };
+        UnorderedElementsAreMatcher::new([], Requirements::Subset)
+    }};
+
+    // TODO: Consider an alternative map-like syntax here similar to that used in
+    // https://crates.io/crates/maplit.
+    ($(($key_matcher:expr, $value_matcher:expr)),* $(,)?) => {{
+        #[cfg(google3)]
+        use $crate::internal::{UnorderedElementsOfMapAreMatcher, Requirements};
+        #[cfg(not(google3))]
+        use $crate::matchers::unordered_elements_are_matcher::internal::{
+            UnorderedElementsOfMapAreMatcher, Requirements
+        };
+        UnorderedElementsOfMapAreMatcher::new(
+            [$((&$key_matcher, &$value_matcher)),*],
+            Requirements::Subset
+        )
+    }};
+
     ($($matcher:expr),* $(,)?) => {{
         #[cfg(google3)]
         use $crate::internal::{UnorderedElementsAreMatcher, Requirements};

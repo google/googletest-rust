@@ -27,6 +27,18 @@ use matchers::{contains_each, is_contained_in, unordered_elements_are};
 use std::collections::HashMap;
 
 #[google_test]
+fn unordered_elements_are_matches_empty_vector() -> Result<()> {
+    let value: Vec<u32> = vec![];
+    verify_that!(value, unordered_elements_are![])
+}
+
+#[google_test]
+fn unordered_elements_are_matches_empty_vector_with_trailing_comma() -> Result<()> {
+    let value: Vec<u32> = vec![];
+    verify_that!(value, unordered_elements_are![,])
+}
+
+#[google_test]
 fn unordered_elements_are_matches_vector() -> Result<()> {
     let value = vec![1, 2, 3];
     verify_that!(value, unordered_elements_are![eq(1), eq(2), eq(3)])
@@ -251,8 +263,32 @@ fn contains_each_supports_trailing_comma() -> Result<()> {
 }
 
 #[google_test]
+fn contains_each_matches_hash_map() -> Result<()> {
+    let value: HashMap<u32, &'static str> =
+        HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
+    verify_that!(value, contains_each![(eq(2), eq("Two")), (eq(1), eq("One"))])
+}
+
+#[google_test]
+fn contains_each_matches_hash_map_with_trailing_comma() -> Result<()> {
+    let value: HashMap<u32, &'static str> =
+        HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
+    verify_that!(value, contains_each![(eq(2), eq("Two")), (eq(1), eq("One")),])
+}
+
+#[google_test]
 fn contains_each_matches_when_no_matchers_present() -> Result<()> {
     verify_that!(vec![2, 3, 4], contains_each!())
+}
+
+#[google_test]
+fn contains_each_matches_when_no_matchers_present_and_trailing_comma() -> Result<()> {
+    verify_that!(vec![2, 3, 4], contains_each!(,))
+}
+
+#[google_test]
+fn contains_each_matches_when_list_is_empty_and_no_matchers_present() -> Result<()> {
+    verify_that!(Vec::<u32>::new(), contains_each!())
 }
 
 #[google_test]
@@ -303,6 +339,18 @@ fn contains_each_explains_mismatch_due_to_no_graph_matching_found() -> Result<()
 }
 
 #[google_test]
+fn is_contained_in_matches_with_empty_vector() -> Result<()> {
+    let value: Vec<u32> = vec![];
+    verify_that!(value, is_contained_in!())
+}
+
+#[google_test]
+fn is_contained_in_matches_with_empty_vector_and_trailing_comma() -> Result<()> {
+    let value: Vec<u32> = vec![];
+    verify_that!(value, is_contained_in!(,))
+}
+
+#[google_test]
 fn is_contained_in_matches_when_one_to_one_correspondence_present() -> Result<()> {
     verify_that!(vec![2, 3, 4], is_contained_in!(eq(2), eq(3), eq(4)))
 }
@@ -310,6 +358,24 @@ fn is_contained_in_matches_when_one_to_one_correspondence_present() -> Result<()
 #[google_test]
 fn is_contained_supports_trailing_comma() -> Result<()> {
     verify_that!(vec![2, 3, 4], is_contained_in!(eq(2), eq(3), eq(4),))
+}
+
+#[google_test]
+fn is_contained_in_matches_hash_map() -> Result<()> {
+    let value: HashMap<u32, &'static str> = HashMap::from_iter([(1, "One"), (2, "Two")]);
+    verify_that!(
+        value,
+        is_contained_in![(eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three"))]
+    )
+}
+
+#[google_test]
+fn is_contained_in_matches_hash_map_with_trailing_comma() -> Result<()> {
+    let value: HashMap<u32, &'static str> = HashMap::from_iter([(1, "One"), (2, "Two")]);
+    verify_that!(
+        value,
+        is_contained_in![(eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three")),]
+    )
 }
 
 #[google_test]
