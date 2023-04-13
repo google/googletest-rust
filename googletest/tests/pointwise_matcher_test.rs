@@ -187,3 +187,8 @@ fn pointwise_matches_single_element_with_three_containers() -> Result<()> {
         pointwise!(|v, t, u| near(v, t * u), vec![1.0f32], vec![0.0001f32], vec![0.5f32])
     )
 }
+#[google_test]
+fn compilation_error() -> Result<()> {
+    let value = vec![1.00001f32];
+    verify_that!(value, pointwise!(near, [1.0f32]))
+}
