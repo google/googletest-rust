@@ -29,6 +29,13 @@
 /// verify_that!(value, pointwise!(le, [1, 1, 3]))?; // Fails
 /// ```
 ///
+/// One can also use a closure which returns a matcher:
+///
+/// ```
+/// let value = vec![1.00001, 2.000001, 3.00001];
+/// verify_that!(value, pointwise!(|v| near(v, 0.001), [1.0, 2.0, 3.0]))?;
+/// ```
+///
 /// The actual value must be a container implementing [`IntoIterator`]. This
 /// includes standard containers, slices (when dereferenced) and arrays.
 ///
@@ -56,12 +63,12 @@
 #[macro_export]
 macro_rules! pointwise {
     ($matcher:expr, $container:expr) => {{
-        #[cfg(google3)]
-        use $crate::internal::PointwiseMatcher;
-        #[cfg(not(google3))]
-        use $crate::matchers::pointwise_matcher::internal::PointwiseMatcher;
-        PointwiseMatcher::new($container.into_iter().map(|t| $matcher(t)).collect())
-    }};
+            #[cfg(google3)]
+            use $crate::internal::PointwiseMatcher;
+            #[cfg(not(google3))]
+            use $crate::matchers::pointwise_matcher::internal::PointwiseMatcher;
+            PointwiseMatcher::new($container.into_iter().map($matcher).collect())
+        }};
 }
 
 /// Module for use only by the procedural macros in this module.

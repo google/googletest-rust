@@ -20,7 +20,7 @@ use googletest::{google_test, verify_that, Result};
 use indoc::indoc;
 #[cfg(google3)]
 use matchers::pointwise;
-use matchers::{contains_substring, displays_as, eq, err, lt, not};
+use matchers::{contains_substring, displays_as, eq, err, lt, near, not};
 
 #[google_test]
 fn pointwise_matches_single_element() -> Result<()> {
@@ -165,4 +165,10 @@ fn pointwise_returns_mismatch_when_actual_value_does_not_match_on_first_and_seco
               * element #1 is 2, which isn't equal to 3"
         ))))
     )
+}
+
+#[google_test]
+fn pointwise_matches_single_element_with_lambda_expression_with_extra_value() -> Result<()> {
+    let value = vec![1.00001f32];
+    verify_that!(value, pointwise!(|v| near(v, 0.0001), vec![1.0]))
 }
