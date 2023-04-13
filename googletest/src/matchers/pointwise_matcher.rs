@@ -36,6 +36,28 @@
 /// verify_that!(value, pointwise!(|v| near(v, 0.001), [1.0, 2.0, 3.0]))?;
 /// ```
 ///
+/// One can pass up to three containers to supply arguments to the function
+/// creating the matcher:
+///
+/// ```
+/// let value = vec![1.00001, 2.000001, 3.00001];
+/// verify_that!(value, pointwise!(|v, t| near(v, t), [1.0, 2.0, 3.0], [0.001, 0.0001, 0.01]))?;
+/// verify_that!(value, pointwise!(near, [1.0, 2.0, 3.0], [0.001, 0.0001, 0.01]))?; // Same as above
+/// verify_that!(
+///     value,
+///     pointwise!(
+///         |v, t, u| near(v, t * u),
+///         [1.0, 2.0, 3.0],
+///         [0.001, 0.0001, 0.01],
+///         [0.5, 0.5, 1.0]
+///     )
+/// )?;
+/// ```
+///
+/// When using `pointwise!` with multiple containers, the caller must ensure
+/// that all of the containers have the same size. This matcher does not check
+/// whether the sizes match.
+///
 /// The actual value must be a container implementing [`IntoIterator`]. This
 /// includes standard containers, slices (when dereferenced) and arrays.
 ///
@@ -63,12 +85,40 @@
 #[macro_export]
 macro_rules! pointwise {
     ($matcher:expr, $container:expr) => {{
-            #[cfg(google3)]
-            use $crate::internal::PointwiseMatcher;
-            #[cfg(not(google3))]
-            use $crate::matchers::pointwise_matcher::internal::PointwiseMatcher;
-            PointwiseMatcher::new($container.into_iter().map($matcher).collect())
-        }};
+        #[cfg(google3)]
+        use $crate::internal::PointwiseMatcher;
+        #[cfg(not(google3))]
+        use $crate::matchers::pointwise_matcher::internal::PointwiseMatcher;
+        PointwiseMatcher::new($container.into_iter().map($matcher).collect())
+    }};
+
+    ($matcher:expr, $left_container:expr, $right_container:expr) => {{
+        #[cfg(google3)]
+        use $crate::internal::PointwiseMatcher;
+        #[cfg(not(google3))]
+        use $crate::matchers::pointwise_matcher::internal::PointwiseMatcher;
+        PointwiseMatcher::new(
+            $left_container
+                .into_iter()
+                .zip($right_container.into_iter())
+                .map(|(l, r)| $matcher(l, r))
+                .collect(),
+        )
+    }};
+
+    ($matcher:expr, $left_container:expr, $middle_container:expr, $right_container:expr) => {{
+        #[cfg(google3)]
+        use $crate::internal::PointwiseMatcher;
+        #[cfg(not(google3))]
+        use $crate::matchers::pointwise_matcher::internal::PointwiseMatcher;
+        PointwiseMatcher::new(
+            $left_container
+                .into_iter()
+                .zip($right_container.into_iter().zip($middle_container.into_iter()))
+                .map(|(l, (m, r))| $matcher(l, m, r))
+                .collect(),
+        )
+    }};
 }
 
 /// Module for use only by the procedural macros in this module.

@@ -172,3 +172,18 @@ fn pointwise_matches_single_element_with_lambda_expression_with_extra_value() ->
     let value = vec![1.00001f32];
     verify_that!(value, pointwise!(|v| near(v, 0.0001), vec![1.0]))
 }
+
+#[google_test]
+fn pointwise_matches_single_element_with_two_containers() -> Result<()> {
+    let value = vec![1.00001f32];
+    verify_that!(value, pointwise!(near, vec![1.0], vec![0.0001]))
+}
+
+#[google_test]
+fn pointwise_matches_single_element_with_three_containers() -> Result<()> {
+    let value = vec![1.00001f32];
+    verify_that!(
+        value,
+        pointwise!(|v, t, u| near(v, t * u), vec![1.0f32], vec![0.0001f32], vec![0.5f32])
+    )
+}
