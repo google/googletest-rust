@@ -121,6 +121,32 @@ macro_rules! pointwise {
     }};
 }
 
+#[cfg(not(google3))]
+use crate as googletest;
+use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
+
+pub fn pointwise_func<
+    Actual,
+    ContainerActual,
+    InnerMatcher,
+    Generator,
+    Expected,
+    ContainerExpected,
+>(
+    inner: Generator,
+    expected: ContainerExpected,
+) -> impl Matcher<ContainerActual>
+where
+    for<'a> &'a ContainerActual: IntoIterator<Item = &'a Actual>,
+    ContainerActual: std::fmt::Debug + ?Sized,
+    InnerMatcher: Matcher<Actual>,
+    Generator: Fn(Expected) -> InnerMatcher,
+    Actual: std::fmt::Debug,
+    ContainerExpected: IntoIterator<Item = Expected>,
+{
+    internal::PointwiseMatcher::new(expected.into_iter().map(inner).collect())
+}
+
 /// Module for use only by the procedural macros in this module.
 ///
 /// **For internal use only. API stablility is not guaranteed!**

@@ -20,6 +20,7 @@ use googletest::{google_test, verify_that, Result};
 use indoc::indoc;
 #[cfg(google3)]
 use matchers::pointwise;
+use matchers::pointwise_func;
 use matchers::{contains_substring, displays_as, eq, err, lt, near, not};
 
 #[google_test]
@@ -186,4 +187,9 @@ fn pointwise_matches_single_element_with_three_containers() -> Result<()> {
         value,
         pointwise!(|v, t, u| near(v, t * u), vec![1.0f32], vec![0.0001f32], vec![0.5f32])
     )
+}
+#[google_test]
+fn compilation_error() -> Result<()> {
+    let value = vec![1.00001f32];
+    verify_that!(value, pointwise_func(near, [1.0f32]))
 }

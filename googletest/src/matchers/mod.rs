@@ -126,6 +126,7 @@ pub use ok_matcher::ok;
 pub use points_to_matcher::points_to;
 #[cfg(google3)]
 pub use pointwise_matcher::pointwise;
+pub use pointwise_matcher::pointwise_func;
 pub use predicate_matcher::{predicate, PredicateMatcher};
 #[cfg(google3)]
 pub use property_matcher::property;
