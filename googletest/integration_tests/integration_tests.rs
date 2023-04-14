@@ -466,9 +466,18 @@ mod tests {
             output,
             contains_substring("tests::test_should_work_with_rstest_second").times(eq(1))
         );
-        verify_that!(
+        expect_that!(
             output,
             contains_substring("tests::test_should_work_with_qualified_rstest_second").times(eq(1))
+        );
+        expect_that!(
+            output,
+            contains_substring("tests::test_should_work_with_qualified_test_annotation")
+                .times(eq(1))
+        );
+        verify_that!(
+            output,
+            contains_substring("tests::test_should_work_with_second_test_annotation").times(eq(1))
         )
     }
 

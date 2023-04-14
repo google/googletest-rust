@@ -62,4 +62,20 @@ mod tests {
     fn paramterised_test_should_work_with_rstest_second(#[case] value: u32) -> Result<()> {
         verify_that!(value, eq(value))
     }
+
+    mod submodule {
+        pub use rstest::rstest as test;
+    }
+
+    #[google_test]
+    #[submodule::test]
+    fn test_should_work_with_qualified_test_annotation() -> Result<()> {
+        verify_that!(1, eq(1))
+    }
+
+    #[google_test]
+    #[test]
+    fn test_should_work_with_second_test_annotation() -> Result<()> {
+        verify_that!(1, eq(1))
+    }
 }

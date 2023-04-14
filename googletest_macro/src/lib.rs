@@ -92,7 +92,8 @@ fn is_test_attribute(attr: &Attribute) -> bool {
     let Some(last_segment) = attr.path().segments.last() else {
         return false;
     };
-    first_segment.ident == "rstest"
-        && last_segment.ident == "rstest"
-        && attr.path().segments.len() <= 2
+    last_segment.ident == "test"
+        || (first_segment.ident == "rstest"
+            && last_segment.ident == "rstest"
+            && attr.path().segments.len() <= 2)
 }
