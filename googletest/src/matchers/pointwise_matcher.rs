@@ -77,11 +77,11 @@
 /// matchers like `eq`, `le`, and so on with `pointwise!` but certain C++ tests
 /// using `Pointwise` will require some extra work to port.
 ///
-/// [`IntoIterator`]: https://doc.rust-lang.org/std/iter/trait.IntoIterator.html
-/// [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
-/// [`Iterator::collect`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect
+/// [`IntoIterator`]: std::iter::IntoIterator
+/// [`Iterator`]: std::iter::Iterator
+/// [`Iterator::collect`]: std::iter::Iterator::collect
 /// [`Pointwise`]: https://google.github.io/googletest/reference/matchers.html#container-matchers
-/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+/// [`Vec`]: std::vec::Vec
 #[macro_export]
 macro_rules! pointwise {
     ($matcher:expr, $container:expr) => {{

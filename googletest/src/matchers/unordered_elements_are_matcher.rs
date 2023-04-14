@@ -64,10 +64,10 @@
 ///    the container and which container elements had no corresponding
 ///    matchers.
 ///
-/// [`IntoIterator`]: https://doc.rust-lang.org/std/iter/trait.IntoIterator.html
-/// [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
-/// [`Iterator::collect`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect
-/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+/// [`IntoIterator`]: std::iter::IntoIterator
+/// [`Iterator`]: std::iter::Iterator
+/// [`Iterator::collect`]: std::iter::Iterator::collect
+/// [`Vec`]: std::vec::Vec
 #[macro_export]
 macro_rules! unordered_elements_are {
     ($(,)?) => {{
@@ -155,10 +155,10 @@ macro_rules! unordered_elements_are {
 ///    message then shows the best matching it could find, including which
 ///    matchers did not have corresponding unique elements in the container.
 ///
-/// [`IntoIterator`]: https://doc.rust-lang.org/std/iter/trait.IntoIterator.html
-/// [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
-/// [`Iterator::collect`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect
-/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+/// [`IntoIterator`]: std::iter::IntoIterator
+/// [`Iterator`]: std::iter::Iterator
+/// [`Iterator::collect`]: std::iter::Iterator::collect
+/// [`Vec`]: std::vec::Vec
 #[macro_export]
 macro_rules! contains_each {
     ($(,)?) => {{
@@ -250,10 +250,10 @@ macro_rules! contains_each {
 ///    message then shows the best matching it could find, including which
 ///    container elements did not have corresponding matchers.
 ///
-/// [`IntoIterator`]: https://doc.rust-lang.org/std/iter/trait.IntoIterator.html
-/// [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
-/// [`Iterator::collect`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect
-/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+/// [`IntoIterator`]: std::iter::IntoIterator
+/// [`Iterator`]: std::iter::Iterator
+/// [`Iterator::collect`]: std::iter::Iterator::collect
+/// [`Vec`]: std::vec::Vec
 #[macro_export]
 macro_rules! is_contained_in {
     ($(,)?) => {{

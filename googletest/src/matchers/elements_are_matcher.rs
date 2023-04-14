@@ -42,10 +42,10 @@
 /// tests. Use [`unordered_elements_are!`][crate::unordered_elements_are]
 /// instead.
 ///
-/// [`IntoIterator`]: https://doc.rust-lang.org/std/iter/trait.IntoIterator.html
-/// [`Iterator`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html
-/// [`Iterator::collect`]: https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect
-/// [`Vec`]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+/// [`IntoIterator`]: std::iter::IntoIterator
+/// [`Iterator`]: std::iter::Iterator
+/// [`Iterator::collect`]: std::iter::Iterator::collect
+/// [`Vec`]: std::vec::Vec
 #[macro_export]
 macro_rules! elements_are {
     ($($matcher:expr),* $(,)?) => {{

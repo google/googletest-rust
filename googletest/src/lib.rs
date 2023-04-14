@@ -292,17 +292,8 @@
 //! }
 //! ```
 //!
-//! [`and_log_failure()`]: trait.GoogleTestSupport.html#tymethod.and_log_failure
-//! [`assert_that!`]: macro.assert_that.html
-//! [`expect_pred!`]: macro.expect_pred.html
-//! [`expect_that!`]: macro.expect_that.html
-//! [`fail!`]: macro.fail.html
-//! [`google_test`]: attr.google_test.html
-//! [`matches_pattern!`]: macro.matches_pattern.html
-//! [`verify_pred!`]: macro.verify_pred.html
-//! [`verify_that!`]: macro.verify_that.html
-//! [`Matcher`]: matcher/trait.Matcher.html
-//! [`Result<()>`]: type.Result.html
+//! [`and_log_failure()`]: GoogleTestSupport::and_log_failure
+//! [`Matcher`]: matcher::Matcher
 
 extern crate googletest_macro;
 
