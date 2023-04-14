@@ -220,18 +220,12 @@ fn build_explanation<T: Debug, U: Debug>(missing: Vec<T>, unexpected: Vec<U>) ->
 }
 
 impl<const N: usize> ContainerEqMatcher<[&str; N]> {
-    fn get_missing_str_items(&self, actual: &Vec<String>) -> Vec<&str> {
-        self.expected
-            .into_iter()
-            .filter(|i| actual.into_iter().find(|j| &j.as_str() == i).is_none())
-            .collect()
+    fn get_missing_str_items(&self, actual: &[String]) -> Vec<&str> {
+        self.expected.into_iter().filter(|i| !actual.iter().any(|j| j == i)).collect()
     }
 
-    fn get_unexpected_string_items<'a>(&self, actual: &'a Vec<String>) -> Vec<&'a String> {
-        actual
-            .into_iter()
-            .filter(|i| self.expected.into_iter().find(|j| j == &i.as_str()).is_none())
-            .collect()
+    fn get_unexpected_string_items<'a>(&self, actual: &'a [String]) -> Vec<&'a String> {
+        actual.iter().filter(|i| !self.expected.into_iter().any(|j| j == i.as_str())).collect()
     }
 }
 
