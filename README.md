@@ -182,15 +182,13 @@ failed, but execution continues until the test completes or otherwise aborts.
 This is analogous to the `EXPECT_*` family of macros in GoogleTest.
 
 To make a non-fatal assertion, use the macro [`expect_that!`]. The test must
-also be marked with [`google_test`] instead of the Rust-standard `#[test]`. It
-must return [`Result<()>`].
+also be marked with [`googletest::test`] instead of the Rust-standard `#[test]`.
+It must return [`Result<()>`].
 
 ```rust
-use googletest::{
-    expect_that, google_test, matchers::eq, Result
-};
+use googletest::{expect_that, matchers::eq, Result};
 
-#[google_test]
+#[googletest::test]
 fn more_than_one_failure() -> Result<()> {
     let value = 2;
     expect_that!(value, eq(3));  // Just marks the test as having failed.
@@ -201,12 +199,12 @@ fn more_than_one_failure() -> Result<()> {
 
 ### Interoperability
 
-You can use the `#[google_test]` macro together with many other libraries such
-as [rstest](https://crates.io/crates/rstest). Just apply both attribute macros
-to the test:
+You can use the `#[googletest::test]` macro together with many other libraries
+such as [rstest](https://crates.io/crates/rstest). Just apply both attribute
+macros to the test:
 
 ```rust
-#[google_test]
+#[googletest::test]
 #[rstest]
 #[case(1)]
 #[case(2)]
@@ -216,16 +214,16 @@ fn rstest_works_with_google_test(#[case] value: u32) -> Result<()> {
 }
 ```
 
-Make sure to put `#[google_test]` *before* `#[rstest]`. Otherwise the annotated
-test will run twice, since both macros will attempt to register a test with the
-Rust test harness.
+Make sure to put `#[googletest::test]` *before* `#[rstest]`. Otherwise the
+annotated test will run twice, since both macros will attempt to register a test
+with the Rust test harness.
 
 The macro also works together with
 [async tests with Tokio](https://docs.rs/tokio/latest/tokio/attr.test.html) in
 the same way:
 
 ```rust
-#[google_test]
+#[googletest::test]
 #[tokio::test]
 async fn should_work_with_tokio() -> Result<()> {
     verify_that!(3, gt(0))
@@ -289,7 +287,7 @@ to this project.
 [`expect_pred!`]: https://docs.rs/googletest/*/googletest/macro.expect_pred.html
 [`expect_that!`]: https://docs.rs/googletest/*/googletest/macro.expect_that.html
 [`fail!`]: https://docs.rs/googletest/*/googletest/macro.fail.html
-[`google_test`]: https://docs.rs/googletest/*/googletest/attr.google_test.html
+[`googletest::test`]: https://docs.rs/googletest/*/googletest/attr.test.html
 [`matches_pattern!`]: https://docs.rs/googletest/*/googletest/macro.matches_pattern.html
 [`verify_pred!`]: https://docs.rs/googletest/*/googletest/macro.verify_pred.html
 [`verify_that!`]: https://docs.rs/googletest/*/googletest/macro.verify_that.html

@@ -14,36 +14,36 @@
 
 fn main() {}
 
-// Mixing rstest and google_test should not result in any compiler warnings. The
+// Mixing rstest and googletest::test should not result in any compiler warnings. The
 // fact that this successfully compiles is part of the test.
 #[deny(warnings)]
 #[cfg(test)]
 mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::eq;
     use rstest::rstest;
 
     #[rstest]
-    #[google_test]
+    #[googletest::test]
     fn test_should_work_with_rstest_first() -> Result<()> {
         verify_that!(1, eq(1))
     }
 
     #[rstest::rstest]
-    #[google_test]
+    #[googletest::test]
     fn test_should_work_with_qualified_rstest_first() -> Result<()> {
         verify_that!(1, eq(1))
     }
 
-    #[google_test]
+    #[googletest::test]
     #[rstest]
     fn test_should_work_with_rstest_second() -> Result<()> {
         verify_that!(1, eq(1))
     }
 
-    #[google_test]
+    #[googletest::test]
     #[rstest::rstest]
     fn test_should_work_with_qualified_rstest_second() -> Result<()> {
         verify_that!(1, eq(1))
@@ -51,12 +51,12 @@ mod tests {
 
     #[rstest]
     #[case(1)]
-    #[google_test]
+    #[googletest::test]
     fn paramterised_test_should_work_with_rstest_first(#[case] value: u32) -> Result<()> {
         verify_that!(value, eq(value))
     }
 
-    #[google_test]
+    #[googletest::test]
     #[rstest]
     #[case(1)]
     fn paramterised_test_should_work_with_rstest_second(#[case] value: u32) -> Result<()> {
@@ -67,13 +67,13 @@ mod tests {
         pub use rstest::rstest as test;
     }
 
-    #[google_test]
+    #[googletest::test]
     #[submodule::test]
     fn test_should_work_with_qualified_test_annotation() -> Result<()> {
         verify_that!(1, eq(1))
     }
 
-    #[google_test]
+    #[googletest::test]
     #[test]
     fn test_should_work_with_second_test_annotation() -> Result<()> {
         verify_that!(1, eq(1))

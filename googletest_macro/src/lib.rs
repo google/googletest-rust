@@ -20,7 +20,7 @@ use syn::{parse_macro_input, Attribute, ItemFn, ReturnType};
 /// Annotate tests the same way ordinary Rust tests are annotated:
 ///
 /// ```
-/// #[google_test]
+/// #[googletest::test]
 /// fn should_work() -> GoogleTestResult {
 ///     ...
 ///     Ok(())
@@ -36,7 +36,7 @@ use syn::{parse_macro_input, Attribute, ItemFn, ReturnType};
 /// the rest of the test execution:
 ///
 /// ```
-/// #[google_test]
+/// #[googletest::test]
 /// fn should_work() -> GoogleTestResult {
 ///     ...
 ///     assert_that_everything_is_okay()?;
@@ -49,7 +49,7 @@ use syn::{parse_macro_input, Attribute, ItemFn, ReturnType};
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn google_test(
+pub fn test(
     _args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
@@ -59,7 +59,7 @@ pub fn google_test(
     let ReturnType::Type(_, output_type) = sig.output.clone() else {
         return quote! {
             compile_error!(
-                "Test function with the #[google_test] attribute must return googletest::Result<()>"
+                "Test function with the #[googletest::test] attribute must return googletest::Result<()>"
             );
         }.into();
     };
@@ -78,7 +78,7 @@ pub fn google_test(
         function
     } else {
         quote! {
-            #[test]
+            #[::core::prelude::v1::test]
             #function
         }
     };

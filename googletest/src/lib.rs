@@ -231,15 +231,13 @@
 //! aborts.
 //!
 //! To make a non-fatal assertion, use the macro [`expect_that!`]. The test must
-//! also be marked with [`google_test`] instead of the Rust-standard `#[test]`.
-//! It must return [`Result<()>`].
+//! also be marked with [`googletest::test`][test] instead of the Rust-standard
+//! `#[test]`. It must return [`Result<()>`].
 //!
 //! ```
-//! use googletest::{
-//!    expect_that, google_test, matchers::eq, Result
-//! };
+//! use googletest::{expect_that, matchers::eq, Result};
 //!
-//! #[google_test]
+//! #[googletest::test]
 //! fn more_than_one_failure() -> Result<()> {
 //!    let value = 2;
 //!    expect_that!(value, eq(3));  // Just marks the test as having failed.
@@ -304,7 +302,11 @@ pub mod matcher;
 #[cfg(not(google3))]
 pub mod matchers;
 
-pub use googletest_macro::google_test;
+pub use googletest_macro::test;
+
+// For backwards compatibility.
+#[deprecated(since = "0.5.0", note = "Use googletest::test instead")]
+pub use googletest_macro::test as google_test;
 
 use internal::test_outcome::TestAssertionFailure;
 

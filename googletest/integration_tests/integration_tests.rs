@@ -19,7 +19,7 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::{all, matchers, matchers::str_matcher};
     use googletest::{
-        assert_that, expect_pred, expect_that, google_test, verify_pred, verify_that,
+        assert_that, expect_pred, expect_that, test, verify_pred, verify_that,
         GoogleTestSupport, Result,
     };
     use indoc::indoc;
@@ -29,48 +29,54 @@ mod tests {
     use std::process::Command;
     use str_matcher::StrMatcherConfigurator;
 
-    #[google_test]
+    #[test]
     fn should_pass() -> Result<()> {
         let value = 2;
         verify_that!(value, eq(2))
     }
 
-    #[google_test]
+    #[googletest::google_test]
+    fn should_pass_with_google_test() -> Result<()> {
+        let value = 2;
+        verify_that!(value, eq(2))
+    }
+
+    #[test]
     fn should_pass_with_assert_that() -> Result<()> {
         let value = 2;
         assert_that!(value, eq(2));
         Ok(())
     }
 
-    #[google_test]
+    #[test]
     fn should_pass_with_expect_that() -> Result<()> {
         let value = 2;
         expect_that!(value, eq(2));
         Ok(())
     }
 
-    #[google_test]
+    #[test]
     fn should_fail_on_assertion_failure() -> Result<()> {
         let status = run_external_process("simple_assertion_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[google_test]
+    #[test]
     fn should_fail_on_assertion_failure_with_assert_that() -> Result<()> {
         let status = run_external_process("simple_assertion_failure_with_assert_that").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[google_test]
+    #[test]
     fn should_fail_on_assertion_failure_with_expect_that() -> Result<()> {
         let status = run_external_process("expect_that_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[google_test]
+    #[test]
     fn should_output_failure_message_on_assertion_failure() -> Result<()> {
         let output = run_external_process_in_tests_directory("simple_assertion_failure")?;
 
@@ -84,7 +90,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn should_output_failure_message_on_assertion_failure_with_assert_that() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("simple_assertion_failure_with_assert_that")?;
@@ -100,7 +106,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn should_output_failure_message_on_assertion_failure_with_expect_that() -> Result<()> {
         let output = run_external_process_in_tests_directory("expect_that_failure")?;
 
@@ -115,7 +121,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn should_output_second_failure_message_on_second_assertion_failure_with_expect_that()
     -> Result<()> {
         let output = run_external_process_in_tests_directory("two_expect_that_failures")?;
@@ -131,28 +137,28 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn should_fail_due_to_assertion_failure_in_subroutine() -> Result<()> {
         let status = run_external_process("simple_assertion_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[google_test]
+    #[test]
     fn should_fail_due_to_returned_error_in_subroutine() -> Result<()> {
         let status = run_external_process("failure_due_to_returned_error").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[google_test]
+    #[test]
     fn should_fail_test_on_and_log_failure() -> Result<()> {
         let status = run_external_process("non_fatal_failure_in_subroutine").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[google_test]
+    #[test]
     fn should_log_test_failures_to_stdout() -> Result<()> {
         let output = run_external_process_in_tests_directory("two_non_fatal_failures")?;
 
@@ -171,7 +177,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn should_abort_after_first_failure() -> Result<()> {
         let output = run_external_process_in_tests_directory("first_failure_aborts")?;
 
@@ -184,7 +190,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn should_fail_with_assertion_in_a_subroutine() -> Result<()> {
         let output = run_external_process_in_tests_directory("non_fatal_failure_in_subroutine")?;
 
@@ -197,7 +203,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn should_include_custom_error_message_in_failure() -> Result<()> {
         let output = run_external_process_in_tests_directory("custom_error_message")?;
 
@@ -206,19 +212,19 @@ mod tests {
         verify_that!(output, contains_substring("A custom error message from a closure"))
     }
 
-    #[google_test]
+    #[test]
     fn should_not_run_closure_with_custom_error_message_if_test_passes() -> Result<()> {
         let value = 2;
         verify_that!(value, eq(2))
             .with_failure_message(|| panic!("This should not execute, since the assertion passes."))
     }
 
-    #[google_test]
+    #[test]
     fn should_verify_predicate_with_success() -> Result<()> {
         verify_pred!(eq_predicate(1, 1))
     }
 
-    #[google_test]
+    #[test]
     fn should_verify_predicate_with_trailing_comma() -> Result<()> {
         verify_pred!(eq_predicate(1, 1,))
     }
@@ -227,20 +233,20 @@ mod tests {
         a == b
     }
 
-    #[google_test]
+    #[test]
     fn should_verify_predicate_with_success_using_expect_pred() -> Result<()> {
         expect_pred!(eq_predicate(1, 1));
         Ok(())
     }
 
-    #[google_test]
+    #[test]
     fn verify_pred_should_fail_test_on_failure() -> Result<()> {
         let status = run_external_process("verify_predicate_with_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[google_test]
+    #[test]
     fn verify_pred_should_output_correct_failure_message() -> Result<()> {
         let output = run_external_process_in_tests_directory("verify_predicate_with_failure")?;
 
@@ -254,21 +260,21 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn assert_pred_should_fail_test_on_failure() -> Result<()> {
         let status = run_external_process("assert_predicate_with_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[google_test]
+    #[test]
     fn expect_pred_should_fail_test_on_failure() -> Result<()> {
         let status = run_external_process("expect_pred_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[google_test]
+    #[test]
     fn assert_pred_should_output_correct_failure_message() -> Result<()> {
         let output = run_external_process_in_tests_directory("assert_predicate_with_failure")?;
 
@@ -282,7 +288,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn expect_pred_should_output_correct_failure_message() -> Result<()> {
         let output = run_external_process_in_tests_directory("expect_pred_failure")?;
 
@@ -296,7 +302,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn expect_pred_should_output_failure_message_for_second_failure() -> Result<()> {
         let output = run_external_process_in_tests_directory("two_expect_pred_failures")?;
 
@@ -310,7 +316,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn should_verify_predicate_in_a_submodule() -> Result<()> {
         verify_pred!(submodule::eq_predicate_in_submodule(1, 1))
     }
@@ -321,14 +327,14 @@ mod tests {
         }
     }
 
-    #[google_test]
+    #[test]
     fn should_verify_predicate_as_a_method() -> Result<()> {
         let a_struct = AStruct {};
 
         verify_pred!(a_struct.eq_predicate_as_method(1, 1))
     }
 
-    #[google_test]
+    #[test]
     fn should_verify_predicate_as_a_method_on_an_expresion_result() -> Result<()> {
         verify_pred!((AStruct {}).eq_predicate_as_method(1, 1))
     }
@@ -341,7 +347,7 @@ mod tests {
         }
     }
 
-    #[google_test]
+    #[test]
     fn should_verify_predicate_as_a_method_in_submodule() -> Result<()> {
         verify_pred!(another_submodule::A_STRUCT_IN_SUBMODULE.eq_predicate_as_method(1, 1))
     }
@@ -350,7 +356,7 @@ mod tests {
         pub(super) static A_STRUCT_IN_SUBMODULE: super::AStruct = super::AStruct {};
     }
 
-    #[google_test]
+    #[test]
     fn should_verify_predicate_as_a_method_on_a_field() -> Result<()> {
         let another_struct = AnotherStruct { a_struct: AStruct {} };
 
@@ -361,7 +367,7 @@ mod tests {
         a_struct: AStruct,
     }
 
-    #[google_test]
+    #[test]
     fn verify_pred_should_show_correct_qualified_function_name_in_test_failure_output() -> Result<()>
     {
         let output = run_external_process_in_tests_directory(
@@ -378,14 +384,14 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn fail_macro_causes_test_failure() -> Result<()> {
         let status = run_external_process("failure_due_to_fail_macro").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[google_test]
+    #[test]
     fn fail_macro_outputs_message() -> Result<()> {
         let output = run_external_process_in_tests_directory("failure_due_to_fail_macro")?;
 
@@ -398,7 +404,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn fail_macro_allows_empty_message() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "failure_due_to_fail_macro_with_empty_message",
@@ -407,7 +413,7 @@ mod tests {
         verify_that!(output, contains_substring("Test failed"))
     }
 
-    #[google_test]
+    #[test]
     fn fail_macro_allows_message_with_format_arguments() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "failure_due_to_fail_macro_with_format_arguments",
@@ -416,7 +422,7 @@ mod tests {
         verify_that!(output, contains_substring("Failure message with argument: An argument"))
     }
 
-    #[google_test]
+    #[test]
     fn test_using_normal_test_attribute_macro_formats_failure_message_correctly() -> Result<()> {
         let result = should_display_error_correctly_without_google_test_macro();
 
@@ -437,7 +443,7 @@ mod tests {
         verify_that!(1, eq(2))
     }
 
-    #[google_test]
+    #[test]
     fn failure_message_uses_pretty_print_for_actual_value() -> Result<()> {
         #[derive(Debug)]
         #[allow(unused)]
@@ -458,13 +464,21 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn test_with_google_test_and_rstest_runs_only_once() -> Result<()> {
         let output = run_external_process_in_tests_directory("google_test_with_rstest")?;
 
         expect_that!(
             output,
+            contains_substring("tests::test_should_work_with_rstest_first").times(eq(1))
+        );
+        expect_that!(
+            output,
             contains_substring("tests::test_should_work_with_rstest_second").times(eq(1))
+        );
+        expect_that!(
+            output,
+            contains_substring("tests::test_should_work_with_qualified_rstest_first").times(eq(1))
         );
         expect_that!(
             output,
@@ -482,7 +496,7 @@ mod tests {
     }
 
     #[cfg(feature = "anyhow")]
-    #[google_test]
+    #[test]
     fn test_can_return_anyhow_generated_error() -> Result<()> {
         let output = run_external_process_in_tests_directory("test_returning_anyhow_error")?;
 
