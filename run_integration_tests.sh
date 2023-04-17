@@ -26,6 +26,7 @@ INTEGRATION_TEST_BINARIES=(
   "integration_tests"
   "assert_predicate_with_failure"
   "assertion_failure_in_subroutine"
+  "async_test_with_expect_that"
   "custom_error_message"
   "expect_pred_failure"
   "expect_that_failure"
@@ -48,6 +49,6 @@ INTEGRATION_TEST_BINARIES=(
 
 cargo build
 for binary in ${INTEGRATION_TEST_BINARIES[@]}; do
-  cargo rustc -p googletest --bin $binary --features anyhow,indoc,rstest -- --test
+  cargo rustc -p googletest --bin $binary --features anyhow,indoc,rstest,tokio -- --test
 done
 ./target/debug/integration_tests

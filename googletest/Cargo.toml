@@ -40,6 +40,7 @@ regex = "1.6.0"
 anyhow = { version = "1.0.70", optional = true }
 indoc = { version = "2", optional = true }
 rstest = { version = "0.17.0", optional = true }
+tokio = { version = "1", optional = true, features = ["time", "macros", "rt"] }
 
 [dev-dependencies]
 indoc = "2"
@@ -59,6 +60,12 @@ test = false
 name = "assertion_failure_in_subroutine"
 path = "integration_tests/assertion_failure_in_subroutine.rs"
 test = false
+
+[[bin]]
+name = "async_test_with_expect_that"
+path = "integration_tests/async_test_with_expect_that.rs"
+test = false
+required_features = ["tokio"]
 
 [[bin]]
 name = "custom_error_message"

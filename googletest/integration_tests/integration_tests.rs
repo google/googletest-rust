@@ -19,8 +19,8 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::{all, matchers, matchers::str_matcher};
     use googletest::{
-        assert_that, expect_pred, expect_that, test, verify_pred, verify_that,
-        GoogleTestSupport, Result,
+        assert_that, expect_pred, expect_that, test, verify_pred, verify_that, GoogleTestSupport,
+        Result,
     };
     use indoc::indoc;
     #[cfg(google3)]
@@ -495,7 +495,24 @@ mod tests {
         )
     }
 
-    #[cfg(feature = "anyhow")]
+    #[test]
+    fn async_test_with_google_test_runs_correctly() -> Result<()> {
+        let output = run_external_process_in_tests_directory("async_test_with_expect_that")?;
+
+        expect_that!(
+            output,
+            contains_substring("tests::async_test_failure_with_non_fatal_assertion ... FAILED")
+                .times(eq(1))
+        );
+        expect_that!(
+            output,
+            contains_substring("tests::async_test_failure_with_fatal_assertion ... FAILED")
+                .times(eq(1))
+        );
+        expect_that!(output, contains_substring("Expected: is equal to 3"));
+        verify_that!(output, contains_substring("Expected: is equal to 4"))
+    }
+
     #[test]
     fn test_can_return_anyhow_generated_error() -> Result<()> {
         let output = run_external_process_in_tests_directory("test_returning_anyhow_error")?;

@@ -64,13 +64,37 @@ pub fn test(
         }.into();
     };
     sig.output = ReturnType::Default;
+    let (maybe_closure, invocation) = if sig.asyncness.is_some() {
+        (
+            // In the async case, the ? operator returns from the *block* rather than the
+            // surrounding function. So we just put the test content in an async block. Async
+            // closures are still unstable (see https://github.com/rust-lang/rust/issues/62290),
+            // so we can't use the same solution as the sync case below.
+            quote! {},
+            quote! {
+                async { #block }.await
+            },
+        )
+    } else {
+        (
+            // In the sync case, the ? operator returns from the surrounding function. So we must
+            // create a separate closure from which the ? operator can return in order to capture
+            // the output.
+            quote! {
+                let test = move || #block;
+            },
+            quote! {
+                test()
+            },
+        )
+    };
     let function = quote! {
         #(#attrs)*
         #sig -> std::result::Result<(), ()> {
-            let test = move || #block;
+            #maybe_closure
             use googletest::internal::test_outcome::TestOutcome;
             TestOutcome::init_current_test_outcome();
-            let result: #output_type = test();
+            let result: #output_type = #invocation;
             TestOutcome::close_current_test_outcome(result)
         }
     };
