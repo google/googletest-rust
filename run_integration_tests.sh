@@ -38,6 +38,7 @@ INTEGRATION_TEST_BINARIES=(
   "non_fatal_failure_in_subroutine"
   "simple_assertion_failure"
   "simple_assertion_failure_with_assert_that"
+  "test_returning_anyhow_error"
   "two_expect_pred_failures"
   "two_expect_that_failures"
   "two_non_fatal_failures"
@@ -47,6 +48,6 @@ INTEGRATION_TEST_BINARIES=(
 
 cargo build
 for binary in ${INTEGRATION_TEST_BINARIES[@]}; do
-  cargo rustc -p googletest --bin $binary --features indoc,rstest -- --test
+  cargo rustc -p googletest --bin $binary --features anyhow,indoc,rstest -- --test
 done
 ./target/debug/integration_tests

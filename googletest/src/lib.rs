@@ -416,3 +416,41 @@ impl<T> GoogleTestSupport for std::result::Result<T, TestAssertionFailure> {
         self
     }
 }
+
+/// Provides an extension method for converting an arbitrary type into a
+/// [`Result`].
+///
+/// A type can implement this trait to provide an easy way to return immediately
+/// from a test in conjunction with the `?` operator. This is useful for
+/// [`Result`][std::result::Result] types whose `Result::Err` variant does not
+/// implement [`std::error::Error`].
+///
+/// There is an implementation of this trait for [`anyhow::Error`] (which does
+/// not implement `std::error::Error`) when the `anyhow` feature is enabled.
+/// Importing this trait allows one to easily map [`anyhow::Error`] to a test
+/// failure:
+///
+/// ```
+/// #[test]
+/// fn should_work() -> Result<()> {
+///     let value = something_which_can_fail().into_test_result()?;
+///     ...
+/// }
+///
+/// fn something_which_can_fail() -> anyhow::Result<...> { ... }
+/// ```
+pub trait IntoTestResult<T> {
+    /// Converts this instance into a [`Result`].
+    ///
+    /// Typically, the `Self` type is itself a [`std::result::Result`]. This
+    /// method should then map the `Err` variant to a [`TestAssertionFailure`]
+    /// and leave the `Ok` variant unchanged.
+    fn into_test_result(self) -> Result<T>;
+}
+
+#[cfg(feature = "anyhow")]
+impl<T> IntoTestResult<T> for std::result::Result<T, anyhow::Error> {
+    fn into_test_result(self) -> std::result::Result<T, TestAssertionFailure> {
+        self.map_err(|e| TestAssertionFailure::create(format!("{e}")))
+    }
+}

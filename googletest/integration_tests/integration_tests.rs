@@ -481,6 +481,14 @@ mod tests {
         )
     }
 
+    #[cfg(feature = "anyhow")]
+    #[google_test]
+    fn test_can_return_anyhow_generated_error() -> Result<()> {
+        let output = run_external_process_in_tests_directory("test_returning_anyhow_error")?;
+
+        verify_that!(output, contains_substring("Error from Anyhow"))
+    }
+
     fn run_external_process_in_tests_directory(name: &'static str) -> Result<String> {
         let mut command = run_external_process(name);
         let std::process::Output { stdout, .. } = command.output()?;

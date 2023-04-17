@@ -37,6 +37,7 @@ doctest = false
 googletest_macro = { path = "../googletest_macro", version = "0.4.2" }
 num-traits = "0.2.15"
 regex = "1.6.0"
+anyhow = { version = "1.0.70", optional = true }
 indoc = { version = "2", optional = true }
 rstest = { version = "0.17.0", optional = true }
 
@@ -119,6 +120,12 @@ test = false
 name = "simple_assertion_failure_with_assert_that"
 path = "integration_tests/simple_assertion_failure_with_assert_that.rs"
 test = false
+
+[[bin]]
+name = "test_returning_anyhow_error"
+path = "integration_tests/test_returning_anyhow_error.rs"
+test = false
+required-features = ["anyhow"]
 
 [[bin]]
 name = "two_expect_pred_failures"

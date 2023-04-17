@@ -57,6 +57,24 @@ jobs:
       - name: cargo test --locked
         run: cargo test --locked --all-features
 
+  test-no-default-features:
+    runs-on: ubuntu-latest
+    name: test (no default features) / ubuntu / ${{ matrix.toolchain }}
+    strategy:
+      matrix:
+        toolchain: [stable]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install ${{ matrix.toolchain }}
+        uses: dtolnay/rust-toolchain@b44cb146d03e8d870c57ab64b80f04586349ca5d
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - name: cargo generate-lockfile
+        if: hashFiles('Cargo.lock') == ''
+        run: cargo generate-lockfile
+      - name: cargo test --locked
+        run: cargo test --locked --no-default-features
+
   integration-test:
     runs-on: ubuntu-latest
     name: integration-test / ubuntu / ${{ matrix.toolchain }}
