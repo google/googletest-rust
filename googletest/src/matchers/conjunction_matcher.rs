@@ -15,10 +15,10 @@
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Extension trait providing the [`and`][AndMatcherExt::and] method.
-pub trait AndMatcherExt<T: Debug>: Matcher<T> {
+pub trait AndMatcherExt<T: Debug>: Matcher {
     /// Constructs a matcher that matches both `self` and `right`.
     ///
     /// ```
@@ -34,7 +34,7 @@ pub trait AndMatcherExt<T: Debug>: Matcher<T> {
     // TODO(b/264518763): Replace the return type with impl Matcher and reduce
     // visibility of ConjunctionMatcher once impl in return position in trait
     // methods is stable.
-    fn and<Right: Matcher<T>>(self, right: Right) -> ConjunctionMatcher<Self, Right>
+    fn and<Right: Matcher>(self, right: Right) -> ConjunctionMatcher<T, Self, Right>
     where
         Self: Sized,
     {
@@ -42,18 +42,19 @@ pub trait AndMatcherExt<T: Debug>: Matcher<T> {
     }
 }
 
-impl<T: Debug, M> AndMatcherExt<T> for M where M: Matcher<T> {}
+impl<T: Debug, M> AndMatcherExt<T> for M where M: Matcher {}
 
 /// Matcher created by [`AndMatcherExt::and`].
 ///
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
-pub struct ConjunctionMatcher<M1, M2> {
+pub struct ConjunctionMatcher<T, M1, M2> {
     m1: M1,
     m2: M2,
+    phantom: PhantomData<T>,
 }
 
-impl<T: Debug, M1: Matcher<T>, M2: Matcher<T>> Matcher<T> for ConjunctionMatcher<M1, M2> {
+impl<T: Debug, M1: Matcher, M2: Matcher> Matcher for ConjunctionMatcher<T, M1, M2> {
     fn matches(&self, actual: &T) -> MatcherResult {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::Matches, MatcherResult::Matches) => MatcherResult::Matches,

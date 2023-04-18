@@ -293,7 +293,10 @@ macro_rules! tuple_internal {
 #[doc(hidden)]
 pub mod internal {
     use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-    use std::fmt::{Debug, Write};
+    use std::{
+        fmt::{Debug, Write},
+        marker::PhantomData,
+    };
 
     /// Replaces the first expression with the second at compile time.
     ///
@@ -316,10 +319,10 @@ pub mod internal {
     macro_rules! tuple_matcher_n {
         ($name:ident, $([$field_number:tt, $matcher_type:ident, $field_type:ident]),*) => {
             #[doc(hidden)]
-            pub struct $name<$($matcher_type),*>($(pub $matcher_type),*);
+            pub struct $name<$($field_type, $matcher_type),*>($(pub $matcher_type),*, $(PhantomData<$field_type>),*);
 
-            impl<$($field_type: Debug, $matcher_type: Matcher<$field_type>),*>
-                Matcher<($($field_type,)*)> for $name<$($matcher_type),*>
+            impl<$($field_type: Debug, $matcher_type: Matcher),*>
+                Matcher for $name<$($field_type, $matcher_type),*>
             {
                 fn matches(&self, actual: &($($field_type,)*)) -> MatcherResult {
                     $(match self.$field_number.matches(&actual.$field_number) {

@@ -86,20 +86,20 @@ pub mod internal {
     ///
     /// For internal use only. API stablility is not guaranteed!
     #[doc(hidden)]
-    pub struct AllMatcher<'a, T: Debug + ?Sized, const N: usize> {
-        components: [&'a dyn Matcher<T>; N],
+    pub struct AllMatcher<'a, 'b, T: Debug + ?Sized + 'b, const N: usize> {
+        components: [&'a dyn Matcher<ActualT<'b> = T>; N],
     }
 
-    impl<'a, T: Debug + ?Sized, const N: usize> AllMatcher<'a, T, N> {
+    impl<'a, 'b, T: Debug + ?Sized + 'b, const N: usize> AllMatcher<'a, 'b, T, N> {
         /// Constructs an [`AllMatcher`] with the given component matchers.
         ///
         /// Intended for use only by the [`all`] macro.
-        pub fn new(components: [&'a dyn Matcher<T>; N]) -> Self {
+        pub fn new(components: [&'a dyn Matcher<ActualT<'b> = T>; N]) -> Self {
             Self { components }
         }
     }
 
-    impl<'a, T: Debug + ?Sized, const N: usize> Matcher<T> for AllMatcher<'a, T, N> {
+    impl<'a, 'b, T: Debug + ?Sized + 'b, const N: usize> Matcher for AllMatcher<'a, 'b, T, N> {
         fn matches(&self, actual: &T) -> MatcherResult {
             for component in self.components {
                 match component.matches(actual) {

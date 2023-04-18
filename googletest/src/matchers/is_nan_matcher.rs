@@ -16,16 +16,16 @@ use crate::matcher::{Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
 use num_traits::float::Float;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a floating point value which is NaN.
-pub fn is_nan<T: Float + Debug>() -> impl Matcher<T> {
-    IsNanMatcher
+pub fn is_nan<T: Float + Debug>() -> impl Matcher {
+    IsNanMatcher(Default::default())
 }
 
-struct IsNanMatcher;
+struct IsNanMatcher<T>(PhantomData<T>);
 
-impl<T: Float + Debug> Matcher<T> for IsNanMatcher {
+impl<T: Float + Debug> Matcher for IsNanMatcher<T> {
     fn matches(&self, actual: &T) -> MatcherResult {
         actual.is_nan().into()
     }

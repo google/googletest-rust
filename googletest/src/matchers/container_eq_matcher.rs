@@ -16,7 +16,6 @@ use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
 use std::fmt::Debug;
-use std::iter::zip;
 
 /// Matches a container equal (in the sense of `==`) to `expected`.
 ///
@@ -95,8 +94,7 @@ pub struct ContainerEqMatcher<T: Debug> {
     expected: T,
 }
 
-impl<T: PartialEq + Debug, ContainerT: PartialEq + Debug> Matcher<ContainerT>
-    for ContainerEqMatcher<ContainerT>
+impl<T: PartialEq + Debug, ContainerT: PartialEq + Debug> Matcher for ContainerEqMatcher<ContainerT>
 where
     for<'a> &'a ContainerT: IntoIterator<Item = &'a T>,
 {
@@ -106,59 +104,6 @@ where
 
     fn explain_match(&self, actual: &ContainerT) -> MatchExplanation {
         self.explain_match_impl(actual)
-    }
-
-    fn describe(&self, matcher_result: MatcherResult) -> String {
-        self.describe_impl(matcher_result)
-    }
-}
-
-impl<T: PartialEq + Debug, const N: usize> Matcher<Vec<T>> for ContainerEqMatcher<[T; N]> {
-    fn matches(&self, actual: &Vec<T>) -> MatcherResult {
-        (actual.as_slice() == self.expected).into()
-    }
-
-    fn explain_match(&self, actual: &Vec<T>) -> MatchExplanation {
-        self.explain_match_impl(actual)
-    }
-
-    fn describe(&self, matcher_result: MatcherResult) -> String {
-        self.describe_impl(matcher_result)
-    }
-}
-
-impl<T: PartialEq + Debug, const N: usize> Matcher<[T]> for ContainerEqMatcher<[T; N]> {
-    fn matches(&self, actual: &[T]) -> MatcherResult {
-        (actual == self.expected).into()
-    }
-
-    fn explain_match(&self, actual: &[T]) -> MatchExplanation {
-        self.explain_match_impl(actual)
-    }
-
-    fn describe(&self, matcher_result: MatcherResult) -> String {
-        self.describe_impl(matcher_result)
-    }
-}
-
-impl<const N: usize> Matcher<Vec<String>> for ContainerEqMatcher<[&str; N]> {
-    fn matches(&self, actual: &Vec<String>) -> MatcherResult {
-        if actual.len() != self.expected.len() {
-            return MatcherResult::DoesNotMatch;
-        }
-        for (actual_element, expected_element) in zip(actual, self.expected) {
-            if actual_element.as_str() != expected_element {
-                return MatcherResult::DoesNotMatch;
-            }
-        }
-        MatcherResult::Matches
-    }
-
-    fn explain_match(&self, actual: &Vec<String>) -> MatchExplanation {
-        build_explanation(
-            self.get_missing_str_items(actual),
-            self.get_unexpected_string_items(actual),
-        )
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {

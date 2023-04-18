@@ -154,11 +154,11 @@ pub mod internal {
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub fn field_matcher<OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<InnerT>>(
+    pub fn field_matcher<OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher>(
         field_accessor: fn(&OuterT) -> Option<&InnerT>,
         field_path: &'static str,
         inner: InnerMatcher,
-    ) -> impl Matcher<OuterT> {
+    ) -> impl Matcher {
         FieldMatcher { field_accessor, field_path, inner }
     }
 
@@ -168,7 +168,7 @@ pub mod internal {
         inner: InnerMatcher,
     }
 
-    impl<OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<InnerT>> Matcher<OuterT>
+    impl<OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher> Matcher
         for FieldMatcher<OuterT, InnerT, InnerMatcher>
     {
         fn matches(&self, actual: &OuterT) -> MatcherResult {

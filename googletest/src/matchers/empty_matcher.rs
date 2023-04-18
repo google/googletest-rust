@@ -15,7 +15,7 @@
 use crate::matcher::{Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches an empty container.
 ///
@@ -47,16 +47,18 @@ use std::fmt::Debug;
 /// # should_pass().unwrap();
 /// ```
 
-pub fn empty<T: Debug + ?Sized>() -> impl Matcher<T>
+pub fn empty<T: Debug + ?Sized>() -> impl Matcher
 where
     for<'a> &'a T: IntoIterator,
 {
-    EmptyMatcher {}
+    EmptyMatcher { phantom: Default::default() }
 }
 
-struct EmptyMatcher {}
+struct EmptyMatcher<T: ?Sized> {
+    phantom: PhantomData<T>,
+}
 
-impl<T: Debug + ?Sized> Matcher<T> for EmptyMatcher
+impl<T: Debug + ?Sized> Matcher for EmptyMatcher<T>
 where
     for<'a> &'a T: IntoIterator,
 {

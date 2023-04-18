@@ -80,7 +80,7 @@ pub mod internal {
     use crate::matchers::zipped_iterator::zip;
     #[cfg(google3)]
     use description::Description;
-    use std::fmt::Debug;
+    use std::{fmt::Debug, marker::PhantomData};
     #[cfg(google3)]
     use zipped_iterator::zip;
 
@@ -88,23 +88,25 @@ pub mod internal {
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub struct ElementsAre<'a, T: Debug> {
-        elements: &'a [&'a dyn Matcher<T>],
+    pub struct ElementsAre<'a, 'b, ContainerT: ?Sized, T: Debug + 'b> {
+        elements: &'a [&'a dyn Matcher<ActualT<'b> = T>],
+        phantom: PhantomData<ContainerT>,
     }
 
-    impl<'a, T: Debug> ElementsAre<'a, T> {
+    impl<'a, 'b, ContainerT: ?Sized, T: Debug + 'b> ElementsAre<'a, 'b, ContainerT, T> {
         /// Factory only intended for use in the macro `elements_are!`.
         ///
         /// **For internal use only. API stablility is not guaranteed!**
         #[doc(hidden)]
-        pub fn new(elements: &'a [&'a dyn Matcher<T>]) -> Self {
-            Self { elements }
+        pub fn new(elements: &'a [&'a dyn Matcher<ActualT<'b> = T>]) -> Self {
+            Self { elements, phantom: Default::default() }
         }
     }
 
-    impl<'a, T: Debug, ContainerT: Debug + ?Sized> Matcher<ContainerT> for ElementsAre<'a, T>
+    impl<'a, 'b, T: Debug + 'b, ContainerT: Debug + ?Sized> Matcher
+        for ElementsAre<'a, 'b, ContainerT, T>
     where
-        for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
+        for<'c> &'c ContainerT: IntoIterator<Item = &'c T>,
     {
         fn matches(&self, actual: &ContainerT) -> MatcherResult {
             let mut zipped_iterator = zip(actual.into_iter(), self.elements.iter());

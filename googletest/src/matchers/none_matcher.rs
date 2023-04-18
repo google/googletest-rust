@@ -33,7 +33,7 @@ use std::marker::PhantomData;
 /// # should_pass().unwrap();
 /// # should_fail().unwrap_err();
 /// ```
-pub fn none<T: Debug>() -> impl Matcher<Option<T>> {
+pub fn none<T: Debug>() -> impl Matcher {
     NoneMatcher { phantom: Default::default() }
 }
 
@@ -41,7 +41,7 @@ struct NoneMatcher<T> {
     phantom: PhantomData<T>,
 }
 
-impl<T: Debug> Matcher<Option<T>> for NoneMatcher<T> {
+impl<T: Debug> Matcher for NoneMatcher<T> {
     fn matches(&self, actual: &Option<T>) -> MatcherResult {
         (actual.is_none()).into()
     }

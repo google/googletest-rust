@@ -15,7 +15,7 @@
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a `Result` containing `Ok` with a value matched by `inner`.
 ///
@@ -37,18 +37,18 @@ use std::fmt::Debug;
 /// # should_fail_1().unwrap_err();
 /// # should_fail_2().unwrap_err();
 /// ```
-pub fn ok<T: Debug, E: Debug>(inner: impl Matcher<T>) -> impl Matcher<std::result::Result<T, E>> {
-    OkMatcher { inner }
+pub fn ok<T: Debug, E: Debug>(inner: impl Matcher) -> impl Matcher {
+    OkMatcher { inner, phantom_t: Default::default(), phantom_e: Default::default() }
 }
 
-struct OkMatcher<InnerMatcherT> {
+struct OkMatcher<T, E, InnerMatcherT> {
     inner: InnerMatcherT,
+    phantom_t: PhantomData<T>,
+    phantom_e: PhantomData<E>,
 }
 
-impl<T: Debug, E: Debug, InnerMatcherT: Matcher<T>> Matcher<std::result::Result<T, E>>
-    for OkMatcher<InnerMatcherT>
-{
-    fn matches(&self, actual: &std::result::Result<T, E>) -> MatcherResult {
+impl<T: Debug, E: Debug, InnerMatcherT: Matcher> Matcher for OkMatcher<T, E, InnerMatcherT> {
+    fn matches(&self, actual: &Result<T, E>) -> MatcherResult {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::DoesNotMatch)
     }
 

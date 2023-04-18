@@ -129,26 +129,27 @@ macro_rules! property_internal {
 #[doc(hidden)]
 pub mod internal {
     use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-    use std::fmt::Debug;
+    use std::{fmt::Debug, marker::PhantomData};
 
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub fn property_matcher<OuterT: Debug, InnerT: Debug, MatcherT: Matcher<InnerT>>(
+    pub fn property_matcher<OuterT: Debug, InnerT: Debug, MatcherT: Matcher>(
         extractor: impl Fn(&OuterT) -> InnerT,
         property_desc: &'static str,
         inner: MatcherT,
-    ) -> impl Matcher<OuterT> {
-        PropertyMatcher { extractor, property_desc, inner }
+    ) -> impl Matcher {
+        PropertyMatcher { extractor, property_desc, inner, phantom: Default::default() }
     }
 
-    struct PropertyMatcher<ExtractorT, MatcherT> {
+    struct PropertyMatcher<OuterT, ExtractorT, MatcherT> {
         extractor: ExtractorT,
         property_desc: &'static str,
         inner: MatcherT,
+        phantom: PhantomData<OuterT>,
     }
 
-    impl<InnerT: Debug, OuterT: Debug, ExtractorT: Fn(&OuterT) -> InnerT, MatcherT: Matcher<InnerT>>
-        Matcher<OuterT> for PropertyMatcher<ExtractorT, MatcherT>
+    impl<InnerT: Debug, OuterT: Debug, ExtractorT: Fn(&OuterT) -> InnerT, MatcherT: Matcher> Matcher
+        for PropertyMatcher<OuterT, ExtractorT, MatcherT>
     {
         fn matches(&self, actual: &OuterT) -> MatcherResult {
             self.inner.matches(&(self.extractor)(actual))
@@ -179,11 +180,11 @@ pub mod internal {
         extractor: fn(&OuterT) -> &InnerT,
         property_desc: &'static str,
         inner: MatcherT,
-    ) -> impl Matcher<OuterT>
+    ) -> impl Matcher
     where
         OuterT: Debug,
         InnerT: Debug + ?Sized,
-        MatcherT: Matcher<InnerT>,
+        MatcherT: Matcher,
     {
         PropertyRefMatcher { extractor, property_desc, inner }
     }
@@ -194,7 +195,7 @@ pub mod internal {
         inner: MatcherT,
     }
 
-    impl<InnerT: Debug + ?Sized, OuterT: Debug, MatcherT: Matcher<InnerT>> Matcher<OuterT>
+    impl<InnerT: Debug + ?Sized, OuterT: Debug, MatcherT: Matcher> Matcher
         for PropertyRefMatcher<InnerT, OuterT, MatcherT>
     {
         fn matches(&self, actual: &OuterT) -> MatcherResult {

@@ -20,6 +20,7 @@ use eq_matcher::EqMatcher;
 use googletest::*;
 use std::borrow::Cow;
 use std::fmt::Debug;
+use std::marker::PhantomData;
 use std::ops::Deref;
 
 /// Matches a string containing a given substring.
@@ -52,10 +53,11 @@ use std::ops::Deref;
 /// > and expected values when matching strings while
 /// > [`ignoring_ascii_case`][StrMatcherConfigurator::ignoring_ascii_case] is
 /// > set.
-pub fn contains_substring<T>(expected: T) -> StrMatcher<T> {
+pub fn contains_substring<A, T>(expected: T) -> StrMatcher<A, T> {
     StrMatcher {
         configuration: Configuration { mode: MatchMode::Contains, ..Default::default() },
         expected,
+        phantom: Default::default(),
     }
 }
 
@@ -88,10 +90,11 @@ pub fn contains_substring<T>(expected: T) -> StrMatcher<T> {
 /// # should_fail_2().unwrap_err();
 /// # should_pass_2().unwrap();
 /// ```
-pub fn starts_with<T>(expected: T) -> StrMatcher<T> {
+pub fn starts_with<A, T>(expected: T) -> StrMatcher<A, T> {
     StrMatcher {
         configuration: Configuration { mode: MatchMode::StartsWith, ..Default::default() },
         expected,
+        phantom: Default::default(),
     }
 }
 
@@ -124,10 +127,11 @@ pub fn starts_with<T>(expected: T) -> StrMatcher<T> {
 /// # should_fail_2().unwrap_err();
 /// # should_pass_2().unwrap();
 /// ```
-pub fn ends_with<T>(expected: T) -> StrMatcher<T> {
+pub fn ends_with<A, T>(expected: T) -> StrMatcher<A, T> {
     StrMatcher {
         configuration: Configuration { mode: MatchMode::EndsWith, ..Default::default() },
         expected,
+        phantom: Default::default(),
     }
 }
 
@@ -136,7 +140,7 @@ pub fn ends_with<T>(expected: T) -> StrMatcher<T> {
 /// Matchers which match against string values and, through configuration,
 /// specialise to [StrMatcher] implement this trait. Currently that only
 /// includes [EqMatcher] and [StrMatcher].
-pub trait StrMatcherConfigurator<ExpectedT> {
+pub trait StrMatcherConfigurator<ActualT: ?Sized, ExpectedT> {
     /// Configures the matcher to ignore any leading whitespace in either the
     /// actual or the expected value.
     ///
@@ -159,7 +163,7 @@ pub trait StrMatcherConfigurator<ExpectedT> {
     /// actual value.
     ///
     /// [`str::trim_start`]: https://doc.rust-lang.org/std/primitive.str.html#method.trim_start
-    fn ignoring_leading_whitespace(self) -> StrMatcher<ExpectedT>;
+    fn ignoring_leading_whitespace(self) -> StrMatcher<ActualT, ExpectedT>;
 
     /// Configures the matcher to ignore any trailing whitespace in either the
     /// actual or the expected value.
@@ -183,7 +187,7 @@ pub trait StrMatcherConfigurator<ExpectedT> {
     /// actual value.
     ///
     /// [`str::trim_end`]: https://doc.rust-lang.org/std/primitive.str.html#method.trim_end
-    fn ignoring_trailing_whitespace(self) -> StrMatcher<ExpectedT>;
+    fn ignoring_trailing_whitespace(self) -> StrMatcher<ActualT, ExpectedT>;
 
     /// Configures the matcher to ignore both leading and trailing whitespace in
     /// either the actual or the expected value.
@@ -211,7 +215,7 @@ pub trait StrMatcherConfigurator<ExpectedT> {
     /// value.
     ///
     /// [`str::trim`]: https://doc.rust-lang.org/std/primitive.str.html#method.trim
-    fn ignoring_outer_whitespace(self) -> StrMatcher<ExpectedT>;
+    fn ignoring_outer_whitespace(self) -> StrMatcher<ActualT, ExpectedT>;
 
     /// Configures the matcher to ignore ASCII case when comparing values.
     ///
@@ -237,7 +241,7 @@ pub trait StrMatcherConfigurator<ExpectedT> {
     /// case characters outside of the codepoints 0-127 covered by ASCII.
     ///
     /// [`str::eq_ignore_ascii_case`]: https://doc.rust-lang.org/std/primitive.str.html#method.eq_ignore_ascii_case
-    fn ignoring_ascii_case(self) -> StrMatcher<ExpectedT>;
+    fn ignoring_ascii_case(self) -> StrMatcher<ActualT, ExpectedT>;
 
     /// Configures the matcher to match only strings which otherwise satisfy the
     /// conditions a number times matched by the matcher `times`.
@@ -280,7 +284,7 @@ pub trait StrMatcherConfigurator<ExpectedT> {
     /// This is only meaningful when the matcher was constructed with
     /// [`contains_substring`]. This method will panic when it is used with any
     /// other matcher construction.
-    fn times(self, times: impl Matcher<usize> + 'static) -> StrMatcher<ExpectedT>;
+    fn times(self, times: impl Matcher + 'static) -> StrMatcher<ActualT, ExpectedT>;
 }
 
 /// A matcher which matches equality or containment of a string-like value in a
@@ -292,12 +296,13 @@ pub trait StrMatcherConfigurator<ExpectedT> {
 ///  * [`contains_substring`],
 ///  * [`starts_with`],
 ///  * [`ends_with`].
-pub struct StrMatcher<ExpectedT> {
+pub struct StrMatcher<ActualT: ?Sized, ExpectedT> {
     expected: ExpectedT,
     configuration: Configuration,
+    phantom: PhantomData<ActualT>,
 }
 
-impl<ExpectedT, ActualT> Matcher<ActualT> for StrMatcher<ExpectedT>
+impl<ExpectedT, ActualT> Matcher for StrMatcher<ActualT, ExpectedT>
 where
     ExpectedT: Deref<Target = str> + Debug,
     ActualT: AsRef<str> + Debug + ?Sized,
@@ -311,10 +316,10 @@ where
     }
 }
 
-impl<ExpectedT, MatcherT: Into<StrMatcher<ExpectedT>>> StrMatcherConfigurator<ExpectedT>
-    for MatcherT
+impl<ActualT: ?Sized, ExpectedT, MatcherT: Into<StrMatcher<ActualT, ExpectedT>>>
+    StrMatcherConfigurator<ActualT, ExpectedT> for MatcherT
 {
-    fn ignoring_leading_whitespace(self) -> StrMatcher<ExpectedT> {
+    fn ignoring_leading_whitespace(self) -> StrMatcher<ActualT, ExpectedT> {
         let existing = self.into();
         StrMatcher {
             configuration: existing.configuration.ignoring_leading_whitespace(),
@@ -322,7 +327,7 @@ impl<ExpectedT, MatcherT: Into<StrMatcher<ExpectedT>>> StrMatcherConfigurator<Ex
         }
     }
 
-    fn ignoring_trailing_whitespace(self) -> StrMatcher<ExpectedT> {
+    fn ignoring_trailing_whitespace(self) -> StrMatcher<ActualT, ExpectedT> {
         let existing = self.into();
         StrMatcher {
             configuration: existing.configuration.ignoring_trailing_whitespace(),
@@ -330,17 +335,17 @@ impl<ExpectedT, MatcherT: Into<StrMatcher<ExpectedT>>> StrMatcherConfigurator<Ex
         }
     }
 
-    fn ignoring_outer_whitespace(self) -> StrMatcher<ExpectedT> {
+    fn ignoring_outer_whitespace(self) -> StrMatcher<ActualT, ExpectedT> {
         let existing = self.into();
         StrMatcher { configuration: existing.configuration.ignoring_outer_whitespace(), ..existing }
     }
 
-    fn ignoring_ascii_case(self) -> StrMatcher<ExpectedT> {
+    fn ignoring_ascii_case(self) -> StrMatcher<ActualT, ExpectedT> {
         let existing = self.into();
         StrMatcher { configuration: existing.configuration.ignoring_ascii_case(), ..existing }
     }
 
-    fn times(self, times: impl Matcher<usize> + 'static) -> StrMatcher<ExpectedT> {
+    fn times(self, times: impl Matcher + 'static) -> StrMatcher<ActualT, ExpectedT> {
         let existing = self.into();
         if !matches!(existing.configuration.mode, MatchMode::Contains) {
             panic!("The times() configurator is only meaningful with contains_substring().");
@@ -349,19 +354,19 @@ impl<ExpectedT, MatcherT: Into<StrMatcher<ExpectedT>>> StrMatcherConfigurator<Ex
     }
 }
 
-impl<T: Deref<Target = str>> From<EqMatcher<T>> for StrMatcher<T> {
-    fn from(value: EqMatcher<T>) -> Self {
+impl<A: ?Sized, T: Deref<Target = str>> From<EqMatcher<A, T>> for StrMatcher<A, T> {
+    fn from(value: EqMatcher<A, T>) -> Self {
         Self::with_default_config(value.expected)
     }
 }
 
-impl<T> StrMatcher<T> {
+impl<A: ?Sized, T> StrMatcher<A, T> {
     /// Returns a [`StrMatcher`] with a default configuration to match against
     /// the given expected value.
     ///
     /// This default configuration is sensitive to whitespace and case.
     fn with_default_config(expected: T) -> Self {
-        Self { expected, configuration: Default::default() }
+        Self { expected, configuration: Default::default(), phantom: Default::default() }
     }
 }
 
@@ -377,7 +382,7 @@ struct Configuration {
     ignore_leading_whitespace: bool,
     ignore_trailing_whitespace: bool,
     case_policy: CasePolicy,
-    times: Option<Box<dyn Matcher<usize>>>,
+    times: Option<Box<dyn Matcher<ActualT<'static> = usize>>>,
 }
 
 #[derive(Default, Clone)]
@@ -504,7 +509,7 @@ impl Configuration {
         Self { case_policy: CasePolicy::IgnoreAscii, ..self }
     }
 
-    fn times(self, times: impl Matcher<usize> + 'static) -> Self {
+    fn times(self, times: impl Matcher<ActualT<'static> = usize> + 'static) -> Self {
         Self { times: Some(Box::new(times)), ..self }
     }
 }

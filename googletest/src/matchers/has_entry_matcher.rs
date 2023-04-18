@@ -18,6 +18,7 @@ use googletest::*;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
+use std::marker::PhantomData;
 
 /// Matches a HashMap containing the given `key` whose value is matched by the
 /// matcher `inner`.
@@ -62,20 +63,21 @@ use std::hash::Hash;
 /// However, `has_entry` will offer somewhat better diagnostic messages in the
 /// case of assertion failure. And it avoid the extra allocation hidden in the
 /// code above.
-pub fn has_entry<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ValueT>>(
+pub fn has_entry<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher>(
     key: KeyT,
     inner: MatcherT,
-) -> impl Matcher<HashMap<KeyT, ValueT>> {
-    HasEntryMatcher { key, inner }
+) -> impl Matcher {
+    HasEntryMatcher { key, inner, phantom: Default::default() }
 }
 
-struct HasEntryMatcher<KeyT, MatcherT> {
+struct HasEntryMatcher<KeyT, ValueT, MatcherT> {
     key: KeyT,
     inner: MatcherT,
+    phantom: PhantomData<ValueT>,
 }
 
-impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ValueT>>
-    Matcher<HashMap<KeyT, ValueT>> for HasEntryMatcher<KeyT, MatcherT>
+impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher> Matcher
+    for HasEntryMatcher<KeyT, ValueT, MatcherT>
 {
     fn matches(&self, actual: &HashMap<KeyT, ValueT>) -> MatcherResult {
         if let Some(value) = actual.get(&self.key) {

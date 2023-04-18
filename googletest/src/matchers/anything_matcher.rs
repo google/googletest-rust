@@ -15,7 +15,7 @@
 use crate::matcher::{Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches anything. This matcher always succeeds.
 ///
@@ -31,13 +31,15 @@ use std::fmt::Debug;
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn anything<T: Debug + ?Sized>() -> impl Matcher<T> {
-    Anything {}
+pub fn anything<T: Debug + ?Sized>() -> impl Matcher {
+    Anything { phantom: Default::default() }
 }
 
-struct Anything {}
+struct Anything<T: ?Sized> {
+    phantom: PhantomData<T>,
+}
 
-impl<T: Debug + ?Sized> Matcher<T> for Anything {
+impl<T: Debug + ?Sized> Matcher for Anything<T> {
     fn matches(&self, _: &T) -> MatcherResult {
         MatcherResult::Matches
     }

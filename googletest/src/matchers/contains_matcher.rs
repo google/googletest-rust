@@ -15,7 +15,7 @@
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches an iterable type whose elements contain a value matched by `inner`.
 ///
@@ -42,16 +42,17 @@ use std::fmt::Debug;
 /// # should_fail_1().unwrap_err();
 /// # should_fail_2().unwrap_err();
 /// ```
-pub fn contains<InnerMatcherT>(inner: InnerMatcherT) -> ContainsMatcher<InnerMatcherT> {
-    ContainsMatcher { inner, count: None }
+pub fn contains<T, InnerMatcherT>(inner: InnerMatcherT) -> ContainsMatcher<T, InnerMatcherT> {
+    ContainsMatcher { inner, count: None, phantom: Default::default() }
 }
 
-pub struct ContainsMatcher<InnerMatcherT> {
+pub struct ContainsMatcher<T, InnerMatcherT> {
     inner: InnerMatcherT,
-    count: Option<Box<dyn Matcher<usize>>>,
+    count: Option<Box<dyn Matcher<ActualT<'static> = usize>>>,
+    phantom: PhantomData<T>,
 }
 
-impl<InnerMatcherT> ContainsMatcher<InnerMatcherT> {
+impl<T, InnerMatcherT> ContainsMatcher<T, InnerMatcherT> {
     /// Configures this instance to match containers which contain a number of
     /// matching items matched by `count`.
     ///
@@ -64,7 +65,7 @@ impl<InnerMatcherT> ContainsMatcher<InnerMatcherT> {
     ///
     /// One can also use `times(eq(0))` to test for the *absence* of an item
     /// matching the expected value.
-    pub fn times(mut self, count: impl Matcher<usize> + 'static) -> Self {
+    pub fn times(mut self, count: impl Matcher<ActualT<'static> = usize> + 'static) -> Self {
         self.count = Some(Box::new(count));
         self
     }
@@ -80,8 +81,8 @@ impl<InnerMatcherT> ContainsMatcher<InnerMatcherT> {
 //  because val is dropped before matcher but the trait bound requires that
 //  the argument to matches outlive the matcher. It works fine if one defines
 //  val before matcher.
-impl<T: Debug, InnerMatcherT: Matcher<T>, ContainerT: Debug> Matcher<ContainerT>
-    for ContainsMatcher<InnerMatcherT>
+impl<T: Debug, InnerMatcherT: Matcher, ContainerT: Debug> Matcher
+    for ContainsMatcher<ContainerT, InnerMatcherT>
 where
     for<'a> &'a ContainerT: IntoIterator<Item = &'a T>,
 {
@@ -134,11 +135,11 @@ where
     }
 }
 
-impl<InnerMatcherT> ContainsMatcher<InnerMatcherT> {
+impl<ActualT, InnerMatcherT> ContainsMatcher<ActualT, InnerMatcherT> {
     fn count_matches<T: Debug, ContainerT>(&self, actual: &ContainerT) -> usize
     where
-        for<'a> &'a ContainerT: IntoIterator<Item = &'a T>,
-        InnerMatcherT: Matcher<T>,
+        for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
+        InnerMatcherT: Matcher,
     {
         let mut count = 0;
         for v in actual.into_iter() {

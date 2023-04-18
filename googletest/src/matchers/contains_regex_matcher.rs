@@ -17,6 +17,7 @@ use crate::matcher::{Matcher, MatcherResult};
 use googletest::*;
 use regex::Regex;
 use std::fmt::Debug;
+use std::marker::PhantomData;
 use std::ops::Deref;
 
 /// Matches a string containing a substring which matches the given regular
@@ -52,8 +53,13 @@ use std::ops::Deref;
 // compiler treats it as a Matcher<str> only and the code
 //   verify_that!("Some value".to_string(), contains_regex(".*value"))?;
 // doesn't compile.
-pub fn contains_regex<PatternT: Deref<Target = str>>(pattern: PatternT) -> ContainsRegexMatcher {
-    ContainsRegexMatcher { regex: Regex::new(pattern.deref()).unwrap() }
+pub fn contains_regex<ActualT, PatternT: Deref<Target = str>>(
+    pattern: PatternT,
+) -> ContainsRegexMatcher<ActualT> {
+    ContainsRegexMatcher {
+        regex: Regex::new(pattern.deref()).unwrap(),
+        phantom: Default::default(),
+    }
 }
 
 /// A matcher matching a string-like type containing a substring matching a
@@ -61,11 +67,12 @@ pub fn contains_regex<PatternT: Deref<Target = str>>(pattern: PatternT) -> Conta
 ///
 /// Intended only to be used from the function [`contains_regex`] only.
 /// Should not be referenced by code outside this library.
-pub struct ContainsRegexMatcher {
+pub struct ContainsRegexMatcher<ActualT: ?Sized> {
     regex: Regex,
+    phantom: PhantomData<ActualT>,
 }
 
-impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher<ActualT> for ContainsRegexMatcher {
+impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher for ContainsRegexMatcher<ActualT> {
     fn matches(&self, actual: &ActualT) -> MatcherResult {
         self.regex.is_match(actual.as_ref()).into()
     }

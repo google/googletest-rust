@@ -19,7 +19,7 @@ use crate::matchers::count_elements::count_elements;
 use count_elements::count_elements;
 #[cfg(google3)]
 use googletest::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a container whose size matches `expected`.
 ///
@@ -51,18 +51,19 @@ use std::fmt::Debug;
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn size<T: Debug + ?Sized, E: Matcher<usize>>(expected: E) -> impl Matcher<T>
+pub fn size<T: Debug + ?Sized, E: Matcher>(expected: E) -> impl Matcher
 where
     for<'b> &'b T: IntoIterator,
 {
-    SizeMatcher { expected }
+    SizeMatcher { expected, phantom: Default::default() }
 }
 
-struct SizeMatcher<E> {
+struct SizeMatcher<T: ?Sized, E> {
     expected: E,
+    phantom: PhantomData<T>,
 }
 
-impl<T: Debug + ?Sized, E: Matcher<usize>> Matcher<T> for SizeMatcher<E>
+impl<T: Debug + ?Sized, E: Matcher> Matcher for SizeMatcher<T, E>
 where
     for<'b> &'b T: IntoIterator,
 {
@@ -182,8 +183,8 @@ mod tests {
 
     #[test]
     fn size_matcher_explain_match() -> Result<()> {
-        struct TestMatcher;
-        impl<T: Debug> Matcher<T> for TestMatcher {
+        struct TestMatcher<T>(PhantomData<T>);
+        impl<T: Debug> Matcher for TestMatcher<T> {
             fn matches(&self, _: &T) -> MatcherResult {
                 false.into()
             }
@@ -197,7 +198,7 @@ mod tests {
             }
         }
         verify_that!(
-            size(TestMatcher {}).explain_match(&[1, 2, 3]),
+            size(TestMatcher(Default::default())).explain_match(&[1, 2, 3]),
             displays_as(eq("which has size 3, called explain_match"))
         )
     }

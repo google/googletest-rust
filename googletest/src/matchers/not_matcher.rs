@@ -15,7 +15,7 @@
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches the actual value exactly when the inner matcher does _not_ match.
 ///
@@ -32,15 +32,16 @@ use std::fmt::Debug;
 /// # should_pass().unwrap();
 /// # should_fail().unwrap_err();
 /// ```
-pub fn not<T: Debug, InnerMatcherT: Matcher<T>>(inner: InnerMatcherT) -> impl Matcher<T> {
-    NotMatcher { inner }
+pub fn not<T: Debug, InnerMatcherT: Matcher>(inner: InnerMatcherT) -> impl Matcher {
+    NotMatcher { inner, phantom: Default::default() }
 }
 
-struct NotMatcher<InnerMatcherT> {
+struct NotMatcher<T, InnerMatcherT> {
     inner: InnerMatcherT,
+    phantom: PhantomData<T>,
 }
 
-impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<T> for NotMatcher<InnerMatcherT> {
+impl<T: Debug, InnerMatcherT: Matcher> Matcher for NotMatcher<T, InnerMatcherT> {
     fn matches(&self, actual: &T) -> MatcherResult {
         match self.inner.matches(actual) {
             MatcherResult::Matches => MatcherResult::DoesNotMatch,

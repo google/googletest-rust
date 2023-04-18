@@ -15,7 +15,7 @@
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches an `Option` containing a value matched by `inner`.
 ///
@@ -37,15 +37,16 @@ use std::fmt::Debug;
 /// # should_fail_1().unwrap_err();
 /// # should_fail_2().unwrap_err();
 /// ```
-pub fn some<T: Debug>(inner: impl Matcher<T>) -> impl Matcher<Option<T>> {
-    SomeMatcher { inner }
+pub fn some<T: Debug>(inner: impl Matcher) -> impl Matcher {
+    SomeMatcher { inner, phantom: Default::default() }
 }
 
-struct SomeMatcher<InnerMatcherT> {
+struct SomeMatcher<T, InnerMatcherT> {
     inner: InnerMatcherT,
+    phantom: PhantomData<T>,
 }
 
-impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<Option<T>> for SomeMatcher<InnerMatcherT> {
+impl<T: Debug, InnerMatcherT: Matcher> Matcher for SomeMatcher<T, InnerMatcherT> {
     fn matches(&self, actual: &Option<T>) -> MatcherResult {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::DoesNotMatch)
     }

@@ -16,6 +16,7 @@ use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
 use std::fmt::Debug;
+use std::marker::PhantomData;
 use std::ops::Deref;
 
 /// Matches a (smart) pointer pointing to a value matched by the [`Matcher`]
@@ -32,23 +33,24 @@ use std::ops::Deref;
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn points_to<ExpectedT, MatcherT, ActualT>(expected: MatcherT) -> impl Matcher<ActualT>
+pub fn points_to<ExpectedT, MatcherT, ActualT>(expected: MatcherT) -> impl Matcher
 where
     ExpectedT: Debug,
-    MatcherT: Matcher<ExpectedT>,
+    MatcherT: Matcher,
     ActualT: Deref<Target = ExpectedT> + Debug + ?Sized,
 {
-    PointsToMatcher { expected }
+    PointsToMatcher { expected, phantom: Default::default() }
 }
 
-struct PointsToMatcher<MatcherT> {
+struct PointsToMatcher<ActualT: ?Sized, MatcherT> {
     expected: MatcherT,
+    phantom: PhantomData<ActualT>,
 }
 
-impl<ExpectedT, MatcherT, ActualT> Matcher<ActualT> for PointsToMatcher<MatcherT>
+impl<ExpectedT, MatcherT, ActualT> Matcher for PointsToMatcher<ActualT, MatcherT>
 where
     ExpectedT: Debug,
-    MatcherT: Matcher<ExpectedT>,
+    MatcherT: Matcher,
     ActualT: Deref<Target = ExpectedT> + Debug + ?Sized,
 {
     fn matches(&self, actual: &ActualT) -> MatcherResult {

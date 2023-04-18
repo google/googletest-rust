@@ -156,7 +156,7 @@ pub mod internal {
     use crate::matchers::zipped_iterator::zip;
     #[cfg(google3)]
     use description::Description;
-    use std::fmt::Debug;
+    use std::{fmt::Debug, marker::PhantomData};
     #[cfg(google3)]
     use zipped_iterator::zip;
 
@@ -164,18 +164,19 @@ pub mod internal {
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub struct PointwiseMatcher<MatcherT> {
+    pub struct PointwiseMatcher<ContainerT: ?Sized, MatcherT> {
         matchers: Vec<MatcherT>,
+        phantom: PhantomData<ContainerT>,
     }
 
-    impl<MatcherT> PointwiseMatcher<MatcherT> {
+    impl<ContainerT: ?Sized, MatcherT> PointwiseMatcher<ContainerT, MatcherT> {
         pub fn new(matchers: Vec<MatcherT>) -> Self {
-            Self { matchers }
+            Self { matchers, phantom: Default::default() }
         }
     }
 
-    impl<T: Debug, MatcherT: Matcher<T>, ContainerT: ?Sized + Debug> Matcher<ContainerT>
-        for PointwiseMatcher<MatcherT>
+    impl<T: Debug, MatcherT: Matcher, ContainerT: ?Sized + Debug> Matcher
+        for PointwiseMatcher<ContainerT, MatcherT>
     where
         for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
     {
