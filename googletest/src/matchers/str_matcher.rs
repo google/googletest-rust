@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::matcher::{Matcher, MatcherResult};
 #[cfg(not(google3))]
-use crate as googletest;
+use crate::matchers::eq_matcher;
 use eq_matcher::EqMatcher;
-use googletest::matcher::{Matcher, MatcherResult};
-#[cfg(not(google3))]
-use googletest::matchers::eq_matcher;
+#[cfg(google3)]
+use googletest::*;
 use std::borrow::Cow;
 use std::fmt::Debug;
 use std::ops::Deref;
@@ -410,12 +410,13 @@ impl Configuration {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{contains_substring, ends_with, starts_with, StrMatcher, StrMatcherConfigurator};
     #[cfg(not(google3))]
-    use crate as googletest;
-    #[cfg(not(google3))]
-    use googletest::matchers;
-    use googletest::{verify_that, Result};
+    use crate::matchers;
+    use crate::{
+        matcher::{Matcher, MatcherResult},
+        verify_that, Result,
+    };
     use matchers::{eq, gt, not};
 
     #[test]

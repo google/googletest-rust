@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
-use crate as googletest;
-use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+#[cfg(google3)]
+use googletest::*;
 use std::fmt::Debug;
 
 /// Extension trait providing the [`and`][AndMatcherExt::and] method.
@@ -76,12 +76,10 @@ impl<T: Debug, M1: Matcher<T>, M2: Matcher<T>> Matcher<T> for ConjunctionMatcher
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::AndMatcherExt;
     #[cfg(not(google3))]
-    use crate as googletest;
-    #[cfg(not(google3))]
-    use googletest::{field, matchers};
-    use googletest::{verify_that, Result};
+    use crate::{field, matchers};
+    use crate::{verify_that, Result};
     #[cfg(google3)]
     use matchers::field;
     use matchers::{anything, contains_substring, displays_as, eq, err, not};

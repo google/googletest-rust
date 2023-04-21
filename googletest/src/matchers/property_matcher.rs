@@ -12,6 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// There are no visible documentation elements in this module; the declarative
+// macro is documented at the top level.
+#![doc(hidden)]
+
+#[cfg(google3)]
+use googletest::*;
+
 /// Matches an object which, upon calling the given method on it with the given
 /// arguments, produces a value matched by the given inner matcher.
 ///
@@ -100,9 +107,7 @@ macro_rules! property_internal {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
-    #[cfg(not(google3))]
-    use crate as googletest;
-    use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
+    use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
     use std::fmt::Debug;
 
     /// **For internal use only. API stablility is not guaranteed!**

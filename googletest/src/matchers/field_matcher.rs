@@ -16,6 +16,9 @@
 // macro is documented at the top level.
 #![doc(hidden)]
 
+#[cfg(google3)]
+use googletest::*;
+
 /// Matches a structure or enum with a given field which is matched by a given
 /// matcher.
 ///
@@ -109,9 +112,7 @@ macro_rules! field_internal {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
-    #[cfg(not(google3))]
-    use crate as googletest;
-    use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
+    use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
     use std::fmt::Debug;
 
     /// Creates a matcher to verify a specific field of the actual struct using

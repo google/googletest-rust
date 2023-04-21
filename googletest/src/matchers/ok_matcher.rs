@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
-use crate as googletest;
-use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+#[cfg(google3)]
+use googletest::*;
 use std::fmt::Debug;
 
 /// Matches a `Result` containing `Ok` with a value matched by `inner`.
@@ -24,7 +24,7 @@ use std::fmt::Debug;
 /// verify_that!(Err("An error"), ok(eq("An error")))?;   // Fails
 /// verify_that!(Ok("Some value"), ok(eq("Some other value")))?;   // Fails
 /// ```
-pub fn ok<T: Debug, E: Debug>(inner: impl Matcher<T>) -> impl Matcher<Result<T, E>> {
+pub fn ok<T: Debug, E: Debug>(inner: impl Matcher<T>) -> impl Matcher<std::result::Result<T, E>> {
     OkMatcher { inner }
 }
 
@@ -32,14 +32,14 @@ struct OkMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
 }
 
-impl<T: Debug, E: Debug, InnerMatcherT: Matcher<T>> Matcher<Result<T, E>>
+impl<T: Debug, E: Debug, InnerMatcherT: Matcher<T>> Matcher<std::result::Result<T, E>>
     for OkMatcher<InnerMatcherT>
 {
-    fn matches(&self, actual: &Result<T, E>) -> MatcherResult {
+    fn matches(&self, actual: &std::result::Result<T, E>) -> MatcherResult {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::DoesNotMatch)
     }
 
-    fn explain_match(&self, actual: &Result<T, E>) -> MatchExplanation {
+    fn explain_match(&self, actual: &std::result::Result<T, E>) -> MatchExplanation {
         match actual {
             Ok(o) => MatchExplanation::create(format!(
                 "which is a success {}",
@@ -69,12 +69,13 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<T>> Matcher<Result<T, E>>
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::ok;
     #[cfg(not(google3))]
-    use crate as googletest;
-    #[cfg(not(google3))]
-    use googletest::matchers;
-    use googletest::{verify_that, Result};
+    use crate::matchers;
+    use crate::{
+        matcher::{Matcher, MatcherResult},
+        verify_that, Result,
+    };
     use matchers::{contains_substring, displays_as, eq, err};
 
     #[test]

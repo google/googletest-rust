@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
-use crate as googletest;
-use googletest::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
+#[cfg(google3)]
+use googletest::*;
 use regex::Regex;
 use std::fmt::Debug;
 use std::ops::Deref;
@@ -71,12 +71,13 @@ impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher<ActualT> for ContainsRegexMat
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{contains_regex, ContainsRegexMatcher};
     #[cfg(not(google3))]
-    use crate as googletest;
-    #[cfg(not(google3))]
-    use googletest::matchers;
-    use googletest::{matcher::Matcher, verify_that, Result};
+    use crate::matchers;
+    use crate::{
+        matcher::{Matcher, MatcherResult},
+        verify_that, Result,
+    };
     use matchers::eq;
 
     #[test]

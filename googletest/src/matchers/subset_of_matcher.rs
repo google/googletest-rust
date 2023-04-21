@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
-use crate as googletest;
-use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+#[cfg(google3)]
+use googletest::*;
 use std::fmt::Debug;
 
 /// Matches a container all of whose items are in the given container
@@ -123,12 +123,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::subset_of;
     #[cfg(not(google3))]
-    use crate as googletest;
-    #[cfg(not(google3))]
-    use googletest::matchers;
-    use googletest::{verify_that, Result};
+    use crate::matchers;
+    use crate::{verify_that, Result};
     use matchers::{contains_substring, displays_as, err, not};
     use std::collections::HashSet;
 

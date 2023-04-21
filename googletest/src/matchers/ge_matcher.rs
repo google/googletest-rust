@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
-use crate as googletest;
-use googletest::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
+#[cfg(google3)]
+use googletest::*;
 use std::fmt::Debug;
 
 /// Matches a value greater than or equal to (in the sense of `>=`) `expected`.
@@ -73,12 +73,13 @@ impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher<ActualT>
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::ge;
     #[cfg(not(google3))]
-    use crate as googletest;
-    #[cfg(not(google3))]
-    use googletest::matchers;
-    use googletest::{verify_that, Result};
+    use crate::matchers;
+    use crate::{
+        matcher::{Matcher, MatcherResult},
+        verify_that, Result,
+    };
     use matchers::{contains_substring, displays_as, eq, err};
     use std::ffi::OsString;
 

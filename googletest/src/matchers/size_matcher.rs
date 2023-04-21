@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
-use crate as googletest;
+use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
 #[cfg(not(google3))]
 use crate::matchers::count_elements::count_elements;
 #[cfg(google3)]
 use count_elements::count_elements;
-use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
+#[cfg(google3)]
+use googletest::*;
 use std::fmt::Debug;
 
 /// Matches a container whose size matches `expected`.
@@ -83,17 +83,19 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::size;
     #[cfg(not(google3))]
-    use crate as googletest;
-    #[cfg(not(google3))]
-    use googletest::matchers;
-    use googletest::{verify_that, Result};
+    use crate::matchers;
+    use crate::{
+        matcher::{MatchExplanation, Matcher, MatcherResult},
+        verify_that, Result,
+    };
     use indoc::indoc;
     use matchers::{contains_substring, displays_as, eq, err};
     use std::collections::{
         BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque,
     };
+    use std::fmt::Debug;
 
     #[test]
     fn size_matcher_match_vec() -> Result<()> {

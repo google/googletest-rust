@@ -16,6 +16,9 @@
 // macro is documented at the top level.
 #![doc(hidden)]
 
+#[cfg(google3)]
+use googletest::*;
+
 /// Generates a matcher which matches a container each of whose elements match
 /// the given matcher name applied respectively to each element of the given
 /// container.
@@ -126,15 +129,13 @@ macro_rules! pointwise {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
+    use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
     #[cfg(not(google3))]
-    use crate as googletest;
+    use crate::matchers::description::Description;
     #[cfg(not(google3))]
     use crate::matchers::zipped_iterator::zip;
     #[cfg(google3)]
     use description::Description;
-    use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
-    #[cfg(not(google3))]
-    use googletest::matchers::description::Description;
     use std::fmt::Debug;
     #[cfg(google3)]
     use zipped_iterator::zip;

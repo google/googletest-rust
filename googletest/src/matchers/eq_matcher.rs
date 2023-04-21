@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
-use crate as googletest;
-use googletest::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
+#[cfg(google3)]
+use googletest::*;
 use std::fmt::Debug;
 
 /// Matches a value equal (in the sense of `==`) to `expected`.
@@ -79,10 +79,8 @@ impl<A: Debug, T: PartialEq<A> + Debug> Matcher<A> for EqMatcher<T> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    #[cfg(not(google3))]
-    use crate as googletest;
-    use googletest::{verify_that, Result};
+    use super::eq;
+    use crate::{verify_that, Result};
 
     #[test]
     fn eq_matches_string_reference_with_string_reference() -> Result<()> {

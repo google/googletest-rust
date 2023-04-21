@@ -16,6 +16,9 @@
 // macro is documented at the top level.
 #![doc(hidden)]
 
+#[cfg(google3)]
+use googletest::*;
+
 /// Matches a container's elements to each matcher in order.
 ///
 /// This macro produces a matcher against a container. It takes as arguments a
@@ -62,15 +65,13 @@ macro_rules! elements_are {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
+    use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
     #[cfg(not(google3))]
-    use crate as googletest;
+    use crate::matchers::description::Description;
     #[cfg(not(google3))]
     use crate::matchers::zipped_iterator::zip;
     #[cfg(google3)]
     use description::Description;
-    use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
-    #[cfg(not(google3))]
-    use googletest::matchers::description::Description;
     use std::fmt::Debug;
     #[cfg(google3)]
     use zipped_iterator::zip;

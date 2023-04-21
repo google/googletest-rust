@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
-use crate as googletest;
-use googletest::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
+#[cfg(google3)]
+use googletest::*;
 use std::fmt::Debug;
 
 /// Creates a matcher based on the predicate provided.
@@ -143,12 +143,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::predicate;
     #[cfg(not(google3))]
-    use crate as googletest;
-    #[cfg(not(google3))]
-    use googletest::matchers;
-    use googletest::{test, verify_that, Result};
+    use crate::matchers;
+    use crate::{matcher::Matcher, verify_that, Result};
     use matchers::{displays_as, eq};
 
     // Simple matcher with a description

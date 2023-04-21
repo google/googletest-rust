@@ -16,6 +16,9 @@
 // macro is documented at the top level.
 #![doc(hidden)]
 
+#[cfg(google3)]
+use googletest::*;
+
 /// Matches a container whose elements in any order have a 1:1 correspondence
 /// with the provided element matchers.
 ///
@@ -297,17 +300,15 @@ macro_rules! is_contained_in {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
-    #[cfg(not(google3))]
-    use crate as googletest;
+    use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
     #[cfg(not(google3))]
     use crate::matchers::count_elements::count_elements;
+    #[cfg(not(google3))]
+    use crate::matchers::description::Description;
     #[cfg(google3)]
     use count_elements::count_elements;
     #[cfg(google3)]
     use description::Description;
-    use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
-    #[cfg(not(google3))]
-    use googletest::matchers::description::Description;
     use std::collections::HashSet;
     use std::fmt::{Debug, Display};
 

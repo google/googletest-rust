@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
-use crate as googletest;
-use googletest::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
+#[cfg(google3)]
+use googletest::*;
 use std::fmt::Debug;
 
 /// Matches anything. This matcher always succeeds.
@@ -47,12 +47,10 @@ impl<T: Debug + ?Sized> Matcher<T> for Anything {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::anything;
     #[cfg(not(google3))]
-    use crate as googletest;
-    #[cfg(not(google3))]
-    use googletest::matchers;
-    use googletest::{verify_that, Result};
+    use crate::matchers;
+    use crate::{verify_that, Result};
     use matchers::some;
 
     #[test]

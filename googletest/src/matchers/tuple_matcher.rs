@@ -16,6 +16,9 @@
 // macro is documented at the top level.
 #![doc(hidden)]
 
+#[cfg(google3)]
+use googletest::*;
+
 /// Matches a tuple whose elements are matched by each of the given matchers.
 ///
 /// This takes as arguments sequence of [`Matcher`][crate::matcher::Matcher]
@@ -278,9 +281,7 @@ macro_rules! tuple_internal {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
-    #[cfg(not(google3))]
-    use crate as googletest;
-    use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
+    use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
     use std::fmt::{Debug, Write};
 
     /// Replaces the first expression with the second at compile time.

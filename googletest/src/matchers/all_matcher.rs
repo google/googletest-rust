@@ -16,6 +16,9 @@
 // macro is documented at the top level.
 #![doc(hidden)]
 
+#[cfg(google3)]
+use googletest::*;
+
 /// Matches a value which all of the given matchers match.
 ///
 /// Each argument is a [`Matcher`][crate::matcher::Matcher] which matches
@@ -53,17 +56,15 @@ macro_rules! all {
 /// For internal use only. API stablility is not guaranteed!
 #[doc(hidden)]
 pub mod internal {
+    use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
     #[cfg(not(google3))]
-    use crate as googletest;
+    use crate::matchers::anything;
+    #[cfg(not(google3))]
+    use crate::matchers::description::Description;
     #[cfg(google3)]
     use anything_matcher::anything;
     #[cfg(google3)]
     use description::Description;
-    use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
-    #[cfg(not(google3))]
-    use googletest::matchers::anything;
-    #[cfg(not(google3))]
-    use googletest::matchers::description::Description;
     use std::fmt::Debug;
 
     /// A matcher which matches an input value matched by all matchers in the
@@ -145,12 +146,10 @@ pub mod internal {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::internal;
     #[cfg(not(google3))]
-    use crate as googletest;
-    #[cfg(not(google3))]
-    use googletest::matchers;
-    use googletest::{
+    use crate::matchers;
+    use crate::{
         matcher::{Matcher, MatcherResult},
         verify_that, Result,
     };

@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
-use crate as googletest;
-use googletest::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
+#[cfg(google3)]
+use googletest::*;
 use num_traits::{Float, FloatConst};
 use std::fmt::Debug;
 
@@ -145,12 +145,13 @@ impl<T: Debug + Float> Matcher<T> for NearMatcher<T> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{approx_eq, near};
     #[cfg(not(google3))]
-    use crate as googletest;
-    #[cfg(not(google3))]
-    use googletest::matchers;
-    use googletest::{verify_that, Result};
+    use crate::matchers;
+    use crate::{
+        matcher::{Matcher, MatcherResult},
+        verify_that, Result,
+    };
     use matchers::{eq, not};
 
     #[test]
@@ -259,13 +260,13 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[test]
+    #[::core::prelude::v1::test]
     #[should_panic]
     fn panics_if_max_abs_error_is_nan() {
         near(0.0, f64::NAN);
     }
 
-    #[test]
+    #[::core::prelude::v1::test]
     #[should_panic]
     fn panics_if_tolerance_is_negative() {
         near(0.0, -1.0);

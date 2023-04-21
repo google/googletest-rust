@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
-use crate as googletest;
-use googletest::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+#[cfg(google3)]
+use googletest::*;
 use std::fmt::Debug;
 
 /// Matches an iterable type whose elements contain a value matched by `inner`.
@@ -139,12 +139,13 @@ impl<InnerMatcherT> ContainsMatcher<InnerMatcherT> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{contains, ContainsMatcher};
     #[cfg(not(google3))]
-    use crate as googletest;
-    #[cfg(not(google3))]
-    use googletest::matchers;
-    use googletest::{matcher::Matcher, verify_that, Result};
+    use crate::matchers;
+    use crate::{
+        matcher::{Matcher, MatcherResult},
+        verify_that, Result,
+    };
     use matchers::{displays_as, eq};
 
     #[test]
