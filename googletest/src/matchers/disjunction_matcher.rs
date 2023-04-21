@@ -22,7 +22,7 @@ pub trait OrMatcherExt<T: Debug>: Matcher<T> {
     /// Constructs a matcher that matches when at least one of `self` or `right`
     /// matches the input.
     ///
-    /// ```
+    /// ```ignore
     /// verify_that!(10, eq(2).or(ge(5)))?;  // Passes
     /// verify_that!(10, eq(2).or(eq(5)).or(ge(9)))?;  // Passes
     /// verify_that!(10, eq(2).or(ge(15)))?; // Fails

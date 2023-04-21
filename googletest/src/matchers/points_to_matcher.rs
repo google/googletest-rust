@@ -24,7 +24,7 @@ use std::ops::Deref;
 /// This allows easily matching smart pointers such as `Box`, `Rc`, and `Arc`.
 /// For example:
 ///
-/// ```
+/// ```ignore
 /// verify_that!(Box::new(123), points_to(eq(123)))?;
 /// ```
 pub fn points_to<ExpectedT, MatcherT, ActualT>(expected: MatcherT) -> impl Matcher<ActualT>

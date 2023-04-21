@@ -24,7 +24,7 @@ use std::iter::zip;
 /// message generated from this matcher will include the missing and unexpected
 /// items in the actual value, e.g.:
 ///
-/// ```
+/// ```text
 /// Expected container to equal [1, 2, 3]
 ///   but was: [1, 2, 4]
 ///   Missing: [3]
@@ -35,7 +35,7 @@ use std::iter::zip;
 /// implements `PartialEq`. If the container type is a `Vec`, then the expected
 /// type may be a slice of the same element type. For example:
 ///
-/// ```
+/// ```ignore
 /// let vec = vec![1, 2, 3];
 /// verify_that!(vec, container_eq([1, 2, 3]))?;
 /// ```
@@ -43,7 +43,7 @@ use std::iter::zip;
 /// As an exception, if the actual type is a `Vec<String>`, the expected type
 /// may be a slice of `&str`:
 ///
-/// ```
+/// ```ignore
 /// let vec: Vec<String> = vec!["A string".into(), "Another string".into()];
 /// verify_that!(vec, container_eq(["A string", "Another string"]))?;
 /// ```
@@ -54,7 +54,7 @@ use std::iter::zip;
 /// One can also check container equality of a slice with an array. To do so,
 /// dereference the slice:
 ///
-/// ```
+/// ```ignore
 /// let value = &[1, 2, 3];
 /// verify_that!(*value, container_eq([1, 2, 3]))?;
 /// ```

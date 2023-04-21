@@ -30,9 +30,6 @@ authors = [
   "Martin Geisler <mgeisler@google.com>",
 ]
 
-[lib]
-doctest = false
-
 [dependencies]
 googletest_macro = { path = "../googletest_macro", version = "0.5.0" }
 num-traits = "0.2.15"

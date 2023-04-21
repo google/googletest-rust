@@ -19,7 +19,7 @@ use std::fmt::Debug;
 
 /// Matches an `Option` containing a value matched by `inner`.
 ///
-/// ```
+/// ```ignore
 /// verify_that!(Some("Some value"), some(eq("Some value")))?;  // Passes
 /// verify_that!(None, some(eq("Some value")))?;   // Fails
 /// verify_that!(Some("Some value"), some(eq("Some other value")))?;   // Fails

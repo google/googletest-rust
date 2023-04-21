@@ -32,4 +32,3 @@ syn = {version = "2.0.10", features = ["full"]}
 [lib]
 name = "googletest_macro"
 proc-macro = true
-doctest = false

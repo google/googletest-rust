@@ -22,7 +22,7 @@ use std::fmt::Debug;
 /// This is useful to check if `actual` matches the specific structure (like
 /// `Some(...)`)  but without caring about the internal value.
 ///
-/// ```
+/// ```ignore
 /// let option = Some("Some value");
 /// verify_that!(option, some(anything()))?;
 /// ```

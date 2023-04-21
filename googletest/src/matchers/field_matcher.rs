@@ -29,7 +29,7 @@ use googletest::*;
 ///
 /// For example:
 ///
-/// ```
+/// ```ignore
 /// struct IntField {
 ///   int: i32
 /// }
@@ -38,7 +38,7 @@ use googletest::*;
 ///
 /// Tuple structs are also supported via the index syntax:
 ///
-/// ```
+/// ```ignore
 /// struct IntField(i32)
 /// verify_that!(IntField(32), field!(IntField.0, eq(32)))?;
 /// ```
@@ -46,7 +46,7 @@ use googletest::*;
 /// Enums are also supported, in which case only the specified variant is
 /// matched:
 ///
-/// ```
+/// ```ignore
 /// enum MyEnum {
 ///     A(i32),
 ///     B,
@@ -57,7 +57,7 @@ use googletest::*;
 ///
 /// The structure or enum may also be referenced from a separate module:
 ///
-/// ```
+/// ```ignore
 /// mod a_module {
 ///     struct AStruct(i32);
 /// }
@@ -66,7 +66,7 @@ use googletest::*;
 ///
 /// Nested structures are *not supported*, however:
 ///
-/// ```
+/// ```ignore
 /// struct InnerStruct(i32);
 /// struct OuterStruct {
 ///     inner: InnerStruct,

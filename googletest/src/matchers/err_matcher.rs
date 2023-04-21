@@ -19,7 +19,7 @@ use std::fmt::Debug;
 
 /// Matches a `Result` containing `Err` with a value matched by `inner`.
 ///
-/// ```
+/// ```ignore
 /// verify_that!(Err("Some error"), err(eq("Some error")))?;  // Passes
 /// verify_that!(Ok("A value"), err(eq("A value")))?;   // Fails
 /// verify_that!(Err("Some error"), err(eq("Some error value")))?;   // Fails

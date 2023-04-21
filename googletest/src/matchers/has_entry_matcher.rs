@@ -22,7 +22,7 @@ use std::hash::Hash;
 /// Matches a HashMap containing the given `key` whose value is matched by the
 /// matcher `inner`.
 ///
-/// ```
+/// ```ignore
 /// let value: HashMap<i32, i32> = HashMap::from([(0, 1), (1, -1)]);
 /// verify_that!(value, has_entry(0, eq(1)))?;  // Passes
 /// verify_that!(value, has_entry(1, gt(0)))?;  // Fails: value not matched
@@ -32,7 +32,7 @@ use std::hash::Hash;
 /// Note: One could obtain the same effect by collecting entries into a `Vec`
 /// and using `contains`:
 ///
-/// ```
+/// ```ignore
 /// let value: HashMap<i32, i32> = HashMap::from([(0, 1), (1, -1)]);
 /// verify_that!(value.into_iter().collect::<Vec<_>>(), contains(eq((0, 1))))?;
 /// ```

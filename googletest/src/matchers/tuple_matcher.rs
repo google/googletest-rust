@@ -25,7 +25,7 @@ use googletest::*;
 /// corresponding to the tuple against which it matches. Each matcher is
 /// applied to the corresponding tuple element.
 ///
-/// ```
+/// ```ignore
 /// verify_that((123, 456), tuple!(eq(123), eq(456)))?; // Passes
 /// verify_that((123, 456), tuple!(eq(123), eq(0)))?; // Fails: second matcher does not match
 /// ```
@@ -33,7 +33,7 @@ use googletest::*;
 /// Matchers must correspond to the actual tuple in count and type. Otherwise
 /// the test will fail to compile.
 ///
-/// ```
+/// ```ignore
 /// verify_that((123, 456), tuple!(eq(123)))?; // Does not compile: wrong tuple size
 /// verify_that((123, "A string"), tuple!(eq(123), eq(456)))?; // Does not compile: wrong type
 /// ```
@@ -42,7 +42,7 @@ use googletest::*;
 /// [`anything`][crate::matchers::anything] for fields which are not relevant
 /// for the test.
 ///
-/// ```
+/// ```ignore
 /// verify_that((123, 456), tuple!(eq(123), anything()))
 /// ```
 ///
@@ -185,9 +185,7 @@ macro_rules! tuple_internal {
         use $crate::internal::TupleMatcher7;
         #[cfg(not(google3))]
         use $crate::matchers::tuple_matcher::internal::TupleMatcher7;
-        TupleMatcher7(
-            $matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5, $matcher6,
-        )
+        TupleMatcher7($matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5, $matcher6)
     }};
 
     (
@@ -202,9 +200,7 @@ macro_rules! tuple_internal {
         use $crate::internal::TupleMatcher6;
         #[cfg(not(google3))]
         use $crate::matchers::tuple_matcher::internal::TupleMatcher6;
-        TupleMatcher6(
-            $matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5,
-        )
+        TupleMatcher6($matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5)
     }};
 
     (

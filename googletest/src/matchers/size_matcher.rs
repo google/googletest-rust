@@ -26,7 +26,7 @@ use std::fmt::Debug;
 /// This matches against a container over which one can iterate. This includes
 /// the standard Rust containers, arrays, and (when dereferenced) slices.
 ///
-/// ```
+/// ```ignore
 /// let array = [1,2,3];
 /// verify_that!(array, size(eq(3)))?;
 /// let vec = vec![1,2,3];
@@ -37,7 +37,7 @@ use std::fmt::Debug;
 ///
 /// The parameter `expected` can be any integer numeric matcher.
 ///
-/// ```
+/// ```ignore
 /// let vec = vec![1,2,3];
 /// verify_that!(vec, size(gt(1)))?;
 /// ```

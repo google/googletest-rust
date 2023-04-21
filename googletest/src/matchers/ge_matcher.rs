@@ -23,7 +23,7 @@ use std::fmt::Debug;
 /// comparable via the `PartialOrd` trait. Namely, `ActualT` must implement
 /// `PartialOrd<ExpectedT>`.
 ///
-/// ```
+/// ```ignore
 /// verify_that!(1, ge(0))?; // Passes
 /// verify_that!(0, ge(1))?; // Fails
 /// ```
@@ -32,12 +32,12 @@ use std::fmt::Debug;
 /// explicitly. This can be surprising when comparing integer types or
 /// references:
 ///
-/// ```
+/// ```ignore
 /// verify_that!(123u32, ge(0u64))?; // Does not compile
 /// verify_that!(123u32 as u64, ge(0u64))?; // Passes
 /// ```
 ///
-/// ```
+/// ```ignore
 /// let actual: &u32 = &2;
 /// let expected: u32 = 0;
 /// verify_that(actual, ge(expected))?; // Does not compile

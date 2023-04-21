@@ -26,7 +26,7 @@ use std::fmt::Debug;
 ///
 /// `T` can be any container such that `&T` implements `IntoIterator`.
 ///
-/// ```
+/// ```ignore
 /// let value: Vec<i32> = vec![1, 2, 3];
 /// verify_that!(value, each(gt(0)))?;  // Passes
 /// verify_that!(value, each(lt(2)))?;  // Fails: 2 and 3 are not less than 2
@@ -37,7 +37,7 @@ use std::fmt::Debug;
 ///
 /// One can also verify the contents of a slice by dereferencing it:
 ///
-/// ```
+/// ```ignore
 /// let value = &[1, 2, 3];
 /// verify_that!(*value, each(gt(0)))?;
 /// ```

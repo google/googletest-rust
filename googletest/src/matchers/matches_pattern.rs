@@ -25,7 +25,7 @@
 /// This can be used to match arbitrary combinations of fields on structures
 /// using arbitrary matchers:
 ///
-/// ```
+/// ```ignore
 /// struct MyStruct {
 ///     a_field: String,
 ///     another_field: String,
@@ -39,7 +39,7 @@
 ///
 /// It is not required to include all named fields in the specification:
 ///
-/// ```
+/// ```ignore
 /// struct MyStruct {
 ///     a_field: String,
 ///     another_field: String,
@@ -53,7 +53,7 @@
 ///
 /// One can use it recursively to match nested structures:
 ///
-/// ```
+/// ```ignore
 /// struct MyStruct {
 ///     a_nested_struct: MyInnerStruct,
 /// }
@@ -71,7 +71,7 @@
 ///
 /// One can use the alias [`pat`][crate::pat] to make this less verbose:
 ///
-/// ```
+/// ```ignore
 /// verify_that!(my_struct, matches_pattern!(MyStruct {
 ///     a_nested_struct: pat!(MyInnerStruct {
 ///         a_field: starts_with("Something"),
@@ -82,7 +82,7 @@
 /// In addition to fields, one can match on the outputs of methods
 /// ("properties"):
 ///
-/// ```
+/// ```ignore
 /// impl MyStruct {
 ///     fn get_a_field(&self) -> String {...}
 /// }
@@ -94,7 +94,7 @@
 ///
 /// These may also include extra parameters you pass in:
 ///
-/// ```
+/// ```ignore
 /// impl MyStruct {
 ///     fn append_to_a_field(&self, suffix: &str) -> String {...}
 /// }
@@ -106,7 +106,7 @@
 ///
 /// If the method returns a reference, precede it with the keyword `ref`:
 ///
-/// ```
+/// ```ignore
 /// impl MyStruct {
 ///     fn get_a_field_ref(&self) -> &String {...}
 /// }
@@ -122,7 +122,7 @@
 /// One can also match tuple structs with up to 10 fields. In this case, all
 /// fields must have matchers:
 ///
-/// ```
+/// ```ignore
 /// struct MyTupleStruct(String, String);
 ///
 /// verify_that!(
@@ -133,7 +133,7 @@
 ///
 /// One can also match enum values:
 ///
-/// ```
+/// ```ignore
 /// enum MyEnum {
 ///     A(u32),
 ///     B,

@@ -26,7 +26,7 @@ use googletest::*;
 /// property cannot be accessed through a field and must instead be
 /// extracted through a method call. For example:
 ///
-/// ```
+/// ```ignore
 /// pub struct InnerStruct {
 ///     // Some private fields
 /// }
@@ -40,7 +40,7 @@ use googletest::*;
 /// If the method returns a *reference*, then it must be preceded by the keyword
 /// `ref`:
 ///
-/// ```
+/// ```ignore
 /// impl InnerStruct {
 ///     pub fn get_foo(&self) -> &u32 {...}
 /// }
@@ -52,7 +52,7 @@ use googletest::*;
 ///
 /// The method may also take additional arguments:
 ///
-/// ```
+/// ```ignore
 /// impl InnerStruct {
 ///     pub fn add_to_foo(&self, a: u32) -> u32 {...}
 /// }

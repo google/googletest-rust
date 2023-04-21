@@ -27,7 +27,7 @@ use std::fmt::Debug;
 /// `max_abs_error` must be non-negative. The matcher panics on construction
 /// otherwise.
 ///
-/// ```
+/// ```ignore
 /// verify_that!(1.0, near(1.0, 0.1))?; // Passes
 /// verify_that!(1.01, near(1.0, 0.1))?; // Passes
 /// verify_that!(1.25, near(1.0, 0.25))?; // Passes
@@ -41,7 +41,7 @@ use std::fmt::Debug;
 /// floating point standard. Thus infinity is infinitely far away from any
 /// floating point value:
 ///
-/// ```
+/// ```ignore
 /// verify_that!(f64::INFINITY, near(0.0, f64::MAX))?; // Fails
 /// verify_that!(0.0, near(f64::INFINITY, f64::MAX))?; // Fails
 /// verify_that!(f64::INFINITY, near(f64::INFINITY, f64::MAX))?; // Fails
@@ -49,7 +49,7 @@ use std::fmt::Debug;
 ///
 /// Similarly, by default, `NaN` is infinitely far away from any value:
 ///
-/// ```
+/// ```ignore
 /// verify_that!(f64::NAN, near(0.0, f64::MAX))?; // Fails
 /// verify_that!(0.0, near(f64::NAN, f64::MAX))?; // Fails
 /// verify_that!(f64::NAN, near(f64::NAN, f64::MAX))?; // Fails
@@ -58,7 +58,7 @@ use std::fmt::Debug;
 /// To treat two `NaN` values as equal, use the method
 /// [`NearMatcher::nans_are_equal`].
 ///
-/// ```
+/// ```ignore
 /// verify_that!(f64::NAN, near(f64::NAN, f64::MAX).nans_are_equal())?; // Passes
 /// ```
 pub fn near<T: Debug + Float + Copy>(expected: T, max_abs_error: T) -> NearMatcher<T> {

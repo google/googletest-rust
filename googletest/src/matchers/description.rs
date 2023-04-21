@@ -22,7 +22,7 @@ use std::fmt::{Display, Formatter, Result};
 /// It provides simple operations to lazily format lists of strings.
 ///
 /// Usage:
-/// ```
+/// ```ignore
 /// let iter: impl Iterator<String> = ...
 /// format!("{}", iter.collect::<Description>().indent().bullet_list())
 /// ```
@@ -72,7 +72,7 @@ impl Description {
     /// Note that this will indent every lines inside each element.
     /// For instance:
     ///
-    /// ```rust
+    /// ```ignore
     /// let description = iter::once("A B C\nD E F".to_string()).collect::<Description>();
     /// verify_that!(description.indent(), displays_as(eq("  A B C\n  D E F")))
     /// ```
@@ -89,7 +89,7 @@ impl Description {
     ///
     /// For instance:
     ///
-    /// ```rust
+    /// ```ignore
     /// let description = iter::once("A B C\nD E F".to_string()).collect::<Description>();
     /// verify_that!(description.bullet_list(), displays_as(eq("* A B C\nD E F")))
     /// ```
@@ -106,7 +106,7 @@ impl Description {
     ///
     /// For instance:
     ///
-    /// ```rust
+    /// ```ignore
     /// let description = iter::once("A B C\nD E F".to_string()).collect::<Description>();
     /// verify_that!(description.indent(), displays_as(eq("  A B C\n  D E F")))
     /// ```

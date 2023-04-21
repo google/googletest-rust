@@ -25,14 +25,14 @@ use googletest::*;
 /// sequence of matchers each of which should respectively match the
 /// corresponding element of the actual value.
 ///
-/// ```
+/// ```ignore
 /// verify_that!(vec![1, 2, 3], elements_are![eq(1), anything(), gt(0).and(lt(123))])
 /// ```
 ///
 /// The actual value must be a container implementing [`IntoIterator`]. This
 /// includes standard containers, slices (when dereferenced) and arrays.
 ///
-/// ```
+/// ```ignore
 /// let vector = vec![1, 2, 3];
 /// let slice = vector.as_slice();
 /// verify_that!(*slice, elements_are![eq(1), anything(), gt(0).and(lt(123))])

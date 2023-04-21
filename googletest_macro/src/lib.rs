@@ -19,7 +19,7 @@ use syn::{parse_macro_input, Attribute, ItemFn, ReturnType};
 ///
 /// Annotate tests the same way ordinary Rust tests are annotated:
 ///
-/// ```
+/// ```ignore
 /// #[googletest::test]
 /// fn should_work() -> GoogleTestResult {
 ///     ...
@@ -35,7 +35,7 @@ use syn::{parse_macro_input, Attribute, ItemFn, ReturnType};
 /// be invoked with the `?` operator so that a failure in the subroutine aborts
 /// the rest of the test execution:
 ///
-/// ```
+/// ```ignore
 /// #[googletest::test]
 /// fn should_work() -> GoogleTestResult {
 ///     ...

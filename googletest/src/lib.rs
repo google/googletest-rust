@@ -38,7 +38,7 @@
 //!
 //! For example, for fatal assertions:
 //!
-//! ```
+//! ```ignore
 //! use googletest::{matchers::eq, verify_that, Result};
 //!
 //! #[test]
@@ -55,7 +55,7 @@
 //!
 //! Matchers are composable:
 //!
-//! ```
+//! ```ignore
 //! use googletest::{matchers::{contains, ge}, verify_that, Result};
 //!
 //! #[test]
@@ -67,7 +67,7 @@
 //!
 //! They can also be logically combined:
 //!
-//! ```
+//! ```ignore
 //! use googletest::{matchers::{gt, lt, not, AndMatcherExt}, verify_that, Result};
 //!
 //! #[test]
@@ -173,7 +173,7 @@
 //! a struct holding the matcher's data and have it implement the trait
 //! [`Matcher`]:
 //!
-//! ```
+//! ```ignore
 //! struct MyEqMatcher<T> {
 //!    expected: T,
 //! }
@@ -198,7 +198,7 @@
 //!
 //! It is recommended to expose a function which constructs the matcher:
 //!
-//! ```
+//! ```ignore
 //! pub fn eq_my_way<T: PartialEq + Debug>(expected: T) -> impl Matcher<T> {
 //!    MyEqMatcher { expected }
 //! }
@@ -206,7 +206,7 @@
 //!
 //! The new matcher can then be used in `verify_that!`:
 //!
-//! ```
+//! ```ignore
 //! #[test]
 //! fn should_be_equal_by_my_definition() -> Result<()> {
 //!    verify_that!(10, eq_my_way(10))
@@ -224,7 +224,7 @@
 //! also be marked with [`googletest::test`][test] instead of the Rust-standard
 //! `#[test]`. It must return [`Result<()>`].
 //!
-//! ```
+//! ```ignore
 //! use googletest::{expect_that, matchers::eq, Result};
 //!
 //! #[googletest::test]
@@ -243,7 +243,7 @@
 //! predicate in a `verify_pred!` invocation to turn that into a test assertion
 //! which passes precisely when the predicate returns `true`:
 //!
-//! ```
+//! ```ignore
 //! fn stuff_is_correct(x: i32, y: i32) -> bool {
 //!    x == y
 //! }
@@ -256,7 +256,7 @@
 //! The assertion failure message shows the arguments and the values to which
 //! they evaluate:
 //!
-//! ```
+//! ```text
 //! stuff_is_correct(x, y) was false with
 //!  x = 3,
 //!  y = 4
@@ -273,7 +273,7 @@
 //! [`verify_pred!`] to cause a test to fail, with an optional formatted
 //! message:
 //!
-//! ```
+//! ```ignore
 //! #[test]
 //! fn always_fails() -> Result<()> {
 //!    fail!("This test must fail with {}", "today")
@@ -307,7 +307,7 @@ use internal::test_outcome::TestAssertionFailure;
 /// This can be used with subroutines which may cause the test to fatally fail
 /// and which return some value needed by the caller. For example:
 ///
-/// ```
+/// ```ignore
 /// fn load_file_content_as_string() -> Result<String> {
 ///     let file_stream = load_file().err_to_test_failure()?;
 ///     Ok(file_stream.to_string())
@@ -327,7 +327,7 @@ pub trait GoogleTestSupport {
     ///
     /// This can be used for non-fatal test assertions, for example:
     ///
-    /// ```
+    /// ```ignore
     /// let actual = 42;
     /// verify_that!(actual, eq(42)).and_log_failure();
     ///                                  // Test still passing; nothing happens
@@ -346,14 +346,14 @@ pub trait GoogleTestSupport {
     ///
     /// For example:
     ///
-    /// ```
+    /// ```ignore
     /// let actual = 0;
     /// verify_that!(actual, eq(42)).failure_message("Actual was wrong!")?;
     /// ```
     ///
     /// results in the following failure message:
     ///
-    /// ```
+    /// ```text
     /// Expected: actual equal to 42
     ///   but was: 0
     /// Actual was wrong!
@@ -361,7 +361,7 @@ pub trait GoogleTestSupport {
     ///
     /// One can pass a `String` too:
     ///
-    /// ```
+    /// ```ignore
     /// let actual = 0;
     /// verify_that!(actual, eq(42))
     ///    .failure_message(format!("Actual {} was wrong!", actual))?;
@@ -379,7 +379,7 @@ pub trait GoogleTestSupport {
     /// only executes the closure `provider` if it actually produces the
     /// message, thus saving possible memory allocation.
     ///
-    /// ```
+    /// ```ignore
     /// let actual = 0;
     /// verify_that!(actual, eq(42))
     ///    .with_failure_message(|| format!("Actual {} was wrong!", actual))?;
@@ -422,7 +422,7 @@ impl<T> GoogleTestSupport for std::result::Result<T, TestAssertionFailure> {
 /// Importing this trait allows one to easily map [`anyhow::Error`] to a test
 /// failure:
 ///
-/// ```
+/// ```ignore
 /// #[test]
 /// fn should_work() -> Result<()> {
 ///     let value = something_which_can_fail().into_test_result()?;

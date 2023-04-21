@@ -20,8 +20,7 @@ use std::marker::PhantomData;
 
 /// Matches the string representation of types that implement `Display`.
 ///
-///
-/// ```
+/// ```ignore
 /// let result: impl Display = ...;
 /// verify_that!(result, displays_as(eq(format!("{}", result))))?;
 /// ```

@@ -28,7 +28,7 @@ use std::ops::Deref;
 /// Both the actual value and the expected regular expression may be either a
 /// `String` or a string reference.
 ///
-/// ```
+/// ```ignore
 /// verify_that!("Some value", matches_regex("S.*e"))?;  // Passes
 /// verify_that!("Another value", matches_regex("Some"))?;   // Fails
 /// verify_that!("Some value", matches_regex("Some"))?;   // Fails

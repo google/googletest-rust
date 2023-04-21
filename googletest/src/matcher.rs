@@ -36,7 +36,7 @@ pub trait Matcher<T: Debug + ?Sized> {
     /// The output appears next to `Expected` in an assertion failure message.
     /// For example:
     ///
-    /// ```
+    /// ```text
     /// Value of: ...
     /// Expected: is equal to 7
     ///           ^^^^^^^^^^^^^
@@ -49,7 +49,7 @@ pub trait Matcher<T: Debug + ?Sized> {
     /// verb phrase would fit. For example, the matcher
     /// [`some`][crate::matchers::some] implements `describe` as follows:
     ///
-    /// ```
+    /// ```ignore
     /// fn describe(&self, matcher_result: MatcherResult) -> String {
     ///     match matcher_result {
     ///         MatcherResult::Matches => {
@@ -78,7 +78,7 @@ pub trait Matcher<T: Debug + ?Sized> {
     /// with a relative pronoun such as "which" or "whose". It will appear next
     /// to the actual value in an assertion failure. For example:
     ///
-    /// ```
+    /// ```text
     /// Value of: ...
     /// Expected: ...
     /// Actual: ["Something"], which does not contain "Something else"
@@ -106,7 +106,7 @@ pub trait Matcher<T: Debug + ?Sized> {
     /// [`points_to`][crate::matchers::points_to] defers immediately to the
     /// inner matcher and appears as follows:
     ///
-    /// ```
+    /// ```ignore
     /// fn explain_match(&self, actual: &ActualT) -> MatchExplanation {
     ///     self.expected.explain_match(actual.deref())
     /// }
@@ -116,7 +116,7 @@ pub trait Matcher<T: Debug + ?Sized> {
     /// an inner matcher. In that case it should invoke `explain_match` on the
     /// inner matcher at a point where a relative clause would fit. For example:
     ///
-    /// ```
+    /// ```ignore
     /// fn explain_match(&self, actual: &ActualT) -> MatchExplanation {
     ///     MatchExplanation::create(
     ///         format!("which points to a value {}", self.expected.explain_match(actual.deref()))

@@ -26,7 +26,7 @@ use googletest::*;
 ///
 /// For example:
 ///
-/// ```
+/// ```ignore
 /// verify_that!("A string", all!(starts_with("A"), ends_width("string")))?; // Passes
 /// verify_that!("A string", all!(starts_with("A"), ends_width("not a string")))?; // Fails
 /// ```
@@ -35,7 +35,7 @@ use googletest::*;
 /// [`and`][crate::matchers::conjunction_matcher::AndMatcherExt::and] extension
 /// method:
 ///
-/// ```
+/// ```ignore
 /// verify_that!("A string", starts_with("A").and(ends_width("string")))?; // Also passes
 /// ```
 ///

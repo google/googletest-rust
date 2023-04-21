@@ -31,7 +31,7 @@
 /// cause the test to be recorded as a failure.
 ///
 /// Example:
-/// ```
+/// ```ignore
 /// value = 42;
 /// verify_that!(42, eq(42))?; // This will pass.
 /// verify_that!(42, eq(123)).and_log_failure();
@@ -62,7 +62,7 @@ macro_rules! verify_that {
 /// The failure message contains detailed information about the arguments. For
 /// example:
 ///
-/// ```
+/// ```ignore
 /// fn equals_modulo(a: i32, b: i32, n: i32) -> bool { a % n == b % n }
 ///
 /// fn test() -> Result<()> {
@@ -75,7 +75,7 @@ macro_rules! verify_that {
 ///
 /// This results in the following message:
 ///
-/// ```
+/// ```text
 /// equals_modulo(a, b, n) was false with
 ///   a = 1,
 ///   b = 7,
@@ -88,7 +88,7 @@ macro_rules! verify_that {
 ///
 /// The predicate can also be a method on a struct, e.g.:
 ///
-/// ```
+/// ```ignore
 /// struct AStruct {};
 ///
 /// impl AStruct {
@@ -106,7 +106,7 @@ macro_rules! verify_that {
 /// assign the outputs of non-pure functions to variables before using them in
 /// this macro. For example:
 ///
-/// ```
+/// ```ignore
 /// let output = generate_random_number();  // Assigned outside of verify_pred.
 /// verify_pred!(is_sufficiently_random(output))?;
 /// ```
@@ -143,7 +143,7 @@ macro_rules! verify_pred {
 /// This can be used to force the test to fail if its execution reaches a
 /// particular point. For example:
 ///
-/// ```
+/// ```ignore
 /// match some_value {
 ///     ExpectedVariant => {...}
 ///     UnwantedVaraint => {
@@ -154,7 +154,7 @@ macro_rules! verify_pred {
 ///
 /// One may include formatted arguments in the failure message:
 ///
-/// ```
+/// ```ignore
 /// match some_value {
 ///     ExpectedVariant => {...}
 ///     UnwantedVaraint => {
@@ -166,7 +166,7 @@ macro_rules! verify_pred {
 /// One may also omit the message, in which case the test failure message will
 /// be generic:
 ///
-/// ```
+/// ```ignore
 /// match some_value {
 ///     ExpectedVariant => {...}
 ///     UnwantedVaraint => {
@@ -251,7 +251,7 @@ macro_rules! assert_pred {
 /// Invoking this macro is equivalent to using
 /// [`and_log_failure`](crate::GoogleTestSupport::and_log_failure) as follows:
 ///
-/// ```
+/// ```ignore
 /// verify_that!(actual, expected).and_log_failure()
 /// ```
 #[macro_export]
@@ -275,7 +275,7 @@ macro_rules! expect_that {
 /// Invoking this macro is equivalent to using
 /// [`and_log_failure`](crate::GoogleTestSupport::and_log_failure) as follows:
 ///
-/// ```
+/// ```ignore
 /// verify_pred!(predicate(...)).and_log_failure()
 /// ```
 #[macro_export]
