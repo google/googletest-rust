@@ -64,29 +64,29 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::not;
     use std::collections::HashSet;
 
-    #[google_test]
+    #[test]
     fn empty_matcher_match_empty_vec() -> Result<()> {
         let value: Vec<i32> = vec![];
         verify_that!(value, empty())
     }
 
-    #[google_test]
+    #[test]
     fn empty_matcher_does_not_match_empty_vec() -> Result<()> {
         let value = vec![1, 2, 3];
         verify_that!(value, not(empty()))
     }
 
-    #[google_test]
+    #[test]
     fn empty_matcher_matches_empty_slice() -> Result<()> {
         let value: &[i32] = &[];
         verify_that!(*value, empty())
     }
 
-    #[google_test]
+    #[test]
     fn empty_matcher_matches_empty_hash_set() -> Result<()> {
         let value: HashSet<i32> = HashSet::new();
         verify_that!(value, empty())

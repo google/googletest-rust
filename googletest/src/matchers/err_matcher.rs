@@ -71,10 +71,10 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::{contains_substring, displays_as, eq};
 
-    #[google_test]
+    #[test]
     fn err_matches_result_with_err_value() -> Result<()> {
         let matcher = err(eq(1));
         let value: std::result::Result<i32, i32> = Err(1);
@@ -84,7 +84,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn err_does_not_match_result_with_wrong_err_value() -> Result<()> {
         let matcher = err(eq(1));
         let value: std::result::Result<i32, i32> = Err(0);
@@ -94,7 +94,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn err_does_not_match_result_with_ok() -> Result<()> {
         let matcher = err(eq(1));
         let value: std::result::Result<i32, i32> = Ok(1);
@@ -104,7 +104,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn err_full_error_message() -> Result<()> {
         let result = verify_that!(Err::<i32, i32>(1), err(eq(2)));
 
@@ -122,7 +122,7 @@ Actual: Err(
         )
     }
 
-    #[google_test]
+    #[test]
     fn err_describe_matches() -> Result<()> {
         verify_that!(
             err::<i32, i32>(eq(1)).describe(MatcherResult::Matches),

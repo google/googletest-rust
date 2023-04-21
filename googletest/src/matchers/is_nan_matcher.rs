@@ -42,25 +42,25 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::not;
 
-    #[google_test]
+    #[test]
     fn matches_f32_nan() -> Result<()> {
         verify_that!(f32::NAN, is_nan())
     }
 
-    #[google_test]
+    #[test]
     fn does_not_match_f32_number() -> Result<()> {
         verify_that!(0.0f32, not(is_nan()))
     }
 
-    #[google_test]
+    #[test]
     fn matches_f64_nan() -> Result<()> {
         verify_that!(f64::NAN, is_nan())
     }
 
-    #[google_test]
+    #[test]
     fn does_not_match_f64_number() -> Result<()> {
         verify_that!(0.0f64, not(is_nan()))
     }

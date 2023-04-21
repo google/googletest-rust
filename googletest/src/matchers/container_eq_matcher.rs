@@ -236,28 +236,28 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::{contains_substring, displays_as, eq, err};
     use std::collections::HashSet;
 
-    #[google_test]
+    #[test]
     fn container_eq_returns_match_when_containers_match() -> Result<()> {
         verify_that!(vec![1, 2, 3], container_eq(vec![1, 2, 3]))
     }
 
-    #[google_test]
+    #[test]
     fn container_eq_matches_array_with_slice() -> Result<()> {
         let value = &[1, 2, 3];
         verify_that!(*value, container_eq([1, 2, 3]))
     }
 
-    #[google_test]
+    #[test]
     fn container_eq_matches_hash_set() -> Result<()> {
         let value: HashSet<i32> = [1, 2, 3].into();
         verify_that!(value, container_eq([1, 2, 3].into()))
     }
 
-    #[google_test]
+    #[test]
     fn container_eq_full_error_message() -> Result<()> {
         let result = verify_that!(vec![1, 3, 2], container_eq(vec![1, 2, 3]));
         verify_that!(
@@ -276,7 +276,7 @@ Actual: [
         )
     }
 
-    #[google_test]
+    #[test]
     fn container_eq_returns_mismatch_when_elements_out_of_order() -> Result<()> {
         verify_that!(
             container_eq(vec![1, 2, 3]).explain_match(&vec![1, 3, 2]),
@@ -284,7 +284,7 @@ Actual: [
         )
     }
 
-    #[google_test]
+    #[test]
     fn container_eq_mismatch_shows_missing_elements_in_container() -> Result<()> {
         verify_that!(
             container_eq(vec![1, 2, 3]).explain_match(&vec![1, 2]),
@@ -292,7 +292,7 @@ Actual: [
         )
     }
 
-    #[google_test]
+    #[test]
     fn container_eq_mismatch_shows_surplus_elements_in_container() -> Result<()> {
         verify_that!(
             container_eq(vec![1, 2]).explain_match(&vec![1, 2, 3]),
@@ -300,7 +300,7 @@ Actual: [
         )
     }
 
-    #[google_test]
+    #[test]
     fn container_eq_mismatch_shows_missing_and_surplus_elements_in_container() -> Result<()> {
         verify_that!(
             container_eq(vec![1, 2, 3]).explain_match(&vec![1, 2, 4]),
@@ -308,7 +308,7 @@ Actual: [
         )
     }
 
-    #[google_test]
+    #[test]
     fn container_eq_mismatch_does_not_show_duplicated_element() -> Result<()> {
         verify_that!(
             container_eq(vec![1, 2, 3]).explain_match(&vec![1, 2, 3, 3]),
@@ -316,20 +316,20 @@ Actual: [
         )
     }
 
-    #[google_test]
+    #[test]
     fn container_eq_matches_owned_vec_with_slice() -> Result<()> {
         let vector = vec![123, 234];
         verify_that!(vector, container_eq([123, 234]))
     }
 
-    #[google_test]
+    #[test]
     fn container_eq_matches_owned_vec_of_owned_strings_with_slice_of_string_references()
     -> Result<()> {
         let vector = vec!["A string".to_string(), "Another string".to_string()];
         verify_that!(vector, container_eq(["A string", "Another string"]))
     }
 
-    #[google_test]
+    #[test]
     fn container_eq_matches_owned_vec_of_owned_strings_with_shorter_slice_of_string_references()
     -> Result<()> {
         let actual = vec!["A string".to_string(), "Another string".to_string()];
@@ -340,7 +340,7 @@ Actual: [
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn container_eq_mismatch_with_slice_shows_missing_elements_in_container() -> Result<()> {
         verify_that!(
             container_eq([1, 2, 3]).explain_match(&vec![1, 2]),
@@ -348,7 +348,7 @@ Actual: [
         )
     }
 
-    #[google_test]
+    #[test]
     fn container_eq_mismatch_with_str_slice_shows_missing_elements_in_container() -> Result<()> {
         verify_that!(
             container_eq(["A", "B", "C"]).explain_match(&vec!["A".to_string(), "B".to_string()]),
@@ -356,7 +356,7 @@ Actual: [
         )
     }
 
-    #[google_test]
+    #[test]
     fn container_eq_mismatch_with_str_slice_shows_surplus_elements_in_container() -> Result<()> {
         verify_that!(
             container_eq(["A", "B"]).explain_match(&vec![

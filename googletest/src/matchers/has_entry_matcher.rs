@@ -100,35 +100,35 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::{contains_substring, displays_as, eq, err, not};
     use std::collections::HashMap;
 
-    #[google_test]
+    #[test]
     fn has_entry_does_not_match_empty_hash_map() -> Result<()> {
         let value: HashMap<i32, i32> = HashMap::new();
         verify_that!(value, not(has_entry(0, eq(0))))
     }
 
-    #[google_test]
+    #[test]
     fn has_entry_matches_hash_map_with_value() -> Result<()> {
         let value: HashMap<i32, i32> = HashMap::from([(0, 0)]);
         verify_that!(value, has_entry(0, eq(0)))
     }
 
-    #[google_test]
+    #[test]
     fn has_entry_does_not_match_hash_map_with_wrong_value() -> Result<()> {
         let value: HashMap<i32, i32> = HashMap::from([(0, 1)]);
         verify_that!(value, not(has_entry(0, eq(0))))
     }
 
-    #[google_test]
+    #[test]
     fn has_entry_does_not_match_hash_map_with_wrong_key() -> Result<()> {
         let value: HashMap<i32, i32> = HashMap::from([(1, 0)]);
         verify_that!(value, not(has_entry(0, eq(0))))
     }
 
-    #[google_test]
+    #[test]
     fn has_entry_shows_correct_message_when_key_is_not_present() -> Result<()> {
         let result = verify_that!(HashMap::from([(0, 0)]), has_entry(1, eq(0)));
 
@@ -146,7 +146,7 @@ Actual: {
         )
     }
 
-    #[google_test]
+    #[test]
     fn has_entry_shows_correct_message_when_key_has_non_matching_value() -> Result<()> {
         let result = verify_that!(HashMap::from([(0, 0)]), has_entry(0, eq(1)));
 

@@ -74,10 +74,10 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::{contains_substring, displays_as, eq, err};
 
-    #[google_test]
+    #[test]
     fn ok_matches_result_with_value() -> Result<()> {
         let matcher = ok(eq(1));
         let value: std::result::Result<i32, i32> = Ok(1);
@@ -87,7 +87,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn ok_does_not_match_result_with_wrong_value() -> Result<()> {
         let matcher = ok(eq(1));
         let value: std::result::Result<i32, i32> = Ok(0);
@@ -97,7 +97,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn ok_does_not_match_result_with_err() -> Result<()> {
         let matcher = ok(eq(1));
         let value: std::result::Result<i32, i32> = Err(1);
@@ -107,7 +107,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn ok_full_error_message() -> Result<()> {
         let result = verify_that!(Ok::<i32, i32>(1), ok(eq(2)));
 
@@ -125,7 +125,7 @@ Actual: Ok(
         )
     }
 
-    #[google_test]
+    #[test]
     fn ok_describe_matches() -> Result<()> {
         verify_that!(
             ok::<i32, i32>(eq(1)).describe(MatcherResult::Matches),

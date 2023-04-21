@@ -78,37 +78,37 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::{contains_substring, eq};
     use std::ffi::OsString;
 
-    #[google_test]
+    #[test]
     fn le_matches_i32_with_i32() -> Result<()> {
         let actual: i32 = 0;
         let expected: i32 = 0;
         verify_that!(actual, le(expected))
     }
 
-    #[google_test]
+    #[test]
     fn le_does_not_match_bigger_i32() -> Result<()> {
         let matcher = le(0);
         let result = matcher.matches(&1);
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn le_matches_smaller_str() -> Result<()> {
         verify_that!("A", le("B"))
     }
 
-    #[google_test]
+    #[test]
     fn le_does_not_match_bigger_str() -> Result<()> {
         let matcher = le("a");
         let result = matcher.matches(&"z");
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn le_mismatch_contains_actual_and_expected() -> Result<()> {
         let result = verify_that!(489, le(294));
         let formatted_message = format!("{}", result.unwrap_err());
@@ -134,14 +134,14 @@ mod tests {
     // This means that the test case bellow effectively ensures that
     // `verify_that(actual, le(expected))` works if `actual <= expected` works
     // (regardless whether the `expected <= actual` works`).
-    #[google_test]
+    #[test]
     fn le_matches_owned_osstring_reference_with_string_reference() -> Result<()> {
         let expected = "B";
         let actual: OsString = "A".into();
         verify_that!(&actual, le(expected))
     }
 
-    #[google_test]
+    #[test]
     fn le_matches_ipv6addr_with_ipaddr() -> Result<()> {
         use std::net::IpAddr;
         use std::net::Ipv6Addr;
@@ -150,7 +150,7 @@ mod tests {
         verify_that!(actual, le(expected))
     }
 
-    #[google_test]
+    #[test]
     fn le_matches_with_custom_partial_ord() -> Result<()> {
         /// A custom "number" that is lower than all other numbers. The only
         /// things we define about this "special" number is `PartialOrd` and

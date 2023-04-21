@@ -150,10 +150,10 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::{eq, not};
 
-    #[google_test]
+    #[test]
     fn matches_value_inside_range() -> Result<()> {
         let matcher = near(1.0f64, 0.1f64);
 
@@ -162,7 +162,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn matches_value_at_low_end_of_range() -> Result<()> {
         let matcher = near(1.0f64, 0.1f64);
 
@@ -171,7 +171,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn matches_value_at_high_end_of_range() -> Result<()> {
         let matcher = near(1.0f64, 0.25f64);
 
@@ -180,7 +180,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn does_not_match_value_below_low_end_of_range() -> Result<()> {
         let matcher = near(1.0f64, 0.1f64);
 
@@ -189,7 +189,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn does_not_match_value_above_high_end_of_range() -> Result<()> {
         let matcher = near(1.0f64, 0.1f64);
 
@@ -198,7 +198,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn nan_is_not_near_a_number() -> Result<()> {
         let matcher = near(0.0f64, f64::MAX);
 
@@ -207,32 +207,32 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn nan_is_not_near_nan_by_default() -> Result<()> {
         verify_that!(f64::NAN, not(near(f64::NAN, f64::MAX)))
     }
 
-    #[google_test]
+    #[test]
     fn nan_is_not_near_nan_when_explicitly_configured() -> Result<()> {
         verify_that!(f64::NAN, not(near(f64::NAN, f64::MAX).nans_are_not_equal()))
     }
 
-    #[google_test]
+    #[test]
     fn nan_is_near_nan_if_nans_are_equal() -> Result<()> {
         verify_that!(f64::NAN, near(f64::NAN, f64::MAX).nans_are_equal())
     }
 
-    #[google_test]
+    #[test]
     fn nan_is_not_near_number_when_nans_are_equal() -> Result<()> {
         verify_that!(f64::NAN, not(near(0.0, f64::MAX).nans_are_equal()))
     }
 
-    #[google_test]
+    #[test]
     fn number_is_not_near_nan_when_nans_are_equal() -> Result<()> {
         verify_that!(0.0, not(near(f64::NAN, f64::MAX).nans_are_equal()))
     }
 
-    #[google_test]
+    #[test]
     fn inf_is_not_near_inf() -> Result<()> {
         let matcher = near(f64::INFINITY, f64::MAX);
 
@@ -241,7 +241,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn inf_is_not_near_a_number() -> Result<()> {
         let matcher = near(f64::INFINITY, f64::MAX);
 
@@ -250,7 +250,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn any_two_numbers_are_within_inf_of_each_other() -> Result<()> {
         let matcher = near(f64::MIN, f64::INFINITY);
 
@@ -271,32 +271,32 @@ mod tests {
         near(0.0, -1.0);
     }
 
-    #[google_test]
+    #[test]
     fn approx_eq_matches_equal_number() -> Result<()> {
         verify_that!(1.0f64, approx_eq(1.0f64))
     }
 
-    #[google_test]
+    #[test]
     fn approx_eq_matches_really_close_f64_number() -> Result<()> {
         verify_that!(1.0f64, approx_eq(1.0 + 16.0 * f64::EPSILON))
     }
 
-    #[google_test]
+    #[test]
     fn approx_eq_matches_really_close_f64_number_to_large_number() -> Result<()> {
         verify_that!(1000f64, approx_eq(1000.0 + 16000.0 * f64::EPSILON))
     }
 
-    #[google_test]
+    #[test]
     fn approx_eq_matches_really_close_f64_number_to_zero() -> Result<()> {
         verify_that!(16.0 * f64::EPSILON, approx_eq(0.0))
     }
 
-    #[google_test]
+    #[test]
     fn approx_eq_matches_really_close_f32_number() -> Result<()> {
         verify_that!(1.0f32, approx_eq(1.0 + 16.0 * f32::EPSILON))
     }
 
-    #[google_test]
+    #[test]
     fn approx_eq_does_not_match_distant_number() -> Result<()> {
         verify_that!(0.0f64, not(approx_eq(1.0f64)))
     }

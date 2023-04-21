@@ -80,44 +80,44 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::{contains_substring, eq};
     use std::ffi::OsString;
 
-    #[google_test]
+    #[test]
     fn lt_matches_i32_with_i32() -> Result<()> {
         let actual: i32 = 10000;
         let expected: i32 = 20000;
         verify_that!(actual, lt(expected))
     }
 
-    #[google_test]
+    #[test]
     fn lt_does_not_match_equal_i32() -> Result<()> {
         let matcher = lt(10);
         let result = matcher.matches(&10);
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn lt_does_not_match_lower_i32() -> Result<()> {
         let matcher = lt(-50);
         let result = matcher.matches(&50);
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn lt_matches_lesser_str() -> Result<()> {
         verify_that!("A", lt("B"))
     }
 
-    #[google_test]
+    #[test]
     fn lt_does_not_match_bigger_str() -> Result<()> {
         let matcher = lt("ab");
         let result = matcher.matches(&"az");
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn lt_mismatch_contains_actual_and_expected() -> Result<()> {
         let result = verify_that!(481, lt(45));
         let formatted_message = format!("{}", result.unwrap_err());
@@ -143,14 +143,14 @@ mod tests {
     // This means that the test case bellow effectively ensures that
     // `verify_that(actual, lt(expected))` works if `actual < expected` works
     // (regardless whether the `expected < actual` works`).
-    #[google_test]
+    #[test]
     fn lt_matches_owned_osstring_reference_with_string_reference() -> Result<()> {
         let expected = "C";
         let actual: OsString = "B".to_string().into();
         verify_that!(&actual, lt(expected))
     }
 
-    #[google_test]
+    #[test]
     fn lt_matches_ipv6addr_with_ipaddr() -> Result<()> {
         use std::net::IpAddr;
         use std::net::Ipv6Addr;
@@ -159,7 +159,7 @@ mod tests {
         verify_that!(actual, lt(expected))
     }
 
-    #[google_test]
+    #[test]
     fn lt_matches_with_custom_partial_ord() -> Result<()> {
         /// A custom "number" that is smaller than all other numbers. The only
         /// things we define about this "special" number is `PartialOrd` and

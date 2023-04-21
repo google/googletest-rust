@@ -89,10 +89,10 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, matcher::Matcher, verify_that, Result};
+    use googletest::{matcher::Matcher, verify_that, Result};
     use matchers::eq;
 
-    #[google_test]
+    #[test]
     fn matches_regex_matches_string_reference_with_pattern() -> Result<()> {
         let matcher = matches_regex("S.*e");
 
@@ -101,7 +101,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn matches_regex_does_not_match_string_without_pattern() -> Result<()> {
         let matcher = matches_regex("Another");
 
@@ -110,7 +110,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn matches_regex_does_not_match_string_only_beginning_of_which_matches() -> Result<()> {
         let matcher = matches_regex("Some");
 
@@ -119,7 +119,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn matches_regex_does_not_match_string_only_end_of_which_matches() -> Result<()> {
         let matcher = matches_regex("value");
 
@@ -128,7 +128,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn matches_regex_matches_owned_string_with_pattern() -> Result<()> {
         let matcher = matches_regex(".*value");
 
@@ -137,7 +137,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn matches_regex_matches_string_when_regex_has_beginning_of_string_marker() -> Result<()> {
         let matcher = matches_regex("^Some value");
 
@@ -146,7 +146,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn matches_regex_matches_string_when_regex_has_end_of_string_marker() -> Result<()> {
         let matcher = matches_regex("Some value$");
 
@@ -155,7 +155,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn matches_regex_matches_string_when_regex_has_both_end_markers() -> Result<()> {
         let matcher = matches_regex("^Some value$");
 
@@ -164,7 +164,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn matches_regex_matches_string_reference_with_owned_string() -> Result<()> {
         let matcher = matches_regex(".*value".to_string());
 
@@ -173,12 +173,12 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn verify_that_works_with_owned_string() -> Result<()> {
         verify_that!("Some value".to_string(), matches_regex(".*value"))
     }
 
-    #[google_test]
+    #[test]
     fn matches_regex_displays_quoted_debug_of_pattern() -> Result<()> {
         let matcher = matches_regex("\n");
 

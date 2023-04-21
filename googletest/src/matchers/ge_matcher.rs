@@ -78,37 +78,37 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::{contains_substring, displays_as, eq, err};
     use std::ffi::OsString;
 
-    #[google_test]
+    #[test]
     fn ge_matches_i32_with_i32() -> Result<()> {
         let actual: i32 = 0;
         let expected: i32 = 0;
         verify_that!(actual, ge(expected))
     }
 
-    #[google_test]
+    #[test]
     fn ge_does_not_match_smaller_i32() -> Result<()> {
         let matcher = ge(10);
         let result = matcher.matches(&9);
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn ge_matches_bigger_str() -> Result<()> {
         verify_that!("B", ge("A"))
     }
 
-    #[google_test]
+    #[test]
     fn ge_does_not_match_lesser_str() -> Result<()> {
         let matcher = ge("z");
         let result = matcher.matches(&"a");
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn ge_mismatch_contains_actual_and_expected() -> Result<()> {
         let result = verify_that!(591, ge(927));
 
@@ -133,14 +133,14 @@ mod tests {
     // This means that the test case bellow effectively ensures that
     // `verify_that(actual, ge(expected))` works if `actual >= expected` works
     // (regardless whether the `expected >= actual` works`).
-    #[google_test]
+    #[test]
     fn ge_matches_owned_osstring_reference_with_string_reference() -> Result<()> {
         let expected = "A";
         let actual: OsString = "B".to_string().into();
         verify_that!(&actual, ge(expected))
     }
 
-    #[google_test]
+    #[test]
     fn ge_matches_ipv6addr_with_ipaddr() -> Result<()> {
         use std::net::IpAddr;
         use std::net::Ipv6Addr;
@@ -149,7 +149,7 @@ mod tests {
         verify_that!(actual, ge(expected))
     }
 
-    #[google_test]
+    #[test]
     fn ge_matches_with_custom_partial_ord() -> Result<()> {
         /// A custom "number" that is lower than all other numbers. The only
         /// things we define about this "special" number is `PartialOrd` and

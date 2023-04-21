@@ -144,10 +144,10 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, matcher::Matcher, verify_that, Result};
+    use googletest::{matcher::Matcher, verify_that, Result};
     use matchers::{displays_as, eq};
 
-    #[google_test]
+    #[test]
     fn contains_matches_singleton_slice_with_value() -> Result<()> {
         let matcher = contains(eq(1));
 
@@ -156,7 +156,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn contains_matches_singleton_vec_with_value() -> Result<()> {
         let matcher = contains(eq(1));
 
@@ -165,7 +165,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn contains_matches_two_element_slice_with_value() -> Result<()> {
         let matcher = contains(eq(1));
 
@@ -174,7 +174,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn contains_does_not_match_singleton_slice_with_wrong_value() -> Result<()> {
         let matcher = contains(eq(1));
 
@@ -183,7 +183,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn contains_does_not_match_empty_slice() -> Result<()> {
         let matcher = contains(eq(1));
 
@@ -192,7 +192,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn contains_matches_slice_with_repeated_value() -> Result<()> {
         let matcher = contains(eq(1)).times(eq(2));
 
@@ -201,7 +201,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn contains_does_not_match_slice_with_too_few_of_value() -> Result<()> {
         let matcher = contains(eq(1)).times(eq(2));
 
@@ -210,7 +210,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn contains_does_not_match_slice_with_too_many_of_value() -> Result<()> {
         let matcher = contains(eq(1)).times(eq(1));
 
@@ -219,7 +219,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn contains_formats_without_multiplicity_by_default() -> Result<()> {
         let matcher = contains(eq(1));
 
@@ -229,7 +229,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn contains_formats_with_multiplicity_when_specified() -> Result<()> {
         let matcher = contains(eq(1)).times(eq(2));
 
@@ -239,7 +239,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn contains_mismatch_shows_number_of_times_element_was_found() -> Result<()> {
         verify_that!(
             contains(eq(3)).times(eq(1)).explain_match(&vec![1, 2, 3, 3]),
@@ -247,7 +247,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn contains_mismatch_shows_when_matches() -> Result<()> {
         verify_that!(
             contains(eq(3)).explain_match(&vec![1, 2, 3, 3]),
@@ -255,7 +255,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn contains_mismatch_shows_when_no_matches() -> Result<()> {
         verify_that!(
             contains(eq(3)).explain_match(&vec![1, 2]),

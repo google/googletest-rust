@@ -208,31 +208,31 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use indoc::indoc;
     use matchers::displays_as;
     use matchers::eq;
 
-    #[google_test]
+    #[test]
     fn description_single_element() -> Result<()> {
         let description = ["A B C".to_string()].into_iter().collect::<Description>();
         verify_that!(description, displays_as(eq("A B C")))
     }
 
-    #[google_test]
+    #[test]
     fn description_two_elements() -> Result<()> {
         let description =
             ["A B C".to_string(), "D E F".to_string()].into_iter().collect::<Description>();
         verify_that!(description, displays_as(eq("A B C\nD E F")))
     }
 
-    #[google_test]
+    #[test]
     fn description_indent_single_element() -> Result<()> {
         let description = ["A B C".to_string()].into_iter().collect::<Description>().indent();
         verify_that!(description, displays_as(eq("  A B C")))
     }
 
-    #[google_test]
+    #[test]
     fn description_indent_two_elements() -> Result<()> {
         let description = ["A B C".to_string(), "D E F".to_string()]
             .into_iter()
@@ -241,20 +241,20 @@ mod tests {
         verify_that!(description, displays_as(eq("  A B C\n  D E F")))
     }
 
-    #[google_test]
+    #[test]
     fn description_indent_single_element_two_lines() -> Result<()> {
         let description =
             ["A B C\nD E F".to_string()].into_iter().collect::<Description>().indent();
         verify_that!(description, displays_as(eq("  A B C\n  D E F")))
     }
 
-    #[google_test]
+    #[test]
     fn description_bullet_single_element() -> Result<()> {
         let description = ["A B C".to_string()].into_iter().collect::<Description>().bullet_list();
         verify_that!(description, displays_as(eq("* A B C")))
     }
 
-    #[google_test]
+    #[test]
     fn description_bullet_two_elements() -> Result<()> {
         let description = ["A B C".to_string(), "D E F".to_string()]
             .into_iter()
@@ -263,20 +263,20 @@ mod tests {
         verify_that!(description, displays_as(eq("* A B C\n* D E F")))
     }
 
-    #[google_test]
+    #[test]
     fn description_bullet_single_element_two_lines() -> Result<()> {
         let description =
             ["A B C\nD E F".to_string()].into_iter().collect::<Description>().bullet_list();
         verify_that!(description, displays_as(eq("* A B C\n  D E F")))
     }
 
-    #[google_test]
+    #[test]
     fn description_enumerate_single_element() -> Result<()> {
         let description = ["A B C".to_string()].into_iter().collect::<Description>().enumerate();
         verify_that!(description, displays_as(eq("0. A B C")))
     }
 
-    #[google_test]
+    #[test]
     fn description_enumerate_two_elements() -> Result<()> {
         let description = ["A B C".to_string(), "D E F".to_string()]
             .into_iter()
@@ -285,14 +285,14 @@ mod tests {
         verify_that!(description, displays_as(eq("0. A B C\n1. D E F")))
     }
 
-    #[google_test]
+    #[test]
     fn description_enumerate_single_element_two_lines() -> Result<()> {
         let description =
             ["A B C\nD E F".to_string()].into_iter().collect::<Description>().enumerate();
         verify_that!(description, displays_as(eq("0. A B C\n   D E F")))
     }
 
-    #[google_test]
+    #[test]
     fn description_enumerate_correct_indentation_with_large_index() -> Result<()> {
         let description = ["A B C\nD E F"; 11]
             .into_iter()

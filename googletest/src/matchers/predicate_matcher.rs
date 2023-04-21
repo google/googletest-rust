@@ -148,7 +148,7 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{test, verify_that, Result};
     use matchers::{displays_as, eq};
 
     // Simple matcher with a description
@@ -156,17 +156,17 @@ mod tests {
         predicate(|x| x % 2 == 1).with_description("is odd", "is even")
     }
 
-    #[google_test]
+    #[test]
     fn predicate_matcher_odd() -> Result<()> {
         verify_that!(1, is_odd())
     }
 
-    #[google_test]
+    #[test]
     fn predicate_matcher_odd_explain_match_matches() -> Result<()> {
         verify_that!(is_odd().explain_match(&1), displays_as(eq("which is odd")))
     }
 
-    #[google_test]
+    #[test]
     fn predicate_matcher_odd_explain_match_does_not_match() -> Result<()> {
         verify_that!(is_odd().explain_match(&2), displays_as(eq("which is even")))
     }
@@ -176,22 +176,22 @@ mod tests {
         predicate(|x| x % 2 == 0)
     }
 
-    #[google_test]
+    #[test]
     fn predicate_matcher_even() -> Result<()> {
         verify_that!(2, is_even())
     }
 
-    #[google_test]
+    #[test]
     fn predicate_matcher_even_explain_match_matches() -> Result<()> {
         verify_that!(is_even().explain_match(&2), displays_as(eq("which matches")))
     }
 
-    #[google_test]
+    #[test]
     fn predicate_matcher_even_explain_match_does_not_match() -> Result<()> {
         verify_that!(is_even().explain_match(&1), displays_as(eq("which does not match")))
     }
 
-    #[google_test]
+    #[test]
     fn predicate_matcher_generator_lambda() -> Result<()> {
         let is_divisible_by = |quotient| {
             predicate(move |x: &i32| x % quotient == 0).with_description(
@@ -202,12 +202,12 @@ mod tests {
         verify_that!(49, is_divisible_by(7))
     }
 
-    #[google_test]
+    #[test]
     fn predicate_matcher_inline() -> Result<()> {
         verify_that!(2048, predicate(|x: &i32| x.count_ones() == 1))
     }
 
-    #[google_test]
+    #[test]
     fn predicate_matcher_function_pointer() -> Result<()> {
         use std::time::Duration;
         verify_that!(Duration::new(0, 0), predicate(Duration::is_zero))

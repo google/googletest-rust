@@ -78,44 +78,44 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::{contains_substring, displays_as, each, eq, err};
     use std::ffi::OsString;
 
-    #[google_test]
+    #[test]
     fn gt_matches_i32_with_i32() -> Result<()> {
         let actual: i32 = 321;
         let expected: i32 = 123;
         verify_that!(actual, gt(expected))
     }
 
-    #[google_test]
+    #[test]
     fn gt_does_not_match_equal_i32() -> Result<()> {
         let matcher = gt(10);
         let result = matcher.matches(&10);
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn gt_does_not_match_lower_i32() -> Result<()> {
         let matcher = gt(-50);
         let result = matcher.matches(&-51);
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn gt_matches_greater_str() -> Result<()> {
         verify_that!("B", gt("A"))
     }
 
-    #[google_test]
+    #[test]
     fn gt_does_not_match_lesser_str() -> Result<()> {
         let matcher = gt("B");
         let result = matcher.matches(&"A");
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn gt_mismatch_contains_actual_and_expected() -> Result<()> {
         let result = verify_that!(481, gt(632));
 
@@ -130,7 +130,7 @@ Actual: 481"
         )
     }
 
-    #[google_test]
+    #[test]
     fn gt_mismatch_combined_with_each() -> Result<()> {
         let result = verify_that!(vec![19, 23, 11], each(gt(15)));
 
@@ -150,7 +150,7 @@ Actual: [
         )
     }
 
-    #[google_test]
+    #[test]
     fn gt_describe_matches() -> Result<()> {
         verify_that!(
             gt::<i32, i32>(232).describe(MatcherResult::Matches),
@@ -158,7 +158,7 @@ Actual: [
         )
     }
 
-    #[google_test]
+    #[test]
     fn gt_describe_does_not_match() -> Result<()> {
         verify_that!(
             gt::<i32, i32>(232).describe(MatcherResult::DoesNotMatch),
@@ -177,14 +177,14 @@ Actual: [
     // This means that the test case bellow effectively ensures that
     // `verify_that(actual, gt(expected))` works if `actual > expected` works
     // (regardless whether the `expected > actual` works`).
-    #[google_test]
+    #[test]
     fn gt_matches_owned_osstring_reference_with_string_reference() -> Result<()> {
         let expected = "A";
         let actual: OsString = "B".to_string().into();
         verify_that!(&actual, gt(expected))
     }
 
-    #[google_test]
+    #[test]
     fn gt_matches_ipv6addr_with_ipaddr() -> Result<()> {
         use std::net::IpAddr;
         use std::net::Ipv6Addr;
@@ -193,7 +193,7 @@ Actual: [
         verify_that!(actual, gt(expected))
     }
 
-    #[google_test]
+    #[test]
     fn gt_matches_with_custom_partial_ord() -> Result<()> {
         /// A custom "number" that is smaller than all other numbers. The only
         /// things we define about this "special" number is `PartialOrd` and

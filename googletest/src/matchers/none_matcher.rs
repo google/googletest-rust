@@ -52,10 +52,10 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::eq;
 
-    #[google_test]
+    #[test]
     fn none_matches_option_with_none() -> Result<()> {
         let matcher = none::<i32>();
 
@@ -64,7 +64,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn none_does_not_match_option_with_value() -> Result<()> {
         let matcher = none();
 

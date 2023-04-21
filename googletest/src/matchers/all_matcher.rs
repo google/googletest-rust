@@ -151,14 +151,13 @@ mod tests {
     #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{
-        google_test,
         matcher::{Matcher, MatcherResult},
         verify_that, Result,
     };
     use indoc::indoc;
     use matchers::{displays_as, ends_with, eq, starts_with};
 
-    #[google_test]
+    #[test]
     fn description_shows_more_than_one_matcher() -> Result<()> {
         let first_matcher = starts_with("A");
         let second_matcher = ends_with("string");
@@ -175,7 +174,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn description_shows_one_matcher_directly() -> Result<()> {
         let first_matcher = starts_with("A");
         let matcher: internal::AllMatcher<String, 1> = all!(first_matcher);
@@ -183,7 +182,7 @@ mod tests {
         verify_that!(matcher.describe(MatcherResult::Matches), eq("starts with prefix \"A\""))
     }
 
-    #[google_test]
+    #[test]
     fn mismatch_description_shows_which_matcher_failed_if_more_than_one_constituent() -> Result<()>
     {
         let first_matcher = starts_with("Another");
@@ -196,7 +195,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn mismatch_description_is_simple_when_only_one_consistuent() -> Result<()> {
         let first_matcher = starts_with("Another");
         let matcher: internal::AllMatcher<str, 1> = all!(first_matcher);

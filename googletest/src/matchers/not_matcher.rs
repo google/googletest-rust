@@ -59,10 +59,10 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::{container_eq, contains_substring, displays_as, eq, err};
 
-    #[google_test]
+    #[test]
     fn matches_when_inner_matcher_does_not_match() -> Result<()> {
         let matcher = not(eq(1));
 
@@ -71,7 +71,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn does_not_match_when_inner_matcher_matches() -> Result<()> {
         let matcher = not(eq(1));
 
@@ -80,7 +80,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn match_explanation_references_actual_value() -> Result<()> {
         let result = verify_that!(*&[1], not(container_eq([1])));
 

@@ -52,24 +52,24 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::some;
 
-    #[google_test]
+    #[test]
     fn anything_matches_i32() -> Result<()> {
         let value = 32;
         verify_that!(value, anything())?;
         Ok(())
     }
 
-    #[google_test]
+    #[test]
     fn anything_matches_str() -> Result<()> {
         let value = "32";
         verify_that!(value, anything())?;
         Ok(())
     }
 
-    #[google_test]
+    #[test]
     fn anything_matches_option() -> Result<()> {
         let value = Some(32);
         verify_that!(value, some(anything()))?;

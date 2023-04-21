@@ -79,25 +79,25 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::{anything, contains_substring, displays_as, eq, err, ge, not};
 
-    #[google_test]
+    #[test]
     fn or_true_true_matches() -> Result<()> {
         verify_that!(1, anything().or(anything()))
     }
 
-    #[google_test]
+    #[test]
     fn or_true_false_matches() -> Result<()> {
         verify_that!(1, anything().or(not(anything())))
     }
 
-    #[google_test]
+    #[test]
     fn or_false_true_matches() -> Result<()> {
         verify_that!(1, not(anything()).or(anything()))
     }
 
-    #[google_test]
+    #[test]
     fn or_false_false_does_not_match() -> Result<()> {
         let result = verify_that!(1, not(anything()).or(not(anything())));
         verify_that!(
@@ -111,7 +111,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn chained_or_matches() -> Result<()> {
         verify_that!(10, eq(1).or(eq(5)).or(ge(9)))
     }

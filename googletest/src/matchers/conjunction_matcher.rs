@@ -81,17 +81,17 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::{field, matchers};
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     #[cfg(google3)]
     use matchers::field;
     use matchers::{anything, contains_substring, displays_as, eq, err, not};
 
-    #[google_test]
+    #[test]
     fn and_true_true_matches() -> Result<()> {
         verify_that!(1, anything().and(anything()))
     }
 
-    #[google_test]
+    #[test]
     fn and_true_false_does_not_match() -> Result<()> {
         let result = verify_that!(1, anything().and(not(anything())));
         verify_that!(
@@ -104,7 +104,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn and_false_true_does_not_match() -> Result<()> {
         let result = verify_that!(1, not(anything()).and(anything()));
         verify_that!(
@@ -117,7 +117,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn and_false_false_does_not_match() -> Result<()> {
         let result = verify_that!(1, not(anything()).and(not(anything())));
         verify_that!(
@@ -131,7 +131,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn chained_and_matches() -> Result<()> {
         #[derive(Debug)]
         struct Struct {

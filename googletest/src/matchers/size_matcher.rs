@@ -88,87 +88,87 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use indoc::indoc;
     use matchers::{contains_substring, displays_as, eq, err};
     use std::collections::{
         BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque,
     };
 
-    #[google_test]
+    #[test]
     fn size_matcher_match_vec() -> Result<()> {
         let value = vec![1, 2, 3];
         verify_that!(value, size(eq(3)))
     }
 
-    #[google_test]
+    #[test]
     fn size_matcher_match_array_reference() -> Result<()> {
         let value = &[1, 2, 3];
         verify_that!(*value, size(eq(3)))
     }
 
-    #[google_test]
+    #[test]
     fn size_matcher_match_slice_of_array() -> Result<()> {
         let value = &[1, 2, 3];
         verify_that!(value[0..1], size(eq(1)))
     }
 
-    #[google_test]
+    #[test]
     fn size_matcher_match_slice_of_vec() -> Result<()> {
         let value = vec![1, 2, 3];
         let slice = value.as_slice();
         verify_that!(*slice, size(eq(3)))
     }
 
-    #[google_test]
+    #[test]
     fn size_matcher_match_sized_slice() -> Result<()> {
         let value = [1, 2, 3];
         verify_that!(value, size(eq(3)))
     }
 
-    #[google_test]
+    #[test]
     fn size_matcher_match_btreemap() -> Result<()> {
         let value = BTreeMap::from([(1, 2), (2, 3), (3, 4)]);
         verify_that!(value, size(eq(3)))
     }
 
-    #[google_test]
+    #[test]
     fn size_matcher_match_btreeset() -> Result<()> {
         let value = BTreeSet::from([1, 2, 3]);
         verify_that!(value, size(eq(3)))
     }
 
-    #[google_test]
+    #[test]
     fn size_matcher_match_binaryheap() -> Result<()> {
         let value = BinaryHeap::from([1, 2, 3]);
         verify_that!(value, size(eq(3)))
     }
 
-    #[google_test]
+    #[test]
     fn size_matcher_match_hashmap() -> Result<()> {
         let value = HashMap::from([(1, 2), (2, 3), (3, 4)]);
         verify_that!(value, size(eq(3)))
     }
 
-    #[google_test]
+    #[test]
     fn size_matcher_match_hashset() -> Result<()> {
         let value = HashSet::from([1, 2, 3]);
         verify_that!(value, size(eq(3)))
     }
 
-    #[google_test]
+    #[test]
     fn size_matcher_match_linkedlist() -> Result<()> {
         let value = LinkedList::from([1, 2, 3]);
         verify_that!(value, size(eq(3)))
     }
 
-    #[google_test]
+    #[test]
     fn size_matcher_match_vecdeque() -> Result<()> {
         let value = VecDeque::from([1, 2, 3]);
         verify_that!(value, size(eq(3)))
     }
 
-    #[google_test]
+    #[test]
     fn size_matcher_explain_match() -> Result<()> {
         struct TestMatcher;
         impl<T: Debug> Matcher<T> for TestMatcher {
@@ -190,7 +190,7 @@ mod tests {
         )
     }
 
-    #[google_test]
+    #[test]
     fn size_matcher_error_message() -> Result<()> {
         let result = verify_that!(vec![1, 2, 3, 4], size(eq(3)));
         verify_that!(

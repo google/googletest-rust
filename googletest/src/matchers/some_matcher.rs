@@ -69,10 +69,10 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::{contains_substring, displays_as, eq, err};
 
-    #[google_test]
+    #[test]
     fn some_matches_option_with_value() -> Result<()> {
         let matcher = some(eq(1));
 
@@ -81,7 +81,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::Matches))
     }
 
-    #[google_test]
+    #[test]
     fn some_does_not_match_option_with_wrong_value() -> Result<()> {
         let matcher = some(eq(1));
 
@@ -90,7 +90,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn some_does_not_match_option_with_none() -> Result<()> {
         let matcher = some(eq(1));
 
@@ -99,7 +99,7 @@ mod tests {
         verify_that!(result, eq(MatcherResult::DoesNotMatch))
     }
 
-    #[google_test]
+    #[test]
     fn some_full_error_message() -> Result<()> {
         let result = verify_that!(Some(2), some(eq(1)));
         verify_that!(
@@ -116,7 +116,7 @@ Actual: Some(
         )
     }
 
-    #[google_test]
+    #[test]
     fn some_describe_matches() -> Result<()> {
         verify_that!(
             some(eq(1)).describe(MatcherResult::Matches),
@@ -124,7 +124,7 @@ Actual: Some(
         )
     }
 
-    #[google_test]
+    #[test]
     fn some_describe_does_not_match() -> Result<()> {
         verify_that!(
             some(eq(1)).describe(MatcherResult::DoesNotMatch),
@@ -132,12 +132,12 @@ Actual: Some(
         )
     }
 
-    #[google_test]
+    #[test]
     fn some_explain_match_with_none() -> Result<()> {
         verify_that!(some(eq(1)).explain_match(&None), displays_as(eq("which is None")))
     }
 
-    #[google_test]
+    #[test]
     fn some_explain_match_with_some_success() -> Result<()> {
         verify_that!(
             some(eq(1)).explain_match(&Some(1)),
@@ -145,7 +145,7 @@ Actual: Some(
         )
     }
 
-    #[google_test]
+    #[test]
     fn some_explain_match_with_some_fail() -> Result<()> {
         verify_that!(
             some(eq(1)).explain_match(&Some(2)),

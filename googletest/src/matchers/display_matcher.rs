@@ -72,25 +72,25 @@ mod tests {
     use crate as googletest;
     #[cfg(not(google3))]
     use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
+    use googletest::{verify_that, Result};
     use matchers::eq;
     use std::fmt::{Debug, Display, Error, Formatter};
 
-    #[google_test]
+    #[test]
     fn display_matches_i32() -> Result<()> {
         let value = 32;
         verify_that!(value, displays_as(eq("32")))?;
         Ok(())
     }
 
-    #[google_test]
+    #[test]
     fn display_matches_str() -> Result<()> {
         let value = "32";
         verify_that!(value, displays_as(eq("32")))?;
         Ok(())
     }
 
-    #[google_test]
+    #[test]
     fn display_matches_struct() -> Result<()> {
         #[allow(dead_code)]
         #[derive(Debug)]
@@ -106,7 +106,7 @@ mod tests {
         verify_that!(Struct { a: 123, b: 321 }, displays_as(eq("Struct { a: 123, b: 321 }")))?;
         Ok(())
     }
-    #[google_test]
+    #[test]
     fn display_displays_error_message() -> Result<()> {
         verify_that!(
             displays_as(eq("31")).explain_match(&43),
