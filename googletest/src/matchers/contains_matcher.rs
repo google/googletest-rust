@@ -23,11 +23,24 @@ use std::fmt::Debug;
 /// by `inner`. Use the method [`ContainsMatcher::times`] to constrain the
 /// matched containers to a specific number of matching elements.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::{contains, eq}, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// verify_that!(["Some value"], contains(eq("Some value")))?;  // Passes
 /// verify_that!(vec!["Some value"], contains(eq("Some value")))?;  // Passes
-/// verify_that!([], contains(eq("Some value")))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_fail_1() -> Result<()> {
+/// verify_that!([] as [String; 0], contains(eq("Some value")))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_fail_2() -> Result<()> {
 /// verify_that!(["Some value"], contains(eq("Some other value")))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail_1().unwrap_err();
+/// # should_fail_2().unwrap_err();
 /// ```
 pub fn contains<InnerMatcherT>(inner: InnerMatcherT) -> ContainsMatcher<InnerMatcherT> {
     ContainsMatcher { inner, count: None }
