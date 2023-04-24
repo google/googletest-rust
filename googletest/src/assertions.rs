@@ -31,14 +31,28 @@
 /// cause the test to be recorded as a failure.
 ///
 /// Example:
-/// ```ignore
-/// value = 42;
+/// ```
+/// # use googletest::{
+/// #     matchers::{contains_substring, displays_as, err, eq},
+/// #     verify_that,
+/// #     GoogleTestSupport,
+/// #     Result,
+/// # };
+/// # fn should_pass() -> Result<()> {
 /// verify_that!(42, eq(42))?; // This will pass.
+/// # Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # fn should_fail() -> Result<()> {
 /// verify_that!(42, eq(123)).and_log_failure();
 ///             // This will log a test failure and allow execution to continue.
 /// let _ = verify_that!(42, eq(123)); // This will do nothing.
 /// verify_that!(42, eq(123))?; // This will fail, returning immediately.
 /// verify_that!(42, eq(0))?; // This will not run.
+/// # Ok(())
+/// # }
+/// # verify_that!(should_fail(), err(displays_as(contains_substring("Expected: is equal to 123"))))
+/// #     .unwrap();
 /// ```
 #[macro_export]
 macro_rules! verify_that {
@@ -62,15 +76,26 @@ macro_rules! verify_that {
 /// The failure message contains detailed information about the arguments. For
 /// example:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{
+/// #     matchers::{contains_substring, displays_as, err}, verify_that, verify_pred, Result,
+/// # };
 /// fn equals_modulo(a: i32, b: i32, n: i32) -> bool { a % n == b % n }
 ///
+/// # /* The attribute macro would prevent the function from being compiled in a doctest.
+/// #[test]
+/// # */
 /// fn test() -> Result<()> {
-///   let a = 1;
-///   let b = 7;
-///   let n = 5;
-///   verify_pred!(equals_modulo(a, b, n))?;
+///     let a = 1;
+///     let b = 7;
+///     let n = 5;
+///     verify_pred!(equals_modulo(a, b, n))?;
+///     Ok(())
 /// }
+/// # verify_that!(
+/// #     test(),
+/// #     err(displays_as(contains_substring("equals_modulo(a, b, n) was false with")))
+/// # ).unwrap();
 /// ```
 ///
 /// This results in the following message:
