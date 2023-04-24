@@ -38,15 +38,18 @@
 //!
 //! For example, for fatal assertions:
 //!
-//! ```ignore
+//! ```
 //! use googletest::{matchers::eq, verify_that, Result};
 //!
+//! # /* The attribute macro would prevent the function from being compiled in a doctest.
 //! #[test]
+//! # */
 //! fn more_than_one_failure() -> Result<()> {
 //!    let value = 2;
 //!    verify_that!(value, eq(4))?;  // Fails and ends execution of the test.
 //!    verify_that!(value, eq(2)) // One can also just return the assertion result.
 //! }
+//! # more_than_one_failure().unwrap_err();
 //! ```
 //!
 //! > In case one wants behaviour closer to other Rust test libraries, the macro
@@ -55,26 +58,32 @@
 //!
 //! Matchers are composable:
 //!
-//! ```ignore
+//! ```
 //! use googletest::{matchers::{contains, ge}, verify_that, Result};
 //!
+//! # /* The attribute macro would prevent the function from being compiled in a doctest.
 //! #[test]
+//! # */
 //! fn contains_at_least_one_item_at_least_3() -> Result<()> {
 //!    let value = vec![1, 2, 3];
 //!    verify_that!(value, contains(ge(3)))
 //! }
+//! # contains_at_least_one_item_at_least_3().unwrap();
 //! ```
 //!
 //! They can also be logically combined:
 //!
-//! ```ignore
-//! use googletest::{matchers::{gt, lt, not, AndMatcherExt}, verify_that, Result};
+//! ```
+//! use googletest::{matchers::{ge, gt, not, AndMatcherExt}, verify_that, Result};
 //!
+//! # /* The attribute macro would prevent the function from being compiled in a doctest.
 //! #[test]
+//! # */
 //! fn strictly_between_9_and_11() -> Result<()> {
 //!    let value = 10;
 //!    verify_that!(value, gt(9).and(not(ge(11))))
 //! }
+//! # strictly_between_9_and_11().unwrap();
 //! ```
 //!
 //! ## Available matchers
@@ -173,14 +182,21 @@
 //! a struct holding the matcher's data and have it implement the trait
 //! [`Matcher`]:
 //!
-//! ```ignore
+//! ```no_run
+//! use googletest::matcher::{Matcher, MatcherResult};
+//! use std::fmt::Debug;
+//!
 //! struct MyEqMatcher<T> {
 //!    expected: T,
 //! }
 //!
 //! impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
-//!    fn matches(&self, actual: &A) -> MatcherResult {
-//!        if self.expected == *actual { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
+//!    fn matches(&self, actual: &T) -> MatcherResult {
+//!        if self.expected == *actual {
+//!            MatcherResult::Matches
+//!        } else {
+//!            MatcherResult::DoesNotMatch
+//!        }
 //!    }
 //!
 //!    fn describe(&self, matcher_result: MatcherResult) -> String {
@@ -198,7 +214,35 @@
 //!
 //! It is recommended to expose a function which constructs the matcher:
 //!
-//! ```ignore
+//! ```no_run
+//! # use googletest::matcher::{Matcher, MatcherResult};
+//! # use std::fmt::Debug;
+//! #
+//! # struct MyEqMatcher<T> {
+//! #    expected: T,
+//! # }
+//! #
+//! # impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
+//! #    fn matches(&self, actual: &T) -> MatcherResult {
+//! #        if self.expected == *actual {
+//! #            MatcherResult::Matches
+//! #        } else {
+//! #            MatcherResult::DoesNotMatch
+//! #        }
+//! #    }
+//! #
+//! #    fn describe(&self, matcher_result: MatcherResult) -> String {
+//! #        match matcher_result {
+//! #            MatcherResult::Matches => {
+//! #                format!("is equal to {:?} the way I define it", self.expected)
+//! #            }
+//! #            MatcherResult::DoesNotMatch => {
+//! #                format!("isn't equal to {:?} the way I define it", self.expected)
+//! #            }
+//! #        }
+//! #    }
+//! # }
+//! #
 //! pub fn eq_my_way<T: PartialEq + Debug>(expected: T) -> impl Matcher<T> {
 //!    MyEqMatcher { expected }
 //! }
@@ -206,11 +250,45 @@
 //!
 //! The new matcher can then be used in `verify_that!`:
 //!
-//! ```ignore
+//! ```
+//! # use googletest::{matcher::{Matcher, MatcherResult}, verify_that, Result};
+//! # use std::fmt::Debug;
+//! #
+//! # struct MyEqMatcher<T> {
+//! #    expected: T,
+//! # }
+//! #
+//! # impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
+//! #    fn matches(&self, actual: &T) -> MatcherResult {
+//! #        if self.expected == *actual {
+//! #            MatcherResult::Matches
+//! #        } else {
+//! #            MatcherResult::DoesNotMatch
+//! #        }
+//! #    }
+//! #
+//! #    fn describe(&self, matcher_result: MatcherResult) -> String {
+//! #        match matcher_result {
+//! #            MatcherResult::Matches => {
+//! #                format!("is equal to {:?} the way I define it", self.expected)
+//! #            }
+//! #            MatcherResult::DoesNotMatch => {
+//! #                format!("isn't equal to {:?} the way I define it", self.expected)
+//! #            }
+//! #        }
+//! #    }
+//! # }
+//! #
+//! # pub fn eq_my_way<T: PartialEq + Debug>(expected: T) -> impl Matcher<T> {
+//! #    MyEqMatcher { expected }
+//! # }
+//! # /* The attribute macro would prevent the function from being compiled in a doctest.
 //! #[test]
+//! # */
 //! fn should_be_equal_by_my_definition() -> Result<()> {
 //!    verify_that!(10, eq_my_way(10))
 //! }
+//! # should_be_equal_by_my_definition().unwrap();
 //! ```
 //!
 //! ## Non-fatal assertions
@@ -224,10 +302,12 @@
 //! also be marked with [`googletest::test`][test] instead of the Rust-standard
 //! `#[test]`. It must return [`Result<()>`].
 //!
-//! ```ignore
-//! use googletest::{expect_that, matchers::eq, Result};
+//! ```no_run
+//! use googletest::{expect_that, verify_that, matchers::eq, Result};
 //!
+//! # /* Make sure this also compiles as a doctest.
 //! #[googletest::test]
+//! # */
 //! fn more_than_one_failure() -> Result<()> {
 //!    let value = 2;
 //!    expect_that!(value, eq(3));  // Just marks the test as having failed.
@@ -243,14 +323,19 @@
 //! predicate in a `verify_pred!` invocation to turn that into a test assertion
 //! which passes precisely when the predicate returns `true`:
 //!
-//! ```ignore
+//! ```
+//! # use googletest::{verify_pred, Result};
 //! fn stuff_is_correct(x: i32, y: i32) -> bool {
 //!    x == y
 //! }
 //!
+//! # fn run_test() -> Result<()> {
 //! let x = 3;
 //! let y = 4;
 //! verify_pred!(stuff_is_correct(x, y))?;
+//! # Ok(())
+//! # }
+//! # run_test().unwrap_err();
 //! ```
 //!
 //! The assertion failure message shows the arguments and the values to which
@@ -273,11 +358,15 @@
 //! [`verify_pred!`] to cause a test to fail, with an optional formatted
 //! message:
 //!
-//! ```ignore
+//! ```
+//! # use googletest::{fail, Result};
+//! # /* The attribute macro would prevent the function from being compiled in a doctest.
 //! #[test]
+//! # */
 //! fn always_fails() -> Result<()> {
 //!    fail!("This test must fail with {}", "today")
 //! }
+//! # always_fails().unwrap_err();
 //! ```
 //!
 //! [`and_log_failure()`]: GoogleTestSupport::and_log_failure
@@ -327,7 +416,8 @@ pub trait GoogleTestSupport {
     ///
     /// This can be used for non-fatal test assertions, for example:
     ///
-    /// ```ignore
+    /// ```
+    /// # use googletest::{matchers::eq, verify_that, GoogleTestSupport, Result};
     /// let actual = 42;
     /// verify_that!(actual, eq(42)).and_log_failure();
     ///                                  // Test still passing; nothing happens
@@ -346,9 +436,20 @@ pub trait GoogleTestSupport {
     ///
     /// For example:
     ///
-    /// ```ignore
+    /// ```
+    /// # use googletest::{
+    /// #     matchers::{contains_substring, displays_as, err, eq},
+    /// #     verify_that,
+    /// #     GoogleTestSupport,
+    /// #     Result
+    /// # };
+    /// # fn should_fail() -> Result<()> {
     /// let actual = 0;
     /// verify_that!(actual, eq(42)).failure_message("Actual was wrong!")?;
+    /// # Ok(())
+    /// # }
+    /// # verify_that!(should_fail(), err(displays_as(contains_substring("Actual was wrong"))))
+    /// #     .unwrap();
     /// ```
     ///
     /// results in the following failure message:
@@ -361,10 +462,21 @@ pub trait GoogleTestSupport {
     ///
     /// One can pass a `String` too:
     ///
-    /// ```ignore
+    /// ```
+    /// # use googletest::{
+    /// #     matchers::{contains_substring, displays_as, err, eq},
+    /// #     verify_that,
+    /// #     GoogleTestSupport,
+    /// #     Result
+    /// # };
+    /// # fn should_fail() -> Result<()> {
     /// let actual = 0;
     /// verify_that!(actual, eq(42))
     ///    .failure_message(format!("Actual {} was wrong!", actual))?;
+    /// # Ok(())
+    /// # }
+    /// # verify_that!(should_fail(), err(displays_as(contains_substring("Actual 0 was wrong"))))
+    /// #     .unwrap();
     /// ```
     ///
     /// However, consider using [`GoogleTestSupport::with_failure_message`]
@@ -379,10 +491,21 @@ pub trait GoogleTestSupport {
     /// only executes the closure `provider` if it actually produces the
     /// message, thus saving possible memory allocation.
     ///
-    /// ```ignore
+    /// ```
+    /// # use googletest::{
+    /// #     matchers::{contains_substring, displays_as, err, eq},
+    /// #     verify_that,
+    /// #     GoogleTestSupport,
+    /// #     Result
+    /// # };
+    /// # fn should_fail() -> Result<()> {
     /// let actual = 0;
     /// verify_that!(actual, eq(42))
     ///    .with_failure_message(|| format!("Actual {} was wrong!", actual))?;
+    /// # Ok(())
+    /// # }
+    /// # verify_that!(should_fail(), err(displays_as(contains_substring("Actual 0 was wrong"))))
+    /// #     .unwrap();
     /// ```
     fn with_failure_message(self, provider: impl FnOnce() -> String) -> Self;
 }
