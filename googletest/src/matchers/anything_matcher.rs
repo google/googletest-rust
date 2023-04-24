@@ -22,9 +22,14 @@ use std::fmt::Debug;
 /// This is useful to check if `actual` matches the specific structure (like
 /// `Some(...)`)  but without caring about the internal value.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::{anything, some}, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// let option = Some("Some value");
 /// verify_that!(option, some(anything()))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 pub fn anything<T: Debug + ?Sized>() -> impl Matcher<T> {
     Anything {}
