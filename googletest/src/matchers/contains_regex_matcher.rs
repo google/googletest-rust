@@ -25,11 +25,24 @@ use std::ops::Deref;
 /// Both the actual value and the expected regular expression may be either a
 /// `String` or a string reference.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::contains_regex, verify_that, Result};
+/// # fn should_pass_1() -> Result<()> {
 /// verify_that!("Some value", contains_regex("S.*e"))?;  // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail() -> Result<()> {
 /// verify_that!("Another value", contains_regex("Some"))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_pass_2() -> Result<()> {
 /// verify_that!("Some value".to_string(), contains_regex("v.*e"))?;   // Passes
 /// verify_that!("Some value", contains_regex("v.*e".to_string()))?;   // Passes
+/// #     Ok(())
+/// # }
+/// # should_pass_1().unwrap();
+/// # should_fail().unwrap_err();
+/// # should_pass_2().unwrap();
 /// ```
 ///
 /// Panics if the given `pattern` is not a syntactically valid regular
