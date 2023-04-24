@@ -26,13 +26,28 @@ use std::fmt::Debug;
 ///
 /// `T` can be any container such that `&T` implements `IntoIterator`.
 ///
-/// ```ignore
-/// let value: Vec<i32> = vec![1, 2, 3];
+/// ```
+/// # use googletest::{matchers::{each, gt, lt}, verify_that, Result};
+/// # use std::collections::HashSet;
+/// # fn should_pass_1() -> Result<()> {
+/// let value = vec![1, 2, 3];
 /// verify_that!(value, each(gt(0)))?;  // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail() -> Result<()> {
+/// #     let value = vec![1, 2, 3];
 /// verify_that!(value, each(lt(2)))?;  // Fails: 2 and 3 are not less than 2
+/// #     Ok(())
+/// # }
 ///
+/// # fn should_pass_2() -> Result<()> {
 /// let value: HashSet<i32> = [1, 2, 3].into();
 /// verify_that!(value, each(gt(0)))?;  // Passes
+/// #     Ok(())
+/// # }
+/// should_pass_1().unwrap();
+/// should_fail().unwrap_err();
+/// should_pass_2().unwrap();
 /// ```
 ///
 /// One can also verify the contents of a slice by dereferencing it:
