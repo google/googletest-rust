@@ -21,8 +21,15 @@ use std::fmt::Debug;
 pub trait AndMatcherExt<T: Debug>: Matcher<T> {
     /// Constructs a matcher that matches both `self` and `right`.
     ///
-    /// ```ignore
-    /// verify_that!(Struct { a: 1, b: 2 }, field!(Struct::a, eq(1)).and(field!(Struct::b, eq(2))))?;
+    /// ```
+    /// # use googletest::{field, matchers::{eq, AndMatcherExt}, verify_that, Result};
+    /// # #[derive(Debug)]
+    /// # struct Struct { a: u32, b: u32 };
+    /// # fn should_pass() -> Result<()> {
+    /// verify_that!(Struct { a: 1, b: 2 }, field!(Struct.a, eq(1)).and(field!(Struct.b, eq(2))))?;
+    /// #     Ok(())
+    /// # }
+    /// # should_pass().unwrap();
     /// ```
     // TODO(b/264518763): Replace the return type with impl Matcher and reduce
     // visibility of ConjunctionMatcher once impl in return position in trait
