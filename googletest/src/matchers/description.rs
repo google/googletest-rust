@@ -72,9 +72,11 @@ impl Description {
     /// Note that this will indent every lines inside each element.
     /// For instance:
     ///
-    /// ```ignore
-    /// let description = iter::once("A B C\nD E F".to_string()).collect::<Description>();
+    /// ```
+    /// # use googletest::{matchers::{description::Description, displays_as, eq}, verify_that};
+    /// let description = std::iter::once("A B C\nD E F".to_string()).collect::<Description>();
     /// verify_that!(description.indent(), displays_as(eq("  A B C\n  D E F")))
+    /// # .unwrap();
     /// ```
     pub fn indent(self) -> Self {
         Self { indented: true, ..self }
@@ -89,9 +91,11 @@ impl Description {
     ///
     /// For instance:
     ///
-    /// ```ignore
-    /// let description = iter::once("A B C\nD E F".to_string()).collect::<Description>();
-    /// verify_that!(description.bullet_list(), displays_as(eq("* A B C\nD E F")))
+    /// ```
+    /// # use googletest::{matchers::{description::Description, displays_as, eq}, verify_that};
+    /// let description = std::iter::once("A B C\nD E F".to_string()).collect::<Description>();
+    /// verify_that!(description.bullet_list(), displays_as(eq("* A B C\n  D E F")))
+    /// # .unwrap();
     /// ```
     pub fn bullet_list(self) -> Self {
         Self { list_style: ListStyle::Bullet, ..self }
@@ -106,9 +110,11 @@ impl Description {
     ///
     /// For instance:
     ///
-    /// ```ignore
-    /// let description = iter::once("A B C\nD E F".to_string()).collect::<Description>();
-    /// verify_that!(description.indent(), displays_as(eq("  A B C\n  D E F")))
+    /// ```
+    /// # use googletest::{matchers::{description::Description, displays_as, eq}, verify_that};
+    /// let description = std::iter::once("A B C\nD E F".to_string()).collect::<Description>();
+    /// verify_that!(description.enumerate(), displays_as(eq("0. A B C\n   D E F")))
+    /// # .unwrap();
     /// ```
     pub fn enumerate(self) -> Self {
         Self { list_style: ListStyle::Enumerate, ..self }
