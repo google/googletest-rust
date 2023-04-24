@@ -21,18 +21,30 @@ use std::fmt::Debug;
 ///
 /// `T` can be any container such that `&T` implements `IntoIterator`.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::empty, verify_that, Result};
+/// # use std::collections::HashSet;
+/// # fn should_pass() -> Result<()> {
 /// let value: Vec<i32> = vec![];
 /// verify_that!(value, empty())?;
 /// let value: HashSet<i32> = HashSet::new();
 /// verify_that!(value, empty())?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 ///
 /// One can also check whether a slice is empty by dereferencing it:
 ///
-/// ```ignore
-/// let value = &[];
+/// ```
+/// # use googletest::{matchers::empty, verify_that, Result};
+/// # use std::collections::HashSet;
+/// # fn should_pass() -> Result<()> {
+/// let value: &[u32] = &[];
 /// verify_that!(*value, empty())?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 
 pub fn empty<T: Debug + ?Sized>() -> impl Matcher<T>
