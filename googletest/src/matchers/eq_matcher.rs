@@ -22,9 +22,18 @@ use std::fmt::Debug;
 /// The type of `expected` must implement the [`PartialEq`] trait so that the
 /// expected and actual values can be compared.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::eq, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// verify_that!(123, eq(123))?; // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail() -> Result<()> {
 /// verify_that!(123, eq(234))?; // Fails
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail().unwrap_err();
 /// ```
 ///
 /// `expected` to `actual` must be comparable with one another via the
@@ -32,14 +41,19 @@ use std::fmt::Debug;
 /// type. However, there are a few cases where different but closely related
 /// types are comparable, for example `String` with `&str`.
 ///
-/// ```ignore
-/// verify_that!(String::new("Some value"), eq("Some value"))?; // Passes
+/// ```
+/// # use googletest::{matchers::eq, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
+/// verify_that!(String::from("Some value"), eq("Some value"))?; // Passes
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 ///
 /// In most cases however, one must convert one of the arguments explicitly.
 /// This can be surprising when comparing integer types or references.
 ///
-/// ```ignore
+/// ```compile_fail
 /// verify_that!(123u32, eq(123u64))?; // Does not compile
 /// verify_that!(123u32 as u64, eq(123u64))?; // Passes
 /// ```
