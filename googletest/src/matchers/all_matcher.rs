@@ -26,17 +26,31 @@ use googletest::*;
 ///
 /// For example:
 ///
-/// ```ignore
-/// verify_that!("A string", all!(starts_with("A"), ends_width("string")))?; // Passes
-/// verify_that!("A string", all!(starts_with("A"), ends_width("not a string")))?; // Fails
+/// ```
+/// # use googletest::{all, matchers::{ends_with, starts_with}, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
+/// verify_that!("A string", all!(starts_with("A"), ends_with("string")))?; // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail() -> Result<()> {
+/// verify_that!("A string", all!(starts_with("A"), ends_with("not a string")))?; // Fails
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail().unwrap_err();
 /// ```
 ///
 /// Using this macro is equivalent to using the
 /// [`and`][crate::matchers::conjunction_matcher::AndMatcherExt::and] extension
 /// method:
 ///
-/// ```ignore
-/// verify_that!("A string", starts_with("A").and(ends_width("string")))?; // Also passes
+/// ```
+/// # use googletest::{matchers::{gt, lt, AndMatcherExt}, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
+/// verify_that!(10, gt(9).and(lt(11)))?; // Also passes
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 ///
 /// Assertion failure messages are not guaranteed to be identical, however.
