@@ -25,17 +25,25 @@ use googletest::*;
 /// sequence of matchers each of which should respectively match the
 /// corresponding element of the actual value.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{
+/// #     elements_are, matchers::{anything, eq, gt, lt, AndMatcherExt}, verify_that, Result,
+/// # };
 /// verify_that!(vec![1, 2, 3], elements_are![eq(1), anything(), gt(0).and(lt(123))])
+/// #    .unwrap();
 /// ```
 ///
 /// The actual value must be a container implementing [`IntoIterator`]. This
 /// includes standard containers, slices (when dereferenced) and arrays.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{
+/// #     elements_are, matchers::{anything, eq, gt, lt, AndMatcherExt}, verify_that, Result,
+/// # };
 /// let vector = vec![1, 2, 3];
 /// let slice = vector.as_slice();
 /// verify_that!(*slice, elements_are![eq(1), anything(), gt(0).and(lt(123))])
+/// #    .unwrap();
 /// ```
 ///
 /// This matcher does not support matching directly against an [`Iterator`]. To
