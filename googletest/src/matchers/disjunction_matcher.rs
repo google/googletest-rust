@@ -22,10 +22,19 @@ pub trait OrMatcherExt<T: Debug>: Matcher<T> {
     /// Constructs a matcher that matches when at least one of `self` or `right`
     /// matches the input.
     ///
-    /// ```ignore
+    /// ```
+    /// # use googletest::{matchers::{eq, ge, OrMatcherExt}, verify_that, Result};
+    /// # fn should_pass() -> Result<()> {
     /// verify_that!(10, eq(2).or(ge(5)))?;  // Passes
     /// verify_that!(10, eq(2).or(eq(5)).or(ge(9)))?;  // Passes
+    /// #     Ok(())
+    /// # }
+    /// # fn should_fail() -> Result<()> {
     /// verify_that!(10, eq(2).or(ge(15)))?; // Fails
+    /// #     Ok(())
+    /// # }
+    /// # should_pass().unwrap();
+    /// # should_fail().unwrap_err();
     /// ```
     // TODO(b/264518763): Replace the return type with impl Matcher and reduce
     // visibility of DisjunctionMatcher once impl in return position in trait
