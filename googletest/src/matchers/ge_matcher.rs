@@ -23,25 +23,52 @@ use std::fmt::Debug;
 /// comparable via the `PartialOrd` trait. Namely, `ActualT` must implement
 /// `PartialOrd<ExpectedT>`.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::ge, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// verify_that!(1, ge(0))?; // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail() -> Result<()> {
 /// verify_that!(0, ge(1))?; // Fails
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail().unwrap_err();
 /// ```
 ///
 /// In most cases the params neeed to be the same type or they need to be cast
 /// explicitly. This can be surprising when comparing integer types or
 /// references:
 ///
-/// ```ignore
+/// ```compile_fail
+/// # use googletest::{matchers::ge, verify_that, Result};
+/// # fn should_not_compile() -> Result<()> {
 /// verify_that!(123u32, ge(0u64))?; // Does not compile
 /// verify_that!(123u32 as u64, ge(0u64))?; // Passes
+/// #     Ok(())
+/// # }
 /// ```
 ///
-/// ```ignore
+/// ```compile_fail
+/// # use googletest::{matchers::ge, verify_that, Result};
+/// # fn should_not_compile() -> Result<()> {
 /// let actual: &u32 = &2;
 /// let expected: u32 = 0;
-/// verify_that(actual, ge(expected))?; // Does not compile
-/// verify_that(actual, ge(&expected))?; // Compiles and passes
+/// verify_that!(actual, ge(expected))?; // Does not compile
+/// #     Ok(())
+/// # }
+/// ```
+///
+/// ```
+/// # use googletest::{matchers::ge, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
+/// let actual: &u32 = &2;
+/// let expected: u32 = 0;
+/// verify_that!(actual, ge(&expected))?; // Compiles and passes
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 ///
 /// You can find the standard library `PartialOrd` implementation in
