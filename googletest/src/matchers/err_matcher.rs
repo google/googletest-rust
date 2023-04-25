@@ -19,10 +19,23 @@ use std::fmt::Debug;
 
 /// Matches a `Result` containing `Err` with a value matched by `inner`.
 ///
-/// ```ignore
-/// verify_that!(Err("Some error"), err(eq("Some error")))?;  // Passes
-/// verify_that!(Ok("A value"), err(eq("A value")))?;   // Fails
-/// verify_that!(Err("Some error"), err(eq("Some error value")))?;   // Fails
+/// ```
+/// # use googletest::{matchers::{eq, err}, verify_that};
+/// # fn should_pass() -> googletest::Result<()> {
+/// verify_that!(Err::<(), _>("Some error"), err(eq("Some error")))?;  // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail_1() -> googletest::Result<()> {
+/// verify_that!(Ok::<_, &str>("A value"), err(eq("A value")))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_fail_2() -> googletest::Result<()> {
+/// verify_that!(Err::<(), _>("Some error"), err(eq("Some other error")))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail_1().unwrap_err();
+/// # should_fail_2().unwrap_err();
 /// ```
 pub fn err<T: Debug, E: Debug>(inner: impl Matcher<E>) -> impl Matcher<std::result::Result<T, E>> {
     ErrMatcher { inner }
