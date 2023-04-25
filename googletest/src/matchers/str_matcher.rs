@@ -27,11 +27,24 @@ use std::ops::Deref;
 /// Both the actual value and the expected substring may be either a `String` or
 /// a string reference.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::contains_substring, verify_that, Result};
+/// # fn should_pass_1() -> Result<()> {
 /// verify_that!("Some value", contains_substring("Some"))?;  // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail() -> Result<()> {
 /// verify_that!("Another value", contains_substring("Some"))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_pass_2() -> Result<()> {
 /// verify_that!("Some value".to_string(), contains_substring("value"))?;   // Passes
 /// verify_that!("Some value", contains_substring("value".to_string()))?;   // Passes
+/// #     Ok(())
+/// # }
+/// # should_pass_1().unwrap();
+/// # should_fail().unwrap_err();
+/// # should_pass_2().unwrap();
 /// ```
 ///
 /// > Note on memory use: In most cases, this matcher does not allocate memory
@@ -51,12 +64,29 @@ pub fn contains_substring<T>(expected: T) -> StrMatcher<T> {
 /// Both the actual value and the expected prefix may be either a `String` or
 /// a string reference.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::starts_with, verify_that, Result};
+/// # fn should_pass_1() -> Result<()> {
 /// verify_that!("Some value", starts_with("Some"))?;  // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail_1() -> Result<()> {
 /// verify_that!("Another value", starts_with("Some"))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_fail_2() -> Result<()> {
 /// verify_that!("Some value", starts_with("value"))?;  // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_pass_2() -> Result<()> {
 /// verify_that!("Some value".to_string(), starts_with("Some"))?;   // Passes
 /// verify_that!("Some value", starts_with("Some".to_string()))?;   // Passes
+/// #     Ok(())
+/// # }
+/// # should_pass_1().unwrap();
+/// # should_fail_1().unwrap_err();
+/// # should_fail_2().unwrap_err();
+/// # should_pass_2().unwrap();
 /// ```
 pub fn starts_with<T>(expected: T) -> StrMatcher<T> {
     StrMatcher {
@@ -70,12 +100,29 @@ pub fn starts_with<T>(expected: T) -> StrMatcher<T> {
 /// Both the actual value and the expected suffix may be either a `String` or
 /// a string reference.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::ends_with, verify_that, Result};
+/// # fn should_pass_1() -> Result<()> {
 /// verify_that!("Some value", ends_with("value"))?;  // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail_1() -> Result<()> {
 /// verify_that!("Some value", ends_with("other value"))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_fail_2() -> Result<()> {
 /// verify_that!("Some value", ends_with("Some"))?;  // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_pass_2() -> Result<()> {
 /// verify_that!("Some value".to_string(), ends_with("value"))?;   // Passes
 /// verify_that!("Some value", ends_with("value".to_string()))?;   // Passes
+/// #     Ok(())
+/// # }
+/// # should_pass_1().unwrap();
+/// # should_fail_1().unwrap_err();
+/// # should_fail_2().unwrap_err();
+/// # should_pass_2().unwrap();
 /// ```
 pub fn ends_with<T>(expected: T) -> StrMatcher<T> {
     StrMatcher {
@@ -95,9 +142,16 @@ pub trait StrMatcherConfigurator<ExpectedT> {
     ///
     /// Whitespace is defined as in [`str::trim_start`].
     ///
-    /// ```ignore
+    /// ```
+    /// # use googletest::{
+    /// #     matchers::{eq, str_matcher::StrMatcherConfigurator}, verify_that, Result,
+    /// # };
+    /// # fn should_pass() -> Result<()> {
     /// verify_that!("A string", eq("   A string").ignoring_leading_whitespace())?; // Passes
     /// verify_that!("   A string", eq("A string").ignoring_leading_whitespace())?; // Passes
+    /// #     Ok(())
+    /// # }
+    /// # should_pass().unwrap();
     /// ```
     ///
     /// When all other configuration options are left as the defaults, this is
@@ -112,9 +166,16 @@ pub trait StrMatcherConfigurator<ExpectedT> {
     ///
     /// Whitespace is defined as in [`str::trim_end`].
     ///
-    /// ```ignore
+    /// ```
+    /// # use googletest::{
+    /// #     matchers::{eq, str_matcher::StrMatcherConfigurator}, verify_that, Result,
+    /// # };
+    /// # fn should_pass() -> Result<()> {
     /// verify_that!("A string", eq("A string   ").ignoring_trailing_whitespace())?; // Passes
     /// verify_that!("A string   ", eq("A string").ignoring_trailing_whitespace())?; // Passes
+    /// #     Ok(())
+    /// # }
+    /// # should_pass().unwrap();
     /// ```
     ///
     /// When all other configuration options are left as the defaults, this is
@@ -129,9 +190,16 @@ pub trait StrMatcherConfigurator<ExpectedT> {
     ///
     /// Whitespace is defined as in [`str::trim`].
     ///
-    /// ```ignore
+    /// ```
+    /// # use googletest::{
+    /// #     matchers::{eq, str_matcher::StrMatcherConfigurator}, verify_that, Result,
+    /// # };
+    /// # fn should_pass() -> Result<()> {
     /// verify_that!("A string", eq("   A string   ").ignoring_outer_whitespace())?; // Passes
     /// verify_that!("   A string   ", eq("A string").ignoring_outer_whitespace())?; // Passes
+    /// #     Ok(())
+    /// # }
+    /// # should_pass().unwrap();
     /// ```
     ///
     /// This is equivalent to invoking both
@@ -149,9 +217,20 @@ pub trait StrMatcherConfigurator<ExpectedT> {
     ///
     /// This uses the same rules for case as [`str::eq_ignore_ascii_case`].
     ///
-    /// ```ignore
+    /// ```
+    /// # use googletest::{
+    /// #     matchers::{eq, str_matcher::StrMatcherConfigurator}, verify_that, Result,
+    /// # };
+    /// # fn should_pass() -> Result<()> {
     /// verify_that!("Some value", eq("SOME VALUE").ignoring_ascii_case())?;  // Passes
+    /// #     Ok(())
+    /// # }
+    /// # fn should_fail() -> Result<()> {
     /// verify_that!("Another value", eq("Some value").ignoring_ascii_case())?;   // Fails
+    /// #     Ok(())
+    /// # }
+    /// # should_pass().unwrap();
+    /// # should_fail().unwrap_err();
     /// ```
     ///
     /// This is **not guaranteed** to match strings with differing upper/lower
@@ -163,17 +242,39 @@ pub trait StrMatcherConfigurator<ExpectedT> {
     /// Configures the matcher to match only strings which otherwise satisfy the
     /// conditions a number times matched by the matcher `times`.
     ///
-    /// ```ignore
+    /// ```
+    /// # use googletest::{
+    /// #     matchers::{contains_substring, eq, str_matcher::StrMatcherConfigurator},
+    /// #     verify_that,
+    /// #     Result,
+    /// # };
+    /// # fn should_pass() -> Result<()> {
     /// verify_that!("Some value\nSome value", contains_substring("value").times(eq(2)))?; // Passes
+    /// #     Ok(())
+    /// # }
+    /// # fn should_fail() -> Result<()> {
     /// verify_that!("Some value", contains_substring("value").times(eq(2)))?; // Fails
+    /// #     Ok(())
+    /// # }
+    /// # should_pass().unwrap();
+    /// # should_fail().unwrap_err();
     /// ```
     ///
     /// The matched substrings must be disjoint from one another to be counted.
     /// For example:
     ///
-    /// ```ignore
+    /// ```
+    /// # use googletest::{
+    /// #     matchers::{contains_substring, eq, str_matcher::StrMatcherConfigurator},
+    /// #     verify_that,
+    /// #     Result,
+    /// # };
+    /// # fn should_fail() -> Result<()> {
     /// // Fails: substrings distinct but not disjoint!
     /// verify_that!("ababab", contains_substring("abab").times(eq(2)))?;
+    /// #     Ok(())
+    /// # }
+    /// # should_fail().unwrap_err();
     /// ```
     ///
     /// This is only meaningful when the matcher was constructed with
