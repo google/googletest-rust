@@ -29,49 +29,83 @@ use googletest::*;
 ///
 /// For example:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{field, matchers::eq, verify_that, Result};
+/// # #[derive(Debug)]
 /// struct IntField {
 ///   int: i32
 /// }
+/// # fn should_pass() -> Result<()> {
 /// verify_that!(IntField{int: 32}, field!(IntField.int, eq(32)))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 ///
 /// Tuple structs are also supported via the index syntax:
 ///
-/// ```ignore
-/// struct IntField(i32)
+/// ```
+/// # use googletest::{field, matchers::eq, verify_that, Result};
+/// # #[derive(Debug)]
+/// struct IntField(i32);
+/// # fn should_pass() -> Result<()> {
 /// verify_that!(IntField(32), field!(IntField.0, eq(32)))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 ///
 /// Enums are also supported, in which case only the specified variant is
 /// matched:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{field, matchers::eq, verify_that, Result};
+/// # #[derive(Debug)]
 /// enum MyEnum {
 ///     A(i32),
 ///     B,
 /// }
+/// # fn should_pass() -> Result<()> {
 /// verify_that!(MyEnum::A(32), field!(MyEnum::A.0, eq(32)))?; // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail() -> Result<()> {
 /// verify_that!(MyEnum::B, field!(MyEnum::A.0, eq(32)))?; // Fails: wrong enum variant
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail().unwrap_err();
 /// ```
 ///
 /// The structure or enum may also be referenced from a separate module:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{field, matchers::eq, verify_that, Result};
 /// mod a_module {
-///     struct AStruct(i32);
+/// #   #[derive(Debug)]
+///     pub struct AStruct(pub i32);
 /// }
-/// verify_that(a_module::AStruct(32), field!(a_module::AStruct.0, eq(32)))?;
+/// # fn should_pass() -> Result<()> {
+/// verify_that!(a_module::AStruct(32), field!(a_module::AStruct.0, eq(32)))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 ///
 /// Nested structures are *not supported*, however:
 ///
-/// ```ignore
+/// ```compile_fail
+/// # use googletest::{field, matchers::eq, verify_that, Result};
+/// # #[derive(Debug)]
 /// struct InnerStruct(i32);
+/// # #[derive(Debug)]
 /// struct OuterStruct {
 ///     inner: InnerStruct,
 /// }
-/// verify_that(value, field!(OuterStruct.inner.0, eq(32)))?; // Does not compile
+/// # fn should_not_compile() -> Result<()> {
+/// verify_that!(value, field!(OuterStruct.inner.0, eq(32)))?; // Does not compile
+/// #     Ok(())
+/// # }
 /// ```
 ///
 /// See also the macro [`property`][crate::property] for an analogous mechanism
