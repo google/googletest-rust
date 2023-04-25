@@ -26,25 +26,38 @@ use googletest::*;
 /// property cannot be accessed through a field and must instead be
 /// extracted through a method call. For example:
 ///
-/// ```ignore
-/// pub struct InnerStruct {
-///     // Some private fields
+/// ```
+/// # use googletest::{matchers::{contains, eq}, property, verify_that};
+/// #[derive(Debug)]
+/// pub struct MyStruct {
+///     a_field: u32,
 /// }
-/// impl InnerStruct {
-///     pub fn get_foo(&self) -> u32 {...}
+///
+/// impl MyStruct {
+///     pub fn get_a_field(&self) -> u32 { self.a_field }
 /// }
-/// let value = vec![InnerStruct { ... }]
-/// verify_that!(value, contains(property!(InnerStruct.get_foo(), eq(100))))
+///
+/// let value = vec![MyStruct { a_field: 100 }];
+/// verify_that!(value, contains(property!(MyStruct.get_a_field(), eq(100))))
+/// #    .unwrap();
 /// ```
 ///
 /// If the method returns a *reference*, then it must be preceded by the keyword
 /// `ref`:
 ///
-/// ```ignore
-/// impl InnerStruct {
-///     pub fn get_foo(&self) -> &u32 {...}
+/// ```
+/// # use googletest::{matchers::{contains, eq}, property, verify_that};
+/// # #[derive(Debug)]
+/// # pub struct MyStruct {
+/// #     a_field: u32,
+/// # }
+/// impl MyStruct {
+///     pub fn get_a_field(&self) -> &u32 { &self.a_field }
 /// }
-/// verify_that!(value, contains(property!(ref InnerStruct.get_foo(), eq(100))))
+///
+/// # let value = vec![MyStruct { a_field: 100 }];
+/// verify_that!(value, contains(property!(ref MyStruct.get_a_field(), eq(100))))
+/// #    .unwrap();
 /// ```
 ///
 /// > Note: At the moment, this does not work properly with methods returning
@@ -52,11 +65,19 @@ use googletest::*;
 ///
 /// The method may also take additional arguments:
 ///
-/// ```ignore
-/// impl InnerStruct {
-///     pub fn add_to_foo(&self, a: u32) -> u32 {...}
+/// ```
+/// # use googletest::{matchers::{contains, eq}, property, verify_that};
+/// # #[derive(Debug)]
+/// # pub struct MyStruct {
+/// #     a_field: u32,
+/// # }
+/// impl MyStruct {
+///     pub fn add_to_a_field(&self, a: u32) -> u32 { self.a_field + a }
 /// }
-/// verify_that!(value, contains(property!(InnerStruct.add_to_foo(50), eq(150))))
+///
+/// # let value = vec![MyStruct { a_field: 100 }];
+/// verify_that!(value, contains(property!(MyStruct.add_to_a_field(50), eq(150))))
+/// #    .unwrap();
 /// ```
 ///
 /// > **Note**: The method should be pure function with a deterministic output
