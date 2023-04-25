@@ -26,23 +26,40 @@ use googletest::*;
 /// For example, the following matches a container of integers each of which
 /// does not exceed the given upper bounds:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::le, pointwise, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// let value = vec![1, 2, 3];
 /// verify_that!(value, pointwise!(le, [1, 3, 3]))?; // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail() -> Result<()> {
+/// #     let value = vec![1, 2, 3];
 /// verify_that!(value, pointwise!(le, [1, 1, 3]))?; // Fails
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail().unwrap_err();
 /// ```
 ///
 /// One can also use a closure which returns a matcher:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::near, pointwise, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// let value = vec![1.00001, 2.000001, 3.00001];
 /// verify_that!(value, pointwise!(|v| near(v, 0.001), [1.0, 2.0, 3.0]))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 ///
 /// One can pass up to three containers to supply arguments to the function
 /// creating the matcher:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::near, pointwise, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// let value = vec![1.00001, 2.000001, 3.00001];
 /// verify_that!(value, pointwise!(|v, t| near(v, t), [1.0, 2.0, 3.0], [0.001, 0.0001, 0.01]))?;
 /// verify_that!(value, pointwise!(near, [1.0, 2.0, 3.0], [0.001, 0.0001, 0.01]))?; // Same as above
@@ -55,6 +72,9 @@ use googletest::*;
 ///         [0.5, 0.5, 1.0]
 ///     )
 /// )?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 ///
 /// When using `pointwise!` with multiple containers, the caller must ensure
