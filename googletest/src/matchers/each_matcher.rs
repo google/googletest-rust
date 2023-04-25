@@ -45,16 +45,21 @@ use std::fmt::Debug;
 /// verify_that!(value, each(gt(0)))?;  // Passes
 /// #     Ok(())
 /// # }
-/// should_pass_1().unwrap();
-/// should_fail().unwrap_err();
-/// should_pass_2().unwrap();
+/// # should_pass_1().unwrap();
+/// # should_fail().unwrap_err();
+/// # should_pass_2().unwrap();
 /// ```
 ///
 /// One can also verify the contents of a slice by dereferencing it:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::{each, gt}, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// let value = &[1, 2, 3];
 /// verify_that!(*value, each(gt(0)))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 pub fn each<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT>(
     inner: MatcherT,
