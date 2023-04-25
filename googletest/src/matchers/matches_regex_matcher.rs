@@ -22,18 +22,35 @@ use std::ops::Deref;
 /// Matches a string the entirety of which which matches the given regular
 /// expression.
 ///
-/// This is similar to `contains_regex`, except that the match must cover the
-/// whole string and not a substring.
+/// This is similar to [`contains_regex`][crate::matchers::contains_regex],
+/// except that the match must cover the whole string and not a substring.
 ///
 /// Both the actual value and the expected regular expression may be either a
 /// `String` or a string reference.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::matches_regex, verify_that, Result};
+/// # fn should_pass_1() -> Result<()> {
 /// verify_that!("Some value", matches_regex("S.*e"))?;  // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail_1() -> Result<()> {
 /// verify_that!("Another value", matches_regex("Some"))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_fail_2() -> Result<()> {
 /// verify_that!("Some value", matches_regex("Some"))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_pass_2() -> Result<()> {
 /// verify_that!("Some value".to_string(), matches_regex(".*v.*e"))?;   // Passes
 /// verify_that!("Some value", matches_regex(".*v.*e".to_string()))?;   // Passes
+/// #     Ok(())
+/// # }
+/// # should_pass_1().unwrap();
+/// # should_fail_1().unwrap_err();
+/// # should_fail_2().unwrap_err();
+/// # should_pass_2().unwrap();
 /// ```
 ///
 /// Panics if the given `pattern` is not a syntactically valid regular
