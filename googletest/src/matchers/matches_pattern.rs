@@ -25,95 +25,155 @@
 /// This can be used to match arbitrary combinations of fields on structures
 /// using arbitrary matchers:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::{ends_with, starts_with}, matches_pattern, verify_that};
+/// #[derive(Debug)]
 /// struct MyStruct {
 ///     a_field: String,
 ///     another_field: String,
 /// }
 ///
+/// let my_struct = MyStruct {
+///     a_field: "Something to believe in".into(),
+///     another_field: "Something else".into()
+/// };
 /// verify_that!(my_struct, matches_pattern!(MyStruct {
 ///     a_field: starts_with("Something"),
 ///     another_field: ends_with("else"),
 /// }))
+/// #     .unwrap();
 /// ```
 ///
 /// It is not required to include all named fields in the specification:
 ///
-/// ```ignore
-/// struct MyStruct {
-///     a_field: String,
-///     another_field: String,
-/// }
-///
+/// ```
+/// # use googletest::{matchers::starts_with, matches_pattern, verify_that};
+/// # #[derive(Debug)]
+/// # struct MyStruct {
+/// #     a_field: String,
+/// #     another_field: String,
+/// # }
+/// #
+/// # let my_struct = MyStruct {
+/// #     a_field: "Something to believe in".into(),
+/// #     another_field: "Something else".into()
+/// # };
 /// verify_that!(my_struct, matches_pattern!(MyStruct {
 ///     a_field: starts_with("Something"),
 ///     // another_field is missing, so it may be anything.
 /// }))
+/// #     .unwrap();
 /// ```
 ///
 /// One can use it recursively to match nested structures:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::starts_with, matches_pattern, verify_that};
+/// #[derive(Debug)]
 /// struct MyStruct {
 ///     a_nested_struct: MyInnerStruct,
 /// }
 ///
+/// #[derive(Debug)]
 /// struct MyInnerStruct {
 ///     a_field: String,
 /// }
 ///
+/// let my_struct = MyStruct {
+///     a_nested_struct: MyInnerStruct { a_field: "Something to believe in".into() },
+/// };
 /// verify_that!(my_struct, matches_pattern!(MyStruct {
 ///     a_nested_struct: matches_pattern!(MyInnerStruct {
 ///         a_field: starts_with("Something"),
 ///     }),
 /// }))
+/// #     .unwrap();
 /// ```
 ///
 /// One can use the alias [`pat`][crate::pat] to make this less verbose:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::starts_with, matches_pattern, pat, verify_that};
+/// # #[derive(Debug)]
+/// # struct MyStruct {
+/// #     a_nested_struct: MyInnerStruct,
+/// # }
+/// #
+/// # #[derive(Debug)]
+/// # struct MyInnerStruct {
+/// #     a_field: String,
+/// # }
+/// #
+/// # let my_struct = MyStruct {
+/// #     a_nested_struct: MyInnerStruct { a_field: "Something to believe in".into() },
+/// # };
 /// verify_that!(my_struct, matches_pattern!(MyStruct {
 ///     a_nested_struct: pat!(MyInnerStruct {
 ///         a_field: starts_with("Something"),
 ///     }),
 /// }))
+/// #     .unwrap();
 /// ```
 ///
 /// In addition to fields, one can match on the outputs of methods
 /// ("properties"):
 ///
-/// ```ignore
-/// impl MyStruct {
-///     fn get_a_field(&self) -> String {...}
+/// ```
+/// # use googletest::{matchers::starts_with, matches_pattern, verify_that};
+/// #[derive(Debug)]
+/// struct MyStruct {
+///     a_field: String,
 /// }
 ///
+/// impl MyStruct {
+///     fn get_a_field(&self) -> String { self.a_field.clone() }
+/// }
+///
+/// let my_struct = MyStruct { a_field: "Something to believe in".into() };
 /// verify_that!(my_struct, matches_pattern!(MyStruct {
 ///     get_a_field(): starts_with("Something"),
 /// }))
+/// #     .unwrap();
 /// ```
 ///
 /// These may also include extra parameters you pass in:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::ends_with, matches_pattern, verify_that};
+/// # #[derive(Debug)]
+/// # struct MyStruct {
+/// #     a_field: String,
+/// # }
+/// #
 /// impl MyStruct {
-///     fn append_to_a_field(&self, suffix: &str) -> String {...}
+///     fn append_to_a_field(&self, suffix: &str) -> String { self.a_field.clone() + suffix }
 /// }
 ///
+/// # let my_struct = MyStruct { a_field: "Something to believe in".into() };
 /// verify_that!(my_struct, matches_pattern!(MyStruct {
 ///     append_to_a_field("a suffix"): ends_with("a suffix"),
 /// }))
+/// #     .unwrap();
 /// ```
 ///
 /// If the method returns a reference, precede it with the keyword `ref`:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::starts_with, matches_pattern, verify_that};
+/// # #[derive(Debug)]
+/// # struct MyStruct {
+/// #     a_field: String,
+/// # }
+/// #
 /// impl MyStruct {
-///     fn get_a_field_ref(&self) -> &String {...}
+///     fn get_a_field_ref(&self) -> &String { &self.a_field }
 /// }
 ///
+/// # let my_struct = MyStruct { a_field: "Something to believe in".into() };
 /// verify_that!(my_struct, matches_pattern!(MyStruct {
 ///     ref get_a_field_ref(): starts_with("Something"),
 /// }))
+/// #    .unwrap();
 /// ```
 ///
 /// > Note: At the moment, this does not work properly with methods returning
@@ -122,25 +182,39 @@
 /// One can also match tuple structs with up to 10 fields. In this case, all
 /// fields must have matchers:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::eq, matches_pattern, verify_that, Result};
+/// #[derive(Debug)]
 /// struct MyTupleStruct(String, String);
 ///
+/// let my_struct = MyTupleStruct("Something".into(), "Some other thing".into());
 /// verify_that!(
 ///     my_struct,
 ///     matches_pattern!(MyTupleStruct(eq("Something"), eq("Some other thing")))
 /// )
+/// #    .unwrap();
 /// ```
 ///
 /// One can also match enum values:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::eq, matches_pattern, verify_that, Result};
+/// #[derive(Debug)]
 /// enum MyEnum {
 ///     A(u32),
 ///     B,
 /// }
 ///
-/// verify_that(MyEnum::A(123), matches_pattern!(MyEnum::A(eq(123))))?; // Passes
-/// verify_that(MyEnum::B, matches_pattern!(MyEnum::A(eq(123))))?; // Fails - wrong enum variant
+/// # fn should_pass() -> Result<()> {
+/// verify_that!(MyEnum::A(123), matches_pattern!(MyEnum::A(eq(123))))?; // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail() -> Result<()> {
+/// verify_that!(MyEnum::B, matches_pattern!(MyEnum::A(eq(123))))?; // Fails - wrong enum variant
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail().unwrap_err();
 /// ```
 ///
 /// It is perfectly okay to omit fields from a pattern with named fields. The
