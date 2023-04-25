@@ -26,20 +26,30 @@ use std::fmt::Debug;
 /// This matches against a container over which one can iterate. This includes
 /// the standard Rust containers, arrays, and (when dereferenced) slices.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::{eq, size}, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// let array = [1,2,3];
 /// verify_that!(array, size(eq(3)))?;
 /// let vec = vec![1,2,3];
 /// verify_that!(vec, size(eq(3)))?;
-/// let slice = value.as_slice();
+/// let slice = vec.as_slice();
 /// verify_that!(*slice, size(eq(3)))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 ///
 /// The parameter `expected` can be any integer numeric matcher.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::{gt, size}, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// let vec = vec![1,2,3];
 /// verify_that!(vec, size(gt(1)))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 pub fn size<T: Debug + ?Sized, E: Matcher<usize>>(expected: E) -> impl Matcher<T>
 where
