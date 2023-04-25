@@ -22,19 +22,41 @@ use std::hash::Hash;
 /// Matches a HashMap containing the given `key` whose value is matched by the
 /// matcher `inner`.
 ///
-/// ```ignore
-/// let value: HashMap<i32, i32> = HashMap::from([(0, 1), (1, -1)]);
+/// ```
+/// # use googletest::{matchers::{eq, gt, has_entry}, verify_that, Result};
+/// # use std::collections::HashMap;
+/// # fn should_pass() -> Result<()> {
+/// let value = HashMap::from([(0, 1), (1, -1)]);
 /// verify_that!(value, has_entry(0, eq(1)))?;  // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail_1() -> Result<()> {
+/// # let value = HashMap::from([(0, 1), (1, -1)]);
 /// verify_that!(value, has_entry(1, gt(0)))?;  // Fails: value not matched
+/// #     Ok(())
+/// # }
+/// # fn should_fail_2() -> Result<()> {
+/// # let value = HashMap::from([(0, 1), (1, -1)]);
 /// verify_that!(value, has_entry(2, eq(0)))?;  // Fails: key not present
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail_1().unwrap_err();
+/// # should_fail_2().unwrap_err();
 /// ```
 ///
 /// Note: One could obtain the same effect by collecting entries into a `Vec`
 /// and using `contains`:
 ///
-/// ```ignore
-/// let value: HashMap<i32, i32> = HashMap::from([(0, 1), (1, -1)]);
+/// ```
+/// # use googletest::{matchers::{contains, eq}, verify_that, Result};
+/// # use std::collections::HashMap;
+/// # fn should_pass() -> Result<()> {
+/// let value = HashMap::from([(0, 1), (1, -1)]);
 /// verify_that!(value.into_iter().collect::<Vec<_>>(), contains(eq((0, 1))))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 ///
 /// However, `has_entry` will offer somewhat better diagnostic messages in the
