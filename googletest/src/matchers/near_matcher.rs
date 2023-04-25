@@ -27,39 +27,87 @@ use std::fmt::Debug;
 /// `max_abs_error` must be non-negative. The matcher panics on construction
 /// otherwise.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::near, verify_that, Result};
+/// # fn should_pass_1() -> Result<()> {
 /// verify_that!(1.0, near(1.0, 0.1))?; // Passes
 /// verify_that!(1.01, near(1.0, 0.1))?; // Passes
 /// verify_that!(1.25, near(1.0, 0.25))?; // Passes
 /// verify_that!(0.75, near(1.0, 0.25))?; // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail_1() -> Result<()> {
 /// verify_that!(1.101, near(1.0, 0.1))?; // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_fail_2() -> Result<()> {
 /// verify_that!(0.899, near(1.0, 0.1))?; // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_pass_2() -> Result<()> {
 /// verify_that!(100.25, near(100.0, 0.25))?; // Passes
+/// #     Ok(())
+/// # }
+/// # should_pass_1().unwrap();
+/// # should_fail_1().unwrap_err();
+/// # should_fail_2().unwrap_err();
+/// # should_pass_2().unwrap();
 /// ```
 ///
 /// The default behaviour for special values is consistent with the IEEE
 /// floating point standard. Thus infinity is infinitely far away from any
 /// floating point value:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::near, verify_that, Result};
+/// # fn should_fail_1() -> Result<()> {
 /// verify_that!(f64::INFINITY, near(0.0, f64::MAX))?; // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_fail_2() -> Result<()> {
 /// verify_that!(0.0, near(f64::INFINITY, f64::MAX))?; // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_fail_3() -> Result<()> {
 /// verify_that!(f64::INFINITY, near(f64::INFINITY, f64::MAX))?; // Fails
+/// #     Ok(())
+/// # }
+/// # should_fail_1().unwrap_err();
+/// # should_fail_2().unwrap_err();
+/// # should_fail_3().unwrap_err();
 /// ```
 ///
 /// Similarly, by default, `NaN` is infinitely far away from any value:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::near, verify_that, Result};
+/// # fn should_fail_1() -> Result<()> {
 /// verify_that!(f64::NAN, near(0.0, f64::MAX))?; // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_fail_2() -> Result<()> {
 /// verify_that!(0.0, near(f64::NAN, f64::MAX))?; // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_fail_3() -> Result<()> {
 /// verify_that!(f64::NAN, near(f64::NAN, f64::MAX))?; // Fails
+/// #     Ok(())
+/// # }
+/// # should_fail_1().unwrap_err();
+/// # should_fail_2().unwrap_err();
+/// # should_fail_3().unwrap_err();
 /// ```
 ///
 /// To treat two `NaN` values as equal, use the method
 /// [`NearMatcher::nans_are_equal`].
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::near, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// verify_that!(f64::NAN, near(f64::NAN, f64::MAX).nans_are_equal())?; // Passes
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 pub fn near<T: Debug + Float + Copy>(expected: T, max_abs_error: T) -> NearMatcher<T> {
     if max_abs_error.is_nan() {
