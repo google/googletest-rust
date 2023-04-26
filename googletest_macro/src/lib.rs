@@ -21,13 +21,13 @@ use syn::{parse_macro_input, Attribute, ItemFn, ReturnType};
 ///
 /// ```ignore
 /// #[googletest::test]
-/// fn should_work() -> GoogleTestResult {
+/// fn should_work() -> googletest::Result {
 ///     ...
 ///     Ok(())
 /// }
 /// ```
 ///
-/// The test function should return `GoogleTestResult` so that one can use
+/// The test function should return [`googletest::Result`] so that one can use
 /// `verify_that!` with the question mark operator to abort execution. The last
 /// line of the test should return `Ok(())`.
 ///
@@ -37,17 +37,19 @@ use syn::{parse_macro_input, Attribute, ItemFn, ReturnType};
 ///
 /// ```ignore
 /// #[googletest::test]
-/// fn should_work() -> GoogleTestResult {
+/// fn should_work() -> googletest::Result {
 ///     ...
 ///     assert_that_everything_is_okay()?;
 ///     do_some_more_stuff();  // Will not be executed if assert failed.
 ///     Ok(())
 /// }
 ///
-/// fn assert_that_everything_is_okay() -> GoogleTestResult {
+/// fn assert_that_everything_is_okay() -> googletest::Result {
 ///     verify_that!(...)
 /// }
 /// ```
+///
+/// [`googletest::Result`]: type.Result.html
 #[proc_macro_attribute]
 pub fn test(
     _args: proc_macro::TokenStream,
