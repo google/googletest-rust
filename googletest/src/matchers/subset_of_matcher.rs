@@ -26,28 +26,53 @@ use std::fmt::Debug;
 /// `ActualT` and `ExpectedT` can each be any container a reference to which
 /// implements `IntoIterator`. They need not be the same container type.
 ///
-/// ```ignore
-/// let value: Vec<i32> = vec![1, 2, 3];
+/// ```
+/// # use googletest::{matchers::subset_of, verify_that, Result};
+/// # use std::collections::HashSet;
+/// # fn should_pass_1() -> Result<()> {
+/// let value = vec![1, 2, 3];
 /// verify_that!(value, subset_of([1, 2, 3, 4]))?;  // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail() -> Result<()> {
+/// # let value = vec![1, 2, 3];
 /// verify_that!(value, subset_of([1, 2]))?;  // Fails: 3 is not in the superset
+/// #     Ok(())
+/// # }
+/// # should_pass_1().unwrap();
+/// # should_fail().unwrap_err();
 ///
+/// # fn should_pass_2() -> Result<()> {
 /// let value: HashSet<i32> = [1, 2, 3].into();
 /// verify_that!(value, subset_of([1, 2, 3]))?;  // Passes
+/// #     Ok(())
+/// # }
+/// # should_pass_2().unwrap();
 /// ```
 ///
 /// Item multiplicity in both the actual and expected containers is ignored:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::subset_of, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// let value: Vec<i32> = vec![0, 0, 1];
 /// verify_that!(value, subset_of([0, 1]))?;  // Passes
 /// verify_that!(value, subset_of([0, 1, 1]))?;  // Passes
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 ///
 /// One can also verify the contents of a slice by dereferencing it:
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::subset_of, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// let value = &[1, 2, 3];
 /// verify_that!(*value, subset_of([1, 2, 3]))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 ///
 /// A note on performance: This matcher uses a naive algorithm with a worst-case
