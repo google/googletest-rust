@@ -19,10 +19,23 @@ use std::fmt::Debug;
 
 /// Matches an `Option` containing a value matched by `inner`.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::{eq, some}, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// verify_that!(Some("Some value"), some(eq("Some value")))?;  // Passes
-/// verify_that!(None, some(eq("Some value")))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_fail_1() -> Result<()> {
+/// verify_that!(None::<&str>, some(eq("Some value")))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_fail_2() -> Result<()> {
 /// verify_that!(Some("Some value"), some(eq("Some other value")))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail_1().unwrap_err();
+/// # should_fail_2().unwrap_err();
 /// ```
 pub fn some<T: Debug>(inner: impl Matcher<T>) -> impl Matcher<Option<T>> {
     SomeMatcher { inner }

@@ -20,9 +20,18 @@ use std::marker::PhantomData;
 
 /// Matches an `Option` containing `None`.
 ///
-/// ```ignore
-/// verify_that!(None, none())?;   // Passes
+/// ```
+/// # use googletest::{matchers::none, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
+/// verify_that!(None::<()>, none())?;   // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail() -> Result<()> {
 /// verify_that!(Some("Some value"), none())?;  // Fails
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail().unwrap_err();
 /// ```
 pub fn none<T: Debug>() -> impl Matcher<Option<T>> {
     NoneMatcher { phantom: Default::default() }

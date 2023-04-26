@@ -19,10 +19,23 @@ use std::fmt::Debug;
 
 /// Matches a `Result` containing `Ok` with a value matched by `inner`.
 ///
-/// ```ignore
-/// verify_that!(Ok("Some value"), ok(eq("Some value")))?;  // Passes
-/// verify_that!(Err("An error"), ok(eq("An error")))?;   // Fails
-/// verify_that!(Ok("Some value"), ok(eq("Some other value")))?;   // Fails
+/// ```
+/// # use googletest::{matchers::{eq, ok}, verify_that};
+/// # fn should_pass() -> googletest::Result<()> {
+/// verify_that!(Ok::<_, ()>("Some value"), ok(eq("Some value")))?;  // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail_1() -> googletest::Result<()> {
+/// verify_that!(Err::<&str, _>("An error"), ok(eq("An error")))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_fail_2() -> googletest::Result<()> {
+/// verify_that!(Ok::<_, ()>("Some value"), ok(eq("Some other value")))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail_1().unwrap_err();
+/// # should_fail_2().unwrap_err();
 /// ```
 pub fn ok<T: Debug, E: Debug>(inner: impl Matcher<T>) -> impl Matcher<std::result::Result<T, E>> {
     OkMatcher { inner }

@@ -19,9 +19,18 @@ use std::fmt::Debug;
 
 /// Matches the actual value exactly when the inner matcher does _not_ match.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::{eq, not}, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// verify_that!(0, not(eq(1)))?; // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail() -> Result<()> {
 /// verify_that!(0, not(eq(0)))?; // Fails
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail().unwrap_err();
 /// ```
 pub fn not<T: Debug, InnerMatcherT: Matcher<T>>(inner: InnerMatcherT) -> impl Matcher<T> {
     NotMatcher { inner }

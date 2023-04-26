@@ -31,7 +31,7 @@ use googletest::*;
 ///
 /// ```
 /// # use googletest::{field, matchers::eq, verify_that, Result};
-/// # #[derive(Debug)]
+/// #[derive(Debug)]
 /// struct IntField {
 ///   int: i32
 /// }
@@ -46,7 +46,7 @@ use googletest::*;
 ///
 /// ```
 /// # use googletest::{field, matchers::eq, verify_that, Result};
-/// # #[derive(Debug)]
+/// #[derive(Debug)]
 /// struct IntField(i32);
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(IntField(32), field!(IntField.0, eq(32)))?;
@@ -60,7 +60,7 @@ use googletest::*;
 ///
 /// ```
 /// # use googletest::{field, matchers::eq, verify_that, Result};
-/// # #[derive(Debug)]
+/// #[derive(Debug)]
 /// enum MyEnum {
 ///     A(i32),
 ///     B,
@@ -82,7 +82,7 @@ use googletest::*;
 /// ```
 /// # use googletest::{field, matchers::eq, verify_that, Result};
 /// mod a_module {
-/// #   #[derive(Debug)]
+///     #[derive(Debug)]
 ///     pub struct AStruct(pub i32);
 /// }
 /// # fn should_pass() -> Result<()> {
@@ -96,9 +96,9 @@ use googletest::*;
 ///
 /// ```compile_fail
 /// # use googletest::{field, matchers::eq, verify_that, Result};
-/// # #[derive(Debug)]
+/// #[derive(Debug)]
 /// struct InnerStruct(i32);
-/// # #[derive(Debug)]
+/// #[derive(Debug)]
 /// struct OuterStruct {
 ///     inner: InnerStruct,
 /// }

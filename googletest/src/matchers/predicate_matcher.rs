@@ -19,8 +19,13 @@ use std::fmt::Debug;
 
 /// Creates a matcher based on the predicate provided.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::predicate, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// verify_that!(3, predicate(|x: &i32| x % 2 == 1))?;  // Passes
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
 /// ```
 ///
 /// The predicate should take the subject type by reference and return a
