@@ -22,11 +22,28 @@ use googletest::*;
 /// Matches a container whose elements in any order have a 1:1 correspondence
 /// with the provided element matchers.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::{anything, eq, ge}, unordered_elements_are, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// verify_that!(vec![3, 2, 1], unordered_elements_are![eq(1), ge(2), anything()])?;   // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail_1() -> Result<()> {
 /// verify_that!(vec![1], unordered_elements_are![eq(1), ge(2)])?;              // Fails: container has wrong size
+/// #     Ok(())
+/// # }
+/// # fn should_fail_2() -> Result<()> {
 /// verify_that!(vec![3, 2, 1], unordered_elements_are![eq(1), ge(4), eq(2)])?; // Fails: second matcher not matched
+/// #     Ok(())
+/// # }
+/// # fn should_fail_3() -> Result<()> {
 /// verify_that!(vec![3, 2, 1], unordered_elements_are![ge(3), ge(3), ge(3)])?; // Fails: no 1:1 correspondence
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail_1().unwrap_err();
+/// # should_fail_2().unwrap_err();
+/// # should_fail_3().unwrap_err();
 /// ```
 ///
 /// The actual value must be a container implementing [`IntoIterator`]. This
@@ -36,13 +53,16 @@ use googletest::*;
 /// similar collections. The arguments are a sequence of pairs of matchers
 /// corresponding to the keys and their respective values.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{matchers::eq, unordered_elements_are, verify_that, Result};
+/// # use std::collections::HashMap;
 /// let value: HashMap<u32, &'static str> =
 ///     HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
 /// verify_that!(
 ///     value,
 ///     unordered_elements_are![(eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three"))]
 /// )
+/// #     .unwrap();
 /// ```
 ///
 /// This matcher does not support matching directly against an [`Iterator`]. To
@@ -119,12 +139,29 @@ macro_rules! unordered_elements_are {
 /// Put another way, `contains_each!` matches if there is a subset of the actual
 /// container which [`unordered_elements_are`] would match.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{contains_each, matchers::{eq, ge}, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// verify_that!(vec![3, 2, 1], contains_each![eq(2), ge(3)])?;   // Passes
-/// verify_that!(vec![3, 2, 1], contains_each![ge(3), ge(3)])?;   // Passes
+/// verify_that!(vec![3, 2, 1], contains_each![ge(2), ge(2)])?;   // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail_1() -> Result<()> {
 /// verify_that!(vec![1], contains_each![eq(1), ge(2)])?;         // Fails: container too small
+/// #     Ok(())
+/// # }
+/// # fn should_fail_2() -> Result<()> {
 /// verify_that!(vec![3, 2, 1], contains_each![eq(1), ge(4)])?;   // Fails: second matcher unmatched
+/// #     Ok(())
+/// # }
+/// # fn should_fail_3() -> Result<()> {
 /// verify_that!(vec![3, 2, 1], contains_each![ge(3), ge(3), ge(3)])?; // Fails: no matching
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail_1().unwrap_err();
+/// # should_fail_2().unwrap_err();
+/// # should_fail_3().unwrap_err();
 /// ```
 ///
 /// The actual value must be a container implementing [`IntoIterator`]. This
@@ -134,10 +171,13 @@ macro_rules! unordered_elements_are {
 /// similar collections. The arguments are a sequence of pairs of matchers
 /// corresponding to the keys and their respective values.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{contains_each, matchers::eq, verify_that, Result};
+/// # use std::collections::HashMap;
 /// let value: HashMap<u32, &'static str> =
 ///     HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
 /// verify_that!(value, contains_each![(eq(2), eq("Two")), (eq(1), eq("One"))])
+/// #     .unwrap();
 /// ```
 ///
 /// This matcher does not support matching directly against an [`Iterator`]. To
@@ -212,12 +252,29 @@ macro_rules! contains_each {
 /// Put another way, `is_contained_in!` matches if there is a subset of the
 /// matchers which would match with [`unordered_elements_are`].
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{is_contained_in, matchers::{eq, ge}, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
 /// verify_that!(vec![2, 1], is_contained_in![eq(1), ge(2)])?;   // Passes
 /// verify_that!(vec![2, 1], is_contained_in![ge(1), ge(1)])?;   // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail_1() -> Result<()> {
 /// verify_that!(vec![1, 2, 3], is_contained_in![eq(1), ge(2)])?; // Fails: container too large
+/// #     Ok(())
+/// # }
+/// # fn should_fail_2() -> Result<()> {
 /// verify_that!(vec![2, 1], is_contained_in![eq(1), ge(4)])?;    // Fails: second matcher unmatched
+/// #     Ok(())
+/// # }
+/// # fn should_fail_3() -> Result<()> {
 /// verify_that!(vec![3, 1], is_contained_in![ge(3), ge(3), ge(3)])?; // Fails: no matching
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail_1().unwrap_err();
+/// # should_fail_2().unwrap_err();
+/// # should_fail_3().unwrap_err();
 /// ```
 ///
 /// The actual value must be a container implementing [`IntoIterator`]. This
@@ -227,12 +284,15 @@ macro_rules! contains_each {
 /// similar collections. The arguments are a sequence of pairs of matchers
 /// corresponding to the keys and their respective values.
 ///
-/// ```ignore
+/// ```
+/// # use googletest::{is_contained_in, matchers::eq, verify_that, Result};
+/// # use std::collections::HashMap;
 /// let value: HashMap<u32, &'static str> = HashMap::from_iter([(1, "One"), (2, "Two")]);
 /// verify_that!(
 ///     value,
 ///     is_contained_in![(eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three"))]
 /// )
+/// #     .unwrap();
 /// ```
 ///
 /// This matcher does not support matching directly against an [`Iterator`]. To
