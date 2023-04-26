@@ -25,25 +25,40 @@ use googletest::*;
 /// corresponding to the tuple against which it matches. Each matcher is
 /// applied to the corresponding tuple element.
 ///
-/// ```ignore
-/// verify_that((123, 456), tuple!(eq(123), eq(456)))?; // Passes
-/// verify_that((123, 456), tuple!(eq(123), eq(0)))?; // Fails: second matcher does not match
+/// ```
+/// # use googletest::{matchers::eq, tuple, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
+/// verify_that!((123, 456), tuple!(eq(123), eq(456)))?; // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail() -> Result<()> {
+/// verify_that!((123, 456), tuple!(eq(123), eq(0)))?; // Fails: second matcher does not match
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail().unwrap_err();
 /// ```
 ///
 /// Matchers must correspond to the actual tuple in count and type. Otherwise
 /// the test will fail to compile.
 ///
-/// ```ignore
-/// verify_that((123, 456), tuple!(eq(123)))?; // Does not compile: wrong tuple size
-/// verify_that((123, "A string"), tuple!(eq(123), eq(456)))?; // Does not compile: wrong type
+/// ```compile_fail
+/// # use googletest::{matchers::eq, tuple, verify_that, Result};
+/// # fn should_not_compile() -> Result<()> {
+/// verify_that!((123, 456), tuple!(eq(123)))?; // Does not compile: wrong tuple size
+/// verify_that!((123, "A string"), tuple!(eq(123), eq(456)))?; // Does not compile: wrong type
+/// #     Ok(())
+/// # }
 /// ```
 ///
 /// All fields must be covered by matchers. Use
 /// [`anything`][crate::matchers::anything] for fields which are not relevant
 /// for the test.
 ///
-/// ```ignore
-/// verify_that((123, 456), tuple!(eq(123), anything()))
+/// ```
+/// # use googletest::{matchers::{anything, eq}, tuple, verify_that, Result};
+/// verify_that!((123, 456), tuple!(eq(123), anything()))
+/// #     .unwrap();
 /// ```
 ///
 /// This supports tuples of up to 12 elements. Tuples longer than that do not
