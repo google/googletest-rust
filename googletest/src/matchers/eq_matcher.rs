@@ -37,7 +37,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// ```
 ///
 /// `expected` to `actual` must be comparable with one another via the
-/// `PartialEq` trait. In most cases, this means that they must be of the same
+/// [`PartialEq`] trait. In most cases, this means that they must be of the same
 /// type. However, there are a few cases where different but closely related
 /// types are comparable, for example `String` with `&str`.
 ///
@@ -65,8 +65,10 @@ use std::{fmt::Debug, marker::PhantomData};
 /// verify_that(actual, eq(&expected))?; // Compiles
 /// ```
 ///
-/// You can find the standard library PartialEq implementation in
-/// <https://doc.rust-lang.org/core/cmp/trait.PartialEq.html#implementors>
+/// When matching with string types (`&str` and `String`), one can set more
+/// options on how equality is checked through the
+/// [`StrMatcherConfigurator`][crate::matchers::str_matcher::StrMatcherConfigurator]
+/// extension trait, which is implemented for this matcher.
 pub fn eq<A: ?Sized, T>(expected: T) -> EqMatcher<A, T> {
     EqMatcher { expected, phantom: Default::default() }
 }

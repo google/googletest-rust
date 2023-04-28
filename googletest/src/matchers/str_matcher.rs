@@ -48,6 +48,9 @@ use std::ops::Deref;
 /// # should_pass_2().unwrap();
 /// ```
 ///
+/// See the [`StrMatcherConfigurator`] extension trait for more options on how
+/// the string is matched.
+///
 /// > Note on memory use: In most cases, this matcher does not allocate memory
 /// > when matching strings. However, it must allocate copies of both the actual
 /// > and expected values when matching strings while
@@ -90,6 +93,9 @@ pub fn contains_substring<A: ?Sized, T>(expected: T) -> StrMatcher<A, T> {
 /// # should_fail_2().unwrap_err();
 /// # should_pass_2().unwrap();
 /// ```
+///
+/// See the [`StrMatcherConfigurator`] extension trait for more options on how
+/// the string is matched.
 pub fn starts_with<A: ?Sized, T>(expected: T) -> StrMatcher<A, T> {
     StrMatcher {
         configuration: Configuration { mode: MatchMode::StartsWith, ..Default::default() },
@@ -127,6 +133,9 @@ pub fn starts_with<A: ?Sized, T>(expected: T) -> StrMatcher<A, T> {
 /// # should_fail_2().unwrap_err();
 /// # should_pass_2().unwrap();
 /// ```
+///
+/// See the [`StrMatcherConfigurator`] extension trait for more options on how
+/// the string is matched.
 pub fn ends_with<A: ?Sized, T>(expected: T) -> StrMatcher<A, T> {
     StrMatcher {
         configuration: Configuration { mode: MatchMode::EndsWith, ..Default::default() },
@@ -135,11 +144,11 @@ pub fn ends_with<A: ?Sized, T>(expected: T) -> StrMatcher<A, T> {
     }
 }
 
-/// Extension trait to configure [StrMatcher].
+/// Extension trait to configure [`StrMatcher`].
 ///
 /// Matchers which match against string values and, through configuration,
-/// specialise to [StrMatcher] implement this trait. Currently that only
-/// includes [EqMatcher] and [StrMatcher].
+/// specialise to [`StrMatcher`] implement this trait. That includes
+/// [`EqMatcher`] and [`StrMatcher`].
 pub trait StrMatcherConfigurator<ActualT: ?Sized, ExpectedT> {
     /// Configures the matcher to ignore any leading whitespace in either the
     /// actual or the expected value.
