@@ -87,20 +87,22 @@ pub mod internal {
     /// For internal use only. API stablility is not guaranteed!
     #[doc(hidden)]
     pub struct AllMatcher<'a, T: Debug + ?Sized, const N: usize> {
-        components: [&'a dyn Matcher<T>; N],
+        components: [&'a dyn Matcher<ActualT = T>; N],
     }
 
     impl<'a, T: Debug + ?Sized, const N: usize> AllMatcher<'a, T, N> {
         /// Constructs an [`AllMatcher`] with the given component matchers.
         ///
         /// Intended for use only by the [`all`] macro.
-        pub fn new(components: [&'a dyn Matcher<T>; N]) -> Self {
+        pub fn new(components: [&'a dyn Matcher<ActualT = T>; N]) -> Self {
             Self { components }
         }
     }
 
-    impl<'a, T: Debug + ?Sized, const N: usize> Matcher<T> for AllMatcher<'a, T, N> {
-        fn matches(&self, actual: &T) -> MatcherResult {
+    impl<'a, T: Debug + ?Sized, const N: usize> Matcher for AllMatcher<'a, T, N> {
+        type ActualT = T;
+
+        fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
             for component in self.components {
                 match component.matches(actual) {
                     MatcherResult::DoesNotMatch => {
@@ -112,7 +114,7 @@ pub mod internal {
             MatcherResult::Matches
         }
 
-        fn explain_match(&self, actual: &T) -> MatchExplanation {
+        fn explain_match(&self, actual: &Self::ActualT) -> MatchExplanation {
             match N {
                 0 => anything::<T>().explain_match(actual),
                 1 => self.components[0].explain_match(actual),

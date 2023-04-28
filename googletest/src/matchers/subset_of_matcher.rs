@@ -15,7 +15,7 @@
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a container all of whose items are in the given container
 /// `superset`.
@@ -81,24 +81,27 @@ use std::fmt::Debug;
 /// items. It should not be used on especially large containers.
 pub fn subset_of<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug>(
     superset: ExpectedT,
-) -> impl Matcher<ActualT>
+) -> impl Matcher<ActualT = ActualT>
 where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
 {
-    SubsetOfMatcher { superset }
+    SubsetOfMatcher::<ActualT, _> { superset, phantom: PhantomData::default() }
 }
 
-struct SubsetOfMatcher<ExpectedT> {
+struct SubsetOfMatcher<ActualT: ?Sized, ExpectedT> {
     superset: ExpectedT,
+    phantom: PhantomData<ActualT>,
 }
 
-impl<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug> Matcher<ActualT>
-    for SubsetOfMatcher<ExpectedT>
+impl<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug> Matcher
+    for SubsetOfMatcher<ActualT, ExpectedT>
 where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
 {
+    type ActualT = ActualT;
+
     fn matches(&self, actual: &ActualT) -> MatcherResult {
         for actual_item in actual {
             if self.expected_is_missing(actual_item) {
@@ -137,7 +140,7 @@ where
     }
 }
 
-impl<ElementT: PartialEq, ExpectedT> SubsetOfMatcher<ExpectedT>
+impl<ActualT: ?Sized, ElementT: PartialEq, ExpectedT> SubsetOfMatcher<ActualT, ExpectedT>
 where
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
 {

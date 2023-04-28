@@ -138,8 +138,10 @@ struct MyEqMatcher<T> {
     expected: T,
 }
 
-impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
-    fn matches(&self, actual: &A) -> MatcherResult {
+impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
+    type ActualT = T;
+
+    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
          (self.expected == *actual).into()
     }
 
@@ -159,7 +161,7 @@ impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
 It is recommended to expose a function which constructs the matcher:
 
 ```rust
-pub fn eq_my_way<T: PartialEq + Debug>(expected: T) -> impl Matcher<T> {
+pub fn eq_my_way<T: PartialEq + Debug>(expected: T) -> impl Matcher<ActualT = T> {
     MyEqMatcher { expected }
 }
 ```

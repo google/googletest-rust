@@ -15,7 +15,7 @@
 use crate::matcher::{Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a value greater than or equal to (in the sense of `>=`) `expected`.
 ///
@@ -75,17 +75,20 @@ use std::fmt::Debug;
 /// <https://doc.rust-lang.org/core/cmp/trait.PartialOrd.html#implementors>
 pub fn ge<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug>(
     expected: ExpectedT,
-) -> impl Matcher<ActualT> {
-    GeMatcher { expected }
+) -> impl Matcher<ActualT = ActualT> {
+    GeMatcher::<ActualT, _> { expected, phantom: Default::default() }
 }
 
-pub struct GeMatcher<ExpectedT> {
+pub struct GeMatcher<ActualT, ExpectedT> {
     expected: ExpectedT,
+    phantom: PhantomData<ActualT>,
 }
 
-impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher<ActualT>
-    for GeMatcher<ExpectedT>
+impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher
+    for GeMatcher<ActualT, ExpectedT>
 {
+    type ActualT = ActualT;
+
     fn matches(&self, actual: &ActualT) -> MatcherResult {
         (*actual >= self.expected).into()
     }

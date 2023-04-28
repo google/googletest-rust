@@ -17,14 +17,17 @@ use crate::internal::test_outcome::TestAssertionFailure;
 use std::fmt::{Debug, Display, Formatter, Result};
 
 /// An interface for checking an arbitrary condition on a datum.
-pub trait Matcher<T: Debug + ?Sized> {
+pub trait Matcher {
+    /// The type against which this matcher matches.
+    type ActualT: Debug + ?Sized;
+
     /// Returns whether the condition matches the datum `actual`.
     ///
     /// The trait implementation defines what it means to "match". Often the
     /// matching condition is based on data stored in the matcher. For example,
     /// `eq` matches when its stored expected value is equal (in the sense of
     /// the `==` operator) to the value `actual`.
-    fn matches(&self, actual: &T) -> MatcherResult;
+    fn matches(&self, actual: &Self::ActualT) -> MatcherResult;
 
     /// Returns a description of `self` or a negative description if
     /// `matcher_result` is `DoesNotMatch`.
@@ -107,7 +110,7 @@ pub trait Matcher<T: Debug + ?Sized> {
     /// inner matcher and appears as follows:
     ///
     /// ```ignore
-    /// fn explain_match(&self, actual: &ActualT) -> MatchExplanation {
+    /// fn explain_match(&self, actual: &Self::ActualT) -> MatchExplanation {
     ///     self.expected.explain_match(actual.deref())
     /// }
     /// ```
@@ -117,14 +120,14 @@ pub trait Matcher<T: Debug + ?Sized> {
     /// inner matcher at a point where a relative clause would fit. For example:
     ///
     /// ```ignore
-    /// fn explain_match(&self, actual: &ActualT) -> MatchExplanation {
+    /// fn explain_match(&self, actual: &Self::ActualT) -> MatchExplanation {
     ///     MatchExplanation::create(
     ///         format!("which points to a value {}", self.expected.explain_match(actual.deref()))
     ///             //   ^^^^^^^^^^^^^^^^^^^^ Expands to "points to a value which ..."
     ///     )
     /// }
     /// ```
-    fn explain_match(&self, actual: &T) -> MatchExplanation {
+    fn explain_match(&self, actual: &Self::ActualT) -> MatchExplanation {
         MatchExplanation::create(format!("which {}", self.describe(self.matches(actual))))
     }
 }
@@ -135,7 +138,7 @@ pub trait Matcher<T: Debug + ?Sized> {
 /// The parameter `actual_expr` contains the expression which was evaluated to
 /// obtain `actual`.
 pub(crate) fn create_assertion_failure<T: Debug + ?Sized>(
-    matcher: &impl Matcher<T>,
+    matcher: &impl Matcher<ActualT = T>,
     actual: &T,
     actual_expr: &'static str,
     source_location: SourceLocation,

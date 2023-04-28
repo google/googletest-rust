@@ -15,7 +15,7 @@
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a `Result` containing `Ok` with a value matched by `inner`.
 ///
@@ -37,22 +37,28 @@ use std::fmt::Debug;
 /// # should_fail_1().unwrap_err();
 /// # should_fail_2().unwrap_err();
 /// ```
-pub fn ok<T: Debug, E: Debug>(inner: impl Matcher<T>) -> impl Matcher<std::result::Result<T, E>> {
-    OkMatcher { inner }
+pub fn ok<T: Debug, E: Debug>(
+    inner: impl Matcher<ActualT = T>,
+) -> impl Matcher<ActualT = std::result::Result<T, E>> {
+    OkMatcher::<T, E, _> { inner, phantom_t: Default::default(), phantom_e: Default::default() }
 }
 
-struct OkMatcher<InnerMatcherT> {
+struct OkMatcher<T, E, InnerMatcherT> {
     inner: InnerMatcherT,
+    phantom_t: PhantomData<T>,
+    phantom_e: PhantomData<E>,
 }
 
-impl<T: Debug, E: Debug, InnerMatcherT: Matcher<T>> Matcher<std::result::Result<T, E>>
-    for OkMatcher<InnerMatcherT>
+impl<T: Debug, E: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher
+    for OkMatcher<T, E, InnerMatcherT>
 {
-    fn matches(&self, actual: &std::result::Result<T, E>) -> MatcherResult {
+    type ActualT = std::result::Result<T, E>;
+
+    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::DoesNotMatch)
     }
 
-    fn explain_match(&self, actual: &std::result::Result<T, E>) -> MatchExplanation {
+    fn explain_match(&self, actual: &Self::ActualT) -> MatchExplanation {
         match actual {
             Ok(o) => MatchExplanation::create(format!(
                 "which is a success {}",

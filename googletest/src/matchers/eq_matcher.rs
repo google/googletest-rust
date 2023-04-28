@@ -15,7 +15,7 @@
 use crate::matcher::{Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a value equal (in the sense of `==`) to `expected`.
 ///
@@ -67,18 +67,21 @@ use std::fmt::Debug;
 ///
 /// You can find the standard library PartialEq implementation in
 /// <https://doc.rust-lang.org/core/cmp/trait.PartialEq.html#implementors>
-pub fn eq<T>(expected: T) -> EqMatcher<T> {
-    EqMatcher { expected }
+pub fn eq<A: ?Sized, T>(expected: T) -> EqMatcher<A, T> {
+    EqMatcher { expected, phantom: Default::default() }
 }
 
 /// A matcher which matches a value equal to `expected`.
 ///
 /// See [`eq`].
-pub struct EqMatcher<T> {
+pub struct EqMatcher<A: ?Sized, T> {
     pub(crate) expected: T,
+    phantom: PhantomData<A>,
 }
 
-impl<A: Debug, T: PartialEq<A> + Debug> Matcher<A> for EqMatcher<T> {
+impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher for EqMatcher<A, T> {
+    type ActualT = A;
+
     fn matches(&self, actual: &A) -> MatcherResult {
         (self.expected == *actual).into()
     }

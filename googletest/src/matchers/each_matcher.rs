@@ -19,7 +19,7 @@ use crate::matchers::description::Description;
 use description::Description;
 #[cfg(google3)]
 use googletest::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a container all of whose elements are matched by the matcher
 /// `inner`.
@@ -63,23 +63,26 @@ use std::fmt::Debug;
 /// ```
 pub fn each<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT>(
     inner: MatcherT,
-) -> impl Matcher<ActualT>
+) -> impl Matcher<ActualT = ActualT>
 where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    MatcherT: Matcher<ElementT>,
+    MatcherT: Matcher<ActualT = ElementT>,
 {
-    EachMatcher { inner }
+    EachMatcher { inner, phantom: Default::default() }
 }
 
-struct EachMatcher<MatcherT> {
+struct EachMatcher<ActualT: ?Sized, MatcherT> {
     inner: MatcherT,
+    phantom: PhantomData<ActualT>,
 }
 
-impl<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT> Matcher<ActualT> for EachMatcher<MatcherT>
+impl<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT> Matcher for EachMatcher<ActualT, MatcherT>
 where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    MatcherT: Matcher<ElementT>,
+    MatcherT: Matcher<ActualT = ElementT>,
 {
+    type ActualT = ActualT;
+
     fn matches(&self, actual: &ActualT) -> MatcherResult {
         for element in actual {
             if !self.inner.matches(element).into_bool() {

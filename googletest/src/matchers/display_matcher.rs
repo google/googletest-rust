@@ -24,20 +24,22 @@ use std::marker::PhantomData;
 /// let result: impl Display = ...;
 /// verify_that!(result, displays_as(eq(format!("{}", result))))?;
 /// ```
-pub fn displays_as<T: Debug + Display, InnerMatcher: Matcher<String>>(
+pub fn displays_as<T: Debug + Display, InnerMatcher: Matcher<ActualT = String>>(
     inner: InnerMatcher,
-) -> impl Matcher<T> {
-    DisplayMatcher { inner, phantom: Default::default() }
+) -> impl Matcher<ActualT = T> {
+    DisplayMatcher::<T, _> { inner, phantom: Default::default() }
 }
 
-struct DisplayMatcher<T, InnerMatcher: Matcher<String>> {
+struct DisplayMatcher<T, InnerMatcher: Matcher> {
     inner: InnerMatcher,
     phantom: PhantomData<T>,
 }
 
-impl<T: Debug + Display, InnerMatcher: Matcher<String>> Matcher<T>
+impl<T: Debug + Display, InnerMatcher: Matcher<ActualT = String>> Matcher
     for DisplayMatcher<T, InnerMatcher>
 {
+    type ActualT = T;
+
     fn matches(&self, actual: &T) -> MatcherResult {
         self.inner.matches(&format!("{actual}"))
     }

@@ -15,7 +15,7 @@
 use crate::matcher::{Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Creates a matcher based on the predicate provided.
 ///
@@ -37,7 +37,7 @@ use std::fmt::Debug;
 /// This is easily fixed by explicitly declaring the type of the argument
 pub fn predicate<T: Debug + ?Sized, P>(
     predicate: P,
-) -> PredicateMatcher<P, NoDescription, NoDescription>
+) -> PredicateMatcher<T, P, NoDescription, NoDescription>
 where
     for<'a> P: Fn(&'a T) -> bool,
 {
@@ -45,10 +45,11 @@ where
         predicate,
         positive_description: NoDescription,
         negative_description: NoDescription,
+        phantom: Default::default(),
     }
 }
 
-impl<P> PredicateMatcher<P, NoDescription, NoDescription> {
+impl<T, P> PredicateMatcher<T, P, NoDescription, NoDescription> {
     /// Configures this instance to provide a more meaningful description.
     ///
     /// For example, to make sure the error message is more useful
@@ -68,18 +69,24 @@ impl<P> PredicateMatcher<P, NoDescription, NoDescription> {
         self,
         positive_description: D1,
         negative_description: D2,
-    ) -> PredicateMatcher<P, D1, D2> {
-        PredicateMatcher { predicate: self.predicate, positive_description, negative_description }
+    ) -> PredicateMatcher<T, P, D1, D2> {
+        PredicateMatcher {
+            predicate: self.predicate,
+            positive_description,
+            negative_description,
+            phantom: Default::default(),
+        }
     }
 }
 
 /// A matcher which applies `predicate` on the value.
 ///
 /// See [`predicate`].
-pub struct PredicateMatcher<P, D1, D2> {
+pub struct PredicateMatcher<T: ?Sized, P, D1, D2> {
     predicate: P,
     positive_description: D1,
     negative_description: D2,
+    phantom: PhantomData<T>,
 }
 
 /// A trait to allow [`PredicateMatcher::with_description`] to accept multiple
@@ -116,10 +123,12 @@ where
 #[doc(hidden)]
 pub struct NoDescription;
 
-impl<T: Debug, P> Matcher<T> for PredicateMatcher<P, NoDescription, NoDescription>
+impl<T: Debug, P> Matcher for PredicateMatcher<T, P, NoDescription, NoDescription>
 where
     for<'a> P: Fn(&'a T) -> bool,
 {
+    type ActualT = T;
+
     fn matches(&self, actual: &T) -> MatcherResult {
         (self.predicate)(actual).into()
     }
@@ -132,11 +141,13 @@ where
     }
 }
 
-impl<T: Debug, P, D1: PredicateDescription, D2: PredicateDescription> Matcher<T>
-    for PredicateMatcher<P, D1, D2>
+impl<T: Debug, P, D1: PredicateDescription, D2: PredicateDescription> Matcher
+    for PredicateMatcher<T, P, D1, D2>
 where
     for<'a> P: Fn(&'a T) -> bool,
 {
+    type ActualT = T;
+
     fn matches(&self, actual: &T) -> MatcherResult {
         (self.predicate)(actual).into()
     }
@@ -158,7 +169,7 @@ mod tests {
     use matchers::{displays_as, eq};
 
     // Simple matcher with a description
-    fn is_odd() -> impl Matcher<i32> {
+    fn is_odd() -> impl Matcher<ActualT = i32> {
         predicate(|x| x % 2 == 1).with_description("is odd", "is even")
     }
 
@@ -178,7 +189,7 @@ mod tests {
     }
 
     // Simple Matcher without description
-    fn is_even() -> impl Matcher<i32> {
+    fn is_even() -> impl Matcher<ActualT = i32> {
         predicate(|x| x % 2 == 0)
     }
 

@@ -97,8 +97,19 @@ macro_rules! tuple_internal {
         #[cfg(not(google3))]
         use $crate::matchers::tuple_matcher::internal::TupleMatcher12;
         TupleMatcher12(
-            $matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5, $matcher6, $matcher7,
-            $matcher8, $matcher9, $matcher10, $matcher11,
+            $matcher0,
+            $matcher1,
+            $matcher2,
+            $matcher3,
+            $matcher4,
+            $matcher5,
+            $matcher6,
+            $matcher7,
+            $matcher8,
+            $matcher9,
+            $matcher10,
+            $matcher11,
+            Default::default(),
         )
     }};
 
@@ -120,8 +131,18 @@ macro_rules! tuple_internal {
         #[cfg(not(google3))]
         use $crate::matchers::tuple_matcher::internal::TupleMatcher11;
         TupleMatcher11(
-            $matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5, $matcher6, $matcher7,
-            $matcher8, $matcher9, $matcher10,
+            $matcher0,
+            $matcher1,
+            $matcher2,
+            $matcher3,
+            $matcher4,
+            $matcher5,
+            $matcher6,
+            $matcher7,
+            $matcher8,
+            $matcher9,
+            $matcher10,
+            Default::default(),
         )
     }};
 
@@ -142,8 +163,17 @@ macro_rules! tuple_internal {
         #[cfg(not(google3))]
         use $crate::matchers::tuple_matcher::internal::TupleMatcher10;
         TupleMatcher10(
-            $matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5, $matcher6, $matcher7,
-            $matcher8, $matcher9,
+            $matcher0,
+            $matcher1,
+            $matcher2,
+            $matcher3,
+            $matcher4,
+            $matcher5,
+            $matcher6,
+            $matcher7,
+            $matcher8,
+            $matcher9,
+            Default::default(),
         )
     }};
 
@@ -163,8 +193,16 @@ macro_rules! tuple_internal {
         #[cfg(not(google3))]
         use $crate::matchers::tuple_matcher::internal::TupleMatcher9;
         TupleMatcher9(
-            $matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5, $matcher6, $matcher7,
+            $matcher0,
+            $matcher1,
+            $matcher2,
+            $matcher3,
+            $matcher4,
+            $matcher5,
+            $matcher6,
+            $matcher7,
             $matcher8,
+            Default::default(),
         )
     }};
 
@@ -183,7 +221,15 @@ macro_rules! tuple_internal {
         #[cfg(not(google3))]
         use $crate::matchers::tuple_matcher::internal::TupleMatcher8;
         TupleMatcher8(
-            $matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5, $matcher6, $matcher7,
+            $matcher0,
+            $matcher1,
+            $matcher2,
+            $matcher3,
+            $matcher4,
+            $matcher5,
+            $matcher6,
+            $matcher7,
+            Default::default(),
         )
     }};
 
@@ -200,7 +246,16 @@ macro_rules! tuple_internal {
         use $crate::internal::TupleMatcher7;
         #[cfg(not(google3))]
         use $crate::matchers::tuple_matcher::internal::TupleMatcher7;
-        TupleMatcher7($matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5, $matcher6)
+        TupleMatcher7(
+            $matcher0,
+            $matcher1,
+            $matcher2,
+            $matcher3,
+            $matcher4,
+            $matcher5,
+            $matcher6,
+            Default::default(),
+        )
     }};
 
     (
@@ -215,7 +270,15 @@ macro_rules! tuple_internal {
         use $crate::internal::TupleMatcher6;
         #[cfg(not(google3))]
         use $crate::matchers::tuple_matcher::internal::TupleMatcher6;
-        TupleMatcher6($matcher0, $matcher1, $matcher2, $matcher3, $matcher4, $matcher5)
+        TupleMatcher6(
+            $matcher0,
+            $matcher1,
+            $matcher2,
+            $matcher3,
+            $matcher4,
+            $matcher5,
+            Default::default(),
+        )
     }};
 
     (
@@ -229,7 +292,7 @@ macro_rules! tuple_internal {
         use $crate::internal::TupleMatcher5;
         #[cfg(not(google3))]
         use $crate::matchers::tuple_matcher::internal::TupleMatcher5;
-        TupleMatcher5($matcher0, $matcher1, $matcher2, $matcher3, $matcher4)
+        TupleMatcher5($matcher0, $matcher1, $matcher2, $matcher3, $matcher4, Default::default())
     }};
 
     (
@@ -242,7 +305,7 @@ macro_rules! tuple_internal {
         use $crate::internal::TupleMatcher4;
         #[cfg(not(google3))]
         use $crate::matchers::tuple_matcher::internal::TupleMatcher4;
-        TupleMatcher4($matcher0, $matcher1, $matcher2, $matcher3)
+        TupleMatcher4($matcher0, $matcher1, $matcher2, $matcher3, Default::default())
     }};
 
     (
@@ -254,7 +317,7 @@ macro_rules! tuple_internal {
         use $crate::internal::TupleMatcher3;
         #[cfg(not(google3))]
         use $crate::matchers::tuple_matcher::internal::TupleMatcher3;
-        TupleMatcher3($matcher0, $matcher1, $matcher2)
+        TupleMatcher3($matcher0, $matcher1, $matcher2, Default::default())
     }};
 
     (
@@ -265,7 +328,7 @@ macro_rules! tuple_internal {
         use $crate::internal::TupleMatcher2;
         #[cfg(not(google3))]
         use $crate::matchers::tuple_matcher::internal::TupleMatcher2;
-        TupleMatcher2($matcher0, $matcher1)
+        TupleMatcher2($matcher0, $matcher1, Default::default())
     }};
 
     (
@@ -275,7 +338,7 @@ macro_rules! tuple_internal {
         use $crate::internal::TupleMatcher1;
         #[cfg(not(google3))]
         use $crate::matchers::tuple_matcher::internal::TupleMatcher1;
-        TupleMatcher1($matcher0)
+        TupleMatcher1($matcher0, Default::default())
     }};
 
     () => {{
@@ -293,7 +356,10 @@ macro_rules! tuple_internal {
 #[doc(hidden)]
 pub mod internal {
     use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-    use std::fmt::{Debug, Write};
+    use std::{
+        fmt::{Debug, Write},
+        marker::PhantomData,
+    };
 
     /// Replaces the first expression with the second at compile time.
     ///
@@ -316,11 +382,16 @@ pub mod internal {
     macro_rules! tuple_matcher_n {
         ($name:ident, $([$field_number:tt, $matcher_type:ident, $field_type:ident]),*) => {
             #[doc(hidden)]
-            pub struct $name<$($matcher_type),*>($(pub $matcher_type),*);
+            pub struct $name<$($field_type, $matcher_type),*>(
+                $(pub $matcher_type),*,
+                pub PhantomData<($($field_type,)*)>,
+            );
 
-            impl<$($field_type: Debug, $matcher_type: Matcher<$field_type>),*>
-                Matcher<($($field_type,)*)> for $name<$($matcher_type),*>
+            impl<$($field_type: Debug, $matcher_type: Matcher<ActualT = $field_type>),*>
+                Matcher for $name<$($field_type, $matcher_type),*>
             {
+                type ActualT = ($($field_type,)*);
+
                 fn matches(&self, actual: &($($field_type,)*)) -> MatcherResult {
                     $(match self.$field_number.matches(&actual.$field_number) {
                         MatcherResult::Matches => {},

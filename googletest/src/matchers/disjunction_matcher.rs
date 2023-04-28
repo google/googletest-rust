@@ -15,10 +15,10 @@
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
 #[cfg(google3)]
 use googletest::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Extension trait providing the [`or`][OrMatcherExt::or] method.
-pub trait OrMatcherExt<T: Debug>: Matcher<T> {
+pub trait OrMatcherExt<T: Debug>: Matcher<ActualT = T> {
     /// Constructs a matcher that matches when at least one of `self` or `right`
     /// matches the input.
     ///
@@ -39,26 +39,31 @@ pub trait OrMatcherExt<T: Debug>: Matcher<T> {
     // TODO(b/264518763): Replace the return type with impl Matcher and reduce
     // visibility of DisjunctionMatcher once impl in return position in trait
     // methods is stable.
-    fn or<Right: Matcher<T>>(self, right: Right) -> DisjunctionMatcher<Self, Right>
+    fn or<Right: Matcher<ActualT = T>>(self, right: Right) -> DisjunctionMatcher<T, Self, Right>
     where
         Self: Sized,
     {
-        DisjunctionMatcher { m1: self, m2: right }
+        DisjunctionMatcher { m1: self, m2: right, phantom: Default::default() }
     }
 }
 
-impl<T: Debug, M> OrMatcherExt<T> for M where M: Matcher<T> {}
+impl<T: Debug, M> OrMatcherExt<T> for M where M: Matcher<ActualT = T> {}
 
 /// Matcher created by [`OrMatcherExt::or`].
 ///
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
-pub struct DisjunctionMatcher<M1, M2> {
+pub struct DisjunctionMatcher<T, M1, M2> {
     m1: M1,
     m2: M2,
+    phantom: PhantomData<T>,
 }
 
-impl<T: Debug, M1: Matcher<T>, M2: Matcher<T>> Matcher<T> for DisjunctionMatcher<M1, M2> {
+impl<T: Debug, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matcher
+    for DisjunctionMatcher<T, M1, M2>
+{
+    type ActualT = T;
+
     fn matches(&self, actual: &T) -> MatcherResult {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::DoesNotMatch, MatcherResult::DoesNotMatch) => {
@@ -87,7 +92,7 @@ mod tests {
     #[cfg(not(google3))]
     use crate::matchers;
     use crate::{verify_that, Result};
-    use matchers::{anything, contains_substring, displays_as, eq, err, ge, not};
+    use matchers::{anything, contains_substring, displays_as, ends_with, eq, err, ge, not};
 
     #[test]
     fn or_true_true_matches() -> Result<()> {
@@ -121,5 +126,15 @@ mod tests {
     #[test]
     fn chained_or_matches() -> Result<()> {
         verify_that!(10, eq(1).or(eq(5)).or(ge(9)))
+    }
+
+    #[test]
+    fn works_with_str_slices() -> Result<()> {
+        verify_that!("A string", ends_with("A").or(ends_with("string")))
+    }
+
+    #[test]
+    fn works_with_owned_strings() -> Result<()> {
+        verify_that!("A string".to_string(), ends_with("A").or(ends_with("string")))
     }
 }
