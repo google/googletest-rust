@@ -131,6 +131,24 @@ pub fn ends_with<T>(expected: T) -> StrMatcher<T> {
     }
 }
 
+/// Matches a string which equals witht the expected string.
+///
+/// Both the actual value and the expected suffix may be either a `String` or
+/// a string reference.
+///
+/// Note this is currently equivalent to [`eq`][crate::matchers::eq_matcher::eq]
+///
+/// ```
+/// verify_that!("value", str_eq("value"))?;  // Passes
+/// verify_that!("this value", str_eq("other value"))?;   // Fails
+/// verify_that!("Some value", str_eq("Some"))?;  // Fails
+/// verify_that!("Some value".to_string(), str_eq("value"))?;   // Passes
+/// verify_that!("Some value", str_eq("value".to_string()))?;   // Passes
+/// ```
+pub fn str_eq<T>(expected: T) -> StrMatcher<T> {
+    StrMatcher { configuration: Default::default(), expected }
+}
+
 /// Extension trait to configure [StrMatcher].
 ///
 /// Matchers which match against string values and, through configuration,
@@ -514,99 +532,99 @@ mod tests {
 
     #[test]
     fn matches_string_reference_with_equal_string_reference() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string");
+        let matcher = str_eq("A string");
         verify_that!("A string", matcher)
     }
 
     #[test]
     fn does_not_match_string_reference_with_non_equal_string_reference() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("Another string");
+        let matcher = str_eq("Another string");
         verify_that!("A string", not(matcher))
     }
 
     #[test]
     fn matches_owned_string_with_string_reference() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string");
+        let matcher = str_eq("A string");
         let value = "A string".to_string();
         verify_that!(value, matcher)
     }
 
     #[test]
     fn matches_owned_string_reference_with_string_reference() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string");
+        let matcher = str_eq("A string");
         let value = "A string".to_string();
         verify_that!(&value, matcher)
     }
 
     #[test]
     fn ignores_leading_whitespace_in_expected_when_requested() -> Result<()> {
-        let matcher = StrMatcher::with_default_config(" \n\tA string");
+        let matcher = str_eq(" \n\tA string");
         verify_that!("A string", matcher.ignoring_leading_whitespace())
     }
 
     #[test]
     fn ignores_leading_whitespace_in_actual_when_requested() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string");
+        let matcher = str_eq("A string");
         verify_that!(" \n\tA string", matcher.ignoring_leading_whitespace())
     }
 
     #[test]
     fn does_not_match_unequal_remaining_string_when_ignoring_leading_whitespace() -> Result<()> {
-        let matcher = StrMatcher::with_default_config(" \n\tAnother string");
+        let matcher = str_eq(" \n\tAnother string");
         verify_that!("A string", not(matcher.ignoring_leading_whitespace()))
     }
 
     #[test]
     fn remains_sensitive_to_trailing_whitespace_when_ignoring_leading_whitespace() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string \n\t");
+        let matcher = str_eq("A string \n\t");
         verify_that!("A string", not(matcher.ignoring_leading_whitespace()))
     }
 
     #[test]
     fn ignores_trailing_whitespace_in_expected_when_requested() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string \n\t");
+        let matcher = str_eq("A string \n\t");
         verify_that!("A string", matcher.ignoring_trailing_whitespace())
     }
 
     #[test]
     fn ignores_trailing_whitespace_in_actual_when_requested() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string");
+        let matcher = str_eq("A string");
         verify_that!("A string \n\t", matcher.ignoring_trailing_whitespace())
     }
 
     #[test]
     fn does_not_match_unequal_remaining_string_when_ignoring_trailing_whitespace() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("Another string \n\t");
+        let matcher = str_eq("Another string \n\t");
         verify_that!("A string", not(matcher.ignoring_trailing_whitespace()))
     }
 
     #[test]
     fn remains_sensitive_to_leading_whitespace_when_ignoring_trailing_whitespace() -> Result<()> {
-        let matcher = StrMatcher::with_default_config(" \n\tA string");
+        let matcher = str_eq(" \n\tA string");
         verify_that!("A string", not(matcher.ignoring_trailing_whitespace()))
     }
 
     #[test]
     fn ignores_leading_and_trailing_whitespace_in_expected_when_requested() -> Result<()> {
-        let matcher = StrMatcher::with_default_config(" \n\tA string \n\t");
+        let matcher = str_eq(" \n\tA string \n\t");
         verify_that!("A string", matcher.ignoring_outer_whitespace())
     }
 
     #[test]
     fn ignores_leading_and_trailing_whitespace_in_actual_when_requested() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string");
+        let matcher = str_eq("A string");
         verify_that!(" \n\tA string \n\t", matcher.ignoring_outer_whitespace())
     }
 
     #[test]
     fn respects_ascii_case_by_default() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string");
+        let matcher = str_eq("A string");
         verify_that!("A STRING", not(matcher))
     }
 
     #[test]
     fn ignores_ascii_case_when_requested() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string");
+        let matcher = str_eq("A string");
         verify_that!("A STRING", matcher.ignoring_ascii_case())
     }
 
@@ -718,7 +736,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_matching_result() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string");
+        let matcher = str_eq("A string");
         verify_that!(
             Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
             eq("is equal to \"A string\"")
@@ -727,7 +745,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_non_matching_result() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string");
+        let matcher = str_eq("A string");
         verify_that!(
             Matcher::<&str>::describe(&matcher, MatcherResult::DoesNotMatch),
             eq("isn't equal to \"A string\"")
@@ -736,7 +754,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_matching_result_ignoring_leading_whitespace() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string").ignoring_leading_whitespace();
+        let matcher = str_eq("A string").ignoring_leading_whitespace();
         verify_that!(
             Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
             eq("is equal to \"A string\" (ignoring leading whitespace)")
@@ -745,7 +763,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_non_matching_result_ignoring_leading_whitespace() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string").ignoring_leading_whitespace();
+        let matcher = str_eq("A string").ignoring_leading_whitespace();
         verify_that!(
             Matcher::<&str>::describe(&matcher, MatcherResult::DoesNotMatch),
             eq("isn't equal to \"A string\" (ignoring leading whitespace)")
@@ -754,7 +772,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_matching_result_ignoring_trailing_whitespace() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string").ignoring_trailing_whitespace();
+        let matcher = str_eq("A string").ignoring_trailing_whitespace();
         verify_that!(
             Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
             eq("is equal to \"A string\" (ignoring trailing whitespace)")
@@ -764,7 +782,7 @@ mod tests {
     #[test]
     fn describes_itself_for_matching_result_ignoring_leading_and_trailing_whitespace() -> Result<()>
     {
-        let matcher = StrMatcher::with_default_config("A string").ignoring_outer_whitespace();
+        let matcher = str_eq("A string").ignoring_outer_whitespace();
         verify_that!(
             Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
             eq("is equal to \"A string\" (ignoring leading and trailing whitespace)")
@@ -773,7 +791,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_matching_result_ignoring_ascii_case() -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string").ignoring_ascii_case();
+        let matcher = str_eq("A string").ignoring_ascii_case();
         verify_that!(
             Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
             eq("is equal to \"A string\" (ignoring ASCII case)")
@@ -783,9 +801,7 @@ mod tests {
     #[test]
     fn describes_itself_for_matching_result_ignoring_ascii_case_and_leading_whitespace()
     -> Result<()> {
-        let matcher = StrMatcher::with_default_config("A string")
-            .ignoring_leading_whitespace()
-            .ignoring_ascii_case();
+        let matcher = str_eq("A string").ignoring_leading_whitespace().ignoring_ascii_case();
         verify_that!(
             Matcher::<&str>::describe(&matcher, MatcherResult::Matches),
             eq("is equal to \"A string\" (ignoring leading whitespace, ignoring ASCII case)")
