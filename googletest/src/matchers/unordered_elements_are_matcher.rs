@@ -1056,3 +1056,67 @@ pub mod internal {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::matcher::Matcher;
+    #[cfg(not(google3))]
+    use crate::matchers;
+    #[cfg(not(google3))]
+    use crate::unordered_elements_are;
+    use crate::{matcher::MatcherResult, verify_that, Result};
+    use indoc::indoc;
+    use matchers::{anything, contains_regex, contains_substring, displays_as, eq, AndMatcherExt};
+    use std::collections::HashMap;
+
+    #[test]
+    fn has_correct_description_for_map() -> Result<()> {
+        // UnorderedElementsAreMatcher maintains references to the matchers, so the
+        // constituent matchers must live longer. Inside a verify_that! macro, the
+        // compiler takes care of that, but when the matcher is created separately,
+        // we must create the constitute matchers separately so that they
+        // aren't dropped too early.
+        let matchers = ((eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three")));
+        let matcher = unordered_elements_are![
+            (matchers.0.0, matchers.0.1),
+            (matchers.1.0, matchers.1.1),
+            (matchers.2.0, matchers.2.1)
+        ];
+        verify_that!(
+            Matcher::<HashMap<i32, &str>>::describe(&matcher, MatcherResult::Matches),
+            eq(indoc!(
+                "
+                contains elements matching in any order:
+                  is equal to 2 => is equal to \"Two\"
+                  is equal to 1 => is equal to \"One\"
+                  is equal to 3 => is equal to \"Three\""
+            ))
+        )
+    }
+
+    #[test]
+    fn unordered_elements_are_description_no_full_match_with_map() -> Result<()> {
+        // UnorderedElementsAreMatcher maintains references to the matchers, so the
+        // constituent matchers must live longer. Inside a verify_that! macro, the
+        // compiler takes care of that, but when the matcher is created separately,
+        // we must create the constitute matchers separately so that they
+        // aren't dropped too early.
+        let matchers = ((anything(), eq(1)), (anything(), eq(2)), (anything(), eq(2)));
+        let matcher = unordered_elements_are![
+            (matchers.0.0, matchers.0.1),
+            (matchers.1.0, matchers.1.1),
+            (matchers.2.0, matchers.2.1),
+        ];
+        let value: HashMap<u32, u32> = HashMap::from_iter([(0, 1), (1, 1), (2, 2)]);
+        verify_that!(
+            matcher.explain_match(&value),
+            displays_as(contains_regex(
+                "Actual element 2 => 2 at index [0-2] matched expected element `is anything` => `is equal to 2` at index [0-2]."
+            )).and(displays_as(contains_regex(
+                "Actual element [0-1] => [0-1] at index [0-2] did not match any remaining expected element."
+            ))).and(displays_as(contains_substring(
+                "Expected element `is anything` => `is equal to 2` at index 2 did not match any remaining actual element."
+            )))
+        )
+    }
+}
