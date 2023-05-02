@@ -23,13 +23,13 @@
 //!
 //! ## Assertions and matchers
 //!
-//! Most assertions are made through the macro [`verify_that!`] which evaluates
-//! to a [`Result<()>`]. It takes two arguments: an actual value to be tested
-//! and a [`Matcher`].
+//! Most assertions are made through the macro [`verify_that!`]. It takes two
+//! arguments: an actual value to be tested and a [`Matcher`].
 //!
 //! Unlike the macros used in other test assertion libraries in Rust,
 //! `verify_that!` does not panic when the test assertion fails. Instead, it
-//! evaluates to `Result`, which the caller can choose to handle by:
+//! evaluates to [`googletest::Result<()>`][Result], which the caller can choose
+//! to handle by:
 //!
 //! * Returning immediately from the function with the `?` operator (a *fatal*
 //!   assertion), or
@@ -107,7 +107,7 @@
 //! | [`empty`]            | An empty collection.                                                     |
 //! | [`ends_with`]        | A string ending with the given suffix.                                   |
 //! | [`eq`]               | A value equal to the argument, in the sense of the [`PartialEq`] trait.  |
-//! | [`err`]              | A [`Result`] containing an `Err` variant the argument matches.           |
+//! | [`err`]              | A [`Result`][std::result::Result] containing an `Err` variant the argument matches. |
 //! | [`field!`]           | A struct or enum with a given field whose value the argument matches.    |
 //! | [`ge`]               | A [`PartialOrd`] value greater than or equal to the given value.         |
 //! | [`gt`]               | A [`PartialOrd`] value strictly greater than the given value.            |
@@ -121,7 +121,7 @@
 //! | [`near`]             | A floating point number within a given tolerance of the argument.        |
 //! | [`none`]             | An [`Option`] containing `None`.                                         |
 //! | [`not`]              | Any value the argument does not match.                                   |
-//! | [`ok`]               | A [`Result`] containing an `Ok` variant the argument matches.            |
+//! | [`ok`]               | A [`Result`][std::result::Result] containing an `Ok` variant the argument matches. |
 //! | [`or`]               | Anything matched by either of the two given matchers.                    |
 //! | [`pat!`]             | Alias for [`matches_pattern!`].                                          |
 //! | [`points_to`]        | Any [`Deref`] such as `&`, `Rc`, etc. whose value the argument matches.  |
@@ -174,7 +174,6 @@
 //! [`Option`]: std::option::Option
 //! [`PartialEq`]: std::cmp::PartialEq
 //! [`PartialOrd`]: std::cmp::PartialOrd
-//! [`Result`]: std::result::Result
 //!
 //! ## Writing matchers
 //!
