@@ -42,6 +42,11 @@ use googletest::*;
 /// #    .unwrap();
 /// ```
 ///
+/// **Important**: The method should be pure function with a deterministic
+/// output and no side effects. In particular, in the event of an assertion
+/// failure, it will be invoked a second time, with the assertion failure output
+/// reflecting the *second* invocation.
+///
 /// If the method returns a *reference*, then it must be preceded by the keyword
 /// `ref`:
 ///
@@ -60,9 +65,6 @@ use googletest::*;
 /// #    .unwrap();
 /// ```
 ///
-/// > Note: At the moment, this does not work properly with methods returning
-/// > string references or slices.
-///
 /// The method may also take additional arguments:
 ///
 /// ```
@@ -80,10 +82,22 @@ use googletest::*;
 /// #    .unwrap();
 /// ```
 ///
-/// > **Note**: The method should be pure function with a deterministic output
-/// > and no side effects. In particular, in the event of an assertion failure,
-/// > it will be invoked a second time, with the assertion failure output
-/// > reflecting the *second* invocation.
+/// Unfortunately, this matcher does *not* work with methods returning string slices:
+///
+/// ```compile_fail
+/// # use googletest::{matchers::eq, property, verify_that};
+/// #[derive(Debug)]
+/// pub struct MyStruct {
+///     a_string: String,
+/// }
+/// impl MyStruct {
+///     pub fn get_a_string(&self) -> &str { &self.a_string }
+/// }
+///
+/// let value = MyStruct { a_string: "A string".into() };
+/// verify_that!(value, property!(ref MyStruct.get_a_string(), eq("A string"))) // Does not compile
+/// #    .unwrap();
+/// ```
 ///
 /// This macro is analogous to [`field`][crate::field], except that it extracts
 /// the datum to be matched from the given object by invoking a method rather

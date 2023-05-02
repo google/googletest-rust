@@ -96,6 +96,21 @@ fn matches_struct_with_matching_string_reference_property() -> Result<()> {
 }
 
 #[google_test]
+fn matches_struct_with_matching_slice_property() -> Result<()> {
+    #[derive(Debug)]
+    struct StructWithVec {
+        property: Vec<u32>,
+    }
+    impl StructWithVec {
+        fn get_property_ref(&self) -> &[u32] {
+            &self.property
+        }
+    }
+    let value = StructWithVec { property: vec![1, 2, 3] };
+    verify_that!(value, property!(ref StructWithVec.get_property_ref(), eq([1, 2, 3])))
+}
+
+#[google_test]
 fn matches_struct_with_matching_property_ref_with_parameters() -> Result<()> {
     let value = SomeStruct { a_property: 10 };
     verify_that!(value, property!(ref SomeStruct.get_property_ref_with_params(2, 3), eq(10)))
