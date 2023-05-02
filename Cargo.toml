@@ -17,3 +17,26 @@ members = [
   "googletest_macro",
   "googletest",
 ]
+
+[package]
+name = "googletest-rust"
+version = "0.1.0"
+edition = "2018"
+description = "A Rust binding to Google Test"
+repository = "https://github.com/google/googletest-rust"
+license = "Apache-2.0"
+
+[badges]
+travis-ci = { repository = "google/googletest-rust" }
+codecov = { repository = "google/googletest-rust" }
+
+[dependencies]
+googletest = { version = "0.9.0", default-features = false }
+
+[[bin]]
+name = "example1"
+path = "examples/example1.rs"
+
+[[bin]]
+name = "example2"
+path = "examples/example2.rs"
