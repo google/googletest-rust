@@ -31,6 +31,7 @@ use googletest::*;
 /// # fn should_pass() -> Result<()> {
 /// let value = vec![1, 2, 3];
 /// verify_that!(value, pointwise!(le, [1, 3, 3]))?; // Passes
+/// verify_that!(value, pointwise!(le, vec![1, 3, 3]))?; // Passes
 /// #     Ok(())
 /// # }
 /// # fn should_fail() -> Result<()> {
@@ -83,6 +84,17 @@ use googletest::*;
 ///
 /// The actual value must be a container implementing [`IntoIterator`]. This
 /// includes standard containers, slices (when dereferenced) and arrays.
+///
+/// ```
+/// # use googletest::{matchers::le, pointwise, verify_that, Result};
+/// # fn should_pass() -> Result<()> {
+/// let value = vec![1, 2, 3];
+/// verify_that!(*value.as_slice(), pointwise!(le, [1, 3, 3]))?; // Passes
+/// verify_that!([1, 2, 3], pointwise!(le, [1, 3, 3]))?; // Passes
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// ```
 ///
 /// This matcher does not support matching directly against an [`Iterator`]. To
 /// match against an iterator, use [`Iterator::collect`] to build a [`Vec`]
