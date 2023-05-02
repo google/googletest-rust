@@ -22,14 +22,22 @@ pub trait AndMatcherExt<T: Debug>: Matcher<ActualT = T> {
     /// Constructs a matcher that matches both `self` and `right`.
     ///
     /// ```
-    /// # use googletest::{field, matchers::{eq, AndMatcherExt}, verify_that, Result};
-    /// # #[derive(Debug)]
-    /// # struct Struct { a: u32, b: u32 };
+    /// # use googletest::{matchers::{ends_with, starts_with, AndMatcherExt}, verify_that, Result};
     /// # fn should_pass() -> Result<()> {
-    /// verify_that!(Struct { a: 1, b: 2 }, field!(Struct.a, eq(1)).and(field!(Struct.b, eq(2))))?;
+    /// verify_that!("A string", starts_with("A").and(ends_with("string")))?; // Passes
+    /// #     Ok(())
+    /// # }
+    /// # fn should_fail_1() -> Result<()> {
+    /// verify_that!("A string", starts_with("Another").and(ends_with("string")))?; // Fails
+    /// #     Ok(())
+    /// # }
+    /// # fn should_fail_2() -> Result<()> {
+    /// verify_that!("A string", starts_with("A").and(ends_with("non-string")))?; // Fails
     /// #     Ok(())
     /// # }
     /// # should_pass().unwrap();
+    /// # should_fail_1().unwrap_err();
+    /// # should_fail_2().unwrap_err();
     /// ```
     // TODO(b/264518763): Replace the return type with impl Matcher and reduce
     // visibility of ConjunctionMatcher once impl in return position in trait
