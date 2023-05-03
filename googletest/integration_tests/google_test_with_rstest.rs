@@ -14,12 +14,11 @@
 
 fn main() {}
 
-// Mixing rstest and googletest::test should not result in any compiler warnings. The
-// fact that this successfully compiles is part of the test.
+// Mixing rstest and googletest::test should not result in any compiler
+// warnings. The fact that this successfully compiles is part of the test.
 #[deny(warnings)]
 #[cfg(test)]
 mod tests {
-    #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{verify_that, Result};
     use matchers::eq;

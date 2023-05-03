@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches an `Option` containing a value matched by `inner`.
@@ -81,7 +79,6 @@ impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for SomeMatcher<T, I
 #[cfg(test)]
 mod tests {
     use super::some;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{
         matcher::{Matcher, MatcherResult},

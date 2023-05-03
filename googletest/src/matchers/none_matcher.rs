@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
@@ -59,7 +57,6 @@ impl<T: Debug> Matcher for NoneMatcher<T> {
 #[cfg(test)]
 mod tests {
     use super::none;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{
         matcher::{Matcher, MatcherResult},

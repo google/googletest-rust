@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches an empty container.
@@ -76,7 +74,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::empty;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{verify_that, Result};
     use matchers::not;

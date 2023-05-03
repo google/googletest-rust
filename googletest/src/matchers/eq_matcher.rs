@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a value equal (in the sense of `==`) to `expected`.

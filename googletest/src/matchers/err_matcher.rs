@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a `Result` containing `Err` with a value matched by `inner`.
@@ -86,7 +84,6 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<ActualT = E>> Matcher
 #[cfg(test)]
 mod tests {
     use super::err;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{
         matcher::{Matcher, MatcherResult},

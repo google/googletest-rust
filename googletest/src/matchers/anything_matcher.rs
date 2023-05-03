@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches anything. This matcher always succeeds.
@@ -55,7 +53,6 @@ impl<T: Debug + ?Sized> Matcher for Anything<T> {
 #[cfg(test)]
 mod tests {
     use super::anything;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{verify_that, Result};
     use matchers::some;

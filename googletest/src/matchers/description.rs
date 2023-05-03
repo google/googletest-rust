@@ -210,9 +210,7 @@ impl FromIterator<String> for Description {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[cfg(not(google3))]
     use crate as googletest;
-    #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{verify_that, Result};
     use indoc::indoc;

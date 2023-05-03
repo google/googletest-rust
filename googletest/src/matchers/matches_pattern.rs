@@ -226,7 +226,8 @@
 /// Trailing commas are allowed (but not required) in both ordinary and tuple
 /// structs.
 ///
-/// Unfortunately, this matcher does *not* work with methods returning string slices:
+/// Unfortunately, this matcher does *not* work with methods returning string
+/// slices:
 ///
 /// ```compile_fail
 /// # use googletest::{matchers::eq, property, verify_that};
@@ -563,18 +564,8 @@ macro_rules! matches_pattern_internal {
     };
 
     ($first:tt $($rest:tt)*) => {{
-        #[cfg(not(google3))]
         #[allow(unused)]
         use $crate::{all, field, property};
-        #[cfg(google3)]
-        #[allow(unused)]
-        use all_matcher::all;
-        #[cfg(google3)]
-        #[allow(unused)]
-        use field_matcher::field;
-        #[cfg(google3)]
-        #[allow(unused)]
-        use property_matcher::property;
         $crate::matches_pattern_internal!([$first], $($rest)*)
     }};
 }

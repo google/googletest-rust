@@ -13,11 +13,8 @@
 // limitations under the License.
 
 use crate::matcher::{Matcher, MatcherResult};
-#[cfg(not(google3))]
 use crate::matchers::eq_matcher;
 use eq_matcher::EqMatcher;
-#[cfg(google3)]
-use googletest::*;
 use std::borrow::Cow;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -526,7 +523,6 @@ impl Configuration {
 #[cfg(test)]
 mod tests {
     use super::{contains_substring, ends_with, starts_with, StrMatcher, StrMatcherConfigurator};
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{
         matcher::{Matcher, MatcherResult},

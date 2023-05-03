@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use num_traits::float::Float;
 use std::{fmt::Debug, marker::PhantomData};
 
@@ -40,7 +38,6 @@ impl<T: Float + Debug> Matcher for IsNanMatcher<T> {
 #[cfg(test)]
 mod tests {
     use super::is_nan;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{verify_that, Result};
     use matchers::not;

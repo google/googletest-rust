@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Extension trait providing the [`and`][AndMatcherExt::and] method.
@@ -97,11 +95,8 @@ impl<T: Debug, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matcher
 #[cfg(test)]
 mod tests {
     use super::AndMatcherExt;
-    #[cfg(not(google3))]
     use crate::{field, matchers};
     use crate::{verify_that, Result};
-    #[cfg(google3)]
-    use matchers::field;
     use matchers::{
         anything, contains_substring, displays_as, ends_with, eq, err, not, starts_with,
     };

@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a value less (in the sense of `<`) than `expected`.
@@ -106,7 +104,6 @@ impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher
 #[cfg(test)]
 mod tests {
     use super::lt;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{
         matcher::{Matcher, MatcherResult},

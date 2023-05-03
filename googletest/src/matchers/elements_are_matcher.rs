@@ -16,9 +16,6 @@
 // macro is documented at the top level.
 #![doc(hidden)]
 
-#[cfg(google3)]
-use googletest::*;
-
 /// Matches a container's elements to each matcher in order.
 ///
 /// This macro produces a matcher against a container. It takes as arguments a
@@ -60,9 +57,6 @@ use googletest::*;
 #[macro_export]
 macro_rules! elements_are {
     ($($matcher:expr),* $(,)?) => {{
-        #[cfg(google3)]
-        use $crate::internal::ElementsAre;
-        #[cfg(not(google3))]
         use $crate::matchers::elements_are_matcher::internal::ElementsAre;
         ElementsAre::new(&[$(&$matcher),*])
     }}
@@ -74,15 +68,9 @@ macro_rules! elements_are {
 #[doc(hidden)]
 pub mod internal {
     use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-    #[cfg(not(google3))]
     use crate::matchers::description::Description;
-    #[cfg(not(google3))]
     use crate::matchers::zipped_iterator::zip;
-    #[cfg(google3)]
-    use description::Description;
     use std::{fmt::Debug, marker::PhantomData};
-    #[cfg(google3)]
-    use zipped_iterator::zip;
 
     /// This struct is meant to be used only by the macro `elements_are!`.
     ///

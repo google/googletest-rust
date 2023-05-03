@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
 use googletest::matchers;
-#[cfg(not(google3))]
 use googletest::tuple;
 use googletest::{
     google_test,
@@ -22,8 +20,6 @@ use googletest::{
     verify_that, Result,
 };
 use indoc::indoc;
-#[cfg(google3)]
-use matchers::tuple;
 use matchers::{displays_as, eq, not};
 
 #[google_test]

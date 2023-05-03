@@ -12,15 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
 use googletest::matchers;
 use googletest::{google_test, verify_that, Result};
-#[cfg(not(google3))]
 use googletest::{matches_pattern, pat};
 use indoc::indoc;
 use matchers::{contains_substring, displays_as, eq, err, not};
-#[cfg(google3)]
-use matchers::{matches_pattern, pat};
 
 #[google_test]
 fn matches_struct_containing_single_field() -> Result<()> {

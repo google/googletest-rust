@@ -16,9 +16,6 @@
 // macro is documented at the top level.
 #![doc(hidden)]
 
-#[cfg(google3)]
-use googletest::*;
-
 /// Generates a matcher which matches a container each of whose elements match
 /// the given matcher name applied respectively to each element of the given
 /// container.
@@ -120,17 +117,11 @@ use googletest::*;
 #[macro_export]
 macro_rules! pointwise {
     ($matcher:expr, $container:expr) => {{
-        #[cfg(google3)]
-        use $crate::internal::PointwiseMatcher;
-        #[cfg(not(google3))]
         use $crate::matchers::pointwise_matcher::internal::PointwiseMatcher;
         PointwiseMatcher::new($container.into_iter().map($matcher).collect())
     }};
 
     ($matcher:expr, $left_container:expr, $right_container:expr) => {{
-        #[cfg(google3)]
-        use $crate::internal::PointwiseMatcher;
-        #[cfg(not(google3))]
         use $crate::matchers::pointwise_matcher::internal::PointwiseMatcher;
         PointwiseMatcher::new(
             $left_container
@@ -142,9 +133,6 @@ macro_rules! pointwise {
     }};
 
     ($matcher:expr, $left_container:expr, $middle_container:expr, $right_container:expr) => {{
-        #[cfg(google3)]
-        use $crate::internal::PointwiseMatcher;
-        #[cfg(not(google3))]
         use $crate::matchers::pointwise_matcher::internal::PointwiseMatcher;
         PointwiseMatcher::new(
             $left_container
@@ -162,15 +150,9 @@ macro_rules! pointwise {
 #[doc(hidden)]
 pub mod internal {
     use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-    #[cfg(not(google3))]
     use crate::matchers::description::Description;
-    #[cfg(not(google3))]
     use crate::matchers::zipped_iterator::zip;
-    #[cfg(google3)]
-    use description::Description;
     use std::{fmt::Debug, marker::PhantomData};
-    #[cfg(google3)]
-    use zipped_iterator::zip;
 
     /// This struct is meant to be used only through the `pointwise` macro.
     ///

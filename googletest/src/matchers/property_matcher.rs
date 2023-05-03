@@ -16,9 +16,6 @@
 // macro is documented at the top level.
 #![doc(hidden)]
 
-#[cfg(google3)]
-use googletest::*;
-
 /// Matches an object which, upon calling the given method on it with the given
 /// arguments, produces a value matched by the given inner matcher.
 ///
@@ -82,7 +79,8 @@ use googletest::*;
 /// #    .unwrap();
 /// ```
 ///
-/// Unfortunately, this matcher does *not* work with methods returning string slices:
+/// Unfortunately, this matcher does *not* work with methods returning string
+/// slices:
 ///
 /// ```compile_fail
 /// # use googletest::{matchers::eq, property, verify_that};
@@ -115,10 +113,7 @@ macro_rules! property {
 #[macro_export]
 macro_rules! property_internal {
     ($($t:ident)::+.$method:tt($($argument:tt),* $(,)?), $m:expr) => {{
-        #[cfg(google3)]
-        use $crate::internal::property_matcher;
-        #[cfg(not(google3))]
-        use $crate::matchers::property_matcher::internal::property_matcher;
+         use $crate::matchers::property_matcher::internal::property_matcher;
         property_matcher(
             |o: &$($t)::+| o.$method($($argument),*),
             &stringify!($method($($argument),*)),
@@ -126,9 +121,6 @@ macro_rules! property_internal {
     }};
 
     (ref $($t:ident)::+.$method:tt($($argument:tt),* $(,)?), $m:expr) => {{
-        #[cfg(google3)]
-        use $crate::internal::property_ref_matcher;
-        #[cfg(not(google3))]
         use $crate::matchers::property_matcher::internal::property_ref_matcher;
         property_ref_matcher(
             |o: &$($t)::+| o.$method($($argument),*),

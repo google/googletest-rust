@@ -383,7 +383,6 @@ extern crate googletest_macro;
 pub mod assertions;
 pub mod internal;
 pub mod matcher;
-#[cfg(not(google3))]
 pub mod matchers;
 
 pub use googletest_macro::test;

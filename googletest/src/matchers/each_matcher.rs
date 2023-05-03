@@ -13,12 +13,7 @@
 // limitations under the License.
 
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-#[cfg(not(google3))]
 use crate::matchers::description::Description;
-#[cfg(google3)]
-use description::Description;
-#[cfg(google3)]
-use googletest::*;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a container all of whose elements are matched by the matcher
@@ -145,7 +140,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::each;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{verify_that, Result};
     use indoc::indoc;

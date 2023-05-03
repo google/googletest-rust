@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a container all of whose items are in the given container
@@ -152,7 +150,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::subset_of;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{verify_that, Result};
     use matchers::{contains_substring, displays_as, err, not};

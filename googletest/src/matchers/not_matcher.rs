@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches the actual value exactly when the inner matcher does _not_ match.
@@ -69,7 +67,6 @@ impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for NotMatcher<T, In
 #[cfg(test)]
 mod tests {
     use super::not;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{
         matcher::{Matcher, MatcherResult},

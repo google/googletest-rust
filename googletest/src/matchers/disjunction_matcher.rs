@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Extension trait providing the [`or`][OrMatcherExt::or] method.
@@ -89,7 +87,6 @@ impl<T: Debug, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matcher
 #[cfg(test)]
 mod tests {
     use super::OrMatcherExt;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{verify_that, Result};
     use matchers::{anything, contains_substring, displays_as, ends_with, eq, err, ge, not};

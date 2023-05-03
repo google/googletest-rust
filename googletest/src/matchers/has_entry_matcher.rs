@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -122,7 +120,6 @@ impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ActualT = ValueT>
 #[cfg(test)]
 mod tests {
     use super::has_entry;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{verify_that, Result};
     use matchers::{contains_substring, displays_as, eq, err, not};

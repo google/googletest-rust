@@ -12,14 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
 use googletest::matchers;
-#[cfg(not(google3))]
 use googletest::pointwise;
 use googletest::{google_test, verify_that, Result};
 use indoc::indoc;
-#[cfg(google3)]
-use matchers::pointwise;
 use matchers::{contains_substring, displays_as, eq, err, lt, near, not};
 
 #[google_test]

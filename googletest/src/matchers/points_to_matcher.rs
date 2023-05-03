@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::ops::Deref;
@@ -73,7 +71,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::points_to;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{verify_that, Result};
     use matchers::{container_eq, contains_substring, displays_as, eq, err};

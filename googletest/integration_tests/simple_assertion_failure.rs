@@ -16,7 +16,6 @@ fn main() {}
 
 #[cfg(test)]
 mod tests {
-    #[cfg(not(google3))]
     use googletest::matchers;
     use googletest::{verify_that, Result};
     use matchers::eq;

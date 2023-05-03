@@ -12,17 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(not(google3))]
 use googletest::matchers;
-#[cfg(not(google3))]
 use googletest::property;
 use googletest::{
     google_test,
     matcher::{Matcher, MatcherResult},
     verify_that, Result,
 };
-#[cfg(google3)]
-use matchers::property;
 use matchers::{container_eq, contains_substring, displays_as, eq, err, not};
 
 #[derive(Debug)]

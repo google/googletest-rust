@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use num_traits::{Float, FloatConst};
 use std::fmt::Debug;
 
@@ -196,7 +194,6 @@ impl<T: Debug + Float> Matcher for NearMatcher<T> {
 #[cfg(test)]
 mod tests {
     use super::{approx_eq, near};
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{
         matcher::{Matcher, MatcherResult},

@@ -14,10 +14,6 @@
 
 // There are no visible documentation elements in this module; the declarative
 // macro is documented at the top level.
-#![doc(hidden)]
-
-#[cfg(google3)]
-use googletest::*;
 
 /// Matches a container whose elements in any order have a 1:1 correspondence
 /// with the provided element matchers.
@@ -94,9 +90,6 @@ use googletest::*;
 #[macro_export]
 macro_rules! unordered_elements_are {
     ($(,)?) => {{
-        #[cfg(google3)]
-        use $crate::internal::{UnorderedElementsAreMatcher, Requirements};
-        #[cfg(not(google3))]
         use $crate::matchers::unordered_elements_are_matcher::internal::{
             UnorderedElementsAreMatcher, Requirements
         };
@@ -106,9 +99,6 @@ macro_rules! unordered_elements_are {
     // TODO: Consider an alternative map-like syntax here similar to that used in
     // https://crates.io/crates/maplit.
     ($(($key_matcher:expr, $value_matcher:expr)),* $(,)?) => {{
-        #[cfg(google3)]
-        use $crate::internal::{UnorderedElementsOfMapAreMatcher, Requirements};
-        #[cfg(not(google3))]
         use $crate::matchers::unordered_elements_are_matcher::internal::{
             UnorderedElementsOfMapAreMatcher, Requirements
         };
@@ -119,9 +109,6 @@ macro_rules! unordered_elements_are {
     }};
 
     ($($matcher:expr),* $(,)?) => {{
-        #[cfg(google3)]
-        use $crate::internal::{UnorderedElementsAreMatcher, Requirements};
-        #[cfg(not(google3))]
         use $crate::matchers::unordered_elements_are_matcher::internal::{
             UnorderedElementsAreMatcher, Requirements
         };
@@ -205,9 +192,6 @@ macro_rules! unordered_elements_are {
 #[macro_export]
 macro_rules! contains_each {
     ($(,)?) => {{
-        #[cfg(google3)]
-        use $crate::internal::{UnorderedElementsAreMatcher, Requirements};
-        #[cfg(not(google3))]
         use $crate::matchers::unordered_elements_are_matcher::internal::{
             UnorderedElementsAreMatcher, Requirements
         };
@@ -217,9 +201,6 @@ macro_rules! contains_each {
     // TODO: Consider an alternative map-like syntax here similar to that used in
     // https://crates.io/crates/maplit.
     ($(($key_matcher:expr, $value_matcher:expr)),* $(,)?) => {{
-        #[cfg(google3)]
-        use $crate::internal::{UnorderedElementsOfMapAreMatcher, Requirements};
-        #[cfg(not(google3))]
         use $crate::matchers::unordered_elements_are_matcher::internal::{
             UnorderedElementsOfMapAreMatcher, Requirements
         };
@@ -230,9 +211,6 @@ macro_rules! contains_each {
     }};
 
     ($($matcher:expr),* $(,)?) => {{
-        #[cfg(google3)]
-        use $crate::internal::{UnorderedElementsAreMatcher, Requirements};
-        #[cfg(not(google3))]
         use $crate::matchers::unordered_elements_are_matcher::internal::{
             UnorderedElementsAreMatcher, Requirements
         };
@@ -320,9 +298,6 @@ macro_rules! contains_each {
 #[macro_export]
 macro_rules! is_contained_in {
     ($(,)?) => {{
-        #[cfg(google3)]
-        use $crate::internal::{UnorderedElementsAreMatcher, Requirements};
-        #[cfg(not(google3))]
         use $crate::matchers::unordered_elements_are_matcher::internal::{
             UnorderedElementsAreMatcher, Requirements
         };
@@ -332,9 +307,6 @@ macro_rules! is_contained_in {
     // TODO: Consider an alternative map-like syntax here similar to that used in
     // https://crates.io/crates/maplit.
     ($(($key_matcher:expr, $value_matcher:expr)),* $(,)?) => {{
-        #[cfg(google3)]
-        use $crate::internal::{UnorderedElementsOfMapAreMatcher, Requirements};
-        #[cfg(not(google3))]
         use $crate::matchers::unordered_elements_are_matcher::internal::{
             UnorderedElementsOfMapAreMatcher, Requirements
         };
@@ -345,9 +317,6 @@ macro_rules! is_contained_in {
     }};
 
     ($($matcher:expr),* $(,)?) => {{
-        #[cfg(google3)]
-        use $crate::internal::{UnorderedElementsAreMatcher, Requirements};
-        #[cfg(not(google3))]
         use $crate::matchers::unordered_elements_are_matcher::internal::{
             UnorderedElementsAreMatcher, Requirements
         };
@@ -361,14 +330,8 @@ macro_rules! is_contained_in {
 #[doc(hidden)]
 pub mod internal {
     use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-    #[cfg(not(google3))]
     use crate::matchers::count_elements::count_elements;
-    #[cfg(not(google3))]
     use crate::matchers::description::Description;
-    #[cfg(google3)]
-    use count_elements::count_elements;
-    #[cfg(google3)]
-    use description::Description;
     use std::collections::HashSet;
     use std::fmt::{Debug, Display};
     use std::marker::PhantomData;

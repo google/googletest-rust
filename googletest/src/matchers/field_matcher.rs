@@ -16,9 +16,6 @@
 // macro is documented at the top level.
 #![doc(hidden)]
 
-#[cfg(google3)]
-use googletest::*;
-
 /// Matches a structure or enum with a given field which is matched by a given
 /// matcher.
 ///
@@ -121,9 +118,6 @@ macro_rules! field {
 #[macro_export]
 macro_rules! field_internal {
     ($($t:ident)::+.$field:tt, $m:expr) => {{
-        #[cfg(google3)]
-        use $crate::internal::field_matcher;
-        #[cfg(not(google3))]
         use $crate::matchers::field_matcher::internal::field_matcher;
         field_matcher(
             |o| {

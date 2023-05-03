@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Creates a matcher based on the predicate provided.
@@ -163,7 +161,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::predicate;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{matcher::Matcher, verify_that, Result};
     use matchers::{displays_as, eq};

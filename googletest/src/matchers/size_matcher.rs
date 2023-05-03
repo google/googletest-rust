@@ -13,12 +13,7 @@
 // limitations under the License.
 
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-#[cfg(not(google3))]
 use crate::matchers::count_elements::count_elements;
-#[cfg(google3)]
-use count_elements::count_elements;
-#[cfg(google3)]
-use googletest::*;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a container whose size matches `expected`.
@@ -99,7 +94,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::size;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{
         matcher::{MatchExplanation, Matcher, MatcherResult},

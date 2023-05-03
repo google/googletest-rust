@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
@@ -181,7 +179,6 @@ fn build_explanation<T: Debug, U: Debug>(missing: Vec<T>, unexpected: Vec<U>) ->
 #[cfg(test)]
 mod tests {
     use super::container_eq;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{
         matcher::{Matcher, MatcherResult},

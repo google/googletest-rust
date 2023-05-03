@@ -13,14 +13,10 @@
 // limitations under the License.
 
 use googletest::matcher::Matcher;
-#[cfg(not(google3))]
 use googletest::matchers;
-#[cfg(not(google3))]
 use googletest::{contains_each, is_contained_in, unordered_elements_are};
 use googletest::{google_test, verify_that, Result};
 use indoc::indoc;
-#[cfg(google3)]
-use matchers::{contains_each, is_contained_in, unordered_elements_are};
 use matchers::{contains_substring, displays_as, eq, err, ge, not};
 use std::collections::HashMap;
 

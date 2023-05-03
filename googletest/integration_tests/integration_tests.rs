@@ -16,15 +16,12 @@ fn main() {}
 
 #[cfg(test)]
 mod tests {
-    #[cfg(not(google3))]
     use googletest::{all, matchers, matchers::str_matcher};
     use googletest::{
         assert_that, expect_pred, expect_that, test, verify_pred, verify_that, GoogleTestSupport,
         Result,
     };
     use indoc::indoc;
-    #[cfg(google3)]
-    use matchers::all;
     use matchers::{anything, contains_regex, contains_substring, displays_as, eq, err, not};
     use std::process::Command;
     use str_matcher::StrMatcherConfigurator;

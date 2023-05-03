@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use regex::Regex;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -94,7 +92,6 @@ impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher for ContainsRegexMatcher<Actu
 #[cfg(test)]
 mod tests {
     use super::{contains_regex, ContainsRegexMatcher};
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{
         matcher::{Matcher, MatcherResult},

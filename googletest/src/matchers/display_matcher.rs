@@ -13,8 +13,6 @@
 // limitations under the License.
 
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-#[cfg(google3)]
-use googletest::*;
 use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 
@@ -69,7 +67,6 @@ impl<T: Debug + Display, InnerMatcher: Matcher<ActualT = String>> Matcher
 #[cfg(test)]
 mod tests {
     use super::displays_as;
-    #[cfg(not(google3))]
     use crate::matchers;
     use crate::{matcher::Matcher, verify_that, Result};
     use matchers::eq;
