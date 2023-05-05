@@ -255,6 +255,7 @@
 //!
 //! ```
 //! # use googletest::prelude::*;
+//! # use googletest::matcher::{Matcher, MatcherResult};
 //! # use std::fmt::Debug;
 //! #
 //! # struct MyEqMatcher<T> {
@@ -387,7 +388,6 @@ pub mod matcher_support;
 pub mod matchers;
 
 pub mod prelude {
-    pub use super::matcher::*;
     pub use super::matchers::*;
     pub use super::GoogleTestSupport;
     pub use super::IntoTestResult;

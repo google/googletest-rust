@@ -161,6 +161,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::predicate;
+    use crate::matcher::Matcher;
     use crate::prelude::*;
 
     // Simple matcher with a description

@@ -179,6 +179,7 @@ fn build_explanation<T: Debug, U: Debug>(missing: Vec<T>, unexpected: Vec<U>) ->
 #[cfg(test)]
 mod tests {
     use super::container_eq;
+    use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
     use std::collections::HashSet;
 

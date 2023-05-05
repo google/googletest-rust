@@ -57,6 +57,7 @@ impl<T: Debug> Matcher for NoneMatcher<T> {
 #[cfg(test)]
 mod tests {
     use super::none;
+    use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
 
     #[test]

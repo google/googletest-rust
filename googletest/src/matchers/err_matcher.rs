@@ -84,6 +84,7 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<ActualT = E>> Matcher
 #[cfg(test)]
 mod tests {
     use super::err;
+    use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
 
     #[test]

@@ -67,6 +67,7 @@ impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for NotMatcher<T, In
 #[cfg(test)]
 mod tests {
     use super::not;
+    use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
 
     #[test]

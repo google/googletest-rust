@@ -109,6 +109,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::{matches_regex, MatchesRegexMatcher};
+    use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
 
     #[test]

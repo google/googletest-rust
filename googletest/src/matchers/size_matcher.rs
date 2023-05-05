@@ -94,6 +94,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::size;
+    use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
     use crate::prelude::*;
     use indoc::indoc;
     use std::collections::{

@@ -151,6 +151,7 @@ pub mod internal {
 #[cfg(test)]
 mod tests {
     use super::internal;
+    use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
     use indoc::indoc;
 

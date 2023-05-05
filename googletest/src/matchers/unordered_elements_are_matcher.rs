@@ -1040,6 +1040,7 @@ pub mod internal {
 #[cfg(test)]
 mod tests {
     use super::internal::UnorderedElementsOfMapAreMatcher;
+    use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
     use indoc::indoc;
     use std::collections::HashMap;

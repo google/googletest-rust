@@ -154,6 +154,7 @@ impl<ActualT, InnerMatcherT> ContainsMatcher<ActualT, InnerMatcherT> {
 #[cfg(test)]
 mod tests {
     use super::{contains, ContainsMatcher};
+    use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
 
     #[test]

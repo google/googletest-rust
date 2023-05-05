@@ -104,6 +104,7 @@ impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher
 #[cfg(test)]
 mod tests {
     use super::lt;
+    use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
     use std::ffi::OsString;
 

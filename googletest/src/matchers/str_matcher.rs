@@ -512,6 +512,7 @@ impl Configuration {
 #[cfg(test)]
 mod tests {
     use super::{contains_substring, ends_with, starts_with, StrMatcher, StrMatcherConfigurator};
+    use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
 
     #[test]

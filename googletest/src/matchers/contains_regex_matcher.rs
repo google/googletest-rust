@@ -92,6 +92,7 @@ impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher for ContainsRegexMatcher<Actu
 #[cfg(test)]
 mod tests {
     use super::{contains_regex, ContainsRegexMatcher};
+    use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
 
     #[test]
