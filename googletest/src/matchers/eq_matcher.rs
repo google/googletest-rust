@@ -95,31 +95,36 @@ impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher for EqMatcher<A, T> {
     }
 
     fn explain_match(&self, actual: &A) -> MatchExplanation {
-        let actual_debug = format!("{:#?}", actual);
-        if actual_debug.lines().count() < 2 {
-            // If the actual debug is only one line, then there is no point in doing a
-            // line-by-line diff.
-            return MatchExplanation::create(format!(
-                "which {}",
-                self.describe(self.matches(actual))
-            ));
-        }
-        let expected_debug = format!("{:#?}", self.expected);
-        let edit_list = edit_distance::edit_list(actual_debug.lines(), expected_debug.lines());
-
-        if edit_list.is_empty() {
-            return MatchExplanation::create(format!(
-                "which {}\nNo difference found between debug strings.",
-                self.describe(self.matches(actual))
-            ));
-        }
-
-        MatchExplanation::create(format!(
-            "which {}\nDebug diff:{}",
-            self.describe(self.matches(actual)),
-            edit_list_summary(&edit_list)
-        ))
+        create_diff(
+            &format!("{:#?}", self.expected),
+            &format!("{:#?}", actual),
+            &self.describe(self.matches(actual)),
+        )
     }
+}
+
+pub(super) fn create_diff(
+    expected_debug: &str,
+    actual_debug: &str,
+    description: &str,
+) -> MatchExplanation {
+    if actual_debug.lines().count() < 2 {
+        // If the actual debug is only one line, then there is no point in doing a
+        // line-by-line diff.
+        return MatchExplanation::create(format!("which {description}",));
+    }
+    let edit_list = edit_distance::edit_list(actual_debug.lines(), expected_debug.lines());
+
+    if edit_list.is_empty() {
+        return MatchExplanation::create(format!(
+            "which {description}\nNo difference found between debug strings.",
+        ));
+    }
+
+    MatchExplanation::create(format!(
+        "which {description}\nDebug diff:{}",
+        edit_list_summary(&edit_list)
+    ))
 }
 
 fn edit_list_summary(edit_list: &[edit_distance::Edit<&str>]) -> String {

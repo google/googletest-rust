@@ -13,8 +13,7 @@
 // limitations under the License.
 
 use crate::matcher::{Matcher, MatcherResult};
-use crate::matchers::eq_matcher;
-use eq_matcher::EqMatcher;
+use crate::matchers::{eq_deref_of_matcher::EqDerefOfMatcher, eq_matcher::EqMatcher};
 use std::borrow::Cow;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -350,6 +349,12 @@ impl<A: ?Sized, T: Deref<Target = str>> From<EqMatcher<A, T>> for StrMatcher<A, 
     }
 }
 
+impl<A: ?Sized, T: Deref<Target = str>> From<EqDerefOfMatcher<A, T>> for StrMatcher<A, T> {
+    fn from(value: EqDerefOfMatcher<A, T>) -> Self {
+        Self::with_default_config(value.expected)
+    }
+}
+
 impl<A: ?Sized, T> StrMatcher<A, T> {
     /// Returns a [`StrMatcher`] with a default configuration to match against
     /// the given expected value.
@@ -625,6 +630,16 @@ mod tests {
     #[test]
     fn allows_ignoring_ascii_case_from_eq() -> Result<()> {
         verify_that!("A string", eq("A STRING").ignoring_ascii_case())
+    }
+
+    #[test]
+    fn allows_ignoring_ascii_case_from_eq_deref_of_str_slice() -> Result<()> {
+        verify_that!("A string", eq_deref_of("A STRING").ignoring_ascii_case())
+    }
+
+    #[test]
+    fn allows_ignoring_ascii_case_from_eq_deref_of_owned_string() -> Result<()> {
+        verify_that!("A string", eq_deref_of("A STRING".to_string()).ignoring_ascii_case())
     }
 
     #[test]
