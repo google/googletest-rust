@@ -23,6 +23,7 @@ pub mod description;
 pub mod disjunction_matcher;
 pub mod display_matcher;
 pub mod each_matcher;
+mod edit_distance;
 pub mod elements_are_matcher;
 pub mod empty_matcher;
 pub mod eq_matcher;

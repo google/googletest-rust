@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matchers::edit_distance;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a value equal (in the sense of `==`) to `expected`.
@@ -92,12 +93,70 @@ impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher for EqMatcher<A, T> {
             MatcherResult::DoesNotMatch => format!("isn't equal to {:?}", self.expected),
         }
     }
+
+    fn explain_match(&self, actual: &A) -> MatchExplanation {
+        let actual_debug = format!("{:#?}", actual);
+        if actual_debug.lines().count() < 2 {
+            // If the actual debug is only one line, then there is no point in doing a
+            // line-by-line diff.
+            return MatchExplanation::create(format!(
+                "which {}",
+                self.describe(self.matches(actual))
+            ));
+        }
+        let expected_debug = format!("{:#?}", self.expected);
+        let edit_list = edit_distance::edit_list(actual_debug.lines(), expected_debug.lines());
+
+        if edit_list.is_empty() {
+            return MatchExplanation::create(format!(
+                "which {}\nNo difference found between debug strings.",
+                self.describe(self.matches(actual))
+            ));
+        }
+
+        MatchExplanation::create(format!(
+            "which {}\nDebug diff:{}",
+            self.describe(self.matches(actual)),
+            edit_list_summary(&edit_list)
+        ))
+    }
+}
+
+fn edit_list_summary(edit_list: &[edit_distance::Edit<&str>]) -> String {
+    let mut summary = String::new();
+    for edit in edit_list {
+        summary.push('\n');
+        match edit {
+            edit_distance::Edit::Both { left, distance, .. } if *distance == 0.0 => {
+                summary.push(' ');
+                summary.push_str(left);
+            }
+            edit_distance::Edit::Both { left, right, .. } => {
+                summary.push('+');
+                summary.push_str(left);
+                summary.push('\n');
+                summary.push('-');
+                summary.push_str(right);
+            }
+            edit_distance::Edit::ExtraLeft { left } => {
+                summary.push('+');
+                summary.push_str(left);
+            }
+            edit_distance::Edit::ExtraRight { right } => {
+                summary.push('-');
+                summary.push_str(right);
+            }
+        }
+    }
+    summary
 }
 
 #[cfg(test)]
 mod tests {
     use super::eq;
+    use crate::matchers::{contains_substring, displays_as, err};
     use crate::{verify_that, Result};
+    use indoc::indoc;
 
     #[test]
     fn eq_matches_string_reference_with_string_reference() -> Result<()> {
@@ -119,5 +178,107 @@ mod tests {
     #[test]
     fn eq_matches_i32_with_i32() -> Result<()> {
         verify_that!(123, eq(123))
+    }
+
+    #[test]
+    fn eq_struct_debug_diff() -> Result<()> {
+        #[derive(Debug, PartialEq)]
+        struct Strukt {
+            int: i32,
+            string: String,
+        }
+
+        let result = verify_that!(
+            Strukt { int: 123, string: "something".into() },
+            eq(Strukt { int: 321, string: "someone".into() })
+        );
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc! {
+            r#"
+            Value of: Strukt { int: 123, string: "something".into() }
+            Expected: is equal to Strukt { int: 321, string: "someone" }
+            Actual: Strukt {
+                int: 123,
+                string: "something",
+            }, which isn't equal to Strukt { int: 321, string: "someone" }
+            Debug diff:
+             Strukt {
+            +    int: 123,
+            -    int: 321,
+            +    string: "something",
+            -    string: "someone",
+             }
+            "#})))
+        )
+    }
+
+    #[test]
+    fn eq_vec_debug_diff() -> Result<()> {
+        let result = verify_that!(vec![1, 2, 3], eq(vec![1, 3, 4]));
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc! {
+            r#"
+            Value of: vec![1, 2, 3]
+            Expected: is equal to [1, 3, 4]
+            Actual: [
+                1,
+                2,
+                3,
+            ], which isn't equal to [1, 3, 4]
+            Debug diff:
+             [
+                 1,
+            +    2,
+                 3,
+            -    4,
+             ]
+            "#})))
+        )
+    }
+
+    #[test]
+    fn eq_vec_debug_diff_length_mismatch() -> Result<()> {
+        let result = verify_that!(vec![1, 2, 3, 4, 5], eq(vec![1, 3, 5]));
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc! {
+            r#"
+            Value of: vec![1, 2, 3, 4, 5]
+            Expected: is equal to [1, 3, 5]
+            Actual: [
+                1,
+                2,
+                3,
+                4,
+                5,
+            ], which isn't equal to [1, 3, 5]
+            Debug diff:
+             [
+                 1,
+            +    2,
+                 3,
+            +    4,
+                 5,
+             ]
+            "#})))
+        )
+    }
+
+    #[test]
+    fn eq_multi_line_string_debug_diff() -> Result<()> {
+        let result = verify_that!("One\nTwo\nThree", eq("One\nSix\nThree"));
+        // TODO: b/257454450 - Make this more useful, by potentially unescaping the
+        // line return.
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc! {
+            r#"
+            Value of: "One\nTwo\nThree"
+            Expected: is equal to "One\nSix\nThree"
+            Actual: "One\nTwo\nThree", which isn't equal to "One\nSix\nThree"
+            "#})))
+        )
     }
 }
