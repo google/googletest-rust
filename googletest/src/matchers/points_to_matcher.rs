@@ -24,7 +24,7 @@ use std::ops::Deref;
 /// For example:
 ///
 /// ```
-/// # use googletest::{matchers::{eq, points_to}, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(Box::new(123), points_to(eq(123)))?;
 /// #     Ok(())
@@ -71,9 +71,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::points_to;
-    use crate::matchers;
-    use crate::{verify_that, Result};
-    use matchers::{container_eq, contains_substring, displays_as, eq, err};
+    use crate::prelude::*;
     use std::rc::Rc;
 
     #[test]

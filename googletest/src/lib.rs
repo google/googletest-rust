@@ -39,7 +39,7 @@
 //! For example, for fatal assertions:
 //!
 //! ```
-//! use googletest::{matchers::eq, verify_that, Result};
+//! use googletest::prelude::*;
 //!
 //! # /* The attribute macro would prevent the function from being compiled in a doctest.
 //! #[test]
@@ -59,7 +59,7 @@
 //! Matchers are composable:
 //!
 //! ```
-//! use googletest::{matchers::{contains, ge}, verify_that, Result};
+//! use googletest::prelude::*;
 //!
 //! # /* The attribute macro would prevent the function from being compiled in a doctest.
 //! #[test]
@@ -74,7 +74,7 @@
 //! They can also be logically combined:
 //!
 //! ```
-//! use googletest::{matchers::{ge, gt, not, AndMatcherExt}, verify_that, Result};
+//! use googletest::prelude::*;
 //!
 //! # /* The attribute macro would prevent the function from being compiled in a doctest.
 //! #[test]
@@ -254,7 +254,7 @@
 //! The new matcher can then be used in `verify_that!`:
 //!
 //! ```
-//! # use googletest::{matcher::{Matcher, MatcherResult}, verify_that, Result};
+//! # use googletest::prelude::*;
 //! # use std::fmt::Debug;
 //! #
 //! # struct MyEqMatcher<T> {
@@ -308,7 +308,7 @@
 //! `#[test]`. It must return [`Result<()>`].
 //!
 //! ```no_run
-//! use googletest::{expect_that, verify_that, matchers::eq, Result};
+//! use googletest::prelude::*;
 //!
 //! # /* Make sure this also compiles as a doctest.
 //! #[googletest::test]
@@ -329,7 +329,7 @@
 //! which passes precisely when the predicate returns `true`:
 //!
 //! ```
-//! # use googletest::{verify_pred, Result};
+//! # use googletest::prelude::*;
 //! fn stuff_is_correct(x: i32, y: i32) -> bool {
 //!    x == y
 //! }
@@ -364,7 +364,7 @@
 //! message:
 //!
 //! ```
-//! # use googletest::{fail, Result};
+//! # use googletest::prelude::*;
 //! # /* The attribute macro would prevent the function from being compiled in a doctest.
 //! #[test]
 //! # */
@@ -384,6 +384,21 @@ pub mod assertions;
 pub mod internal;
 pub mod matcher;
 pub mod matchers;
+
+pub mod prelude {
+    pub use super::matcher::*;
+    pub use super::matchers::*;
+    pub use super::GoogleTestSupport;
+    pub use super::IntoTestResult;
+    pub use super::Result;
+    // Assert macros
+    pub use super::{assert_that, expect_pred, expect_that, fail, verify_pred, verify_that};
+    // Matcher macros
+    pub use super::{
+        all, contains_each, elements_are, field, is_contained_in, matches_pattern, pat, pointwise,
+        property, tuple, unordered_elements_are,
+    };
+}
 
 pub use googletest_macro::test;
 
@@ -421,7 +436,7 @@ pub trait GoogleTestSupport {
     /// This can be used for non-fatal test assertions, for example:
     ///
     /// ```
-    /// # use googletest::{matchers::eq, verify_that, GoogleTestSupport, Result};
+    /// # use googletest::prelude::*;
     /// let actual = 42;
     /// verify_that!(actual, eq(42)).and_log_failure();
     ///                                  // Test still passing; nothing happens
@@ -441,12 +456,7 @@ pub trait GoogleTestSupport {
     /// For example:
     ///
     /// ```
-    /// # use googletest::{
-    /// #     matchers::{contains_substring, displays_as, err, eq},
-    /// #     verify_that,
-    /// #     GoogleTestSupport,
-    /// #     Result
-    /// # };
+    /// # use googletest::prelude::*;
     /// # fn should_fail() -> Result<()> {
     /// let actual = 0;
     /// verify_that!(actual, eq(42)).failure_message("Actual was wrong!")?;
@@ -467,12 +477,7 @@ pub trait GoogleTestSupport {
     /// One can pass a `String` too:
     ///
     /// ```
-    /// # use googletest::{
-    /// #     matchers::{contains_substring, displays_as, err, eq},
-    /// #     verify_that,
-    /// #     GoogleTestSupport,
-    /// #     Result
-    /// # };
+    /// # use googletest::prelude::*;
     /// # fn should_fail() -> Result<()> {
     /// let actual = 0;
     /// verify_that!(actual, eq(42))
@@ -496,12 +501,7 @@ pub trait GoogleTestSupport {
     /// message, thus saving possible memory allocation.
     ///
     /// ```
-    /// # use googletest::{
-    /// #     matchers::{contains_substring, displays_as, err, eq},
-    /// #     verify_that,
-    /// #     GoogleTestSupport,
-    /// #     Result
-    /// # };
+    /// # use googletest::prelude::*;
     /// # fn should_fail() -> Result<()> {
     /// let actual = 0;
     /// verify_that!(actual, eq(42))

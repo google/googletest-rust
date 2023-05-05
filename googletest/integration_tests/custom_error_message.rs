@@ -16,9 +16,7 @@ fn main() {}
 
 #[cfg(test)]
 mod tests {
-    use googletest::matchers;
-    use googletest::{verify_that, GoogleTestSupport, Result};
-    use matchers::eq;
+    use googletest::prelude::*;
 
     #[test]
     fn should_fail_with_custom_error_message() -> Result<()> {

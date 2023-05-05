@@ -34,7 +34,7 @@ use std::marker::PhantomData;
 /// type may be a slice of the same element type. For example:
 ///
 /// ```
-/// # use googletest::{matchers::container_eq, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let vec = vec![1, 2, 3];
 /// verify_that!(vec, container_eq([1, 2, 3]))?;
@@ -47,7 +47,7 @@ use std::marker::PhantomData;
 /// may be a slice of `&str`:
 ///
 /// ```
-/// # use googletest::{matchers::container_eq, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let vec: Vec<String> = vec!["A string".into(), "Another string".into()];
 /// verify_that!(vec, container_eq(["A string", "Another string"]))?;
@@ -63,7 +63,7 @@ use std::marker::PhantomData;
 /// dereference the slice:
 ///
 /// ```
-/// # use googletest::{matchers::container_eq, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let value = &[1, 2, 3];
 /// verify_that!(*value, container_eq([1, 2, 3]))?;
@@ -179,12 +179,7 @@ fn build_explanation<T: Debug, U: Debug>(missing: Vec<T>, unexpected: Vec<U>) ->
 #[cfg(test)]
 mod tests {
     use super::container_eq;
-    use crate::matchers;
-    use crate::{
-        matcher::{Matcher, MatcherResult},
-        verify_that, Result,
-    };
-    use matchers::{contains_substring, displays_as, eq, err};
+    use crate::prelude::*;
     use std::collections::HashSet;
 
     #[test]

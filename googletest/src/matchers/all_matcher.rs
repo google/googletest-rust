@@ -24,7 +24,7 @@
 /// For example:
 ///
 /// ```
-/// # use googletest::{all, matchers::{ends_with, starts_with}, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!("A string", all!(starts_with("A"), ends_with("string")))?; // Passes
 /// #     Ok(())
@@ -42,7 +42,7 @@
 /// method:
 ///
 /// ```
-/// # use googletest::{matchers::{gt, lt, AndMatcherExt}, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(10, gt(9).and(lt(11)))?; // Also passes
 /// #     Ok(())
@@ -151,13 +151,8 @@ pub mod internal {
 #[cfg(test)]
 mod tests {
     use super::internal;
-    use crate::matchers;
-    use crate::{
-        matcher::{Matcher, MatcherResult},
-        verify_that, Result,
-    };
+    use crate::prelude::*;
     use indoc::indoc;
-    use matchers::{displays_as, ends_with, eq, starts_with};
 
     #[test]
     fn description_shows_more_than_one_matcher() -> Result<()> {

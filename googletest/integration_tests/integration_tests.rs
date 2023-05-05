@@ -16,15 +16,9 @@ fn main() {}
 
 #[cfg(test)]
 mod tests {
-    use googletest::{all, matchers, matchers::str_matcher};
-    use googletest::{
-        assert_that, expect_pred, expect_that, test, verify_pred, verify_that, GoogleTestSupport,
-        Result,
-    };
+    use googletest::prelude::*;
     use indoc::indoc;
-    use matchers::{anything, contains_regex, contains_substring, displays_as, eq, err, not};
     use std::process::Command;
-    use str_matcher::StrMatcherConfigurator;
 
     #[test]
     fn should_pass() -> Result<()> {

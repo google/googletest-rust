@@ -12,18 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::field;
-use googletest::matcher::{Matcher, MatcherResult};
-use googletest::matchers;
-use googletest::{google_test, verify_that, Result};
-use matchers::{container_eq, contains_substring, displays_as, eq, err, not};
+use googletest::prelude::*;
 
 #[derive(Debug)]
 struct IntField {
     int: i32,
 }
 
-#[google_test]
+#[test]
 fn field_matches_integer_field() -> Result<()> {
     verify_that!(IntField { int: 32 }, field!(IntField.int, eq(32)))
 }
@@ -33,12 +29,12 @@ struct StringField {
     strink: String,
 }
 
-#[google_test]
+#[test]
 fn field_matches_string_field() -> Result<()> {
     verify_that!(StringField { strink: "yes".to_string() }, field!(StringField.strink, eq("yes")))
 }
 
-#[google_test]
+#[test]
 fn field_error_message_shows_field_name_and_inner_matcher() -> Result<()> {
     let matcher = field!(IntField.int, eq(31));
 
@@ -55,7 +51,7 @@ mod sub {
     }
 }
 
-#[google_test]
+#[test]
 fn struct_in_other_module_matches() -> Result<()> {
     verify_that!(sub::SubStruct { field: 32 }, field!(sub::SubStruct.field, eq(32)))
 }
@@ -63,12 +59,12 @@ fn struct_in_other_module_matches() -> Result<()> {
 #[derive(Debug)]
 struct Tuple(i32, String);
 
-#[google_test]
+#[test]
 fn tuple_matches_with_index() -> Result<()> {
     verify_that!(Tuple(32, "yes".to_string()), field!(Tuple.0, eq(32)))
 }
 
-#[google_test]
+#[test]
 fn matches_enum_value() -> Result<()> {
     #[derive(Debug)]
     enum AnEnum {
@@ -79,7 +75,7 @@ fn matches_enum_value() -> Result<()> {
     verify_that!(value, field!(AnEnum::AValue.0, eq(123)))
 }
 
-#[google_test]
+#[test]
 fn shows_correct_failure_message_for_wrong_struct_entry() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -97,7 +93,7 @@ fn shows_correct_failure_message_for_wrong_struct_entry() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn does_not_match_enum_value_with_wrong_enum_variant() -> Result<()> {
     #[derive(Debug)]
     enum AnEnum {
@@ -110,7 +106,7 @@ fn does_not_match_enum_value_with_wrong_enum_variant() -> Result<()> {
     verify_that!(value, not(field!(AnEnum::AValue.0, eq(123))))
 }
 
-#[google_test]
+#[test]
 fn shows_correct_failure_message_for_wrong_enum_value() -> Result<()> {
     #[derive(Debug)]
     enum AnEnum {
@@ -127,7 +123,7 @@ fn shows_correct_failure_message_for_wrong_enum_value() -> Result<()> {
     verify_that!(result, err(displays_as(contains_substring("which has no field `a`"))))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_like_enum_value() -> Result<()> {
     #[derive(Debug)]
     enum AnEnum {

@@ -50,7 +50,7 @@ Fatal assertions are analogous to the `ASSERT_*` family of macros in GoogleTest.
 For example, for fatal assertions:
 
 ```rust
-use googletest::{matchers::eq, verify_that, Result};
+use googletest::prelude::*;
 
 #[test]
 fn more_than_one_failure() -> Result<()> {
@@ -73,7 +73,7 @@ This library includes a rich set of matchers, covering:
 Matchers are composable:
 
 ```rust
-use googletest::{matchers::{contains, ge}, verify_that, Result};
+use googletest::prelude::*;
 
 #[test]
 fn contains_at_least_one_item_at_least_3() -> Result<()> {
@@ -85,7 +85,7 @@ fn contains_at_least_one_item_at_least_3() -> Result<()> {
 They can also be logically combined:
 
 ```rust
-use googletest::{matchers::{gt, lt, not, AndMatcherExt}, verify_that, Result};
+use googletest::prelude::*;
 
 #[test]
 fn strictly_between_9_and_11() -> Result<()> {
@@ -100,12 +100,7 @@ One can use the macro [`matches_pattern!`] to create a composite matcher for a
 struct or enum that matches fields with other matchers:
 
 ```rust
-use googletest::{
-    matchers::{contains_substring, eq, gt},
-    matches_pattern,
-    verify_that,
-    Result,
-};
+use googletest::prelude::*;
 
 struct AStruct {
     a_field: i32,
@@ -188,7 +183,7 @@ also be marked with [`googletest::test`] instead of the Rust-standard `#[test]`.
 It must return [`Result<()>`].
 
 ```rust
-use googletest::{expect_that, matchers::eq, Result};
+use googletest::prelude::*;
 
 #[googletest::test]
 fn more_than_one_failure() -> Result<()> {

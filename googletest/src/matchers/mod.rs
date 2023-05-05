@@ -80,6 +80,6 @@ pub use points_to_matcher::points_to;
 pub use predicate_matcher::{predicate, PredicateMatcher};
 pub use size_matcher::size;
 pub use some_matcher::some;
-pub use str_matcher::{contains_substring, ends_with, starts_with};
+pub use str_matcher::{contains_substring, ends_with, starts_with, StrMatcherConfigurator};
 pub use subset_of_matcher::subset_of;
 pub use superset_of_matcher::superset_of;

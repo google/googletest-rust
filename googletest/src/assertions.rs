@@ -32,12 +32,7 @@
 ///
 /// Example:
 /// ```
-/// # use googletest::{
-/// #     matchers::{contains_substring, displays_as, err, eq},
-/// #     verify_that,
-/// #     GoogleTestSupport,
-/// #     Result,
-/// # };
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(42, eq(42))?; // This will pass.
 /// # Ok(())
@@ -77,9 +72,7 @@ macro_rules! verify_that {
 /// example:
 ///
 /// ```
-/// # use googletest::{
-/// #     matchers::{contains_substring, displays_as, err}, verify_that, verify_pred, Result,
-/// # };
+/// # use googletest::prelude::*;
 /// fn equals_modulo(a: i32, b: i32, n: i32) -> bool { a % n == b % n }
 ///
 /// # /* The attribute macro would prevent the function from being compiled in a doctest.

@@ -16,9 +16,9 @@ fn main() {}
 
 #[cfg(test)]
 mod tests {
-    use googletest::{fail, google_test, GoogleTestSupport, Result};
+    use googletest::prelude::*;
 
-    #[google_test]
+    #[googletest::test]
     fn just_fails() -> Result<()> {
         fail!().and_log_failure();
         Ok(())

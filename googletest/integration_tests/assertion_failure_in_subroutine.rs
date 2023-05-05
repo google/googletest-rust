@@ -16,11 +16,9 @@ fn main() {}
 
 #[cfg(test)]
 mod tests {
-    use googletest::matchers;
-    use googletest::{google_test, verify_that, Result};
-    use matchers::eq;
+    use googletest::prelude::*;
 
-    #[google_test]
+    #[test]
     fn should_fail_in_subroutine() -> Result<()> {
         assert_that_things_are_okay(2)
     }

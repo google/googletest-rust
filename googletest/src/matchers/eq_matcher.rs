@@ -22,7 +22,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// expected and actual values can be compared.
 ///
 /// ```
-/// # use googletest::{matchers::eq, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(123, eq(123))?; // Passes
 /// #     Ok(())
@@ -41,7 +41,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// types are comparable, for example `String` with `&str`.
 ///
 /// ```
-/// # use googletest::{matchers::eq, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(String::from("Some value"), eq("Some value"))?; // Passes
 /// #     Ok(())
@@ -154,8 +154,7 @@ fn edit_list_summary(edit_list: &[edit_distance::Edit<&str>]) -> String {
 #[cfg(test)]
 mod tests {
     use super::eq;
-    use crate::matchers::{contains_substring, displays_as, err};
-    use crate::{verify_that, Result};
+    use crate::prelude::*;
     use indoc::indoc;
 
     #[test]

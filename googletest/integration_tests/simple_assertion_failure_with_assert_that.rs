@@ -16,9 +16,7 @@ fn main() {}
 
 #[cfg(test)]
 mod tests {
-    use googletest::assert_that;
-    use googletest::matchers;
-    use matchers::eq;
+    use googletest::prelude::*;
 
     #[test]
     fn should_fail() {

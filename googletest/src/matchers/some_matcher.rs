@@ -18,7 +18,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// Matches an `Option` containing a value matched by `inner`.
 ///
 /// ```
-/// # use googletest::{matchers::{eq, some}, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(Some("Some value"), some(eq("Some value")))?;  // Passes
 /// #     Ok(())
@@ -79,12 +79,7 @@ impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for SomeMatcher<T, I
 #[cfg(test)]
 mod tests {
     use super::some;
-    use crate::matchers;
-    use crate::{
-        matcher::{Matcher, MatcherResult},
-        verify_that, Result,
-    };
-    use matchers::{contains_substring, displays_as, eq, err};
+    use crate::prelude::*;
 
     #[test]
     fn some_matches_option_with_value() -> Result<()> {

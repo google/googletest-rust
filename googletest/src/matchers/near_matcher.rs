@@ -26,7 +26,7 @@ use std::fmt::Debug;
 /// otherwise.
 ///
 /// ```
-/// # use googletest::{matchers::near, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass_1() -> Result<()> {
 /// verify_that!(1.0, near(1.0, 0.1))?; // Passes
 /// verify_that!(1.01, near(1.0, 0.1))?; // Passes
@@ -57,7 +57,7 @@ use std::fmt::Debug;
 /// floating point value:
 ///
 /// ```
-/// # use googletest::{matchers::near, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_fail_1() -> Result<()> {
 /// verify_that!(f64::INFINITY, near(0.0, f64::MAX))?; // Fails
 /// #     Ok(())
@@ -78,7 +78,7 @@ use std::fmt::Debug;
 /// Similarly, by default, `NaN` is infinitely far away from any value:
 ///
 /// ```
-/// # use googletest::{matchers::near, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_fail_1() -> Result<()> {
 /// verify_that!(f64::NAN, near(0.0, f64::MAX))?; // Fails
 /// #     Ok(())
@@ -100,7 +100,7 @@ use std::fmt::Debug;
 /// [`NearMatcher::nans_are_equal`].
 ///
 /// ```
-/// # use googletest::{matchers::near, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(f64::NAN, near(f64::NAN, f64::MAX).nans_are_equal())?; // Passes
 /// #     Ok(())
@@ -194,12 +194,7 @@ impl<T: Debug + Float> Matcher for NearMatcher<T> {
 #[cfg(test)]
 mod tests {
     use super::{approx_eq, near};
-    use crate::matchers;
-    use crate::{
-        matcher::{Matcher, MatcherResult},
-        verify_that, Result,
-    };
-    use matchers::{eq, not};
+    use crate::prelude::*;
 
     #[test]
     fn matches_value_inside_range() -> Result<()> {

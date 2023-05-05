@@ -20,7 +20,7 @@ pub trait AndMatcherExt<T: Debug>: Matcher<ActualT = T> {
     /// Constructs a matcher that matches both `self` and `right`.
     ///
     /// ```
-    /// # use googletest::{matchers::{ends_with, starts_with, AndMatcherExt}, verify_that, Result};
+    /// # use googletest::prelude::*;
     /// # fn should_pass() -> Result<()> {
     /// verify_that!("A string", starts_with("A").and(ends_with("string")))?; // Passes
     /// #     Ok(())
@@ -95,11 +95,7 @@ impl<T: Debug, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matcher
 #[cfg(test)]
 mod tests {
     use super::AndMatcherExt;
-    use crate::{field, matchers};
-    use crate::{verify_that, Result};
-    use matchers::{
-        anything, contains_substring, displays_as, ends_with, eq, err, not, starts_with,
-    };
+    use crate::prelude::*;
 
     #[test]
     fn and_true_true_matches() -> Result<()> {

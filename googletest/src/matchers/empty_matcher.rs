@@ -20,7 +20,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// `T` can be any container such that `&T` implements `IntoIterator`.
 ///
 /// ```
-/// # use googletest::{matchers::empty, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # use std::collections::HashSet;
 /// # fn should_pass() -> Result<()> {
 /// let value: Vec<i32> = vec![];
@@ -35,7 +35,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// One can also check whether a slice is empty by dereferencing it:
 ///
 /// ```
-/// # use googletest::{matchers::empty, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # use std::collections::HashSet;
 /// # fn should_pass() -> Result<()> {
 /// let value: &[u32] = &[];
@@ -74,9 +74,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::empty;
-    use crate::matchers;
-    use crate::{verify_that, Result};
-    use matchers::not;
+    use crate::prelude::*;
     use std::collections::HashSet;
 
     #[test]

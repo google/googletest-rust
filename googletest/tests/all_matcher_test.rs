@@ -12,38 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::all;
-use googletest::matchers;
-use googletest::{google_test, matcher::Matcher, verify_that, Result};
+use googletest::prelude::*;
 use indoc::indoc;
-use matchers::{contains_substring, displays_as, ends_with, eq, err, not, starts_with};
 
-#[google_test]
+#[test]
 fn matches_any_value_when_list_is_empty() -> Result<()> {
     verify_that!((), all!())
 }
 
-#[google_test]
+#[test]
 fn matches_value_with_single_matching_component() -> Result<()> {
     verify_that!(123, all!(eq(123)))
 }
 
-#[google_test]
+#[test]
 fn does_not_match_value_with_single_non_matching_component() -> Result<()> {
     verify_that!(123, not(all!(eq(456))))
 }
 
-#[google_test]
+#[test]
 fn matches_value_with_two_matching_components() -> Result<()> {
     verify_that!("A string", all!(starts_with("A"), ends_with("string")))
 }
 
-#[google_test]
+#[test]
 fn does_not_match_value_with_one_non_matching_component_among_two_components() -> Result<()> {
     verify_that!(123, not(all!(eq(123), eq(456))))
 }
 
-#[google_test]
+#[test]
 fn supports_trailing_comma() -> Result<()> {
     verify_that!(
         "An important string",
@@ -51,7 +48,7 @@ fn supports_trailing_comma() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn mismatch_description_two_failed_matchers() -> Result<()> {
     verify_that!(
         all!(starts_with("One"), starts_with("Two")).explain_match("Three"),
@@ -61,12 +58,12 @@ fn mismatch_description_two_failed_matchers() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn mismatch_description_empty_matcher() -> Result<()> {
     verify_that!(all!().explain_match("Three"), displays_as(eq("which is anything")))
 }
 
-#[google_test]
+#[test]
 fn all_multiple_failed_assertions() -> Result<()> {
     let result = verify_that!(4, all![eq(1), eq(2), eq(3)]);
     verify_that!(

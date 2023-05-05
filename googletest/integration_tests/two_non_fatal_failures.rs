@@ -16,11 +16,9 @@ fn main() {}
 
 #[cfg(test)]
 mod tests {
-    use googletest::matchers;
-    use googletest::{google_test, verify_that, GoogleTestSupport, Result};
-    use matchers::eq;
+    use googletest::prelude::*;
 
-    #[google_test]
+    #[googletest::test]
     fn more_than_one_failure() -> Result<()> {
         let value = 2;
         verify_that!(value, eq(3)).and_log_failure();

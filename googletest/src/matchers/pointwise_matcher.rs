@@ -24,7 +24,7 @@
 /// does not exceed the given upper bounds:
 ///
 /// ```
-/// # use googletest::{matchers::le, pointwise, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let value = vec![1, 2, 3];
 /// verify_that!(value, pointwise!(le, [1, 3, 3]))?; // Passes
@@ -43,7 +43,7 @@
 /// One can also use a closure which returns a matcher:
 ///
 /// ```
-/// # use googletest::{matchers::near, pointwise, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let value = vec![1.00001, 2.000001, 3.00001];
 /// verify_that!(value, pointwise!(|v| near(v, 0.001), [1.0, 2.0, 3.0]))?;
@@ -56,7 +56,7 @@
 /// creating the matcher:
 ///
 /// ```
-/// # use googletest::{matchers::near, pointwise, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let value = vec![1.00001, 2.000001, 3.00001];
 /// verify_that!(value, pointwise!(|v, t| near(v, t), [1.0, 2.0, 3.0], [0.001, 0.0001, 0.01]))?;
@@ -83,7 +83,7 @@
 /// includes standard containers, slices (when dereferenced) and arrays.
 ///
 /// ```
-/// # use googletest::{matchers::le, pointwise, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let value = vec![1, 2, 3];
 /// verify_that!(*value.as_slice(), pointwise!(le, [1, 3, 3]))?; // Passes

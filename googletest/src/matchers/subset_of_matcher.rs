@@ -25,7 +25,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// implements `IntoIterator`. They need not be the same container type.
 ///
 /// ```
-/// # use googletest::{matchers::subset_of, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # use std::collections::HashSet;
 /// # fn should_pass_1() -> Result<()> {
 /// let value = vec![1, 2, 3];
@@ -51,7 +51,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// Item multiplicity in both the actual and expected containers is ignored:
 ///
 /// ```
-/// # use googletest::{matchers::subset_of, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let value: Vec<i32> = vec![0, 0, 1];
 /// verify_that!(value, subset_of([0, 1]))?;  // Passes
@@ -64,7 +64,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// One can also verify the contents of a slice by dereferencing it:
 ///
 /// ```
-/// # use googletest::{matchers::subset_of, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let value = &[1, 2, 3];
 /// verify_that!(*value, subset_of([1, 2, 3]))?;
@@ -150,9 +150,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::subset_of;
-    use crate::matchers;
-    use crate::{verify_that, Result};
-    use matchers::{contains_substring, displays_as, err, not};
+    use crate::prelude::*;
     use std::collections::HashSet;
 
     #[test]

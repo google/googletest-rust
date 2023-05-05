@@ -12,14 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::matchers;
-use googletest::property;
-use googletest::{
-    google_test,
-    matcher::{Matcher, MatcherResult},
-    verify_that, Result,
-};
-use matchers::{container_eq, contains_substring, displays_as, eq, err, not};
+use googletest::prelude::*;
 
 #[derive(Debug)]
 struct SomeStruct {
@@ -44,19 +37,19 @@ impl SomeStruct {
     }
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_matching_property() -> Result<()> {
     let value = SomeStruct { a_property: 10 };
     verify_that!(value, property!(SomeStruct.get_property(), eq(10)))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_matching_property_with_parameters() -> Result<()> {
     let value = SomeStruct { a_property: 10 };
     verify_that!(value, property!(SomeStruct.add_product_to_field(2, 3), eq(16)))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_matching_property_with_captured_arguments() -> Result<()> {
     let value = SomeStruct { a_property: 10 };
     let arg1 = 2;
@@ -64,19 +57,19 @@ fn matches_struct_with_matching_property_with_captured_arguments() -> Result<()>
     verify_that!(value, property!(SomeStruct.add_product_to_field(arg1, arg2), eq(16)))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_matching_property_with_parameters_with_trailing_comma() -> Result<()> {
     let value = SomeStruct { a_property: 10 };
     verify_that!(value, property!(SomeStruct.add_product_to_field(2, 3,), eq(16)))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_matching_property_ref() -> Result<()> {
     let value = SomeStruct { a_property: 10 };
     verify_that!(value, property!(ref SomeStruct.get_property_ref(), eq(10)))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_matching_string_reference_property() -> Result<()> {
     #[derive(Debug)]
     struct StructWithString {
@@ -91,7 +84,7 @@ fn matches_struct_with_matching_string_reference_property() -> Result<()> {
     verify_that!(value, property!(ref StructWithString.get_property_ref(), eq("Something")))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_matching_slice_property() -> Result<()> {
     #[derive(Debug)]
     struct StructWithVec {
@@ -106,25 +99,25 @@ fn matches_struct_with_matching_slice_property() -> Result<()> {
     verify_that!(value, property!(ref StructWithVec.get_property_ref(), eq([1, 2, 3])))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_matching_property_ref_with_parameters() -> Result<()> {
     let value = SomeStruct { a_property: 10 };
     verify_that!(value, property!(ref SomeStruct.get_property_ref_with_params(2, 3), eq(10)))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_matching_property_ref_with_parameters_and_trailing_comma() -> Result<()> {
     let value = SomeStruct { a_property: 10 };
     verify_that!(value, property!(ref SomeStruct.get_property_ref_with_params(2, 3,), eq(10)))
 }
 
-#[google_test]
+#[test]
 fn does_not_match_struct_with_non_matching_property() -> Result<()> {
     let value = SomeStruct { a_property: 2 };
     verify_that!(value, not(property!(SomeStruct.get_property(), eq(1))))
 }
 
-#[google_test]
+#[test]
 fn describes_itself_in_matching_case() -> Result<()> {
     verify_that!(
         property!(SomeStruct.get_property(), eq(1)).describe(MatcherResult::Matches),
@@ -132,7 +125,7 @@ fn describes_itself_in_matching_case() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn describes_itself_in_not_matching_case() -> Result<()> {
     verify_that!(
         property!(SomeStruct.get_property(), eq(1)).describe(MatcherResult::DoesNotMatch),
@@ -140,7 +133,7 @@ fn describes_itself_in_not_matching_case() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn explains_mismatch_referencing_explanation_of_inner_matcher() -> Result<()> {
     impl SomeStruct {
         fn get_a_collection(&self) -> Vec<u32> {
@@ -158,7 +151,7 @@ fn explains_mismatch_referencing_explanation_of_inner_matcher() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn describes_itself_in_matching_case_for_ref() -> Result<()> {
     verify_that!(
         property!(ref SomeStruct.get_property_ref(), eq(1)).describe(MatcherResult::Matches),
@@ -166,7 +159,7 @@ fn describes_itself_in_matching_case_for_ref() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn describes_itself_in_not_matching_case_for_ref() -> Result<()> {
     verify_that!(
         property!(ref SomeStruct.get_property_ref(), eq(1)).describe(MatcherResult::DoesNotMatch),
@@ -174,7 +167,7 @@ fn describes_itself_in_not_matching_case_for_ref() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn explains_mismatch_referencing_explanation_of_inner_matcher_for_ref() -> Result<()> {
     static EMPTY_COLLECTION: Vec<u32> = vec![];
     impl SomeStruct {

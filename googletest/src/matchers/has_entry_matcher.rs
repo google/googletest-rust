@@ -22,7 +22,7 @@ use std::marker::PhantomData;
 /// matcher `inner`.
 ///
 /// ```
-/// # use googletest::{matchers::{eq, gt, has_entry}, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # use std::collections::HashMap;
 /// # fn should_pass() -> Result<()> {
 /// let value = HashMap::from([(0, 1), (1, -1)]);
@@ -48,7 +48,7 @@ use std::marker::PhantomData;
 /// and using `contains`:
 ///
 /// ```
-/// # use googletest::{matchers::{contains, eq}, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # use std::collections::HashMap;
 /// # fn should_pass() -> Result<()> {
 /// let value = HashMap::from([(0, 1), (1, -1)]);
@@ -120,9 +120,7 @@ impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ActualT = ValueT>
 #[cfg(test)]
 mod tests {
     use super::has_entry;
-    use crate::matchers;
-    use crate::{verify_that, Result};
-    use matchers::{contains_substring, displays_as, eq, err, not};
+    use crate::prelude::*;
     use std::collections::HashMap;
 
     #[test]

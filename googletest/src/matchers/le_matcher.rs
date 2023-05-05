@@ -22,7 +22,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// `PartialOrd<ExpectedT>`.
 ///
 /// ```
-/// # use googletest::{matchers::le, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(0, le(0))?; // Passes
 /// #     Ok(())
@@ -40,7 +40,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// references:
 ///
 /// ```compile_fail
-/// # use googletest::{matchers::le, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_not_compile() -> Result<()> {
 /// verify_that!(1u32, le(2u64))?; // Does not compile
 /// verify_that!(1u32 as u64, le(2u64))?; // Passes
@@ -49,7 +49,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// ```
 ///
 /// ```compile_fail
-/// # use googletest::{matchers::le, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_not_compile() -> Result<()> {
 /// let actual: &u32 = &1;
 /// let expected: u32 = 2;
@@ -59,7 +59,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// ```
 ///
 /// ```
-/// # use googletest::{matchers::le, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let actual: &u32 = &1;
 /// let expected: u32 = 2;
@@ -102,12 +102,7 @@ impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher
 #[cfg(test)]
 mod tests {
     use super::le;
-    use crate::matchers;
-    use crate::{
-        matcher::{Matcher, MatcherResult},
-        verify_that, Result,
-    };
-    use matchers::{contains_substring, eq};
+    use crate::prelude::*;
     use std::ffi::OsString;
 
     #[test]

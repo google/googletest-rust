@@ -12,13 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::matchers;
-use googletest::{google_test, verify_that, Result};
-use googletest::{matches_pattern, pat};
+use googletest::prelude::*;
 use indoc::indoc;
-use matchers::{contains_substring, displays_as, eq, err, not};
 
-#[google_test]
+#[test]
 fn matches_struct_containing_single_field() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -29,7 +26,7 @@ fn matches_struct_containing_single_field() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct { a_field: eq(123) }))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_containing_two_fields() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -41,7 +38,7 @@ fn matches_struct_containing_two_fields() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct { a_field: eq(123), another_field: eq(234) }))
 }
 
-#[google_test]
+#[test]
 #[rustfmt::skip]// Otherwise fmt strips the trailing comma
 fn supports_trailing_comma_with_one_field() -> Result<()> {
     #[derive(Debug)]
@@ -55,7 +52,7 @@ fn supports_trailing_comma_with_one_field() -> Result<()> {
     }))
 }
 
-#[google_test]
+#[test]
 fn supports_trailing_comma_with_two_fields() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -73,7 +70,7 @@ fn supports_trailing_comma_with_two_fields() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn supports_trailing_comma_with_three_fields() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -93,7 +90,7 @@ fn supports_trailing_comma_with_three_fields() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_containing_nested_struct_with_field() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -111,7 +108,7 @@ fn matches_struct_containing_nested_struct_with_field() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn has_correct_assertion_failure_message_for_single_field() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -133,7 +130,7 @@ fn has_correct_assertion_failure_message_for_single_field() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn has_correct_assertion_failure_message_for_two_fields() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -163,7 +160,7 @@ fn has_correct_assertion_failure_message_for_two_fields() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn has_correct_assertion_failure_message_for_field_and_property() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -198,7 +195,7 @@ fn has_correct_assertion_failure_message_for_field_and_property() -> Result<()> 
     )
 }
 
-#[google_test]
+#[test]
 fn supports_qualified_struct_names() -> Result<()> {
     mod a_module {
         #[derive(Debug)]
@@ -211,7 +208,7 @@ fn supports_qualified_struct_names() -> Result<()> {
     verify_that!(actual, matches_pattern!(a_module::AStruct { a_field: eq(123) }))
 }
 
-#[google_test]
+#[test]
 fn matches_tuple_struct_containing_single_field() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(u32);
@@ -220,7 +217,7 @@ fn matches_tuple_struct_containing_single_field() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct(eq(123))))
 }
 
-#[google_test]
+#[test]
 fn matches_tuple_struct_containing_two_fields() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(u32, u32);
@@ -229,7 +226,7 @@ fn matches_tuple_struct_containing_two_fields() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct(eq(123), eq(234))))
 }
 
-#[google_test]
+#[test]
 fn matches_tuple_struct_containing_three_fields() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(u32, u32, u32);
@@ -238,7 +235,7 @@ fn matches_tuple_struct_containing_three_fields() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct(eq(123), eq(234), eq(345))))
 }
 
-#[google_test]
+#[test]
 fn matches_tuple_struct_containing_four_fields() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(u32, u32, u32, u32);
@@ -247,7 +244,7 @@ fn matches_tuple_struct_containing_four_fields() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct(eq(123), eq(234), eq(345), eq(456))))
 }
 
-#[google_test]
+#[test]
 fn matches_tuple_struct_containing_five_fields() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(u32, u32, u32, u32, u32);
@@ -256,7 +253,7 @@ fn matches_tuple_struct_containing_five_fields() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct(eq(123), eq(234), eq(345), eq(456), eq(567))))
 }
 
-#[google_test]
+#[test]
 fn matches_tuple_struct_containing_six_fields() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(u32, u32, u32, u32, u32, u32);
@@ -268,7 +265,7 @@ fn matches_tuple_struct_containing_six_fields() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn matches_tuple_struct_containing_seven_fields() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(u32, u32, u32, u32, u32, u32, u32);
@@ -280,7 +277,7 @@ fn matches_tuple_struct_containing_seven_fields() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn matches_tuple_struct_containing_eight_fields() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(u32, u32, u32, u32, u32, u32, u32, u32);
@@ -301,7 +298,7 @@ fn matches_tuple_struct_containing_eight_fields() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn matches_tuple_struct_containing_nine_fields() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(u32, u32, u32, u32, u32, u32, u32, u32, u32);
@@ -323,7 +320,7 @@ fn matches_tuple_struct_containing_nine_fields() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn matches_tuple_struct_containing_ten_fields() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(u32, u32, u32, u32, u32, u32, u32, u32, u32, u32);
@@ -346,7 +343,7 @@ fn matches_tuple_struct_containing_ten_fields() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn matches_tuple_struct_with_trailing_comma() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(u32);
@@ -360,7 +357,7 @@ fn matches_tuple_struct_with_trailing_comma() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn matches_tuple_struct_with_two_fields_and_trailing_comma() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(u32, u32);
@@ -375,7 +372,7 @@ fn matches_tuple_struct_with_two_fields_and_trailing_comma() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn matches_enum_value() -> Result<()> {
     #[derive(Debug)]
     enum AnEnum {
@@ -386,7 +383,7 @@ fn matches_enum_value() -> Result<()> {
     verify_that!(actual, matches_pattern!(AnEnum::A(eq(123))))
 }
 
-#[google_test]
+#[test]
 fn does_not_match_wrong_enum_value() -> Result<()> {
     #[derive(Debug)]
     enum AnEnum {
@@ -399,7 +396,7 @@ fn does_not_match_wrong_enum_value() -> Result<()> {
     verify_that!(actual, not(matches_pattern!(AnEnum::A(eq(123)))))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -417,7 +414,7 @@ fn matches_struct_with_a_method() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct { get_field(): eq(123) }))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_and_trailing_comma() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -435,7 +432,7 @@ fn matches_struct_with_a_method_and_trailing_comma() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct { get_field(): eq(123), }))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_taking_parameter() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -453,7 +450,7 @@ fn matches_struct_with_a_method_taking_parameter() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct { add_to_field(2): eq(3) }))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_taking_two_parameters() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -471,7 +468,7 @@ fn matches_struct_with_a_method_taking_two_parameters() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct { add_product_to_field(2, 3): eq(7) }))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_taking_enum_value_parameter() -> Result<()> {
     enum AnEnum {
         AVariant,
@@ -493,7 +490,7 @@ fn matches_struct_with_a_method_taking_enum_value_parameter() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct { get_a_field(AnEnum::AVariant): eq(1) }))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_taking_two_parameters_with_trailing_comma() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -511,7 +508,7 @@ fn matches_struct_with_a_method_taking_two_parameters_with_trailing_comma() -> R
     verify_that!(actual, matches_pattern!(AStruct { add_product_to_field(2, 3,): eq(7) }))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_returning_a_reference() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -529,7 +526,7 @@ fn matches_struct_with_a_method_returning_a_reference() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct { ref get_field_ref(): eq(123) }))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_returning_a_reference_with_trailing_comma() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -547,7 +544,7 @@ fn matches_struct_with_a_method_returning_a_reference_with_trailing_comma() -> R
     verify_that!(actual, matches_pattern!(AStruct { ref get_field_ref(): eq(123), }))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_taking_two_parameters_ret_ref() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -565,7 +562,7 @@ fn matches_struct_with_a_method_taking_two_parameters_ret_ref() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct { ref get_field_ref(2, 3): eq(1) }))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_returning_reference_taking_enum_value_parameter() -> Result<()> {
     enum AnEnum {
         AVariant,
@@ -587,7 +584,7 @@ fn matches_struct_with_a_method_returning_reference_taking_enum_value_parameter(
     verify_that!(actual, matches_pattern!(AStruct { ref get_field_ref(AnEnum::AVariant): eq(1) }))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_taking_two_parameters_with_trailing_comma_ret_ref() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -605,7 +602,7 @@ fn matches_struct_with_a_method_taking_two_parameters_with_trailing_comma_ret_re
     verify_that!(actual, matches_pattern!(AStruct { ref get_field_ref(2, 3,): eq(1) }))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_followed_by_a_field() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -624,7 +621,7 @@ fn matches_struct_with_a_method_followed_by_a_field() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct { get_field(): eq(123), another_field: eq(234) }))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_followed_by_a_field_with_trailing_comma() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -646,7 +643,7 @@ fn matches_struct_with_a_method_followed_by_a_field_with_trailing_comma() -> Res
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_taking_two_parameters_and_field() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -668,7 +665,7 @@ fn matches_struct_with_a_method_taking_two_parameters_and_field() -> Result<()> 
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_taking_enum_value_parameter_followed_by_field() -> Result<()> {
     enum AnEnum {
         AVariant,
@@ -694,7 +691,7 @@ fn matches_struct_with_a_method_taking_enum_value_parameter_followed_by_field() 
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_taking_two_parameters_with_trailing_comma_and_field() -> Result<()>
 {
     #[derive(Debug)]
@@ -717,7 +714,7 @@ fn matches_struct_with_a_method_taking_two_parameters_with_trailing_comma_and_fi
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_returning_reference_followed_by_a_field() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -739,7 +736,7 @@ fn matches_struct_with_a_method_returning_reference_followed_by_a_field() -> Res
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_returning_reference_followed_by_a_field_with_trailing_comma()
 -> Result<()> {
     #[derive(Debug)]
@@ -762,7 +759,7 @@ fn matches_struct_with_a_method_returning_reference_followed_by_a_field_with_tra
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_taking_two_parameters_ret_ref_and_field() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -784,7 +781,7 @@ fn matches_struct_with_a_method_taking_two_parameters_ret_ref_and_field() -> Res
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_taking_enum_value_param_ret_ref_followed_by_field() -> Result<()> {
     enum AnEnum {
         AVariant,
@@ -810,7 +807,7 @@ fn matches_struct_with_a_method_taking_enum_value_param_ret_ref_followed_by_fiel
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_method_taking_two_parameters_with_trailing_comma_ret_ref_and_field()
 -> Result<()> {
     #[derive(Debug)]
@@ -833,7 +830,7 @@ fn matches_struct_with_a_method_taking_two_parameters_with_trailing_comma_ret_re
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -852,7 +849,7 @@ fn matches_struct_with_a_field_followed_by_a_method() -> Result<()> {
     verify_that!(actual, matches_pattern!(AStruct { another_field: eq(234), get_field(): eq(123) }))
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method_with_trailing_comma() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -874,7 +871,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_trailing_comma() -> Res
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method_with_params() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -896,7 +893,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params() -> Result<()> 
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_field_followed_by_method_taking_enum_value_param() -> Result<()> {
     enum AnEnum {
         AVariant,
@@ -922,7 +919,7 @@ fn matches_struct_with_field_followed_by_method_taking_enum_value_param() -> Res
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_comma() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -944,7 +941,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_com
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method_returning_reference() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -966,7 +963,7 @@ fn matches_struct_with_a_field_followed_by_a_method_returning_reference() -> Res
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method_returning_ref_and_trailing_comma() -> Result<()>
 {
     #[derive(Debug)]
@@ -989,7 +986,7 @@ fn matches_struct_with_a_field_followed_by_a_method_returning_ref_and_trailing_c
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method_with_params_ret_ref() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -1011,7 +1008,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_ret_ref() -> Res
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_field_followed_by_method_taking_enum_value_param_ret_ref() -> Result<()> {
     enum AnEnum {
         AVariant,
@@ -1037,7 +1034,7 @@ fn matches_struct_with_field_followed_by_method_taking_enum_value_param_ret_ref(
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_comma_ret_ref()
 -> Result<()> {
     #[derive(Debug)]
@@ -1060,7 +1057,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_com
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method_followed_by_a_field() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -1087,7 +1084,7 @@ fn matches_struct_with_a_field_followed_by_a_method_followed_by_a_field() -> Res
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method_followed_by_a_field_with_trailing_comma()
 -> Result<()> {
     #[derive(Debug)]
@@ -1115,7 +1112,7 @@ fn matches_struct_with_a_field_followed_by_a_method_followed_by_a_field_with_tra
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method_with_params_followed_by_a_field() -> Result<()>
 {
     #[derive(Debug)]
@@ -1143,7 +1140,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_followed_by_a_fi
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_comma_followed_by_a_field()
 -> Result<()> {
     #[derive(Debug)]
@@ -1171,7 +1168,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_com
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_field_followed_by_method_taking_enum_value_param_followed_by_field()
 -> Result<()> {
     enum AnEnum {
@@ -1203,7 +1200,7 @@ fn matches_struct_with_field_followed_by_method_taking_enum_value_param_followed
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method_ret_ref_followed_by_a_field() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
@@ -1230,7 +1227,7 @@ fn matches_struct_with_a_field_followed_by_a_method_ret_ref_followed_by_a_field(
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method_ret_ref_followed_by_a_field_with_trailing_comma()
 -> Result<()> {
     #[derive(Debug)]
@@ -1258,7 +1255,7 @@ fn matches_struct_with_a_field_followed_by_a_method_ret_ref_followed_by_a_field_
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method_with_params_ret_ref_followed_by_a_field()
 -> Result<()> {
     #[derive(Debug)]
@@ -1286,7 +1283,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_ret_ref_followed
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_field_followed_by_method_taking_enum_value_param_ret_ref_followed_by_field()
 -> Result<()> {
     enum AnEnum {
@@ -1318,7 +1315,7 @@ fn matches_struct_with_field_followed_by_method_taking_enum_value_param_ret_ref_
     )
 }
 
-#[google_test]
+#[test]
 fn matches_struct_with_a_field_followed_by_a_method_with_params_trailing_comma_ret_ref_followed_by_a_field()
 -> Result<()> {
     #[derive(Debug)]

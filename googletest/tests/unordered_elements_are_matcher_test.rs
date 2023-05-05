@@ -12,40 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::matcher::Matcher;
-use googletest::matchers;
-use googletest::{contains_each, is_contained_in, unordered_elements_are};
-use googletest::{google_test, verify_that, Result};
+use googletest::prelude::*;
 use indoc::indoc;
-use matchers::{contains_substring, displays_as, eq, err, ge, not};
 use std::collections::HashMap;
 
-#[google_test]
+#[test]
 fn unordered_elements_are_matches_empty_vector() -> Result<()> {
     let value: Vec<u32> = vec![];
     verify_that!(value, unordered_elements_are![])
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_matches_empty_vector_with_trailing_comma() -> Result<()> {
     let value: Vec<u32> = vec![];
     verify_that!(value, unordered_elements_are![,])
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_matches_vector() -> Result<()> {
     let value = vec![1, 2, 3];
     verify_that!(value, unordered_elements_are![eq(1), eq(2), eq(3)])
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_matches_slice() -> Result<()> {
     let value = vec![1, 2, 3];
     let slice = value.as_slice();
     verify_that!(*slice, unordered_elements_are![eq(1), eq(2), eq(3)])
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_matches_hash_map() -> Result<()> {
     let value: HashMap<u32, &'static str> =
         HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
@@ -55,7 +51,7 @@ fn unordered_elements_are_matches_hash_map() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_matches_hash_map_with_trailing_comma() -> Result<()> {
     let value: HashMap<u32, &'static str> =
         HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
@@ -65,7 +61,7 @@ fn unordered_elements_are_matches_hash_map_with_trailing_comma() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_does_not_match_hash_map_with_wrong_key() -> Result<()> {
     let value: HashMap<u32, &'static str> =
         HashMap::from_iter([(1, "One"), (2, "Two"), (4, "Three")]);
@@ -75,7 +71,7 @@ fn unordered_elements_are_does_not_match_hash_map_with_wrong_key() -> Result<()>
     )
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_does_not_match_hash_map_with_wrong_value() -> Result<()> {
     let value: HashMap<u32, &'static str> =
         HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Four")]);
@@ -85,7 +81,7 @@ fn unordered_elements_are_does_not_match_hash_map_with_wrong_value() -> Result<(
     )
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_does_not_match_hash_map_missing_element() -> Result<()> {
     let value: HashMap<u32, &'static str> = HashMap::from_iter([(1, "One"), (2, "Two")]);
     verify_that!(
@@ -94,14 +90,14 @@ fn unordered_elements_are_does_not_match_hash_map_missing_element() -> Result<()
     )
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_does_not_match_hash_map_with_extra_element() -> Result<()> {
     let value: HashMap<u32, &'static str> =
         HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
     verify_that!(value, not(unordered_elements_are![(eq(2), eq("Two")), (eq(1), eq("One"))]))
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_does_not_match_hash_map_with_mismatched_key_and_value() -> Result<()> {
     let value: HashMap<u32, &'static str> =
         HashMap::from_iter([(1, "One"), (2, "Three"), (3, "Two")]);
@@ -111,19 +107,19 @@ fn unordered_elements_are_does_not_match_hash_map_with_mismatched_key_and_value(
     )
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_matches_vector_with_trailing_comma() -> Result<()> {
     let value = vec![1, 2, 3];
     verify_that!(value, unordered_elements_are![eq(1), eq(2), eq(3),])
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_matches_size() -> Result<()> {
     let value = vec![1, 2];
     verify_that!(value, not(unordered_elements_are![eq(1), eq(2), eq(3)]))
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_description_mismatch() -> Result<()> {
     let result = verify_that!(vec![1, 4, 3], unordered_elements_are![eq(1), eq(2), eq(3)]);
     verify_that!(
@@ -144,19 +140,19 @@ fn unordered_elements_are_description_mismatch() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_matches_unordered() -> Result<()> {
     let value = vec![1, 2];
     verify_that!(value, unordered_elements_are![eq(2), eq(1)])
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_matches_unordered_with_repetition() -> Result<()> {
     let value = vec![1, 2, 1, 2, 1];
     verify_that!(value, unordered_elements_are![eq(1), eq(1), eq(1), eq(2), eq(2)])
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_explains_mismatch_due_to_wrong_size() -> Result<()> {
     verify_that!(
         unordered_elements_are![eq(2), eq(3), eq(4)].explain_match(&vec![2, 3]),
@@ -164,7 +160,7 @@ fn unordered_elements_are_explains_mismatch_due_to_wrong_size() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_description_no_full_match() -> Result<()> {
     verify_that!(
         unordered_elements_are![eq(1), eq(2), eq(2)].explain_match(&vec![1, 1, 2]),
@@ -179,7 +175,7 @@ fn unordered_elements_are_description_no_full_match() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_unmatchable_expected_description_mismatch() -> Result<()> {
     verify_that!(
         unordered_elements_are![eq(1), eq(2), eq(3)].explain_match(&vec![1, 1, 3]),
@@ -187,7 +183,7 @@ fn unordered_elements_are_unmatchable_expected_description_mismatch() -> Result<
     )
 }
 
-#[google_test]
+#[test]
 fn unordered_elements_are_unmatchable_actual_description_mismatch() -> Result<()> {
     verify_that!(
         unordered_elements_are![eq(1), eq(1), eq(3)].explain_match(&vec![1, 2, 3]),
@@ -195,56 +191,56 @@ fn unordered_elements_are_unmatchable_actual_description_mismatch() -> Result<()
     )
 }
 
-#[google_test]
+#[test]
 fn contains_each_matches_when_one_to_one_correspondence_present() -> Result<()> {
     verify_that!(vec![2, 3, 4], contains_each!(eq(2), eq(3), eq(4)))
 }
 
-#[google_test]
+#[test]
 fn contains_each_supports_trailing_comma() -> Result<()> {
     verify_that!(vec![2, 3, 4], contains_each!(eq(2), eq(3), eq(4),))
 }
 
-#[google_test]
+#[test]
 fn contains_each_matches_hash_map() -> Result<()> {
     let value: HashMap<u32, &'static str> =
         HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
     verify_that!(value, contains_each![(eq(2), eq("Two")), (eq(1), eq("One"))])
 }
 
-#[google_test]
+#[test]
 fn contains_each_matches_hash_map_with_trailing_comma() -> Result<()> {
     let value: HashMap<u32, &'static str> =
         HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
     verify_that!(value, contains_each![(eq(2), eq("Two")), (eq(1), eq("One")),])
 }
 
-#[google_test]
+#[test]
 fn contains_each_matches_when_no_matchers_present() -> Result<()> {
     verify_that!(vec![2, 3, 4], contains_each!())
 }
 
-#[google_test]
+#[test]
 fn contains_each_matches_when_no_matchers_present_and_trailing_comma() -> Result<()> {
     verify_that!(vec![2, 3, 4], contains_each!(,))
 }
 
-#[google_test]
+#[test]
 fn contains_each_matches_when_list_is_empty_and_no_matchers_present() -> Result<()> {
     verify_that!(Vec::<u32>::new(), contains_each!())
 }
 
-#[google_test]
+#[test]
 fn contains_each_matches_when_excess_elements_present() -> Result<()> {
     verify_that!(vec![1, 2, 3, 4], contains_each!(eq(2), eq(3), eq(4)))
 }
 
-#[google_test]
+#[test]
 fn contains_each_does_not_match_when_matchers_are_unmatched() -> Result<()> {
     verify_that!(vec![1, 2, 3], not(contains_each!(eq(2), eq(3), eq(4))))
 }
 
-#[google_test]
+#[test]
 fn contains_each_explains_mismatch_due_to_wrong_size() -> Result<()> {
     verify_that!(
         contains_each![eq(2), eq(3), eq(4)].explain_match(&vec![2, 3]),
@@ -252,7 +248,7 @@ fn contains_each_explains_mismatch_due_to_wrong_size() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn contains_each_explains_missing_element_in_mismatch() -> Result<()> {
     verify_that!(
         contains_each![eq(2), eq(3), eq(4)].explain_match(&vec![1, 2, 3]),
@@ -260,7 +256,7 @@ fn contains_each_explains_missing_element_in_mismatch() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn contains_each_explains_missing_elements_in_mismatch() -> Result<()> {
     verify_that!(
         contains_each![eq(2), eq(3), eq(4), eq(5)].explain_match(&vec![0, 1, 2, 3]),
@@ -268,7 +264,7 @@ fn contains_each_explains_missing_elements_in_mismatch() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn contains_each_explains_mismatch_due_to_no_graph_matching_found() -> Result<()> {
     verify_that!(
         contains_each![ge(2), ge(2)].explain_match(&vec![1, 2]),
@@ -281,29 +277,29 @@ fn contains_each_explains_mismatch_due_to_no_graph_matching_found() -> Result<()
     ))
 }
 
-#[google_test]
+#[test]
 fn is_contained_in_matches_with_empty_vector() -> Result<()> {
     let value: Vec<u32> = vec![];
     verify_that!(value, is_contained_in!())
 }
 
-#[google_test]
+#[test]
 fn is_contained_in_matches_with_empty_vector_and_trailing_comma() -> Result<()> {
     let value: Vec<u32> = vec![];
     verify_that!(value, is_contained_in!(,))
 }
 
-#[google_test]
+#[test]
 fn is_contained_in_matches_when_one_to_one_correspondence_present() -> Result<()> {
     verify_that!(vec![2, 3, 4], is_contained_in!(eq(2), eq(3), eq(4)))
 }
 
-#[google_test]
+#[test]
 fn is_contained_supports_trailing_comma() -> Result<()> {
     verify_that!(vec![2, 3, 4], is_contained_in!(eq(2), eq(3), eq(4),))
 }
 
-#[google_test]
+#[test]
 fn is_contained_in_matches_hash_map() -> Result<()> {
     let value: HashMap<u32, &'static str> = HashMap::from_iter([(1, "One"), (2, "Two")]);
     verify_that!(
@@ -312,7 +308,7 @@ fn is_contained_in_matches_hash_map() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn is_contained_in_matches_hash_map_with_trailing_comma() -> Result<()> {
     let value: HashMap<u32, &'static str> = HashMap::from_iter([(1, "One"), (2, "Two")]);
     verify_that!(
@@ -321,22 +317,22 @@ fn is_contained_in_matches_hash_map_with_trailing_comma() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn is_contained_in_matches_when_container_is_empty() -> Result<()> {
     verify_that!(vec![], is_contained_in!(eq(2), eq(3), eq(4)))
 }
 
-#[google_test]
+#[test]
 fn is_contained_in_matches_when_excess_matchers_present() -> Result<()> {
     verify_that!(vec![3, 4], is_contained_in!(eq(2), eq(3), eq(4)))
 }
 
-#[google_test]
+#[test]
 fn is_contained_in_does_not_match_when_elements_are_unmatched() -> Result<()> {
     verify_that!(vec![1, 2, 3], not(is_contained_in!(eq(2), eq(3), eq(4))))
 }
 
-#[google_test]
+#[test]
 fn is_contained_in_explains_mismatch_due_to_wrong_size() -> Result<()> {
     verify_that!(
         is_contained_in![eq(2), eq(3)].explain_match(&vec![2, 3, 4]),
@@ -344,7 +340,7 @@ fn is_contained_in_explains_mismatch_due_to_wrong_size() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn is_contained_in_explains_missing_element_in_mismatch() -> Result<()> {
     verify_that!(
         is_contained_in![eq(2), eq(3), eq(4)].explain_match(&vec![1, 2, 3]),
@@ -352,7 +348,7 @@ fn is_contained_in_explains_missing_element_in_mismatch() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn is_contained_in_explains_missing_elements_in_mismatch() -> Result<()> {
     verify_that!(
         is_contained_in![eq(2), eq(3), eq(4), eq(5)].explain_match(&vec![0, 1, 2, 3]),
@@ -360,7 +356,7 @@ fn is_contained_in_explains_missing_elements_in_mismatch() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn is_contained_in_explains_mismatch_due_to_no_graph_matching_found() -> Result<()> {
     verify_that!(
         is_contained_in![ge(1), ge(3)].explain_match(&vec![1, 2]),

@@ -19,7 +19,7 @@
 /// with the provided element matchers.
 ///
 /// ```
-/// # use googletest::{matchers::{anything, eq, ge}, unordered_elements_are, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(vec![3, 2, 1], unordered_elements_are![eq(1), ge(2), anything()])?;   // Passes
 /// #     Ok(())
@@ -50,7 +50,7 @@
 /// corresponding to the keys and their respective values.
 ///
 /// ```
-/// # use googletest::{matchers::eq, unordered_elements_are, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # use std::collections::HashMap;
 /// let value: HashMap<u32, &'static str> =
 ///     HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
@@ -127,7 +127,7 @@ macro_rules! unordered_elements_are {
 /// container which [`unordered_elements_are`] would match.
 ///
 /// ```
-/// # use googletest::{contains_each, matchers::{eq, ge}, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(vec![3, 2, 1], contains_each![eq(2), ge(3)])?;   // Passes
 /// verify_that!(vec![3, 2, 1], contains_each![ge(2), ge(2)])?;   // Passes
@@ -159,7 +159,7 @@ macro_rules! unordered_elements_are {
 /// corresponding to the keys and their respective values.
 ///
 /// ```
-/// # use googletest::{contains_each, matchers::eq, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # use std::collections::HashMap;
 /// let value: HashMap<u32, &'static str> =
 ///     HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
@@ -231,7 +231,7 @@ macro_rules! contains_each {
 /// matchers which would match with [`unordered_elements_are`].
 ///
 /// ```
-/// # use googletest::{is_contained_in, matchers::{eq, ge}, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(vec![2, 1], is_contained_in![eq(1), ge(2)])?;   // Passes
 /// verify_that!(vec![2, 1], is_contained_in![ge(1), ge(1)])?;   // Passes
@@ -263,7 +263,7 @@ macro_rules! contains_each {
 /// corresponding to the keys and their respective values.
 ///
 /// ```
-/// # use googletest::{is_contained_in, matchers::eq, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # use std::collections::HashMap;
 /// let value: HashMap<u32, &'static str> = HashMap::from_iter([(1, "One"), (2, "Two")]);
 /// verify_that!(
@@ -1040,14 +1040,8 @@ pub mod internal {
 #[cfg(test)]
 mod tests {
     use super::internal::UnorderedElementsOfMapAreMatcher;
-    use crate::matcher::Matcher;
-    #[cfg(not(google3))]
-    use crate::matchers;
-    #[cfg(not(google3))]
-    use crate::unordered_elements_are;
-    use crate::{matcher::MatcherResult, verify_that, Result};
+    use crate::prelude::*;
     use indoc::indoc;
-    use matchers::{anything, contains_regex, contains_substring, displays_as, eq, AndMatcherExt};
     use std::collections::HashMap;
 
     #[test]

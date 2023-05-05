@@ -16,11 +16,9 @@ fn main() {}
 
 #[cfg(test)]
 mod tests {
-    use googletest::matchers;
-    use googletest::{expect_that, google_test, Result};
-    use matchers::eq;
+    use googletest::prelude::*;
 
-    #[google_test]
+    #[googletest::test]
     fn should_fail_but_not_abort() -> Result<()> {
         let value = 2;
         expect_that!(value, eq(3));

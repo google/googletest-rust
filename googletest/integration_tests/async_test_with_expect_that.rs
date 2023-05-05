@@ -17,9 +17,7 @@ fn main() {}
 #[deny(warnings)]
 #[cfg(test)]
 mod tests {
-    use googletest::matchers;
-    use googletest::{expect_that, verify_that, Result};
-    use matchers::eq;
+    use googletest::prelude::*;
     use std::time::Duration;
     use tokio::time::sleep;
 

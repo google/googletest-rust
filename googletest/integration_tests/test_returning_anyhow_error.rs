@@ -16,7 +16,7 @@ fn main() {}
 
 #[cfg(test)]
 mod tests {
-    use googletest::{IntoTestResult, Result};
+    use googletest::prelude::*;
 
     #[test]
     fn should_fail_due_to_error_in_subroutine() -> Result<()> {

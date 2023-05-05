@@ -18,7 +18,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// Matches the actual value exactly when the inner matcher does _not_ match.
 ///
 /// ```
-/// # use googletest::{matchers::{eq, not}, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(0, not(eq(1)))?; // Passes
 /// #     Ok(())
@@ -67,12 +67,7 @@ impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for NotMatcher<T, In
 #[cfg(test)]
 mod tests {
     use super::not;
-    use crate::matchers;
-    use crate::{
-        matcher::{Matcher, MatcherResult},
-        verify_that, Result,
-    };
-    use matchers::{container_eq, contains_substring, displays_as, eq, err};
+    use crate::prelude::*;
 
     #[test]
     fn matches_when_inner_matcher_does_not_match() -> Result<()> {

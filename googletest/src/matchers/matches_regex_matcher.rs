@@ -28,7 +28,7 @@ use std::ops::Deref;
 /// `String` or a string reference.
 ///
 /// ```
-/// # use googletest::{matchers::matches_regex, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass_1() -> Result<()> {
 /// verify_that!("Some value", matches_regex("S.*e"))?;  // Passes
 /// #     Ok(())
@@ -109,12 +109,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::{matches_regex, MatchesRegexMatcher};
-    use crate::matchers;
-    use crate::{
-        matcher::{Matcher, MatcherResult},
-        verify_that, Result,
-    };
-    use matchers::eq;
+    use crate::prelude::*;
 
     #[test]
     fn matches_regex_matches_string_reference_with_pattern() -> Result<()> {

@@ -18,7 +18,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// Creates a matcher based on the predicate provided.
 ///
 /// ```
-/// # use googletest::{matchers::predicate, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(3, predicate(|x: &i32| x % 2 == 1))?;  // Passes
 /// #     Ok(())
@@ -161,9 +161,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::predicate;
-    use crate::matchers;
-    use crate::{matcher::Matcher, verify_that, Result};
-    use matchers::{displays_as, eq};
+    use crate::prelude::*;
 
     // Simple matcher with a description
     fn is_odd() -> impl Matcher<ActualT = i32> {

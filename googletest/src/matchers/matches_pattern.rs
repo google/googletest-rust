@@ -26,7 +26,7 @@
 /// using arbitrary matchers:
 ///
 /// ```
-/// # use googletest::{matchers::{ends_with, starts_with}, matches_pattern, verify_that};
+/// # use googletest::prelude::*;
 /// #[derive(Debug)]
 /// struct MyStruct {
 ///     a_field: String,
@@ -48,7 +48,7 @@
 /// fields have no effect on the output of the matcher.
 ///
 /// ```
-/// # use googletest::{matchers::starts_with, matches_pattern, verify_that};
+/// # use googletest::prelude::*;
 /// # #[derive(Debug)]
 /// # struct MyStruct {
 /// #     a_field: String,
@@ -69,7 +69,7 @@
 /// One can use it recursively to match nested structures:
 ///
 /// ```
-/// # use googletest::{matchers::starts_with, matches_pattern, verify_that};
+/// # use googletest::prelude::*;
 /// #[derive(Debug)]
 /// struct MyStruct {
 ///     a_nested_struct: MyInnerStruct,
@@ -94,7 +94,7 @@
 /// One can use the alias [`pat`][crate::pat] to make this less verbose:
 ///
 /// ```
-/// # use googletest::{matchers::starts_with, matches_pattern, pat, verify_that};
+/// # use googletest::prelude::*;
 /// # #[derive(Debug)]
 /// # struct MyStruct {
 /// #     a_nested_struct: MyInnerStruct,
@@ -120,7 +120,7 @@
 /// ("properties"):
 ///
 /// ```
-/// # use googletest::{matchers::starts_with, matches_pattern, verify_that};
+/// # use googletest::prelude::*;
 /// #[derive(Debug)]
 /// struct MyStruct {
 ///     a_field: String,
@@ -145,7 +145,7 @@
 /// These may also include extra parameters you pass in:
 ///
 /// ```
-/// # use googletest::{matchers::ends_with, matches_pattern, verify_that};
+/// # use googletest::prelude::*;
 /// # #[derive(Debug)]
 /// # struct MyStruct {
 /// #     a_field: String,
@@ -165,7 +165,7 @@
 /// If the method returns a reference, precede it with the keyword `ref`:
 ///
 /// ```
-/// # use googletest::{matchers::starts_with, matches_pattern, verify_that};
+/// # use googletest::prelude::*;
 /// # #[derive(Debug)]
 /// # struct MyStruct {
 /// #     a_field: String,
@@ -186,7 +186,7 @@
 /// fields must have matchers:
 ///
 /// ```
-/// # use googletest::{matchers::eq, matches_pattern, verify_that, Result};
+/// # use googletest::prelude::*;
 /// #[derive(Debug)]
 /// struct MyTupleStruct(String, String);
 ///
@@ -201,7 +201,7 @@
 /// One can also match enum values:
 ///
 /// ```
-/// # use googletest::{matchers::eq, matches_pattern, verify_that, Result};
+/// # use googletest::prelude::*;
 /// #[derive(Debug)]
 /// enum MyEnum {
 ///     A(u32),
@@ -230,7 +230,7 @@
 /// slices:
 ///
 /// ```compile_fail
-/// # use googletest::{matchers::eq, property, verify_that};
+/// # use googletest::prelude::*;
 /// # #[derive(Debug)]
 /// pub struct MyStruct {
 ///     a_string: String,

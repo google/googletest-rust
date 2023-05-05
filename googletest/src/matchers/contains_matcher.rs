@@ -22,7 +22,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// matched containers to a specific number of matching elements.
 ///
 /// ```
-/// # use googletest::{matchers::{contains, eq}, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(["Some value"], contains(eq("Some value")))?;  // Passes
 /// verify_that!(vec!["Some value"], contains(eq("Some value")))?;  // Passes
@@ -154,12 +154,7 @@ impl<ActualT, InnerMatcherT> ContainsMatcher<ActualT, InnerMatcherT> {
 #[cfg(test)]
 mod tests {
     use super::{contains, ContainsMatcher};
-    use crate::matchers;
-    use crate::{
-        matcher::{Matcher, MatcherResult},
-        verify_that, Result,
-    };
-    use matchers::{displays_as, eq};
+    use crate::prelude::*;
 
     #[test]
     fn contains_matches_singleton_slice_with_value() -> Result<()> {

@@ -25,7 +25,7 @@ use std::ops::Deref;
 /// `String` or a string reference.
 ///
 /// ```
-/// # use googletest::{matchers::contains_regex, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass_1() -> Result<()> {
 /// verify_that!("Some value", contains_regex("S.*e"))?;  // Passes
 /// #     Ok(())
@@ -92,12 +92,7 @@ impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher for ContainsRegexMatcher<Actu
 #[cfg(test)]
 mod tests {
     use super::{contains_regex, ContainsRegexMatcher};
-    use crate::matchers;
-    use crate::{
-        matcher::{Matcher, MatcherResult},
-        verify_that, Result,
-    };
-    use matchers::eq;
+    use crate::prelude::*;
 
     #[test]
     fn contains_regex_matches_string_reference_with_pattern() -> Result<()> {

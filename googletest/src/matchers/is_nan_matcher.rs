@@ -38,9 +38,7 @@ impl<T: Float + Debug> Matcher for IsNanMatcher<T> {
 #[cfg(test)]
 mod tests {
     use super::is_nan;
-    use crate::matchers;
-    use crate::{verify_that, Result};
-    use matchers::not;
+    use crate::prelude::*;
 
     #[test]
     fn matches_f32_nan() -> Result<()> {

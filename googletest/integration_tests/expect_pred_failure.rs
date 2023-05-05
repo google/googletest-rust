@@ -16,9 +16,9 @@ fn main() {}
 
 #[cfg(test)]
 mod tests {
-    use googletest::{expect_pred, google_test, Result};
+    use googletest::prelude::*;
 
-    #[google_test]
+    #[googletest::test]
     fn verify_predicate_with_failure() -> Result<()> {
         let a = 1;
         let b = 2;

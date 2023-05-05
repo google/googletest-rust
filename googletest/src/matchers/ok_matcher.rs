@@ -18,7 +18,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// Matches a `Result` containing `Ok` with a value matched by `inner`.
 ///
 /// ```
-/// # use googletest::{matchers::{eq, ok}, verify_that};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> googletest::Result<()> {
 /// verify_that!(Ok::<_, ()>("Some value"), ok(eq("Some value")))?;  // Passes
 /// #     Ok(())
@@ -87,12 +87,7 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher
 #[cfg(test)]
 mod tests {
     use super::ok;
-    use crate::matchers;
-    use crate::{
-        matcher::{Matcher, MatcherResult},
-        verify_that, Result,
-    };
-    use matchers::{contains_substring, displays_as, eq, err};
+    use crate::prelude::*;
 
     #[test]
     fn ok_matches_result_with_value() -> Result<()> {

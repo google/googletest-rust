@@ -24,7 +24,7 @@
 /// extracted through a method call. For example:
 ///
 /// ```
-/// # use googletest::{matchers::{contains, eq}, property, verify_that};
+/// # use googletest::prelude::*;
 /// #[derive(Debug)]
 /// pub struct MyStruct {
 ///     a_field: u32,
@@ -48,7 +48,7 @@
 /// `ref`:
 ///
 /// ```
-/// # use googletest::{matchers::{contains, eq}, property, verify_that};
+/// # use googletest::prelude::*;
 /// # #[derive(Debug)]
 /// # pub struct MyStruct {
 /// #     a_field: u32,
@@ -65,7 +65,7 @@
 /// The method may also take additional arguments:
 ///
 /// ```
-/// # use googletest::{matchers::{contains, eq}, property, verify_that};
+/// # use googletest::prelude::*;
 /// # #[derive(Debug)]
 /// # pub struct MyStruct {
 /// #     a_field: u32,
@@ -83,7 +83,7 @@
 /// slices:
 ///
 /// ```compile_fail
-/// # use googletest::{matchers::eq, property, verify_that};
+/// # use googletest::prelude::*;
 /// #[derive(Debug)]
 /// pub struct MyStruct {
 ///     a_string: String,

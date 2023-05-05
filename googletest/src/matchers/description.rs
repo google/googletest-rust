@@ -73,7 +73,8 @@ impl Description {
     /// For instance:
     ///
     /// ```
-    /// # use googletest::{matchers::{description::Description, displays_as, eq}, verify_that};
+    /// # use googletest::prelude::*;
+    /// # use googletest::matchers::description::Description;
     /// let description = std::iter::once("A B C\nD E F".to_string()).collect::<Description>();
     /// verify_that!(description.indent(), displays_as(eq("  A B C\n  D E F")))
     /// # .unwrap();
@@ -92,7 +93,8 @@ impl Description {
     /// For instance:
     ///
     /// ```
-    /// # use googletest::{matchers::{description::Description, displays_as, eq}, verify_that};
+    /// # use googletest::prelude::*;
+    /// # use googletest::matchers::description::Description;
     /// let description = std::iter::once("A B C\nD E F".to_string()).collect::<Description>();
     /// verify_that!(description.bullet_list(), displays_as(eq("* A B C\n  D E F")))
     /// # .unwrap();
@@ -111,7 +113,8 @@ impl Description {
     /// For instance:
     ///
     /// ```
-    /// # use googletest::{matchers::{description::Description, displays_as, eq}, verify_that};
+    /// # use googletest::prelude::*;
+    /// # use googletest::matchers::description::Description;
     /// let description = std::iter::once("A B C\nD E F".to_string()).collect::<Description>();
     /// verify_that!(description.enumerate(), displays_as(eq("0. A B C\n   D E F")))
     /// # .unwrap();
@@ -209,13 +212,9 @@ impl FromIterator<String> for Description {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate as googletest;
-    use googletest::matchers;
-    use googletest::{verify_that, Result};
+    use super::Description;
+    use crate::prelude::*;
     use indoc::indoc;
-    use matchers::displays_as;
-    use matchers::eq;
 
     #[test]
     fn description_single_element() -> Result<()> {

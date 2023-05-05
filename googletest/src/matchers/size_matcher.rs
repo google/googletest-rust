@@ -22,7 +22,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// the standard Rust containers, arrays, and (when dereferenced) slices.
 ///
 /// ```
-/// # use googletest::{matchers::{eq, size}, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let array = [1,2,3];
 /// verify_that!(array, size(eq(3)))?;
@@ -38,7 +38,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// The parameter `expected` can be any integer numeric matcher.
 ///
 /// ```
-/// # use googletest::{matchers::{gt, size}, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let vec = vec![1,2,3];
 /// verify_that!(vec, size(gt(1)))?;
@@ -94,13 +94,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::size;
-    use crate::matchers;
-    use crate::{
-        matcher::{MatchExplanation, Matcher, MatcherResult},
-        verify_that, Result,
-    };
+    use crate::prelude::*;
     use indoc::indoc;
-    use matchers::{contains_substring, displays_as, eq, err};
     use std::collections::{
         BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque,
     };

@@ -12,44 +12,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::elements_are;
-use googletest::matcher::Matcher;
-use googletest::matchers;
-use googletest::{google_test, verify_that, Result};
+use googletest::prelude::*;
 use indoc::indoc;
-use matchers::{contains_substring, displays_as, eq, err, not};
 
-#[google_test]
+#[test]
 fn elements_are_matches_vector() -> Result<()> {
     let value = vec![1, 2, 3];
     verify_that!(value, elements_are![eq(1), eq(2), eq(3)])
 }
 
-#[google_test]
+#[test]
 fn elements_are_matches_slice() -> Result<()> {
     let value = vec![1, 2, 3];
     let slice = value.as_slice();
     verify_that!(*slice, elements_are![eq(1), eq(2), eq(3)])
 }
 
-#[google_test]
+#[test]
 fn elements_are_matches_array() -> Result<()> {
     verify_that!([1, 2, 3], elements_are![eq(1), eq(2), eq(3)])
 }
 
-#[google_test]
+#[test]
 fn elements_are_supports_trailing_comma() -> Result<()> {
     let value = vec![1, 2, 3];
     verify_that!(value, elements_are![eq(1), eq(2), eq(3),])
 }
 
-#[google_test]
+#[test]
 fn elements_are_returns_no_match_when_expected_and_actual_sizes_differ() -> Result<()> {
     let value = vec![1, 2];
     verify_that!(value, not(elements_are![eq(1), eq(2), eq(3)]))
 }
 
-#[google_test]
+#[test]
 fn elements_are_produces_correct_failure_message() -> Result<()> {
     let result = verify_that!(vec![1, 4, 3], elements_are![eq(1), eq(2), eq(3)]);
     verify_that!(
@@ -70,7 +66,7 @@ fn elements_are_produces_correct_failure_message() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn elements_are_produces_correct_failure_message_nested() -> Result<()> {
     let result = verify_that!(
         vec![vec![0, 1], vec![1, 2]],
@@ -108,7 +104,7 @@ fn elements_are_produces_correct_failure_message_nested() -> Result<()> {
     )
 }
 
-#[google_test]
+#[test]
 fn elements_are_explain_match_wrong_size() -> Result<()> {
     verify_that!(
         elements_are![eq(1)].explain_match(&vec![1, 2]),

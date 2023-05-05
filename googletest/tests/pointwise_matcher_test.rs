@@ -12,56 +12,53 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::matchers;
-use googletest::pointwise;
-use googletest::{google_test, verify_that, Result};
+use googletest::prelude::*;
 use indoc::indoc;
-use matchers::{contains_substring, displays_as, eq, err, lt, near, not};
 
-#[google_test]
+#[test]
 fn pointwise_matches_single_element() -> Result<()> {
     let value = vec![1];
     verify_that!(value, pointwise!(lt, vec![2]))
 }
 
-#[google_test]
+#[test]
 fn pointwise_matches_two_elements() -> Result<()> {
     let value = vec![1, 2];
     verify_that!(value, pointwise!(lt, vec![2, 3]))
 }
 
-#[google_test]
+#[test]
 fn pointwise_matches_two_elements_with_array() -> Result<()> {
     let value = vec![1, 2];
     verify_that!(value, pointwise!(lt, [2, 3]))
 }
 
-#[google_test]
+#[test]
 fn pointwise_matches_two_element_slice() -> Result<()> {
     let value = vec![1, 2];
     let slice = value.as_slice();
     verify_that!(*slice, pointwise!(lt, [2, 3]))
 }
 
-#[google_test]
+#[test]
 fn pointwise_does_not_match_value_of_wrong_length() -> Result<()> {
     let value = vec![1];
     verify_that!(value, not(pointwise!(lt, vec![2, 3])))
 }
 
-#[google_test]
+#[test]
 fn pointwise_does_not_match_value_not_matching_in_first_position() -> Result<()> {
     let value = vec![1, 2];
     verify_that!(value, not(pointwise!(lt, vec![1, 3])))
 }
 
-#[google_test]
+#[test]
 fn pointwise_does_not_match_value_not_matching_in_second_position() -> Result<()> {
     let value = vec![1, 2];
     verify_that!(value, not(pointwise!(lt, vec![2, 2])))
 }
 
-#[google_test]
+#[test]
 fn pointwise_allows_qualified_matcher_name() -> Result<()> {
     mod submodule {
         pub(super) use super::lt;
@@ -70,7 +67,7 @@ fn pointwise_allows_qualified_matcher_name() -> Result<()> {
     verify_that!(value, pointwise!(submodule::lt, vec![2]))
 }
 
-#[google_test]
+#[test]
 fn pointwise_returns_mismatch_when_actual_value_has_wrong_length() -> Result<()> {
     let result = verify_that!(vec![1, 2, 3], pointwise!(eq, vec![1, 2]));
 
@@ -92,7 +89,7 @@ fn pointwise_returns_mismatch_when_actual_value_has_wrong_length() -> Result<()>
     )
 }
 
-#[google_test]
+#[test]
 fn pointwise_returns_mismatch_when_actual_value_does_not_match_on_first_item() -> Result<()> {
     let result = verify_that!(vec![1, 2, 3], pointwise!(eq, vec![2, 2, 3]));
 
@@ -115,7 +112,7 @@ fn pointwise_returns_mismatch_when_actual_value_does_not_match_on_first_item() -
     )
 }
 
-#[google_test]
+#[test]
 fn pointwise_returns_mismatch_when_actual_value_does_not_match_on_second_item() -> Result<()> {
     let result = verify_that!(vec![1, 2, 3], pointwise!(eq, vec![1, 3, 3]));
 
@@ -138,7 +135,7 @@ fn pointwise_returns_mismatch_when_actual_value_does_not_match_on_second_item() 
     )
 }
 
-#[google_test]
+#[test]
 fn pointwise_returns_mismatch_when_actual_value_does_not_match_on_first_and_second_items()
 -> Result<()> {
     let result = verify_that!(vec![1, 2, 3], pointwise!(eq, vec![2, 3, 3]));
@@ -163,19 +160,19 @@ fn pointwise_returns_mismatch_when_actual_value_does_not_match_on_first_and_seco
     )
 }
 
-#[google_test]
+#[test]
 fn pointwise_matches_single_element_with_lambda_expression_with_extra_value() -> Result<()> {
     let value = vec![1.00001f32];
     verify_that!(value, pointwise!(|v| near(v, 0.0001), vec![1.0]))
 }
 
-#[google_test]
+#[test]
 fn pointwise_matches_single_element_with_two_containers() -> Result<()> {
     let value = vec![1.00001f32];
     verify_that!(value, pointwise!(near, vec![1.0], vec![0.0001]))
 }
 
-#[google_test]
+#[test]
 fn pointwise_matches_single_element_with_three_containers() -> Result<()> {
     let value = vec![1.00001f32];
     verify_that!(

@@ -67,9 +67,7 @@ impl<T: Debug + Display, InnerMatcher: Matcher<ActualT = String>> Matcher
 #[cfg(test)]
 mod tests {
     use super::displays_as;
-    use crate::matchers;
-    use crate::{matcher::Matcher, verify_that, Result};
-    use matchers::eq;
+    use crate::prelude::*;
     use std::fmt::{Debug, Display, Error, Formatter};
 
     #[test]

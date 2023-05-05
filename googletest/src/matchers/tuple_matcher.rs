@@ -23,7 +23,7 @@
 /// applied to the corresponding tuple element.
 ///
 /// ```
-/// # use googletest::{matchers::eq, tuple, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!((123, 456), tuple!(eq(123), eq(456)))?; // Passes
 /// #     Ok(())
@@ -40,7 +40,7 @@
 /// the test will fail to compile.
 ///
 /// ```compile_fail
-/// # use googletest::{matchers::eq, tuple, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_not_compile() -> Result<()> {
 /// verify_that!((123, 456), tuple!(eq(123)))?; // Does not compile: wrong tuple size
 /// verify_that!((123, "A string"), tuple!(eq(123), eq(456)))?; // Does not compile: wrong type
@@ -53,7 +53,7 @@
 /// for the test.
 ///
 /// ```
-/// # use googletest::{matchers::{anything, eq}, tuple, verify_that, Result};
+/// # use googletest::prelude::*;
 /// verify_that!((123, 456), tuple!(eq(123), anything()))
 /// #     .unwrap();
 /// ```

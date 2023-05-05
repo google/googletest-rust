@@ -19,7 +19,7 @@ use std::marker::PhantomData;
 /// Matches an `Option` containing `None`.
 ///
 /// ```
-/// # use googletest::{matchers::none, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(None::<()>, none())?;   // Passes
 /// #     Ok(())
@@ -57,12 +57,7 @@ impl<T: Debug> Matcher for NoneMatcher<T> {
 #[cfg(test)]
 mod tests {
     use super::none;
-    use crate::matchers;
-    use crate::{
-        matcher::{Matcher, MatcherResult},
-        verify_that, Result,
-    };
-    use matchers::eq;
+    use crate::prelude::*;
 
     #[test]
     fn none_matches_option_with_none() -> Result<()> {

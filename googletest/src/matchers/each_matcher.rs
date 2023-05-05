@@ -22,7 +22,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// `T` can be any container such that `&T` implements `IntoIterator`.
 ///
 /// ```
-/// # use googletest::{matchers::{each, gt, lt}, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # use std::collections::HashSet;
 /// # fn should_pass_1() -> Result<()> {
 /// let value = vec![1, 2, 3];
@@ -48,7 +48,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// One can also verify the contents of a slice by dereferencing it:
 ///
 /// ```
-/// # use googletest::{matchers::{each, gt}, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let value = &[1, 2, 3];
 /// verify_that!(*value, each(gt(0)))?;
@@ -140,10 +140,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::each;
-    use crate::matchers;
-    use crate::{verify_that, Result};
+    use crate::prelude::*;
     use indoc::indoc;
-    use matchers::{contains_substring, displays_as, eq, err, gt, not};
     use std::collections::HashSet;
 
     #[test]

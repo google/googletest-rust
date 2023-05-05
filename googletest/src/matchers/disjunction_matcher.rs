@@ -21,7 +21,7 @@ pub trait OrMatcherExt<T: Debug>: Matcher<ActualT = T> {
     /// matches the input.
     ///
     /// ```
-    /// # use googletest::{matchers::{eq, ge, OrMatcherExt}, verify_that, Result};
+    /// # use googletest::prelude::*;
     /// # fn should_pass() -> Result<()> {
     /// verify_that!(10, eq(2).or(ge(5)))?;  // Passes
     /// verify_that!(10, eq(2).or(eq(5)).or(ge(9)))?;  // Passes
@@ -87,9 +87,7 @@ impl<T: Debug, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matcher
 #[cfg(test)]
 mod tests {
     use super::OrMatcherExt;
-    use crate::matchers;
-    use crate::{verify_that, Result};
-    use matchers::{anything, contains_substring, displays_as, ends_with, eq, err, ge, not};
+    use crate::prelude::*;
 
     #[test]
     fn or_true_true_matches() -> Result<()> {

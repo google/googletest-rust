@@ -21,7 +21,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// `Some(...)`)  but without caring about the internal value.
 ///
 /// ```
-/// # use googletest::{matchers::{anything, some}, verify_that, Result};
+/// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let option = Some("Some value");
 /// verify_that!(option, some(anything()))?;
@@ -53,9 +53,7 @@ impl<T: Debug + ?Sized> Matcher for Anything<T> {
 #[cfg(test)]
 mod tests {
     use super::anything;
-    use crate::matchers;
-    use crate::{verify_that, Result};
-    use matchers::some;
+    use crate::prelude::*;
 
     #[test]
     fn anything_matches_i32() -> Result<()> {
