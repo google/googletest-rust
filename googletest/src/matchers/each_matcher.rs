@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-use crate::matchers::description::Description;
+use crate::matcher_support::description::Description;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a container all of whose elements are matched by the matcher

@@ -383,6 +383,7 @@ extern crate googletest_macro;
 pub mod assertions;
 pub mod internal;
 pub mod matcher;
+pub mod matcher_support;
 pub mod matchers;
 
 pub mod prelude {

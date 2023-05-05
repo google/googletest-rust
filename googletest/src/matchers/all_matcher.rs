@@ -65,8 +65,8 @@ macro_rules! all {
 #[doc(hidden)]
 pub mod internal {
     use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+    use crate::matcher_support::description::Description;
     use crate::matchers::anything;
-    use crate::matchers::description::Description;
     use std::fmt::Debug;
 
     /// A matcher which matches an input value matched by all matchers in the

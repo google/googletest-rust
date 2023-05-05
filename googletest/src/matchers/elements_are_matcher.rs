@@ -68,8 +68,8 @@ macro_rules! elements_are {
 #[doc(hidden)]
 pub mod internal {
     use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-    use crate::matchers::description::Description;
-    use crate::matchers::zipped_iterator::zip;
+    use crate::matcher_support::description::Description;
+    use crate::matcher_support::zipped_iterator::zip;
     use std::{fmt::Debug, marker::PhantomData};
 
     /// This struct is meant to be used only by the macro `elements_are!`.

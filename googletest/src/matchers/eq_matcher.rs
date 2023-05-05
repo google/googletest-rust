@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-use crate::matchers::edit_distance;
+use crate::matcher_support::edit_distance;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a value equal (in the sense of `==`) to `expected`.

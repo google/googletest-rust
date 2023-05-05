@@ -330,8 +330,8 @@ macro_rules! is_contained_in {
 #[doc(hidden)]
 pub mod internal {
     use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-    use crate::matchers::count_elements::count_elements;
-    use crate::matchers::description::Description;
+    use crate::matcher_support::count_elements::count_elements;
+    use crate::matcher_support::description::Description;
     use std::collections::HashSet;
     use std::fmt::{Debug, Display};
     use std::marker::PhantomData;

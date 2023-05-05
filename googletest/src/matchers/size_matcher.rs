@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
-use crate::matchers::count_elements::count_elements;
+use crate::matcher_support::count_elements::count_elements;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a container whose size matches `expected`.
