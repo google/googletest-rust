@@ -16,7 +16,7 @@ use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Extension trait providing the [`or`][OrMatcherExt::or] method.
-pub trait OrMatcherExt<T: Debug>: Matcher<ActualT = T> {
+pub trait OrMatcherExt: Matcher {
     /// Constructs a matcher that matches when at least one of `self` or `right`
     /// matches the input.
     ///
@@ -37,7 +37,10 @@ pub trait OrMatcherExt<T: Debug>: Matcher<ActualT = T> {
     // TODO(b/264518763): Replace the return type with impl Matcher and reduce
     // visibility of DisjunctionMatcher once impl in return position in trait
     // methods is stable.
-    fn or<Right: Matcher<ActualT = T>>(self, right: Right) -> DisjunctionMatcher<T, Self, Right>
+    fn or<Right: Matcher<ActualT = <Self as Matcher>::ActualT>>(
+        self,
+        right: Right,
+    ) -> DisjunctionMatcher<<Self as Matcher>::ActualT, Self, Right>
     where
         Self: Sized,
     {
@@ -45,19 +48,19 @@ pub trait OrMatcherExt<T: Debug>: Matcher<ActualT = T> {
     }
 }
 
-impl<T: Debug, M> OrMatcherExt<T> for M where M: Matcher<ActualT = T> {}
+impl<M> OrMatcherExt for M where M: Matcher {}
 
 /// Matcher created by [`OrMatcherExt::or`].
 ///
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
-pub struct DisjunctionMatcher<T, M1, M2> {
+pub struct DisjunctionMatcher<T: ?Sized, M1, M2> {
     m1: M1,
     m2: M2,
     phantom: PhantomData<T>,
 }
 
-impl<T: Debug, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matcher
+impl<T: Debug + ?Sized, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matcher
     for DisjunctionMatcher<T, M1, M2>
 {
     type ActualT = T;
