@@ -58,7 +58,7 @@
 macro_rules! elements_are {
     ($($matcher:expr),* $(,)?) => {{
         use $crate::matchers::elements_are_matcher::internal::ElementsAre;
-        ElementsAre::new(&[$(&$matcher),*])
+        ElementsAre::new(vec![$(Box::new($matcher)),*])
     }}
 }
 
@@ -76,24 +76,24 @@ pub mod internal {
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub struct ElementsAre<'a, ContainerT: ?Sized, T: Debug> {
-        elements: &'a [&'a dyn Matcher<ActualT = T>],
+    pub struct ElementsAre<ContainerT: ?Sized, T: Debug> {
+        elements: Vec<Box<dyn Matcher<ActualT = T>>>,
         phantom: PhantomData<ContainerT>,
     }
 
-    impl<'a, ContainerT: ?Sized, T: Debug> ElementsAre<'a, ContainerT, T> {
+    impl<ContainerT: ?Sized, T: Debug> ElementsAre<ContainerT, T> {
         /// Factory only intended for use in the macro `elements_are!`.
         ///
         /// **For internal use only. API stablility is not guaranteed!**
         #[doc(hidden)]
-        pub fn new(elements: &'a [&'a dyn Matcher<ActualT = T>]) -> Self {
+        pub fn new(elements: Vec<Box<dyn Matcher<ActualT = T>>>) -> Self {
             Self { elements, phantom: Default::default() }
         }
     }
 
-    impl<'a, T: Debug, ContainerT: Debug + ?Sized> Matcher for ElementsAre<'a, ContainerT, T>
+    impl<T: Debug, ContainerT: Debug + ?Sized> Matcher for ElementsAre<ContainerT, T>
     where
-        for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
+        for<'a> &'a ContainerT: IntoIterator<Item = &'a T>,
     {
         type ActualT = ContainerT;
 

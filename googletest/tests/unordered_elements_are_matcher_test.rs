@@ -192,6 +192,24 @@ fn unordered_elements_are_unmatchable_actual_description_mismatch() -> Result<()
     )
 }
 
+fn create_matcher() -> impl Matcher<ActualT = Vec<i32>> {
+    unordered_elements_are![eq(1)]
+}
+
+#[test]
+fn unordered_elements_are_works_when_matcher_is_created_in_subroutine() -> Result<()> {
+    verify_that!(vec![1], create_matcher())
+}
+
+fn create_matcher_for_map() -> impl Matcher<ActualT = HashMap<i32, i32>> {
+    unordered_elements_are![(eq(1), eq(1))]
+}
+
+#[test]
+fn unordered_elements_are_works_when_matcher_for_maps_is_created_in_subroutine() -> Result<()> {
+    verify_that!(HashMap::from([(1, 1)]), create_matcher_for_map())
+}
+
 #[test]
 fn contains_each_matches_when_one_to_one_correspondence_present() -> Result<()> {
     verify_that!(vec![2, 3, 4], contains_each!(eq(2), eq(3), eq(4)))

@@ -112,3 +112,12 @@ fn elements_are_explain_match_wrong_size() -> Result<()> {
         displays_as(eq("whose size is 2"))
     )
 }
+
+fn create_matcher() -> impl Matcher<ActualT = Vec<i32>> {
+    elements_are![eq(1)]
+}
+
+#[test]
+fn elements_are_works_when_matcher_is_created_in_subroutine() -> Result<()> {
+    verify_that!(vec![1], create_matcher())
+}

@@ -103,7 +103,7 @@ macro_rules! unordered_elements_are {
             UnorderedElementsOfMapAreMatcher, Requirements
         };
         UnorderedElementsOfMapAreMatcher::new(
-            [$((&$key_matcher, &$value_matcher)),*],
+            [$((Box::new($key_matcher), Box::new($value_matcher))),*],
             Requirements::PerfectMatch
         )
     }};
@@ -112,7 +112,7 @@ macro_rules! unordered_elements_are {
         use $crate::matchers::unordered_elements_are_matcher::internal::{
             UnorderedElementsAreMatcher, Requirements
         };
-        UnorderedElementsAreMatcher::new([$(&$matcher),*], Requirements::PerfectMatch)
+        UnorderedElementsAreMatcher::new([$(Box::new($matcher)),*], Requirements::PerfectMatch)
     }};
 }
 
@@ -205,7 +205,7 @@ macro_rules! contains_each {
             UnorderedElementsOfMapAreMatcher, Requirements
         };
         UnorderedElementsOfMapAreMatcher::new(
-            [$((&$key_matcher, &$value_matcher)),*],
+            [$((Box::new($key_matcher), Box::new($value_matcher))),*],
             Requirements::Superset
         )
     }};
@@ -214,7 +214,7 @@ macro_rules! contains_each {
         use $crate::matchers::unordered_elements_are_matcher::internal::{
             UnorderedElementsAreMatcher, Requirements
         };
-        UnorderedElementsAreMatcher::new([$(&$matcher),*], Requirements::Superset)
+        UnorderedElementsAreMatcher::new([$(Box::new($matcher)),*], Requirements::Superset)
     }}
 }
 
@@ -311,7 +311,7 @@ macro_rules! is_contained_in {
             UnorderedElementsOfMapAreMatcher, Requirements
         };
         UnorderedElementsOfMapAreMatcher::new(
-            [$((&$key_matcher, &$value_matcher)),*],
+            [$((Box::new($key_matcher), Box::new($value_matcher))),*],
             Requirements::Subset
         )
     }};
@@ -320,7 +320,7 @@ macro_rules! is_contained_in {
         use $crate::matchers::unordered_elements_are_matcher::internal::{
             UnorderedElementsAreMatcher, Requirements
         };
-        UnorderedElementsAreMatcher::new([$(&$matcher),*], Requirements::Subset)
+        UnorderedElementsAreMatcher::new([$(Box::new($matcher)),*], Requirements::Subset)
     }}
 }
 
@@ -341,17 +341,15 @@ pub mod internal {
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub struct UnorderedElementsAreMatcher<'a, ContainerT: ?Sized, T: Debug, const N: usize> {
-        elements: [&'a dyn Matcher<ActualT = T>; N],
+    pub struct UnorderedElementsAreMatcher<ContainerT: ?Sized, T: Debug, const N: usize> {
+        elements: [Box<dyn Matcher<ActualT = T>>; N],
         requirements: Requirements,
         phantom: PhantomData<ContainerT>,
     }
 
-    impl<'a, ContainerT: ?Sized, T: Debug, const N: usize>
-        UnorderedElementsAreMatcher<'a, ContainerT, T, N>
-    {
+    impl<ContainerT: ?Sized, T: Debug, const N: usize> UnorderedElementsAreMatcher<ContainerT, T, N> {
         pub fn new(
-            elements: [&'a dyn Matcher<ActualT = T>; N],
+            elements: [Box<dyn Matcher<ActualT = T>>; N],
             requirements: Requirements,
         ) -> Self {
             Self { elements, requirements, phantom: Default::default() }
@@ -367,10 +365,10 @@ pub mod internal {
     // least one expected element and vice versa.
     // 3. `UnorderedElementsAreMatcher` verifies that a perfect matching exists
     // using Ford-Fulkerson.
-    impl<'a, T: Debug, ContainerT: Debug + ?Sized, const N: usize> Matcher
-        for UnorderedElementsAreMatcher<'a, ContainerT, T, N>
+    impl<T: Debug, ContainerT: Debug + ?Sized, const N: usize> Matcher
+        for UnorderedElementsAreMatcher<ContainerT, T, N>
     where
-        for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
+        for<'a> &'a ContainerT: IntoIterator<Item = &'a T>,
     {
         type ActualT = ContainerT;
 
@@ -415,37 +413,40 @@ pub mod internal {
         }
     }
 
+    type KeyValueMatcher<KeyT, ValueT> =
+        (Box<dyn Matcher<ActualT = KeyT>>, Box<dyn Matcher<ActualT = ValueT>>);
+
     /// This is the analogue to [UnorderedElementsAreMatcher] for maps and
     /// map-like collections.
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub struct UnorderedElementsOfMapAreMatcher<'a, ContainerT, KeyT, ValueT, const N: usize>
+    pub struct UnorderedElementsOfMapAreMatcher<ContainerT, KeyT, ValueT, const N: usize>
     where
         ContainerT: ?Sized,
         KeyT: Debug,
         ValueT: Debug,
     {
-        elements: [(&'a dyn Matcher<ActualT = KeyT>, &'a dyn Matcher<ActualT = ValueT>); N],
+        elements: [KeyValueMatcher<KeyT, ValueT>; N],
         requirements: Requirements,
         phantom: PhantomData<ContainerT>,
     }
 
-    impl<'a, ContainerT, KeyT: Debug, ValueT: Debug, const N: usize>
-        UnorderedElementsOfMapAreMatcher<'a, ContainerT, KeyT, ValueT, N>
+    impl<ContainerT, KeyT: Debug, ValueT: Debug, const N: usize>
+        UnorderedElementsOfMapAreMatcher<ContainerT, KeyT, ValueT, N>
     {
         pub fn new(
-            elements: [(&'a dyn Matcher<ActualT = KeyT>, &'a dyn Matcher<ActualT = ValueT>); N],
+            elements: [KeyValueMatcher<KeyT, ValueT>; N],
             requirements: Requirements,
         ) -> Self {
             Self { elements, requirements, phantom: Default::default() }
         }
     }
 
-    impl<'a, KeyT: Debug, ValueT: Debug, ContainerT: Debug + ?Sized, const N: usize> Matcher
-        for UnorderedElementsOfMapAreMatcher<'a, ContainerT, KeyT, ValueT, N>
+    impl<KeyT: Debug, ValueT: Debug, ContainerT: Debug + ?Sized, const N: usize> Matcher
+        for UnorderedElementsOfMapAreMatcher<ContainerT, KeyT, ValueT, N>
     where
-        for<'b> &'b ContainerT: IntoIterator<Item = (&'b KeyT, &'b ValueT)>,
+        for<'a> &'a ContainerT: IntoIterator<Item = (&'a KeyT, &'a ValueT)>,
     {
         type ActualT = ContainerT;
 
@@ -570,12 +571,12 @@ pub mod internal {
     struct MatchMatrix<const N: usize>(Vec<[MatcherResult; N]>);
 
     impl<const N: usize> MatchMatrix<N> {
-        fn generate<'a, T: Debug, ContainerT: Debug + ?Sized>(
+        fn generate<T: Debug, ContainerT: Debug + ?Sized>(
             actual: &ContainerT,
-            expected: &[&'a dyn Matcher<ActualT = T>; N],
+            expected: &[Box<dyn Matcher<ActualT = T>>; N],
         ) -> Self
         where
-            for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
+            for<'a> &'a ContainerT: IntoIterator<Item = &'a T>,
         {
             let mut matrix =
                 MatchMatrix(vec![[MatcherResult::DoesNotMatch; N]; count_elements(actual)]);
@@ -587,12 +588,12 @@ pub mod internal {
             matrix
         }
 
-        fn generate_for_map<'a, KeyT: Debug, ValueT: Debug, ContainerT: Debug + ?Sized>(
+        fn generate_for_map<KeyT: Debug, ValueT: Debug, ContainerT: Debug + ?Sized>(
             actual: &ContainerT,
-            expected: &[(&'a dyn Matcher<ActualT = KeyT>, &'a dyn Matcher<ActualT = ValueT>); N],
+            expected: &[KeyValueMatcher<KeyT, ValueT>; N],
         ) -> Self
         where
-            for<'b> &'b ContainerT: IntoIterator<Item = (&'b KeyT, &'b ValueT)>,
+            for<'a> &'a ContainerT: IntoIterator<Item = (&'a KeyT, &'a ValueT)>,
         {
             let mut matrix =
                 MatchMatrix(vec![[MatcherResult::DoesNotMatch; N]; count_elements(actual)]);
@@ -930,14 +931,14 @@ pub mod internal {
             (0..N).filter(|expected_idx| !matched_expected.contains(expected_idx)).collect()
         }
 
-        fn get_explanation<'a, T: Debug, ContainerT: Debug + ?Sized>(
+        fn get_explanation<T: Debug, ContainerT: Debug + ?Sized>(
             &self,
             actual: &ContainerT,
-            expected: &[&'a dyn Matcher<ActualT = T>; N],
+            expected: &[Box<dyn Matcher<ActualT = T>>; N],
             requirements: Requirements,
         ) -> Option<String>
         where
-            for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
+            for<'a> &'a ContainerT: IntoIterator<Item = &'a T>,
         {
             let actual: Vec<_> = actual.into_iter().collect();
             if self.is_full_match() {
@@ -977,14 +978,14 @@ pub mod internal {
             ))
         }
 
-        fn get_explanation_for_map<'a, KeyT: Debug, ValueT: Debug, ContainerT: Debug + ?Sized>(
+        fn get_explanation_for_map<KeyT: Debug, ValueT: Debug, ContainerT: Debug + ?Sized>(
             &self,
             actual: &ContainerT,
-            expected: &[(&'a dyn Matcher<ActualT = KeyT>, &'a dyn Matcher<ActualT = ValueT>); N],
+            expected: &[KeyValueMatcher<KeyT, ValueT>; N],
             requirements: Requirements,
         ) -> Option<String>
         where
-            for<'b> &'b ContainerT: IntoIterator<Item = (&'b KeyT, &'b ValueT)>,
+            for<'a> &'a ContainerT: IntoIterator<Item = (&'a KeyT, &'a ValueT)>,
         {
             let actual: Vec<_> = actual.into_iter().collect();
             if self.is_full_match() {
