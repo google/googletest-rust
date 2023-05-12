@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a `Result` containing `Ok` with a value matched by `inner`.
@@ -56,13 +56,10 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::DoesNotMatch)
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> MatchExplanation {
+    fn explain_match(&self, actual: &Self::ActualT) -> String {
         match actual {
-            Ok(o) => MatchExplanation::create(format!(
-                "which is a success {}",
-                self.inner.explain_match(o)
-            )),
-            Err(_) => MatchExplanation::create("which is an error".to_string()),
+            Ok(o) => format!("which is a success {}", self.inner.explain_match(o)),
+            Err(_) => "which is an error".to_string(),
         }
     }
 

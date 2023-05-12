@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
 use crate::matchers::eq_matcher::create_diff;
 use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
@@ -81,7 +81,7 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &ActualT) -> MatchExplanation {
+    fn explain_match(&self, actual: &ActualT) -> String {
         create_diff(
             &format!("{:#?}", self.expected.deref()),
             &format!("{:#?}", actual),

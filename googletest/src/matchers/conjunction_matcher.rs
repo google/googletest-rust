@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matcher created by [`AndMatcherExt::and`].
@@ -43,18 +43,16 @@ impl<T: Debug + ?Sized, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matc
         }
     }
 
-    fn explain_match(&self, actual: &T) -> MatchExplanation {
+    fn explain_match(&self, actual: &T) -> String {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
-            (MatcherResult::Matches, MatcherResult::Matches) => MatchExplanation::create(format!(
-                "{} and\n{}",
-                self.m1.explain_match(actual),
-                self.m2.explain_match(actual)
-            )),
+            (MatcherResult::Matches, MatcherResult::Matches) => {
+                format!("{} and\n{}", self.m1.explain_match(actual), self.m2.explain_match(actual))
+            }
             (MatcherResult::DoesNotMatch, MatcherResult::Matches) => self.m1.explain_match(actual),
             (MatcherResult::Matches, MatcherResult::DoesNotMatch) => self.m2.explain_match(actual),
-            (MatcherResult::DoesNotMatch, MatcherResult::DoesNotMatch) => MatchExplanation::create(
-                format!("{} and\n{}", self.m1.explain_match(actual), self.m2.explain_match(actual)),
-            ),
+            (MatcherResult::DoesNotMatch, MatcherResult::DoesNotMatch) => {
+                format!("{} and\n{}", self.m1.explain_match(actual), self.m2.explain_match(actual))
+            }
         }
     }
 

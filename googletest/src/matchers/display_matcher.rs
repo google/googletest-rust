@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
 use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 
@@ -42,8 +42,8 @@ impl<T: Debug + Display, InnerMatcher: Matcher<ActualT = String>> Matcher
         self.inner.matches(&format!("{actual}"))
     }
 
-    fn explain_match(&self, actual: &T) -> MatchExplanation {
-        MatchExplanation::create(format!("which displays as \"{}\"", actual))
+    fn explain_match(&self, actual: &T) -> String {
+        format!("which displays as \"{}\"", actual)
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {

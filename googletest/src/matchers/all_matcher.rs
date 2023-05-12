@@ -63,7 +63,7 @@ macro_rules! all {
 /// For internal use only. API stablility is not guaranteed!
 #[doc(hidden)]
 pub mod internal {
-    use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+    use crate::matcher::{Matcher, MatcherResult};
     use crate::matcher_support::description::Description;
     use crate::matchers::anything;
     use std::fmt::Debug;
@@ -101,7 +101,7 @@ pub mod internal {
             MatcherResult::Matches
         }
 
-        fn explain_match(&self, actual: &Self::ActualT) -> MatchExplanation {
+        fn explain_match(&self, actual: &Self::ActualT) -> String {
             match N {
                 0 => anything::<T>().explain_match(actual),
                 1 => self.components[0].explain_match(actual),
@@ -110,12 +110,12 @@ pub mod internal {
                         .components
                         .iter()
                         .filter(|component| !component.matches(actual).into_bool())
-                        .map(|component| format!("{}", component.explain_match(actual)))
+                        .map(|component| component.explain_match(actual))
                         .collect::<Description>();
                     if failures.len() == 1 {
-                        MatchExplanation::create(format!("{}", failures))
+                        format!("{}", failures)
                     } else {
-                        MatchExplanation::create(format!("\n{}", failures.bullet_list().indent()))
+                        format!("\n{}", failures.bullet_list().indent())
                     }
                 }
             }

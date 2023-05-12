@@ -140,7 +140,7 @@ macro_rules! field_internal {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
-    use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+    use crate::matcher::{Matcher, MatcherResult};
     use std::fmt::Debug;
 
     /// Creates a matcher to verify a specific field of the actual struct using
@@ -175,18 +175,18 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &OuterT) -> MatchExplanation {
+        fn explain_match(&self, actual: &OuterT) -> String {
             if let Some(actual) = (self.field_accessor)(actual) {
-                MatchExplanation::create(format!(
+                format!(
                     "which has field `{}`, {}",
                     self.field_path,
                     self.inner.explain_match(actual)
-                ))
+                )
             } else {
                 // TODO(hovinen): This message could be misinterpreted to mean that there were a
                 // typo in the field, when it actually means that the actual value uses the
                 // wrong enum variant. Reword this appropriately.
-                MatchExplanation::create(format!("which has no field `{}`", self.field_path))
+                format!("which has no field `{}`", self.field_path)
             }
         }
 

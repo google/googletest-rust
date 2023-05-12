@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matcher created by [`OrMatcherExt::or`].
@@ -45,12 +45,8 @@ impl<T: Debug + ?Sized, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matc
         }
     }
 
-    fn explain_match(&self, actual: &T) -> MatchExplanation {
-        MatchExplanation::create(format!(
-            "{} and\n{}",
-            self.m1.explain_match(actual),
-            self.m2.explain_match(actual)
-        ))
+    fn explain_match(&self, actual: &T) -> String {
+        format!("{} and\n{}", self.m1.explain_match(actual), self.m2.explain_match(actual))
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {

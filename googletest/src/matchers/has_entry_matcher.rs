@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -87,16 +87,16 @@ impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ActualT = ValueT>
         }
     }
 
-    fn explain_match(&self, actual: &HashMap<KeyT, ValueT>) -> MatchExplanation {
+    fn explain_match(&self, actual: &HashMap<KeyT, ValueT>) -> String {
         if let Some(value) = actual.get(&self.key) {
-            MatchExplanation::create(format!(
+            format!(
                 "which contains key {:?}, but is mapped to value {:#?}, {}",
                 self.key,
                 value,
                 self.inner.explain_match(value)
-            ))
+            )
         } else {
-            MatchExplanation::create(format!("which doesn't contain key {:?}", self.key))
+            format!("which doesn't contain key {:?}", self.key)
         }
     }
 

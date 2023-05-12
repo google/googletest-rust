@@ -16,7 +16,7 @@ use crate::internal::source_location::SourceLocation;
 use crate::internal::test_outcome::TestAssertionFailure;
 use crate::matchers::conjunction_matcher::ConjunctionMatcher;
 use crate::matchers::disjunction_matcher::DisjunctionMatcher;
-use std::fmt::{Debug, Display, Formatter, Result};
+use std::fmt::Debug;
 
 /// An interface for checking an arbitrary condition on a datum.
 pub trait Matcher {
@@ -75,7 +75,7 @@ pub trait Matcher {
     /// clause would not make sense.
     fn describe(&self, matcher_result: MatcherResult) -> String;
 
-    /// Prepares a [`MatchExplanation`] describing how the expected value
+    /// Prepares a [`String`] describing how the expected value
     /// encoded in this instance matches or does not match the given value
     /// `actual`.
     ///
@@ -112,7 +112,7 @@ pub trait Matcher {
     /// inner matcher and appears as follows:
     ///
     /// ```ignore
-    /// fn explain_match(&self, actual: &Self::ActualT) -> MatchExplanation {
+    /// fn explain_match(&self, actual: &Self::ActualT) -> String {
     ///     self.expected.explain_match(actual.deref())
     /// }
     /// ```
@@ -122,15 +122,15 @@ pub trait Matcher {
     /// inner matcher at a point where a relative clause would fit. For example:
     ///
     /// ```ignore
-    /// fn explain_match(&self, actual: &Self::ActualT) -> MatchExplanation {
-    ///     MatchExplanation::create(
+    /// fn explain_match(&self, actual: &Self::ActualT) -> String {
+    ///     (
     ///         format!("which points to a value {}", self.expected.explain_match(actual.deref()))
     ///             //   ^^^^^^^^^^^^^^^^^^^^ Expands to "points to a value which ..."
     ///     )
     /// }
     /// ```
-    fn explain_match(&self, actual: &Self::ActualT) -> MatchExplanation {
-        MatchExplanation::create(format!("which {}", self.describe(self.matches(actual))))
+    fn explain_match(&self, actual: &Self::ActualT) -> String {
+        format!("which {}", self.describe(self.matches(actual)))
     }
 
     /// Constructs a matcher that matches both `self` and `right`.
@@ -255,24 +255,5 @@ impl MatcherResult {
     /// type of `into()` to compile.
     pub fn into_bool(self) -> bool {
         self.into()
-    }
-}
-/// Human-readable explanation of why a value was matched or not matched by a
-/// matcher.
-///
-/// This is formatted into an assertion failure message.
-#[derive(Debug, Clone)]
-#[non_exhaustive]
-pub struct MatchExplanation(String);
-
-impl MatchExplanation {
-    pub fn create(explanation: String) -> Self {
-        Self(explanation)
-    }
-}
-
-impl Display for MatchExplanation {
-    fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "{}", self.0)
     }
 }

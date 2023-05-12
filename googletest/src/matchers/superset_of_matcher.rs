@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a container containing all of the items in the given container
@@ -109,7 +109,7 @@ where
         MatcherResult::Matches
     }
 
-    fn explain_match(&self, actual: &ActualT) -> MatchExplanation {
+    fn explain_match(&self, actual: &ActualT) -> String {
         let missing_items: Vec<_> = self
             .subset
             .into_iter()
@@ -117,14 +117,9 @@ where
             .map(|expected_item| format!("{expected_item:#?}"))
             .collect();
         match missing_items.len() {
-            0 => MatchExplanation::create("whose no element is missing".to_string()),
-            1 => {
-                MatchExplanation::create(format!("whose element {} is missing", &missing_items[0]))
-            }
-            _ => MatchExplanation::create(format!(
-                "whose elements {} are missing",
-                missing_items.join(", ")
-            )),
+            0 => "whose no element is missing".to_string(),
+            1 => format!("whose element {} is missing", &missing_items[0]),
+            _ => format!("whose elements {} are missing", missing_items.join(", ")),
         }
     }
 

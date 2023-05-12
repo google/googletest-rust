@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
@@ -114,7 +114,7 @@ where
         (*actual == self.expected).into()
     }
 
-    fn explain_match(&self, actual: &ActualContainerT) -> MatchExplanation {
+    fn explain_match(&self, actual: &ActualContainerT) -> String {
         build_explanation(self.get_missing_items(actual), self.get_unexpected_items(actual))
     }
 
@@ -143,36 +143,37 @@ where
     }
 }
 
-fn build_explanation<T: Debug, U: Debug>(missing: Vec<T>, unexpected: Vec<U>) -> MatchExplanation {
+fn build_explanation<T: Debug, U: Debug>(missing: Vec<T>, unexpected: Vec<U>) -> String {
     match (missing.len(), unexpected.len()) {
         // TODO(b/261175849) add more data here (out of order elements, duplicated elements, etc...)
-        (0, 0) => MatchExplanation::create("which contains all the elements".to_string()),
-        (0, 1) => MatchExplanation::create(format!(
-            "which contains the unexpected element {:?}",
-            unexpected[0]
-        )),
-        (0, _) => MatchExplanation::create(format!(
-            "which contains the unexpected elements {unexpected:?}",
-        )),
-        (1, 0) => {
-            MatchExplanation::create(format!("which is missing the element {:?}", missing[0]))
+        (0, 0) => "which contains all the elements".to_string(),
+        (0, 1) => format!("which contains the unexpected element {:?}", unexpected[0]),
+        (0, _) => format!("which contains the unexpected elements {unexpected:?}",),
+        (1, 0) => format!("which is missing the element {:?}", missing[0]),
+        (1, 1) => {
+            format!(
+                "which is missing the element {:?} and contains the unexpected element {:?}",
+                missing[0], unexpected[0]
+            )
         }
-        (1, 1) => MatchExplanation::create(format!(
-            "which is missing the element {:?} and contains the unexpected element {:?}",
-            missing[0], unexpected[0]
-        )),
-        (1, _) => MatchExplanation::create(format!(
-            "which is missing the element {:?} and contains the unexpected elements {unexpected:?}",
-            missing[0]
-        )),
-        (_, 0) => MatchExplanation::create(format!("which is missing the elements {missing:?}")),
-        (_, 1) => MatchExplanation::create(format!(
-            "which is missing the elements {missing:?} and contains the unexpected element {:?}",
-            unexpected[0]
-        )),
-        (_, _) => MatchExplanation::create(format!(
-            "which is missing the elements {missing:?} and contains the unexpected elements {unexpected:?}",
-        )),
+        (1, _) => {
+            format!(
+                "which is missing the element {:?} and contains the unexpected elements {unexpected:?}",
+                missing[0]
+            )
+        }
+        (_, 0) => format!("which is missing the elements {missing:?}"),
+        (_, 1) => {
+            format!(
+                "which is missing the elements {missing:?} and contains the unexpected element {:?}",
+                unexpected[0]
+            )
+        }
+        (_, _) => {
+            format!(
+                "which is missing the elements {missing:?} and contains the unexpected elements {unexpected:?}",
+            )
+        }
     }
 }
 

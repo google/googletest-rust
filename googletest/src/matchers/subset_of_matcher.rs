@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a container all of whose items are in the given container
@@ -109,7 +109,7 @@ where
         MatcherResult::Matches
     }
 
-    fn explain_match(&self, actual: &ActualT) -> MatchExplanation {
+    fn explain_match(&self, actual: &ActualT) -> String {
         let unexpected_elements = actual
             .into_iter()
             .enumerate()
@@ -118,15 +118,9 @@ where
             .collect::<Vec<_>>();
 
         match unexpected_elements.len() {
-            0 => MatchExplanation::create("which no element is unexpected".to_string()),
-            1 => MatchExplanation::create(format!(
-                "whose element {} is unexpected",
-                &unexpected_elements[0]
-            )),
-            _ => MatchExplanation::create(format!(
-                "whose elements {} are unexpected",
-                unexpected_elements.join(", ")
-            )),
+            0 => "which no element is unexpected".to_string(),
+            1 => format!("whose element {} is unexpected", &unexpected_elements[0]),
+            _ => format!("whose elements {} are unexpected", unexpected_elements.join(", ")),
         }
     }
 

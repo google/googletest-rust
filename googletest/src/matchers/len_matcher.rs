@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
 use crate::matcher_support::count_elements::count_elements;
 use std::{fmt::Debug, marker::PhantomData};
 
@@ -79,20 +79,16 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &T) -> MatchExplanation {
+    fn explain_match(&self, actual: &T) -> String {
         let actual_size = count_elements(actual);
-        MatchExplanation::create(format!(
-            "which has size {}, {}",
-            actual_size,
-            self.expected.explain_match(&actual_size)
-        ))
+        format!("which has size {}, {}", actual_size, self.expected.explain_match(&actual_size))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::len;
-    use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+    use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
     use indoc::indoc;
     use std::collections::{
@@ -188,8 +184,8 @@ mod tests {
                 "called described".into()
             }
 
-            fn explain_match(&self, _: &T) -> MatchExplanation {
-                MatchExplanation::create("called explain_match".into())
+            fn explain_match(&self, _: &T) -> String {
+                "called explain_match".into()
             }
         }
         verify_that!(

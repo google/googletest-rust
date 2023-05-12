@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches the actual value exactly when the inner matcher does _not_ match.
@@ -51,7 +51,7 @@ impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for NotMatcher<T, In
         }
     }
 
-    fn explain_match(&self, actual: &T) -> MatchExplanation {
+    fn explain_match(&self, actual: &T) -> String {
         self.inner.explain_match(actual)
     }
 
@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn match_explanation_references_actual_value() -> Result<()> {
-        let result = verify_that!(*&[1], not(container_eq([1])));
+        let result = verify_that!([1], not(container_eq([1])));
 
         verify_that!(
             result,

@@ -63,7 +63,7 @@ macro_rules! elements_are {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
-    use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+    use crate::matcher::{Matcher, MatcherResult};
     use crate::matcher_support::description::Description;
     use crate::matcher_support::zipped_iterator::zip;
     use std::{fmt::Debug, marker::PhantomData};
@@ -107,7 +107,7 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> MatchExplanation {
+        fn explain_match(&self, actual: &ContainerT) -> String {
             let actual_iterator = actual.into_iter();
             let mut zipped_iterator = zip(actual_iterator, self.elements.iter());
             let mut mismatches = Vec::new();
@@ -118,19 +118,16 @@ pub mod internal {
             }
             if mismatches.is_empty() {
                 if !zipped_iterator.has_size_mismatch() {
-                    MatchExplanation::create("whose elements all match".to_string())
+                    "whose elements all match".to_string()
                 } else {
-                    MatchExplanation::create(format!(
-                        "whose size is {}",
-                        zipped_iterator.left_size()
-                    ))
+                    format!("whose size is {}", zipped_iterator.left_size())
                 }
             } else if mismatches.len() == 1 {
                 let mismatches = mismatches.into_iter().collect::<Description>();
-                MatchExplanation::create(format!("where {mismatches}"))
+                format!("where {mismatches}")
             } else {
                 let mismatches = mismatches.into_iter().collect::<Description>();
-                MatchExplanation::create(format!("where:\n{}", mismatches.bullet_list().indent()))
+                format!("where:\n{}", mismatches.bullet_list().indent())
             }
         }
 

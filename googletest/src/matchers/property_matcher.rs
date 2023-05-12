@@ -134,7 +134,7 @@ macro_rules! property_internal {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
-    use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+    use crate::matcher::{Matcher, MatcherResult};
     use std::{fmt::Debug, marker::PhantomData};
 
     /// **For internal use only. API stablility is not guaranteed!**
@@ -175,14 +175,14 @@ pub mod internal {
             )
         }
 
-        fn explain_match(&self, actual: &OuterT) -> MatchExplanation {
+        fn explain_match(&self, actual: &OuterT) -> String {
             let actual_inner = (self.extractor)(actual);
-            MatchExplanation::create(format!(
+            format!(
                 "whose property `{}` is `{:#?}`, {}",
                 self.property_desc,
                 actual_inner,
                 self.inner.explain_match(&actual_inner)
-            ))
+            )
         }
     }
 
@@ -224,14 +224,14 @@ pub mod internal {
             )
         }
 
-        fn explain_match(&self, actual: &OuterT) -> MatchExplanation {
+        fn explain_match(&self, actual: &OuterT) -> String {
             let actual_inner = (self.extractor)(actual);
-            MatchExplanation::create(format!(
+            format!(
                 "whose property `{}` is `{:#?}`, {}",
                 self.property_desc,
                 actual_inner,
                 self.inner.explain_match(actual_inner)
-            ))
+            )
         }
     }
 }

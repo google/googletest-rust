@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches an iterable type whose elements contain a value matched by `inner`.
@@ -99,16 +99,12 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> MatchExplanation {
+    fn explain_match(&self, actual: &Self::ActualT) -> String {
         let count = self.count_matches(actual);
         match (count, &self.count) {
-            (_, Some(_)) => {
-                MatchExplanation::create(format!("which contains {} matching elements", count))
-            }
-            (0, None) => {
-                MatchExplanation::create("which does not contain a matching element".to_string())
-            }
-            (_, None) => MatchExplanation::create("which contains a matching element".to_string()),
+            (_, Some(_)) => format!("which contains {} matching elements", count),
+            (0, None) => "which does not contain a matching element".to_string(),
+            (_, None) => "which contains a matching element".to_string(),
         }
     }
 

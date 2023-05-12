@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
 use crate::matcher_support::edit_distance;
 use std::{fmt::Debug, marker::PhantomData};
 
@@ -94,7 +94,7 @@ impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher for EqMatcher<A, T> {
         }
     }
 
-    fn explain_match(&self, actual: &A) -> MatchExplanation {
+    fn explain_match(&self, actual: &A) -> String {
         create_diff(
             &format!("{:#?}", self.expected),
             &format!("{:#?}", actual),
@@ -103,15 +103,11 @@ impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher for EqMatcher<A, T> {
     }
 }
 
-pub(super) fn create_diff(
-    expected_debug: &str,
-    actual_debug: &str,
-    description: &str,
-) -> MatchExplanation {
+pub(super) fn create_diff(expected_debug: &str, actual_debug: &str, description: &str) -> String {
     if actual_debug.lines().count() < 2 {
         // If the actual debug is only one line, then there is no point in doing a
         // line-by-line diff.
-        return MatchExplanation::create(format!("which {description}",));
+        return format!("which {description}",);
     }
     let edit_list = edit_distance::edit_list(
         actual_debug.lines(),
@@ -120,15 +116,10 @@ pub(super) fn create_diff(
     );
 
     if edit_list.is_empty() {
-        return MatchExplanation::create(format!(
-            "which {description}\nNo difference found between debug strings.",
-        ));
+        return format!("which {description}\nNo difference found between debug strings.",);
     }
 
-    MatchExplanation::create(format!(
-        "which {description}\nDebug diff:{}",
-        edit_list_summary(&edit_list)
-    ))
+    format!("which {description}\nDebug diff:{}", edit_list_summary(&edit_list))
 }
 
 fn edit_list_summary(edit_list: &[edit_distance::Edit<&str>]) -> String {

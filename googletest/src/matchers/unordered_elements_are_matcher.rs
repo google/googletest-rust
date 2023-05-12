@@ -329,7 +329,7 @@ macro_rules! is_contained_in {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
-    use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+    use crate::matcher::{Matcher, MatcherResult};
     use crate::matcher_support::count_elements::count_elements;
     use crate::matcher_support::description::Description;
     use std::collections::HashSet;
@@ -377,7 +377,7 @@ pub mod internal {
             match_matrix.is_match_for(self.requirements).into()
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> MatchExplanation {
+        fn explain_match(&self, actual: &ContainerT) -> String {
             if let Some(size_mismatch_explanation) =
                 self.requirements.explain_size_mismatch(actual, N)
             {
@@ -392,11 +392,9 @@ pub mod internal {
             }
 
             let best_match = match_matrix.find_best_match();
-            MatchExplanation::create(
-                best_match
-                    .get_explanation(actual, &self.elements, self.requirements)
-                    .unwrap_or("whose elements all match".to_string()),
-            )
+            best_match
+                .get_explanation(actual, &self.elements, self.requirements)
+                .unwrap_or("whose elements all match".to_string())
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> String {
@@ -455,7 +453,7 @@ pub mod internal {
             match_matrix.is_match_for(self.requirements).into()
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> MatchExplanation {
+        fn explain_match(&self, actual: &ContainerT) -> String {
             if let Some(size_mismatch_explanation) =
                 self.requirements.explain_size_mismatch(actual, N)
             {
@@ -470,11 +468,10 @@ pub mod internal {
             }
 
             let best_match = match_matrix.find_best_match();
-            MatchExplanation::create(
-                best_match
-                    .get_explanation_for_map(actual, &self.elements, self.requirements)
-                    .unwrap_or("whose elements all match".to_string()),
-            )
+
+            best_match
+                .get_explanation_for_map(actual, &self.elements, self.requirements)
+                .unwrap_or("whose elements all match".to_string())
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> String {
@@ -519,32 +516,25 @@ pub mod internal {
             &self,
             actual: &ContainerT,
             expected_size: usize,
-        ) -> Option<MatchExplanation>
+        ) -> Option<String>
         where
             for<'b> &'b ContainerT: IntoIterator,
         {
             let actual_size = count_elements(actual);
             match self {
                 Requirements::PerfectMatch if actual_size != expected_size => {
-                    Some(MatchExplanation::create(format!(
-                        "which has size {} (expected {})",
-                        actual_size, expected_size
-                    )))
+                    Some(format!("which has size {} (expected {})", actual_size, expected_size))
                 }
 
-                Requirements::Superset if actual_size < expected_size => {
-                    Some(MatchExplanation::create(format!(
-                        "which has size {} (expected at least {})",
-                        actual_size, expected_size
-                    )))
-                }
+                Requirements::Superset if actual_size < expected_size => Some(format!(
+                    "which has size {} (expected at least {})",
+                    actual_size, expected_size
+                )),
 
-                Requirements::Subset if actual_size > expected_size => {
-                    Some(MatchExplanation::create(format!(
-                        "which has size {} (expected at most {})",
-                        actual_size, expected_size
-                    )))
-                }
+                Requirements::Subset if actual_size > expected_size => Some(format!(
+                    "which has size {} (expected at most {})",
+                    actual_size, expected_size
+                )),
 
                 _ => None,
             }
@@ -624,13 +614,13 @@ pub mod internal {
             }
         }
 
-        fn explain_unmatchable(&self, requirements: Requirements) -> Option<MatchExplanation> {
+        fn explain_unmatchable(&self, requirements: Requirements) -> Option<String> {
             let unmatchable_elements = match requirements {
                 Requirements::PerfectMatch => self.find_unmatchable_elements(),
                 Requirements::Superset => self.find_unmatched_expected(),
                 Requirements::Subset => self.find_unmatched_actual(),
             };
-            unmatchable_elements.get_explanation().map(MatchExplanation::create)
+            unmatchable_elements.get_explanation()
         }
 
         // Verifies that each actual matches at least one expected and that

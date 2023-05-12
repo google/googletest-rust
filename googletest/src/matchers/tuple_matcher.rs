@@ -313,7 +313,7 @@ macro_rules! tuple_internal {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
-    use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+    use crate::matcher::{Matcher, MatcherResult};
     use std::{
         fmt::{Debug, Write},
         marker::PhantomData,
@@ -360,7 +360,7 @@ pub mod internal {
                     MatcherResult::Matches
                 }
 
-                fn explain_match(&self, actual: &($($field_type,)*)) -> MatchExplanation {
+                fn explain_match(&self, actual: &($($field_type,)*)) -> String {
                     let mut explanation = format!("which {}", self.describe(self.matches(actual)));
                     $(match self.$field_number.matches(&actual.$field_number) {
                         MatcherResult::Matches => {},
@@ -373,7 +373,7 @@ pub mod internal {
                             ).unwrap();
                         }
                     })*
-                    MatchExplanation::create(explanation)
+                    (explanation)
                 }
 
                 fn describe(&self, matcher_result: MatcherResult) -> String {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherResult};
 use crate::matcher_support::description::Description;
 use std::{fmt::Debug, marker::PhantomData};
 
@@ -87,7 +87,7 @@ where
         MatcherResult::Matches
     }
 
-    fn explain_match(&self, actual: &ActualT) -> MatchExplanation {
+    fn explain_match(&self, actual: &ActualT) -> String {
         let mut non_matching_elements = Vec::new();
         for (index, element) in actual.into_iter().enumerate() {
             if !self.inner.matches(element).into_bool() {
@@ -95,16 +95,11 @@ where
             }
         }
         if non_matching_elements.is_empty() {
-            return MatchExplanation::create(format!(
-                "whose each element {}",
-                self.inner.describe(MatcherResult::Matches)
-            ));
+            return format!("whose each element {}", self.inner.describe(MatcherResult::Matches));
         }
         if non_matching_elements.len() == 1 {
             let (idx, element, explanation) = non_matching_elements.remove(0);
-            return MatchExplanation::create(format!(
-                "whose element #{idx} is {element:?}, {explanation}"
-            ));
+            return format!("whose element #{idx} is {element:?}, {explanation}");
         }
 
         let failed_indexes = non_matching_elements
@@ -117,9 +112,7 @@ where
             .map(|&(_, element, ref explanation)| format!("{element:?}, {explanation}"))
             .collect::<Description>()
             .indent();
-        MatchExplanation::create(format!(
-            "whose elements {failed_indexes} don't match\n{element_explanations}"
-        ))
+        format!("whose elements {failed_indexes} don't match\n{element_explanations}")
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {

@@ -124,7 +124,7 @@ mod tests {
 
     #[test]
     fn contains_regex_matches_string_reference_with_owned_string() -> Result<()> {
-        let matcher = contains_regex("value".to_string());
+        let matcher = contains_regex("value");
 
         let result = matcher.matches("Some value");
 
