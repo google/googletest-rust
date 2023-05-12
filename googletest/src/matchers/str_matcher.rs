@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use crate::matcher::{Matcher, MatcherResult};
+use crate::matcher_support::edit_distance;
 use crate::matchers::{eq_deref_of_matcher::EqDerefOfMatcher, eq_matcher::EqMatcher};
 use std::borrow::Cow;
 use std::fmt::Debug;
@@ -300,6 +301,10 @@ where
     fn describe(&self, matcher_result: MatcherResult) -> String {
         self.configuration.describe(matcher_result, self.expected.deref())
     }
+
+    fn explain_match(&self, actual: &ActualT) -> String {
+        self.configuration.explain_match(self.expected.deref(), actual.as_ref())
+    }
 }
 
 impl<ActualT: ?Sized, ExpectedT, MatcherT: Into<StrMatcher<ActualT, ExpectedT>>>
@@ -504,6 +509,80 @@ impl Configuration {
     fn times(self, times: impl Matcher<ActualT = usize> + 'static) -> Self {
         Self { times: Some(Box::new(times)), ..self }
     }
+
+    fn explain_match(&self, expected: &str, actual: &str) -> String {
+        let default_explanation = format!(
+            "which {}",
+            self.describe(self.do_strings_match(expected, actual).into(), expected)
+        );
+
+        if self.ignore_leading_whitespace {
+            // TODO - b/257454450 : Support StrMatcher with ignore_leading_whitespace.
+            return default_explanation;
+        }
+
+        if self.ignore_trailing_whitespace {
+            // TODO - b/257454450 : Support StrMatcher with ignore_trailing_whitespace.
+            return default_explanation;
+        }
+
+        if self.times.is_some() {
+            // TODO - b/257454450 : Support StrMatcher with times.
+            return default_explanation;
+        }
+        if matches!(self.case_policy, CasePolicy::IgnoreAscii) {
+            // TODO - b/257454450 : Support StrMatcher with ignore ascii case policy.
+            return default_explanation;
+        }
+        if self.do_strings_match(expected, actual) {
+            // TODO - b/257454450 : Consider supporting debug difference if the
+            // strings match. This can be useful when a small contains is found
+            // in a long string.
+            return default_explanation;
+        }
+
+        format!("{default_explanation}\nDebug info:\n{}", self.diff_summary(expected, actual))
+    }
+
+    fn diff_summary(&self, expected: &str, actual: &str) -> String {
+        let edit_configuration = match self.mode {
+            MatchMode::Equals => edit_distance::Configuration::FullMatch,
+            MatchMode::Contains => edit_distance::Configuration::Contains,
+            MatchMode::StartsWith => edit_distance::Configuration::StartsWith,
+            MatchMode::EndsWith => edit_distance::Configuration::EndsWith,
+        };
+
+        let edit_list =
+            edit_distance::edit_list(actual.chars(), expected.chars(), edit_configuration);
+        let mut actual_line = String::new();
+        let mut diff_line = String::new();
+        let mut expected_line = String::new();
+        for edit in edit_list {
+            match edit {
+                edit_distance::Edit::Both { left, distance, .. } if distance == 0.0 => {
+                    actual_line.push(left);
+                    diff_line.push(' ');
+                    expected_line.push(left);
+                }
+                edit_distance::Edit::Both { left, right, .. } => {
+                    actual_line.push(left);
+                    diff_line.push('X');
+                    expected_line.push(right);
+                }
+                edit_distance::Edit::ExtraLeft { left } => {
+                    actual_line.push(left);
+                    diff_line.push('Λ');
+                    expected_line.push('▯');
+                }
+                edit_distance::Edit::ExtraRight { right } => {
+                    actual_line.push('▯');
+                    diff_line.push('V');
+                    expected_line.push(right);
+                }
+            }
+        }
+        format!("Actual  :{actual_line}\n         {diff_line}\nExpected:{expected_line}")
+    }
 }
 
 impl Default for Configuration {
@@ -523,6 +602,7 @@ mod tests {
     use super::{contains_substring, ends_with, starts_with, StrMatcher, StrMatcherConfigurator};
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
+    use indoc::indoc;
 
     #[test]
     fn matches_string_reference_with_equal_string_reference() -> Result<()> {
@@ -879,6 +959,22 @@ mod tests {
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::DoesNotMatch),
             eq("does not end with \"A string\"")
+        )
+    }
+
+    #[test]
+    fn explain_match_full_match() -> Result<()> {
+        let matcher: StrMatcher<str, _> = StrMatcher::with_default_config("A string");
+        verify_that!(
+            matcher.explain_match("Not a string"),
+            displays_as(eq(indoc!(
+                r#"
+            which isn't equal to "A string"
+            Debug info:
+            Actual  :Not a string
+                     XΛΛ ΛΛ      
+            Expected:A▯▯ ▯▯string"#
+            )))
         )
     }
 }

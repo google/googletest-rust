@@ -53,9 +53,17 @@ fn supports_trailing_comma() -> Result<()> {
 fn mismatch_description_two_failed_matchers() -> Result<()> {
     verify_that!(
         all!(starts_with("One"), starts_with("Two")).explain_match("Three"),
-        displays_as(eq(
-            "\n  * which does not start with \"One\"\n  * which does not start with \"Two\""
-        ))
+        displays_as(eq("
+  * which does not start with \"One\"
+    Debug info:
+    Actual  :▯▯▯Three
+             VVVΛΛΛΛΛ
+    Expected:One▯▯▯▯▯
+  * which does not start with \"Two\"
+    Debug info:
+    Actual  :T▯▯hree
+              VVΛΛΛΛ
+    Expected:Two▯▯▯▯"))
     )
 }
 

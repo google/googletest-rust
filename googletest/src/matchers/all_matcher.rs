@@ -188,7 +188,14 @@ mod tests {
 
         verify_that!(
             matcher.explain_match("A string"),
-            displays_as(eq("which does not start with \"Another\""))
+            displays_as(eq(indoc!(
+                "
+                which does not start with \"Another\"
+                Debug info:
+                Actual  :A st▯▯ring
+                          XX VV ΛΛΛ
+                Expected:Another▯▯▯"
+            )))
         )
     }
 
@@ -199,7 +206,14 @@ mod tests {
 
         verify_that!(
             matcher.explain_match("A string"),
-            displays_as(eq("which does not start with \"Another\""))
+            displays_as(eq(indoc!(
+                "
+                which does not start with \"Another\"
+                Debug info:
+                Actual  :A st▯▯ring
+                          XX VV ΛΛΛ
+                Expected:Another▯▯▯"
+            )))
         )
     }
 }
