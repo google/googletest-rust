@@ -140,8 +140,13 @@ Actual: Ok(
 
     #[test]
     fn ok_describe_matches() -> Result<()> {
+        let matcher = super::OkMatcher::<i32, i32, _> {
+            inner: eq(1),
+            phantom_t: Default::default(),
+            phantom_e: Default::default(),
+        };
         verify_that!(
-            ok::<i32, i32>(eq(1)).describe(MatcherResult::Matches),
+            matcher.describe(MatcherResult::Matches),
             eq("is a success containing a value, which is equal to 1")
         )
     }

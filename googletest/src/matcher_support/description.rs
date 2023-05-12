@@ -138,7 +138,7 @@ impl Description {
         // Number of digit of the last index. For instance, an array of length 13 will
         // have 12 as last index (we start at 0), which have a digit size of 2.
         let enumerate_size = if self.elements.len() > 1 {
-            ((self.elements.len() - 1).ilog10() + 1) as usize
+            ((self.elements.len() - 1) as f64).log10().floor() as usize + 1
         } else {
             // Avoid negative logarithm when there is only 0 or 1 element.
             1

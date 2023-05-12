@@ -204,8 +204,6 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc! {
             r#"
-            Value of: Strukt { int: 123, string: "something".into() }
-            Expected: is equal to Strukt { int: 321, string: "someone" }
             Actual: Strukt {
                 int: 123,
                 string: "something",

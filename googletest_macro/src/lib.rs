@@ -58,12 +58,15 @@ pub fn test(
     let mut parsed_fn = parse_macro_input!(input as ItemFn);
     let attrs = parsed_fn.attrs.drain(..).collect::<Vec<_>>();
     let (mut sig, block) = (parsed_fn.sig, parsed_fn.block);
-    let ReturnType::Type(_, output_type) = sig.output.clone() else {
-        return quote! {
-            compile_error!(
-                "Test function with the #[googletest::test] attribute must return googletest::Result<()>"
-            );
-        }.into();
+    let output_type = match sig.output.clone() {
+        ReturnType::Type(_, output_type) => output_type,
+        _ => {
+            return quote! {
+                compile_error!(
+                    "Test function with the #[googletest::test] attribute must return googletest::Result<()>"
+                );
+            }.into()
+        }
     };
     sig.output = ReturnType::Default;
     let (maybe_closure, invocation) = if sig.asyncness.is_some() {
@@ -112,11 +115,13 @@ pub fn test(
 }
 
 fn is_test_attribute(attr: &Attribute) -> bool {
-    let Some(first_segment) = attr.path().segments.first() else {
-        return false;
+    let first_segment = match attr.path().segments.first() {
+        Some(first_segment) => first_segment,
+        None => return false,
     };
-    let Some(last_segment) = attr.path().segments.last() else {
-        return false;
+    let last_segment = match attr.path().segments.last() {
+        Some(last_segment) => last_segment,
+        None => return false,
     };
     last_segment.ident == "test"
         || (first_segment.ident == "rstest"

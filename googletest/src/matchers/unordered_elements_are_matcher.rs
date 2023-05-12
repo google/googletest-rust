@@ -877,7 +877,7 @@ pub mod internal {
             self.unmatchable_actual
                 .iter()
                 .enumerate()
-                .filter_map(|(idx, b)| b.then_some(idx))
+                .filter_map(|(idx, b)| if *b { Some(idx) } else { None })
                 .collect()
         }
 
@@ -885,7 +885,7 @@ pub mod internal {
             self.unmatchable_expected
                 .iter()
                 .enumerate()
-                .filter_map(|(idx, b)| b.then_some(idx))
+                .filter_map(|(idx, b)| if *b { Some(idx) } else { None })
                 .collect()
         }
     }

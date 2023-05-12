@@ -371,7 +371,6 @@ impl<A: ?Sized, T> StrMatcher<A, T> {
 // parameterised, saving compilation time and binary size on monomorphisation.
 //
 // The default value represents exact equality of the strings.
-#[derive(Default)]
 struct Configuration {
     mode: MatchMode,
     ignore_leading_whitespace: bool,
@@ -380,18 +379,16 @@ struct Configuration {
     times: Option<Box<dyn Matcher<ActualT = usize>>>,
 }
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 enum MatchMode {
-    #[default]
     Equals,
     Contains,
     StartsWith,
     EndsWith,
 }
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 enum CasePolicy {
-    #[default]
     Respect,
     IgnoreAscii,
 }
@@ -506,6 +503,18 @@ impl Configuration {
 
     fn times(self, times: impl Matcher<ActualT = usize> + 'static) -> Self {
         Self { times: Some(Box::new(times)), ..self }
+    }
+}
+
+impl Default for Configuration {
+    fn default() -> Self {
+        Self {
+            mode: MatchMode::Equals,
+            ignore_leading_whitespace: false,
+            ignore_trailing_whitespace: false,
+            case_policy: CasePolicy::Respect,
+            times: None,
+        }
     }
 }
 

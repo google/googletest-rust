@@ -137,8 +137,13 @@ Actual: Err(
 
     #[test]
     fn err_describe_matches() -> Result<()> {
+        let matcher = super::ErrMatcher::<i32, i32, _> {
+            inner: eq(1),
+            phantom_t: Default::default(),
+            phantom_e: Default::default(),
+        };
         verify_that!(
-            err::<i32, i32>(eq(1)).describe(MatcherResult::Matches),
+            matcher.describe(MatcherResult::Matches),
             eq("is an error which is equal to 1")
         )
     }
