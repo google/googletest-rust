@@ -113,7 +113,11 @@ pub(super) fn create_diff(
         // line-by-line diff.
         return MatchExplanation::create(format!("which {description}",));
     }
-    let edit_list = edit_distance::edit_list(actual_debug.lines(), expected_debug.lines());
+    let edit_list = edit_distance::edit_list(
+        actual_debug.lines(),
+        expected_debug.lines(),
+        edit_distance::Configuration::FullMatch,
+    );
 
     if edit_list.is_empty() {
         return MatchExplanation::create(format!(

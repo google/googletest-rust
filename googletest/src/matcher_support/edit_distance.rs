@@ -21,6 +21,7 @@ use std::ops::Index;
 pub(crate) fn edit_list<T: Distance + Copy>(
     left: impl IntoIterator<Item = T>,
     right: impl IntoIterator<Item = T>,
+    configuration: Configuration,
 ) -> Vec<Edit<T>> {
     let left: Vec<_> = left.into_iter().collect();
     let right: Vec<_> = right.into_iter().collect();
@@ -37,9 +38,23 @@ pub(crate) fn edit_list<T: Distance + Copy>(
         last_edit: Edit::ExtraLeft { left: left[0] },
     });
 
+    // The configuration changes how the beginning and the end of left is consumed.
+    // EndsWith and Contains makes the consumption of elements of left before the
+    // first element of right is consumed free. In the implementation, this leads
+    // to table[(_, 0)] == 0.
+    // StartsWith and Contains makes the consumption of character of left after the
+    // last element of right is consumed free. In the implementation, this leads to
+    // ExtraLeft being free when computing table[(_, right.len())].
+    let (free_start, free_end) = match configuration {
+        Configuration::FullMatch => (false, false),
+        Configuration::StartsWith => (false, true),
+        Configuration::EndsWith => (true, false),
+        Configuration::Contains => (true, true),
+    };
+
     for idx in 1..(left.len() + 1) {
         table.push(TableElement {
-            cost: idx as _,
+            cost: if free_start { 0.0 } else { idx as _ },
             last_edit: Edit::ExtraLeft { left: left[idx - 1] },
         });
     }
@@ -51,8 +66,9 @@ pub(crate) fn edit_list<T: Distance + Copy>(
         for idx in 1..(left.len() + 1) {
             let left_element = left[idx - 1];
             let right_element = right[idy - 1];
+            let extra_left_cost = if free_end && idy == right.len() { 0.0 } else { 1.0 };
             let extra_left = TableElement {
-                cost: 1.0 + table[(idx - 1, idy)].cost,
+                cost: extra_left_cost + table[(idx - 1, idy)].cost,
                 last_edit: Edit::ExtraLeft { left: left_element },
             };
             let extra_right = TableElement {
@@ -72,6 +88,7 @@ pub(crate) fn edit_list<T: Distance + Copy>(
             );
         }
     }
+
     let mut path = Vec::with_capacity(left.len() + right.len());
     let mut current = (left.len(), right.len());
     while current != (0, 0) {
@@ -85,6 +102,19 @@ pub(crate) fn edit_list<T: Distance + Copy>(
     }
     path.reverse();
     path
+}
+
+/// Controls how `right` should match `left`.
+#[allow(dead_code)]
+pub(crate) enum Configuration {
+    /// `right` is fully matching `left`
+    FullMatch,
+    /// `right` should match the beginning of `left`
+    StartsWith,
+    /// `right` should match the end of `left`
+    EndsWith,
+    /// `right` should be contained in `left`
+    Contains,
 }
 
 /// An edit operation on two sequences of `T`.
@@ -106,9 +136,16 @@ pub(crate) trait Distance {
     fn distance(left: Self, right: Self) -> f64;
 }
 
+/// Distance between two `char`s  which are not equal.
+/// This value controls the behavior of [`edit_list`] on `char` to decide
+/// between adding one [`Edit::ExtraLeft`] and one [`Edit::ExtraRight`] or
+/// adding a single [`Edit::Both`]. This can have fairly surprising effect in
+/// the more complicated cases.
+const UNEQUAL_CHAR_DISTANCE: f64 = 1.5;
+
 impl Distance for char {
     fn distance(left: Self, right: Self) -> f64 {
-        if left == right { 0.0 } else { 1.0 }
+        if left == right { 0.0 } else { UNEQUAL_CHAR_DISTANCE }
     }
 }
 
@@ -120,14 +157,18 @@ impl Distance for &str {
         if left == right {
             return 0.0;
         }
-        let edits: f64 = edit_list(left.chars(), right.chars())
+        let edits: f64 = edit_list(left.chars(), right.chars(), Configuration::FullMatch)
             .into_iter()
             .map(|edit| match edit {
                 Edit::Both { distance, .. } => distance,
                 _ => 1.0,
             })
             .sum();
-        1. + edits / (left.chars().count().max(right.chars().count()) as f64)
+        let left_len = left.chars().count() as f64;
+        let right_len = right.chars().count() as f64;
+        let maximum_edit_distance =
+            UNEQUAL_CHAR_DISTANCE * right_len.min(left_len) + (right_len - left_len).abs();
+        1. + edits / maximum_edit_distance
     }
 }
 
@@ -170,6 +211,7 @@ mod tests {
     use crate::elements_are;
     use crate::{matcher::Matcher, matchers::predicate, verify_that, Result};
     use indoc::indoc;
+    use Configuration::*;
 
     fn is_both<E: PartialEq + Debug>(
         l_expected: E,
@@ -197,7 +239,7 @@ mod tests {
 
     #[test]
     fn exact_match() -> Result<()> {
-        let edits = edit_list("hello".chars(), "hello".chars());
+        let edits = edit_list("hello".chars(), "hello".chars(), FullMatch);
         verify_that!(
             edits,
             elements_are![
@@ -212,15 +254,17 @@ mod tests {
 
     #[test]
     fn completely_different() -> Result<()> {
-        let edits = edit_list("goodbye".chars(), "hello".chars());
+        let edits = edit_list("goodbye".chars(), "hello".chars(), FullMatch);
         verify_that!(
             edits,
             elements_are![
                 is_both('g', 'h'),
                 is_both('o', 'e'),
-                is_both('o', 'l'),
-                is_both('d', 'l'),
-                is_both('b', 'o'),
+                is_extra_right('l'),
+                is_extra_right('l'),
+                is_both('o', 'o'),
+                is_extra_left('d'),
+                is_extra_left('b'),
                 is_extra_left('y'),
                 is_extra_left('e'),
             ]
@@ -229,7 +273,7 @@ mod tests {
 
     #[test]
     fn slightly_different() -> Result<()> {
-        let edits = edit_list("floor".chars(), "flower".chars());
+        let edits = edit_list("floor".chars(), "flower".chars(), FullMatch);
         verify_that!(
             edits,
             elements_are![
@@ -257,12 +301,76 @@ mod tests {
             string: "someone"
         "#
         );
-        let edits = edit_list(left.lines(), right.lines());
+        let edits = edit_list(left.lines(), right.lines(), FullMatch);
         verify_that!(
             edits,
             elements_are![
                 is_both("int: 123", "int: 321"),
                 is_both(r#"string: "something""#, r#"string: "someone""#),
+            ]
+        )
+    }
+
+    #[test]
+    fn starts_with_imperfect_match() -> Result<()> {
+        let edits = edit_list("123123".chars(), "1212".chars(), StartsWith);
+        verify_that!(
+            edits,
+            elements_are![
+                is_both('1', '1'),
+                is_both('2', '2'),
+                is_extra_left('3'),
+                is_both('1', '1'),
+                is_both('2', '2'),
+                is_extra_left('3'),
+            ]
+        )
+    }
+
+    #[test]
+    fn ends_with_imperfect_match() -> Result<()> {
+        let edits = edit_list("123123".chars(), "124".chars(), EndsWith);
+        verify_that!(
+            edits,
+            elements_are![
+                is_extra_left('1'),
+                is_extra_left('2'),
+                is_extra_left('3'),
+                is_both('1', '1'),
+                is_both('2', '2'),
+                is_both('3', '4'),
+            ]
+        )
+    }
+
+    #[test]
+    fn contains_perfect_match() -> Result<()> {
+        let edits = edit_list("123123".chars(), "312".chars(), Contains);
+        verify_that!(
+            edits,
+            elements_are![
+                is_extra_left('1'),
+                is_extra_left('2'),
+                is_both('3', '3'),
+                is_both('1', '1'),
+                is_both('2', '2'),
+                is_extra_left('3'),
+            ]
+        )
+    }
+
+    #[test]
+    fn contains_imperfect_match() -> Result<()> {
+        let edits = edit_list("123123".chars(), "342".chars(), Contains);
+        verify_that!(
+            edits,
+            elements_are![
+                is_extra_left('1'),
+                is_extra_left('2'),
+                is_both('3', '3'),
+                is_both('1', '4'),
+                is_both('2', '2'),
+                is_extra_left('3'),
             ]
         )
     }
