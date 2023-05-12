@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! Utilities to facilitate writing matchers.
+//!
+//! Tests normally do not need to import anything from this module. Some of
+//! these facilities could be useful to downstream users writing custom
+//! matchers.
+
 pub(crate) mod count_elements;
 pub mod description;
 pub(crate) mod edit_distance;

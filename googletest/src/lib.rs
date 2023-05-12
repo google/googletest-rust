@@ -23,6 +23,20 @@ pub mod matcher;
 pub mod matcher_support;
 pub mod matchers;
 
+/// Re-exports of the symbols in this crate which are most likely to be used.
+///
+/// This includes:
+///  * All assertion macros,
+///  * Traits and type definitions normally used by tests, and
+///  * All built-in matchers.
+///
+/// Typically, one imports everything in the prelude in one's test module:
+///
+/// ```
+/// mod tests {
+///     use googletest::prelude::*;
+/// }
+/// ```
 pub mod prelude {
     pub use super::matcher::Matcher;
     pub use super::matchers::*;

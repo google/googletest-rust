@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! All built-in matchers of this crate are in submodules of this module.
+
 pub mod all_matcher;
 pub mod anything_matcher;
 pub mod conjunction_matcher;
