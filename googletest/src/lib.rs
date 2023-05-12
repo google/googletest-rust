@@ -24,6 +24,7 @@ pub mod matcher_support;
 pub mod matchers;
 
 pub mod prelude {
+    pub use super::matcher::Matcher;
     pub use super::matchers::*;
     pub use super::GoogleTestSupport;
     pub use super::IntoTestResult;

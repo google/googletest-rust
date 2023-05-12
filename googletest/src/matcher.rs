@@ -14,6 +14,8 @@
 
 use crate::internal::source_location::SourceLocation;
 use crate::internal::test_outcome::TestAssertionFailure;
+use crate::matchers::conjunction_matcher::ConjunctionMatcher;
+use crate::matchers::disjunction_matcher::DisjunctionMatcher;
 use std::fmt::{Debug, Display, Formatter, Result};
 
 /// An interface for checking an arbitrary condition on a datum.
@@ -129,6 +131,69 @@ pub trait Matcher {
     /// ```
     fn explain_match(&self, actual: &Self::ActualT) -> MatchExplanation {
         MatchExplanation::create(format!("which {}", self.describe(self.matches(actual))))
+    }
+
+    /// Constructs a matcher that matches both `self` and `right`.
+    ///
+    /// ```
+    /// # use googletest::prelude::*;
+    /// # fn should_pass() -> Result<()> {
+    /// verify_that!("A string", starts_with("A").and(ends_with("string")))?; // Passes
+    /// #     Ok(())
+    /// # }
+    /// # fn should_fail_1() -> Result<()> {
+    /// verify_that!("A string", starts_with("Another").and(ends_with("string")))?; // Fails
+    /// #     Ok(())
+    /// # }
+    /// # fn should_fail_2() -> Result<()> {
+    /// verify_that!("A string", starts_with("A").and(ends_with("non-string")))?; // Fails
+    /// #     Ok(())
+    /// # }
+    /// # should_pass().unwrap();
+    /// # should_fail_1().unwrap_err();
+    /// # should_fail_2().unwrap_err();
+    /// ```
+    // TODO(b/264518763): Replace the return type with impl Matcher and reduce
+    // visibility of ConjunctionMatcher once impl in return position in trait
+    // methods is stable.
+    fn and<Right: Matcher<ActualT = Self::ActualT>>(
+        self,
+        right: Right,
+    ) -> ConjunctionMatcher<Self::ActualT, Self, Right>
+    where
+        Self: Sized,
+    {
+        ConjunctionMatcher::new(self, right)
+    }
+
+    /// Constructs a matcher that matches when at least one of `self` or `right`
+    /// matches the input.
+    ///
+    /// ```
+    /// # use googletest::prelude::*;
+    /// # fn should_pass() -> Result<()> {
+    /// verify_that!(10, eq(2).or(ge(5)))?;  // Passes
+    /// verify_that!(10, eq(2).or(eq(5)).or(ge(9)))?;  // Passes
+    /// #     Ok(())
+    /// # }
+    /// # fn should_fail() -> Result<()> {
+    /// verify_that!(10, eq(2).or(ge(15)))?; // Fails
+    /// #     Ok(())
+    /// # }
+    /// # should_pass().unwrap();
+    /// # should_fail().unwrap_err();
+    /// ```
+    // TODO(b/264518763): Replace the return type with impl Matcher and reduce
+    // visibility of DisjunctionMatcher once impl in return position in trait
+    // methods is stable.
+    fn or<Right: Matcher<ActualT = Self::ActualT>>(
+        self,
+        right: Right,
+    ) -> DisjunctionMatcher<Self::ActualT, Self, Right>
+    where
+        Self: Sized,
+    {
+        DisjunctionMatcher::new(self, right)
     }
 }
 

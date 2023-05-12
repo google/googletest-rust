@@ -80,7 +80,6 @@ The following matchers are provided in GoogleTest Rust:
 |----------------------|--------------------------------------------------------------------------|
 | [`all!`]             | Anything matched by all given matchers.                                  |
 | [`anything`]         | Any input.                                                               |
-| [`and`]              | Anything matched by both matchers.                                       |
 | [`approx_eq`]        | A floating point number within a standard tolerance of the argument.     |
 | [`container_eq`]     | Same as [`eq`], but for containers (with a better mismatch description). |
 | [`contains`]         | A container containing an element matched by the given matcher.          |
@@ -110,7 +109,6 @@ The following matchers are provided in GoogleTest Rust:
 | [`none`]             | An [`Option`] containing `None`.                                         |
 | [`not`]              | Any value the argument does not match.                                   |
 | [`ok`]               | A [`Result`][std::result::Result] containing an `Ok` variant the argument matches. |
-| [`or`]               | Anything matched by either of the two given matchers.                    |
 | [`pat!`]             | Alias for [`matches_pattern!`].                                          |
 | [`points_to`]        | Any [`Deref`] such as `&`, `Rc`, etc. whose value the argument matches.  |
 | [`pointwise!`]       | A container whose contents the arguments match in a pointwise fashion.   |
@@ -123,7 +121,6 @@ The following matchers are provided in GoogleTest Rust:
 | [`unordered_elements_are!`] | A container whose elements the arguments match, in any order.     |
 
 [`anything`]: matchers::anything
-[`and`]: matchers::AndMatcherExt::and
 [`approx_eq`]: matchers::approx_eq
 [`container_eq`]: matchers::container_eq
 [`contains`]: matchers::contains
@@ -148,7 +145,6 @@ The following matchers are provided in GoogleTest Rust:
 [`none`]: matchers::none
 [`not`]: matchers::not
 [`ok`]: matchers::ok
-[`or`]: matchers::OrMatcherExt::or
 [`points_to`]: matchers::points_to
 [`predicate`]: matchers::predicate
 [`some`]: matchers::some

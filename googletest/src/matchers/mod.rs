@@ -52,11 +52,9 @@ pub mod tuple_matcher;
 pub mod unordered_elements_are_matcher;
 
 pub use anything_matcher::anything;
-pub use conjunction_matcher::AndMatcherExt;
 pub use container_eq_matcher::container_eq;
 pub use contains_matcher::contains;
 pub use contains_regex_matcher::contains_regex;
-pub use disjunction_matcher::OrMatcherExt;
 pub use display_matcher::displays_as;
 pub use each_matcher::each;
 pub use empty_matcher::empty;

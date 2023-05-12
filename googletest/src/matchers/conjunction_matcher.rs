@@ -15,44 +15,6 @@
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
 use std::{fmt::Debug, marker::PhantomData};
 
-/// Extension trait providing the [`and`][AndMatcherExt::and] method.
-pub trait AndMatcherExt: Matcher {
-    /// Constructs a matcher that matches both `self` and `right`.
-    ///
-    /// ```
-    /// # use googletest::prelude::*;
-    /// # fn should_pass() -> Result<()> {
-    /// verify_that!("A string", starts_with("A").and(ends_with("string")))?; // Passes
-    /// #     Ok(())
-    /// # }
-    /// # fn should_fail_1() -> Result<()> {
-    /// verify_that!("A string", starts_with("Another").and(ends_with("string")))?; // Fails
-    /// #     Ok(())
-    /// # }
-    /// # fn should_fail_2() -> Result<()> {
-    /// verify_that!("A string", starts_with("A").and(ends_with("non-string")))?; // Fails
-    /// #     Ok(())
-    /// # }
-    /// # should_pass().unwrap();
-    /// # should_fail_1().unwrap_err();
-    /// # should_fail_2().unwrap_err();
-    /// ```
-    // TODO(b/264518763): Replace the return type with impl Matcher and reduce
-    // visibility of ConjunctionMatcher once impl in return position in trait
-    // methods is stable.
-    fn and<Right: Matcher<ActualT = <Self as Matcher>::ActualT>>(
-        self,
-        right: Right,
-    ) -> ConjunctionMatcher<<Self as Matcher>::ActualT, Self, Right>
-    where
-        Self: Sized,
-    {
-        ConjunctionMatcher { m1: self, m2: right, phantom: Default::default() }
-    }
-}
-
-impl<M> AndMatcherExt for M where M: Matcher {}
-
 /// Matcher created by [`AndMatcherExt::and`].
 ///
 /// **For internal use only. API stablility is not guaranteed!**
@@ -61,6 +23,12 @@ pub struct ConjunctionMatcher<T: ?Sized, M1, M2> {
     m1: M1,
     m2: M2,
     phantom: PhantomData<T>,
+}
+
+impl<T: ?Sized, M1, M2> ConjunctionMatcher<T, M1, M2> {
+    pub(crate) fn new(m1: M1, m2: M2) -> Self {
+        Self { m1, m2, phantom: Default::default() }
+    }
 }
 
 impl<T: Debug + ?Sized, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matcher
@@ -97,7 +65,6 @@ impl<T: Debug + ?Sized, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matc
 
 #[cfg(test)]
 mod tests {
-    use super::AndMatcherExt;
     use crate::prelude::*;
 
     #[test]

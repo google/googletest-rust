@@ -15,41 +15,6 @@
 use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
 use std::{fmt::Debug, marker::PhantomData};
 
-/// Extension trait providing the [`or`][OrMatcherExt::or] method.
-pub trait OrMatcherExt: Matcher {
-    /// Constructs a matcher that matches when at least one of `self` or `right`
-    /// matches the input.
-    ///
-    /// ```
-    /// # use googletest::prelude::*;
-    /// # fn should_pass() -> Result<()> {
-    /// verify_that!(10, eq(2).or(ge(5)))?;  // Passes
-    /// verify_that!(10, eq(2).or(eq(5)).or(ge(9)))?;  // Passes
-    /// #     Ok(())
-    /// # }
-    /// # fn should_fail() -> Result<()> {
-    /// verify_that!(10, eq(2).or(ge(15)))?; // Fails
-    /// #     Ok(())
-    /// # }
-    /// # should_pass().unwrap();
-    /// # should_fail().unwrap_err();
-    /// ```
-    // TODO(b/264518763): Replace the return type with impl Matcher and reduce
-    // visibility of DisjunctionMatcher once impl in return position in trait
-    // methods is stable.
-    fn or<Right: Matcher<ActualT = <Self as Matcher>::ActualT>>(
-        self,
-        right: Right,
-    ) -> DisjunctionMatcher<<Self as Matcher>::ActualT, Self, Right>
-    where
-        Self: Sized,
-    {
-        DisjunctionMatcher { m1: self, m2: right, phantom: Default::default() }
-    }
-}
-
-impl<M> OrMatcherExt for M where M: Matcher {}
-
 /// Matcher created by [`OrMatcherExt::or`].
 ///
 /// **For internal use only. API stablility is not guaranteed!**
@@ -58,6 +23,12 @@ pub struct DisjunctionMatcher<T: ?Sized, M1, M2> {
     m1: M1,
     m2: M2,
     phantom: PhantomData<T>,
+}
+
+impl<T: ?Sized, M1, M2> DisjunctionMatcher<T, M1, M2> {
+    pub(crate) fn new(m1: M1, m2: M2) -> Self {
+        Self { m1, m2, phantom: Default::default() }
+    }
 }
 
 impl<T: Debug + ?Sized, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matcher
@@ -89,7 +60,6 @@ impl<T: Debug + ?Sized, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matc
 
 #[cfg(test)]
 mod tests {
-    use super::OrMatcherExt;
     use crate::prelude::*;
 
     #[test]

@@ -38,8 +38,7 @@
 /// ```
 ///
 /// Using this macro is equivalent to using the
-/// [`and`][crate::matchers::conjunction_matcher::AndMatcherExt::and] extension
-/// method:
+/// [`and`][crate::matcher::Matcher::and] method:
 ///
 /// ```
 /// # use googletest::prelude::*;

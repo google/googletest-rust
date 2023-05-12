@@ -23,9 +23,7 @@
 /// corresponding element of the actual value.
 ///
 /// ```
-/// # use googletest::{
-/// #     elements_are, matchers::{anything, eq, gt, lt, AndMatcherExt}, verify_that, Result,
-/// # };
+/// # use googletest::prelude::*;
 /// verify_that!(vec![1, 2, 3], elements_are![eq(1), anything(), gt(0).and(lt(123))])
 /// #    .unwrap();
 /// ```
@@ -34,9 +32,7 @@
 /// includes standard containers, slices (when dereferenced) and arrays.
 ///
 /// ```
-/// # use googletest::{
-/// #     elements_are, matchers::{anything, eq, gt, lt, AndMatcherExt}, verify_that, Result,
-/// # };
+/// # use googletest::prelude::*;
 /// let vector = vec![1, 2, 3];
 /// let slice = vector.as_slice();
 /// verify_that!(*slice, elements_are![eq(1), anything(), gt(0).and(lt(123))])
