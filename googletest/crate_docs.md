@@ -102,6 +102,7 @@ The following matchers are provided in GoogleTest Rust:
 | [`is_contained_in!`] | A container each of whose elements is matched by some given matcher.     |
 | [`is_nan`]           | A floating point number which is NaN.                                    |
 | [`le`]               | A [`PartialOrd`] value less than or equal to the given value.            |
+| [`len`]              | A container whose number of elements the argument matches.               |
 | [`lt`]               | A [`PartialOrd`] value strictly less than the given value.               |
 | [`matches_pattern!`] | A struct or enum whose fields are matched according to the arguments.    |
 | [`matches_regex`]    | A string matched by the given regular expression.                        |
@@ -114,7 +115,6 @@ The following matchers are provided in GoogleTest Rust:
 | [`points_to`]        | Any [`Deref`] such as `&`, `Rc`, etc. whose value the argument matches.  |
 | [`pointwise!`]       | A container whose contents the arguments match in a pointwise fashion.   |
 | [`predicate`]        | A value on which the given predicate returns true.                       |
-| [`size`]             | A container whose size the argument matches.                             |
 | [`some`]             | An [`Option`] containing `Some` whose value the argument matches.        |
 | [`starts_with`]      | A string starting with the given prefix.                                 |
 | [`subset_of`]        | A container all of whose elements are contained in the argument.         |
@@ -141,6 +141,7 @@ The following matchers are provided in GoogleTest Rust:
 [`has_entry`]: matchers::has_entry
 [`is_nan`]: matchers::is_nan
 [`le`]: matchers::le
+[`len`]: matchers::len
 [`lt`]: matchers::lt
 [`matches_regex`]: matchers::matches_regex
 [`near`]: matchers::near
@@ -150,7 +151,6 @@ The following matchers are provided in GoogleTest Rust:
 [`or`]: matchers::OrMatcherExt::or
 [`points_to`]: matchers::points_to
 [`predicate`]: matchers::predicate
-[`size`]: matchers::size
 [`some`]: matchers::some
 [`starts_with`]: matchers::starts_with
 [`subset_of`]: matchers::subset_of

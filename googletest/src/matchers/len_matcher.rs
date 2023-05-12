@@ -16,7 +16,7 @@ use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
 use crate::matcher_support::count_elements::count_elements;
 use std::{fmt::Debug, marker::PhantomData};
 
-/// Matches a container whose size matches `expected`.
+/// Matches a container whose number of elements matches `expected`.
 ///
 /// This matches against a container over which one can iterate. This includes
 /// the standard Rust containers, arrays, and (when dereferenced) slices.
@@ -25,11 +25,11 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let array = [1,2,3];
-/// verify_that!(array, size(eq(3)))?;
+/// verify_that!(array, len(eq(3)))?;
 /// let vec = vec![1,2,3];
-/// verify_that!(vec, size(eq(3)))?;
+/// verify_that!(vec, len(eq(3)))?;
 /// let slice = vec.as_slice();
-/// verify_that!(*slice, size(eq(3)))?;
+/// verify_that!(*slice, len(eq(3)))?;
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -41,26 +41,24 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let vec = vec![1,2,3];
-/// verify_that!(vec, size(gt(1)))?;
+/// verify_that!(vec, len(gt(1)))?;
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn size<T: Debug + ?Sized, E: Matcher<ActualT = usize>>(
-    expected: E,
-) -> impl Matcher<ActualT = T>
+pub fn len<T: Debug + ?Sized, E: Matcher<ActualT = usize>>(expected: E) -> impl Matcher<ActualT = T>
 where
     for<'a> &'a T: IntoIterator,
 {
-    SizeMatcher { expected, phantom: Default::default() }
+    LenMatcher { expected, phantom: Default::default() }
 }
 
-struct SizeMatcher<T: ?Sized, E> {
+struct LenMatcher<T: ?Sized, E> {
     expected: E,
     phantom: PhantomData<T>,
 }
 
-impl<T: Debug + ?Sized, E: Matcher<ActualT = usize>> Matcher for SizeMatcher<T, E>
+impl<T: Debug + ?Sized, E: Matcher<ActualT = usize>> Matcher for LenMatcher<T, E>
 where
     for<'a> &'a T: IntoIterator,
 {
@@ -93,7 +91,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::size;
+    use super::len;
     use crate::matcher::{MatchExplanation, Matcher, MatcherResult};
     use crate::prelude::*;
     use indoc::indoc;
@@ -104,80 +102,80 @@ mod tests {
     use std::marker::PhantomData;
 
     #[test]
-    fn size_matcher_match_vec() -> Result<()> {
+    fn len_matcher_match_vec() -> Result<()> {
         let value = vec![1, 2, 3];
-        verify_that!(value, size(eq(3)))
+        verify_that!(value, len(eq(3)))
     }
 
     #[test]
-    fn size_matcher_match_array_reference() -> Result<()> {
+    fn len_matcher_match_array_reference() -> Result<()> {
         let value = &[1, 2, 3];
-        verify_that!(*value, size(eq(3)))
+        verify_that!(*value, len(eq(3)))
     }
 
     #[test]
-    fn size_matcher_match_slice_of_array() -> Result<()> {
+    fn len_matcher_match_slice_of_array() -> Result<()> {
         let value = &[1, 2, 3];
-        verify_that!(value[0..1], size(eq(1)))
+        verify_that!(value[0..1], len(eq(1)))
     }
 
     #[test]
-    fn size_matcher_match_slice_of_vec() -> Result<()> {
+    fn len_matcher_match_slice_of_vec() -> Result<()> {
         let value = vec![1, 2, 3];
         let slice = value.as_slice();
-        verify_that!(*slice, size(eq(3)))
+        verify_that!(*slice, len(eq(3)))
     }
 
     #[test]
-    fn size_matcher_match_sized_slice() -> Result<()> {
+    fn len_matcher_match_sized_slice() -> Result<()> {
         let value = [1, 2, 3];
-        verify_that!(value, size(eq(3)))
+        verify_that!(value, len(eq(3)))
     }
 
     #[test]
-    fn size_matcher_match_btreemap() -> Result<()> {
+    fn len_matcher_match_btreemap() -> Result<()> {
         let value = BTreeMap::from([(1, 2), (2, 3), (3, 4)]);
-        verify_that!(value, size(eq(3)))
+        verify_that!(value, len(eq(3)))
     }
 
     #[test]
-    fn size_matcher_match_btreeset() -> Result<()> {
+    fn len_matcher_match_btreeset() -> Result<()> {
         let value = BTreeSet::from([1, 2, 3]);
-        verify_that!(value, size(eq(3)))
+        verify_that!(value, len(eq(3)))
     }
 
     #[test]
-    fn size_matcher_match_binaryheap() -> Result<()> {
+    fn len_matcher_match_binaryheap() -> Result<()> {
         let value = BinaryHeap::from([1, 2, 3]);
-        verify_that!(value, size(eq(3)))
+        verify_that!(value, len(eq(3)))
     }
 
     #[test]
-    fn size_matcher_match_hashmap() -> Result<()> {
+    fn len_matcher_match_hashmap() -> Result<()> {
         let value = HashMap::from([(1, 2), (2, 3), (3, 4)]);
-        verify_that!(value, size(eq(3)))
+        verify_that!(value, len(eq(3)))
     }
 
     #[test]
-    fn size_matcher_match_hashset() -> Result<()> {
+    fn len_matcher_match_hashset() -> Result<()> {
         let value = HashSet::from([1, 2, 3]);
-        verify_that!(value, size(eq(3)))
+        verify_that!(value, len(eq(3)))
     }
 
     #[test]
-    fn size_matcher_match_linkedlist() -> Result<()> {
+    fn len_matcher_match_linkedlist() -> Result<()> {
         let value = LinkedList::from([1, 2, 3]);
-        verify_that!(value, size(eq(3)))
+        verify_that!(value, len(eq(3)))
     }
 
     #[test]
-    fn size_matcher_match_vecdeque() -> Result<()> {
+    fn len_matcher_match_vecdeque() -> Result<()> {
         let value = VecDeque::from([1, 2, 3]);
-        verify_that!(value, size(eq(3)))
+        verify_that!(value, len(eq(3)))
     }
 
     #[test]
-    fn size_matcher_explain_match() -> Result<()> {
+    fn len_matcher_explain_match() -> Result<()> {
         struct TestMatcher<T>(PhantomData<T>);
         impl<T: Debug> Matcher for TestMatcher<T> {
             type ActualT = T;
@@ -195,14 +193,14 @@ mod tests {
             }
         }
         verify_that!(
-            size(TestMatcher(Default::default())).explain_match(&[1, 2, 3]),
+            len(TestMatcher(Default::default())).explain_match(&[1, 2, 3]),
             displays_as(eq("which has size 3, called explain_match"))
         )
     }
 
     #[test]
-    fn size_matcher_error_message() -> Result<()> {
-        let result = verify_that!(vec![1, 2, 3, 4], size(eq(3)));
+    fn len_matcher_error_message() -> Result<()> {
+        let result = verify_that!(vec![1, 2, 3, 4], len(eq(3)));
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc!(
