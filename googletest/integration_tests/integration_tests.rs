@@ -39,7 +39,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[googletest::test]
     fn should_pass_with_expect_that() -> Result<()> {
         let value = 2;
         expect_that!(value, eq(2));
@@ -224,7 +224,7 @@ mod tests {
         a == b
     }
 
-    #[test]
+    #[googletest::test]
     fn should_verify_predicate_with_success_using_expect_pred() -> Result<()> {
         expect_pred!(eq_predicate(1, 1));
         Ok(())
@@ -455,7 +455,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[googletest::test]
     fn test_with_google_test_and_rstest_runs_only_once() -> Result<()> {
         let output = run_external_process_in_tests_directory("google_test_with_rstest")?;
 
@@ -486,7 +486,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[googletest::test]
     fn async_test_with_google_test_runs_correctly() -> Result<()> {
         let output = run_external_process_in_tests_directory("async_test_with_expect_that")?;
 
@@ -509,6 +509,34 @@ mod tests {
         let output = run_external_process_in_tests_directory("test_returning_anyhow_error")?;
 
         verify_that!(output, contains_substring("Error from Anyhow"))
+    }
+
+    #[::core::prelude::v1::test]
+    #[should_panic]
+    fn should_panic_when_expect_that_runs_without_attribute_macro() {
+        expect_that!(123, eq(123));
+    }
+
+    #[::core::prelude::v1::test]
+    #[should_panic]
+    fn should_panic_when_and_log_failure_runs_without_attribute_macro() {
+        verify_that!(123, eq(123)).and_log_failure();
+    }
+
+    #[googletest::test]
+    fn should_just_pass() -> Result<()> {
+        Ok(())
+    }
+
+    #[::core::prelude::v1::test]
+    #[should_panic]
+    fn should_panic_when_expect_that_runs_without_attribute_macro_after_another_test() {
+        // The boilerplate in the attribute googletest::test should reset the test
+        // context when the test has finished running. If it fails to do so, then the
+        // expect_that! call will see a test context and *not* panic, causing the test
+        // to fail.
+        let _ = should_just_pass();
+        expect_that!(123, eq(123));
     }
 
     fn run_external_process_in_tests_directory(name: &'static str) -> Result<String> {

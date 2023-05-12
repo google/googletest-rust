@@ -43,7 +43,7 @@ pub use googletest_macro::test;
 #[deprecated(since = "0.5.0", note = "Use googletest::test instead")]
 pub use googletest_macro::test as google_test;
 
-use internal::test_outcome::TestAssertionFailure;
+use internal::test_outcome::{TestAssertionFailure, TestOutcome};
 
 /// A `Result` whose `Err` variant indicates a test failure.
 ///
@@ -74,6 +74,8 @@ pub trait GoogleTestSupport {
     ///
     /// ```
     /// # use googletest::prelude::*;
+    /// # use googletest::internal::test_outcome::TestOutcome;
+    /// # TestOutcome::init_current_test_outcome();
     /// let actual = 42;
     /// verify_that!(actual, eq(42)).and_log_failure();
     ///                                  // Test still passing; nothing happens
@@ -81,6 +83,7 @@ pub trait GoogleTestSupport {
     ///                          // Test now fails and failure output to stdout
     /// verify_that!(actual, eq(100)).and_log_failure();
     ///               // Test still fails and new failure also output to stdout
+    /// # TestOutcome::close_current_test_outcome::<&str>(Ok(())).unwrap_err();
     /// ```
     fn and_log_failure(self);
 
@@ -153,6 +156,7 @@ pub trait GoogleTestSupport {
 
 impl<T> GoogleTestSupport for std::result::Result<T, TestAssertionFailure> {
     fn and_log_failure(self) {
+        TestOutcome::ensure_text_context_present();
         if let Err(failure) = self {
             failure.log();
         }

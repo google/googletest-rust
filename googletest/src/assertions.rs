@@ -39,11 +39,14 @@
 /// # }
 /// # should_pass().unwrap();
 /// # fn should_fail() -> Result<()> {
+/// # googletest::internal::test_outcome::TestOutcome::init_current_test_outcome();
 /// verify_that!(42, eq(123)).and_log_failure();
 ///             // This will log a test failure and allow execution to continue.
 /// let _ = verify_that!(42, eq(123)); // This will do nothing.
 /// verify_that!(42, eq(123))?; // This will fail, returning immediately.
 /// verify_that!(42, eq(0))?; // This will not run.
+/// # googletest::internal::test_outcome::TestOutcome::close_current_test_outcome::<&str>(Ok(()))
+/// #     .unwrap_err();
 /// # Ok(())
 /// # }
 /// # verify_that!(should_fail(), err(displays_as(contains_substring("Expected: is equal to 123"))))

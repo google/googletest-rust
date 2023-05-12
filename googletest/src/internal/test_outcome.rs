@@ -32,20 +32,20 @@ pub enum TestOutcome {
 }
 
 thread_local! {
-    static CURRENT_TEST_OUTCOME: RefCell<TestOutcome> =
-        RefCell::new(TestOutcome::Success);
+    static CURRENT_TEST_OUTCOME: RefCell<Option<TestOutcome>> = RefCell::new(None);
 }
 
 impl TestOutcome {
     /// Resets the current test's [`TestOutcome`].
     ///
-    /// This is intended only for use by the attribute macro `#[google_test]`.
+    /// This is intended only for use by the attribute macro
+    /// `#[googletest::test]`.
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
     pub fn init_current_test_outcome() {
         Self::with_current_test_outcome(|mut current_test_outcome| {
-            *current_test_outcome = TestOutcome::Success;
+            *current_test_outcome = Some(TestOutcome::Success);
         })
     }
 
@@ -63,21 +63,31 @@ impl TestOutcome {
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
     pub fn close_current_test_outcome<E: Display>(result: Result<(), E>) -> Result<(), ()> {
-        TestOutcome::with_current_test_outcome(|outcome| match &*outcome {
-            TestOutcome::Success => match result {
-                Ok(()) => Ok(()),
-                Err(f) => {
-                    print!("{}", f);
-                    Err(())
+        TestOutcome::with_current_test_outcome(|mut outcome| {
+            let result = match &*outcome {
+                Some(TestOutcome::Success) => match result {
+                    Ok(()) => Ok(()),
+                    Err(f) => {
+                        print!("{}", f);
+                        Err(())
+                    }
+                },
+                Some(TestOutcome::Failure) => Err(()),
+                None => {
+                    panic!("No test context found. This indicates a bug in GoogleTest.")
                 }
-            },
-            TestOutcome::Failure => Err(()),
+            };
+            *outcome = None;
+            result
         })
     }
 
     /// Records that the currently running test has failed.
     fn fail_current_test() {
         TestOutcome::with_current_test_outcome(|mut outcome| {
+            let outcome = outcome
+                .as_mut()
+                .expect("No test context found. This indicates a bug in GoogleTest.");
             *outcome = TestOutcome::Failure;
         })
     }
@@ -85,9 +95,22 @@ impl TestOutcome {
     /// Runs `action` with the [`TestOutcome`] for the currently running test.
     ///
     /// This is primarily intended for use by assertion macros like
-    /// `verify_that!`.
-    fn with_current_test_outcome<T>(action: impl FnOnce(RefMut<TestOutcome>) -> T) -> T {
+    /// `expect_that!`.
+    fn with_current_test_outcome<T>(action: impl FnOnce(RefMut<Option<TestOutcome>>) -> T) -> T {
         CURRENT_TEST_OUTCOME.with(|current_test_outcome| action(current_test_outcome.borrow_mut()))
+    }
+
+    /// Ensure that there is a test context present and panic if there is not.
+    pub(crate) fn ensure_text_context_present() {
+        TestOutcome::with_current_test_outcome(|outcome| {
+            outcome.as_ref().expect(
+                "
+No test context found.
+ * Did you annotate the test with googletest::test?
+ * Is the assertion running in the original test thread?
+",
+            );
+        })
     }
 }
 
