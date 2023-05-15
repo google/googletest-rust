@@ -130,10 +130,8 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc! {
             r#"
-            Actual: Strukt {
-                int: 123,
-                string: "something",
-            }, which isn't equal to Strukt { int: 321, string: "someone" }
+            Actual: Strukt { int: 123, string: "something" },
+              which isn't equal to Strukt { int: 321, string: "someone" }
             Debug diff:
              Strukt {
             +    int: 123,

@@ -26,6 +26,7 @@ INTEGRATION_TEST_BINARIES=(
   "integration_tests"
   "assert_predicate_with_failure"
   "assertion_failure_in_subroutine"
+  "assertion_failures_with_short_structured_actual_values"
   "async_test_with_expect_that"
   "custom_error_message"
   "expect_pred_failure"

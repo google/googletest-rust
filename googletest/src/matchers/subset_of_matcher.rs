@@ -145,6 +145,7 @@ where
 mod tests {
     use super::subset_of;
     use crate::prelude::*;
+    use indoc::indoc;
     use std::collections::HashSet;
 
     #[test]
@@ -207,21 +208,18 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: vec![0, 2, 3]
-Expected: is a subset of [
-    1,
-    2,
-    3,
-]
-Actual: [
-    0,
-    2,
-    3,
-], whose element 0 at #0 is unexpected
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                    Value of: vec![0, 2, 3]
+                    Expected: is a subset of [
+                        1,
+                        2,
+                        3,
+                    ]
+                    Actual: [0, 2, 3],
+                      whose element 0 at #0 is unexpected
+                "
+            ))))
         )
     }
 
@@ -231,21 +229,18 @@ Actual: [
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: vec![1, 0, 3]
-Expected: is a subset of [
-    1,
-    2,
-    3,
-]
-Actual: [
-    1,
-    0,
-    3,
-], whose element 0 at #1 is unexpected
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                    Value of: vec![1, 0, 3]
+                    Expected: is a subset of [
+                        1,
+                        2,
+                        3,
+                    ]
+                    Actual: [1, 0, 3],
+                      whose element 0 at #1 is unexpected
+                "
+            ))))
         )
     }
 
@@ -255,21 +250,18 @@ Actual: [
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: vec![0, 0, 3]
-Expected: is a subset of [
-    1,
-    2,
-    3,
-]
-Actual: [
-    0,
-    0,
-    3,
-], whose elements 0 at #0, 0 at #1 are unexpected
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                    Value of: vec![0, 0, 3]
+                    Expected: is a subset of [
+                        1,
+                        2,
+                        3,
+                    ]
+                    Actual: [0, 0, 3],
+                      whose elements 0 at #0, 0 at #1 are unexpected
+                "
+            ))))
         )
     }
 }

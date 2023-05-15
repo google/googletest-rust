@@ -122,9 +122,8 @@ fn has_correct_assertion_failure_message_for_single_field() -> Result<()> {
         err(displays_as(contains_substring(indoc! {"
             Value of: actual
             Expected: has field `a_field`, which is equal to 234
-            Actual: AStruct {
-                a_field: 123,
-            }, which has field `a_field`, which isn't equal to 234
+            Actual: AStruct { a_field: 123 },
+              which has field `a_field`, which isn't equal to 234
             "
         })))
     )
@@ -150,10 +149,7 @@ fn has_correct_assertion_failure_message_for_two_fields() -> Result<()> {
             Expected: has all the following properties:
               * has field `a_field`, which is equal to 234
               * has field `another_field`, which is equal to 123
-            Actual: AStruct {
-                a_field: 123,
-                another_field: 234,
-            }, 
+            Actual: AStruct { a_field: 123, another_field: 234 },
               * which has field `a_field`, which isn't equal to 234
               * which has field `another_field`, which isn't equal to 123"
         ))))
@@ -185,10 +181,7 @@ fn has_correct_assertion_failure_message_for_field_and_property() -> Result<()> 
             Expected: has all the following properties:
               * has property `get_field ()`, which is equal to 234
               * has field `another_field`, which is equal to 123
-            Actual: AStruct {
-                a_field: 123,
-                another_field: 234,
-            }, 
+            Actual: AStruct { a_field: 123, another_field: 234 },
               * whose property `get_field ()` is `123`, which isn't equal to 234
               * which has field `another_field`, which isn't equal to 123"
         ))))

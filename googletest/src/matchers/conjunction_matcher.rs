@@ -46,12 +46,20 @@ impl<T: Debug + ?Sized, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matc
     fn explain_match(&self, actual: &T) -> String {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::Matches, MatcherResult::Matches) => {
-                format!("{} and\n{}", self.m1.explain_match(actual), self.m2.explain_match(actual))
+                format!(
+                    "{} and\n  {}",
+                    self.m1.explain_match(actual),
+                    self.m2.explain_match(actual)
+                )
             }
             (MatcherResult::DoesNotMatch, MatcherResult::Matches) => self.m1.explain_match(actual),
             (MatcherResult::Matches, MatcherResult::DoesNotMatch) => self.m2.explain_match(actual),
             (MatcherResult::DoesNotMatch, MatcherResult::DoesNotMatch) => {
-                format!("{} and\n{}", self.m1.explain_match(actual), self.m2.explain_match(actual))
+                format!(
+                    "{} and\n  {}",
+                    self.m1.explain_match(actual),
+                    self.m2.explain_match(actual)
+                )
             }
         }
     }
@@ -64,6 +72,7 @@ impl<T: Debug + ?Sized, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matc
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
+    use indoc::indoc;
 
     #[test]
     fn and_true_true_matches() -> Result<()> {
@@ -75,11 +84,14 @@ mod tests {
         let result = verify_that!(1, anything().and(not(anything())));
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "Value of: 1\n\
-                Expected: is anything, and never matches\n\
-                Actual: 1, which is anything"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: 1
+                Expected: is anything, and never matches
+                Actual: 1,
+                  which is anything
+                "
+            ))))
         )
     }
 
@@ -88,11 +100,14 @@ mod tests {
         let result = verify_that!(1, not(anything()).and(anything()));
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "Value of: 1\n\
-                Expected: never matches, and is anything\n\
-                Actual: 1, which is anything"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                    Value of: 1
+                    Expected: never matches, and is anything
+                    Actual: 1,
+                      which is anything
+                "
+            ))))
         )
     }
 
@@ -101,12 +116,15 @@ mod tests {
         let result = verify_that!(1, not(anything()).and(not(anything())));
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "Value of: 1\n\
-                Expected: never matches, and never matches\n\
-                Actual: 1, which is anything and\n\
-                which is anything"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: 1
+                Expected: never matches, and never matches
+                Actual: 1,
+                  which is anything and
+                  which is anything
+                "
+            ))))
         )
     }
 

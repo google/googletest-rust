@@ -115,7 +115,7 @@ pub mod internal {
                     if failures.len() == 1 {
                         format!("{}", failures)
                     } else {
-                        format!("\n{}", failures.bullet_list().indent())
+                        format!("{}", failures.bullet_list().indent_except_first_line())
                     }
                 }
             }

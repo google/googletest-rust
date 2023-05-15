@@ -59,6 +59,11 @@ path = "integration_tests/assertion_failure_in_subroutine.rs"
 test = false
 
 [[bin]]
+name = "assertion_failures_with_short_structured_actual_values"
+path = "integration_tests/assertion_failures_with_short_structured_actual_values.rs"
+test = false
+
+[[bin]]
 name = "async_test_with_expect_that"
 path = "integration_tests/async_test_with_expect_that.rs"
 test = false

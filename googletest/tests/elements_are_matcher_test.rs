@@ -58,11 +58,8 @@ fn elements_are_produces_correct_failure_message() -> Result<()> {
                   0. is equal to 1
                   1. is equal to 2
                   2. is equal to 3
-                Actual: [
-                    1,
-                    4,
-                    3,
-                ], where element #1 is 4, which isn't equal to 2"
+                Actual: [1, 4, 3],
+                  where element #1 is 4, which isn't equal to 2"
         ))))
     )
 }
@@ -85,16 +82,8 @@ fn elements_are_produces_correct_failure_message_nested() -> Result<()> {
                   1. has elements:
                        0. is equal to 2
                        1. is equal to 3
-                Actual: [
-                    [
-                        0,
-                        1,
-                    ],
-                    [
-                        1,
-                        2,
-                    ],
-                ], where:
+                Actual: [[0, 1], [1, 2]],
+                  where:
                   * element #0 is [0, 1], where:
                       * element #0 is 0, which isn't equal to 1
                       * element #1 is 1, which isn't equal to 2

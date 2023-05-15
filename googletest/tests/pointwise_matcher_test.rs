@@ -79,11 +79,8 @@ fn pointwise_returns_mismatch_when_actual_value_has_wrong_length() -> Result<()>
             Expected: has elements satisfying respectively:
               0. is equal to 1
               1. is equal to 2
-            Actual: [
-                1,
-                2,
-                3,
-            ], which has size 3 (expected 2)
+            Actual: [1, 2, 3],
+              which has size 3 (expected 2)
             "
         ))))
     )
@@ -102,11 +99,8 @@ fn pointwise_returns_mismatch_when_actual_value_does_not_match_on_first_item() -
               0. is equal to 2
               1. is equal to 2
               2. is equal to 3
-            Actual: [
-                1,
-                2,
-                3,
-            ], where element #0 is 1, which isn't equal to 2
+            Actual: [1, 2, 3],
+              where element #0 is 1, which isn't equal to 2
             "
         ))))
     )
@@ -125,11 +119,8 @@ fn pointwise_returns_mismatch_when_actual_value_does_not_match_on_second_item() 
               0. is equal to 1
               1. is equal to 3
               2. is equal to 3
-            Actual: [
-                1,
-                2,
-                3,
-            ], where element #1 is 2, which isn't equal to 3
+            Actual: [1, 2, 3],
+              where element #1 is 2, which isn't equal to 3
             "
         ))))
     )
@@ -149,11 +140,8 @@ fn pointwise_returns_mismatch_when_actual_value_does_not_match_on_first_and_seco
               0. is equal to 2
               1. is equal to 3
               2. is equal to 3
-            Actual: [
-                1,
-                2,
-                3,
-            ], where:
+            Actual: [1, 2, 3],
+              where:
               * element #0 is 1, which isn't equal to 2
               * element #1 is 2, which isn't equal to 3"
         ))))

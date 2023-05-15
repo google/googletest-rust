@@ -78,6 +78,7 @@ mod tests {
     use super::some;
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
+    use indoc::indoc;
 
     #[test]
     fn some_matches_option_with_value() -> Result<()> {
@@ -111,15 +112,14 @@ mod tests {
         let result = verify_that!(Some(2), some(eq(1)));
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: Some(2)
-Expected: has a value which is equal to 1
-Actual: Some(
-    2,
-), which has a value which isn't equal to 1
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                    Value of: Some(2)
+                    Expected: has a value which is equal to 1
+                    Actual: Some(2),
+                      which has a value which isn't equal to 1
+                "
+            ))))
         )
     }
 

@@ -104,6 +104,7 @@ mod tests {
     use super::gt;
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
+    use indoc::indoc;
     use std::ffi::OsString;
 
     #[test]
@@ -145,12 +146,13 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: 481
-Expected: is greater than 632
-Actual: 481"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: 481
+                Expected: is greater than 632
+                Actual: 481,
+                "
+            ))))
         )
     }
 
@@ -160,17 +162,14 @@ Actual: 481"
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: vec![19, 23, 11]\n\
-Expected: only contains elements that is greater than 15\n\
-Actual: [
-    19,
-    23,
-    11,
-], whose element #2 is 11, which is less than or equal to 15
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: vec![19, 23, 11]
+                Expected: only contains elements that is greater than 15
+                Actual: [19, 23, 11],
+                  whose element #2 is 11, which is less than or equal to 15
+                "
+            ))))
         )
     }
 

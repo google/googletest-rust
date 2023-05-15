@@ -86,6 +86,7 @@ mod tests {
     use super::ok;
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
+    use indoc::indoc;
 
     #[test]
     fn ok_matches_result_with_value() -> Result<()> {
@@ -123,15 +124,14 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: Ok::<i32, i32>(1)
-Expected: is a success containing a value, which is equal to 2
-Actual: Ok(
-    1,
-), which is a success which isn't equal to 2
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                    Value of: Ok::<i32, i32>(1)
+                    Expected: is a success containing a value, which is equal to 2
+                    Actual: Ok(1),
+                      which is a success which isn't equal to 2
+                "
+            ))))
         )
     }
 

@@ -44,8 +44,15 @@ use std::fmt::{Display, Formatter, Result};
 #[derive(Debug)]
 pub struct Description {
     elements: Vec<String>,
-    indented: bool,
+    indent_mode: IndentMode,
     list_style: ListStyle,
+}
+
+#[derive(Debug)]
+enum IndentMode {
+    NoIndent,
+    EveryLine,
+    AllExceptFirstLine,
 }
 
 #[derive(Debug)]
@@ -57,6 +64,7 @@ enum ListStyle {
 
 struct IndentationSizes {
     first_line_indent: usize,
+    first_line_of_element_indent: usize,
     enumeration_padding: usize,
     other_line_indent: usize,
 }
@@ -69,8 +77,9 @@ impl Description {
     ///
     /// This operation will be performed lazily when [`self`] is displayed.
     ///
-    /// Note that this will indent every lines inside each element.
-    /// For instance:
+    /// This will indent every line inside each element.
+    ///
+    /// For example:
     ///
     /// ```
     /// # use googletest::prelude::*;
@@ -80,7 +89,27 @@ impl Description {
     /// # .unwrap();
     /// ```
     pub fn indent(self) -> Self {
-        Self { indented: true, ..self }
+        Self { indent_mode: IndentMode::EveryLine, ..self }
+    }
+
+    /// Indents the lines in elements of this description except for the first
+    /// line.
+    ///
+    /// This is similar to [`Self::indent`] except that the first line is not
+    /// indented. This is useful when the first line has already been indented
+    /// in the output.
+    ///
+    /// For example:
+    ///
+    /// ```
+    /// # use googletest::prelude::*;
+    /// # use googletest::matcher_support::description::Description;
+    /// let description = std::iter::once("A B C\nD E F".to_string()).collect::<Description>();
+    /// verify_that!(description.indent_except_first_line(), displays_as(eq("A B C\n  D E F")))
+    /// # .unwrap();
+    /// ```
+    pub fn indent_except_first_line(self) -> Self {
+        Self { indent_mode: IndentMode::AllExceptFirstLine, ..self }
     }
 
     /// Bullet lists the elements of [`self`].
@@ -134,34 +163,42 @@ impl Description {
     }
 
     fn indentation_sizes(&self) -> IndentationSizes {
-        let first_indent = if self.indented { INDENTATION_SIZE } else { 0 };
+        let first_line_indent =
+            if matches!(self.indent_mode, IndentMode::EveryLine) { INDENTATION_SIZE } else { 0 };
+        let first_line_of_element_indent =
+            if !matches!(self.indent_mode, IndentMode::NoIndent) { INDENTATION_SIZE } else { 0 };
         // Number of digit of the last index. For instance, an array of length 13 will
         // have 12 as last index (we start at 0), which have a digit size of 2.
-        let enumerate_size = if self.elements.len() > 1 {
+        let enumeration_padding = if self.elements.len() > 1 {
             ((self.elements.len() - 1) as f64).log10().floor() as usize + 1
         } else {
             // Avoid negative logarithm when there is only 0 or 1 element.
             1
         };
 
-        let other_indent = first_indent
+        let other_line_indent = first_line_of_element_indent
             + match self.list_style {
                 ListStyle::NoList => 0,
                 ListStyle::Bullet => "* ".len(),
-                ListStyle::Enumerate => enumerate_size + ". ".len(),
+                ListStyle::Enumerate => enumeration_padding + ". ".len(),
             };
         IndentationSizes {
-            first_line_indent: first_indent,
-            enumeration_padding: enumerate_size,
-            other_line_indent: other_indent,
+            first_line_indent,
+            first_line_of_element_indent,
+            enumeration_padding,
+            other_line_indent,
         }
     }
 }
 
 impl Display for Description {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        let IndentationSizes { first_line_indent, enumeration_padding, other_line_indent } =
-            self.indentation_sizes();
+        let IndentationSizes {
+            mut first_line_indent,
+            first_line_of_element_indent,
+            enumeration_padding,
+            other_line_indent,
+        } = self.indentation_sizes();
 
         let mut first = true;
         for (idx, element) in self.elements.iter().enumerate() {
@@ -192,6 +229,7 @@ impl Display for Description {
                 writeln!(f)?;
                 write!(f, "{:other_line_indent$}{line}", "")?;
             }
+            first_line_indent = first_line_of_element_indent;
         }
         Ok(())
     }
@@ -204,7 +242,7 @@ impl FromIterator<String> for Description {
     {
         Self {
             elements: iter.into_iter().collect(),
-            indented: false,
+            indent_mode: IndentMode::NoIndent,
             list_style: ListStyle::NoList,
         }
     }
@@ -245,10 +283,28 @@ mod tests {
     }
 
     #[test]
+    fn description_indent_two_elements_except_first_line() -> Result<()> {
+        let description = ["A B C".to_string(), "D E F".to_string()]
+            .into_iter()
+            .collect::<Description>()
+            .indent_except_first_line();
+        verify_that!(description, displays_as(eq("A B C\n  D E F")))
+    }
+
+    #[test]
     fn description_indent_single_element_two_lines() -> Result<()> {
         let description =
             ["A B C\nD E F".to_string()].into_iter().collect::<Description>().indent();
         verify_that!(description, displays_as(eq("  A B C\n  D E F")))
+    }
+
+    #[test]
+    fn description_indent_single_element_two_lines_except_first_line() -> Result<()> {
+        let description = ["A B C\nD E F".to_string()]
+            .into_iter()
+            .collect::<Description>()
+            .indent_except_first_line();
+        verify_that!(description, displays_as(eq("A B C\n  D E F")))
     }
 
     #[test]
@@ -271,6 +327,26 @@ mod tests {
         let description =
             ["A B C\nD E F".to_string()].into_iter().collect::<Description>().bullet_list();
         verify_that!(description, displays_as(eq("* A B C\n  D E F")))
+    }
+
+    #[test]
+    fn description_bullet_single_element_two_lines_indent_except_first_line() -> Result<()> {
+        let description = ["A B C\nD E F".to_string()]
+            .into_iter()
+            .collect::<Description>()
+            .bullet_list()
+            .indent_except_first_line();
+        verify_that!(description, displays_as(eq("* A B C\n    D E F")))
+    }
+
+    #[test]
+    fn description_bullet_two_elements_indent_except_first_line() -> Result<()> {
+        let description = ["A B C".to_string(), "D E F".to_string()]
+            .into_iter()
+            .collect::<Description>()
+            .bullet_list()
+            .indent_except_first_line();
+        verify_that!(description, displays_as(eq("* A B C\n  * D E F")))
     }
 
     #[test]

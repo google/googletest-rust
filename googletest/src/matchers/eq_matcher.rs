@@ -195,10 +195,8 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc! {
             r#"
-            Actual: Strukt {
-                int: 123,
-                string: "something",
-            }, which isn't equal to Strukt { int: 321, string: "someone" }
+            Actual: Strukt { int: 123, string: "something" },
+              which isn't equal to Strukt { int: 321, string: "someone" }
             Debug diff:
              Strukt {
             +    int: 123,
@@ -219,11 +217,8 @@ mod tests {
             r#"
             Value of: vec![1, 2, 3]
             Expected: is equal to [1, 3, 4]
-            Actual: [
-                1,
-                2,
-                3,
-            ], which isn't equal to [1, 3, 4]
+            Actual: [1, 2, 3],
+              which isn't equal to [1, 3, 4]
             Debug diff:
              [
                  1,
@@ -244,13 +239,8 @@ mod tests {
             r#"
             Value of: vec![1, 2, 3, 4, 5]
             Expected: is equal to [1, 3, 5]
-            Actual: [
-                1,
-                2,
-                3,
-                4,
-                5,
-            ], which isn't equal to [1, 3, 5]
+            Actual: [1, 2, 3, 4, 5],
+              which isn't equal to [1, 3, 5]
             Debug diff:
              [
                  1,
@@ -274,7 +264,8 @@ mod tests {
             r#"
             Value of: "One\nTwo\nThree"
             Expected: is equal to "One\nSix\nThree"
-            Actual: "One\nTwo\nThree", which isn't equal to "One\nSix\nThree"
+            Actual: "One\nTwo\nThree",
+              which isn't equal to "One\nSix\nThree"
             "#})))
         )
     }

@@ -197,6 +197,10 @@ pub trait Matcher {
     }
 }
 
+/// Any actual value whose debug length is greater than this value will be
+/// pretty-printed. Otherwise, it will have normal debug output formatting.
+const PRETTY_PRINT_LENGTH_THRESHOLD: usize = 60;
+
 /// Constructs a [`TestAssertionFailure`] reporting that the given `matcher`
 /// does not match the value `actual`.
 ///
@@ -208,16 +212,21 @@ pub(crate) fn create_assertion_failure<T: Debug + ?Sized>(
     actual_expr: &'static str,
     source_location: SourceLocation,
 ) -> TestAssertionFailure {
+    let actual_formatted = format!("{actual:?}");
+    let actual_formatted = if actual_formatted.len() > PRETTY_PRINT_LENGTH_THRESHOLD {
+        format!("{actual:#?}")
+    } else {
+        actual_formatted
+    };
     TestAssertionFailure::create(format!(
-        "Value of: {}\n\
-             Expected: {}\n\
-             Actual: {:#?}, {}\n\
-             {}",
-        actual_expr,
+        "\
+Value of: {actual_expr}
+Expected: {}
+Actual: {actual_formatted},
+  {}
+{source_location}",
         matcher.describe(MatcherResult::Matches),
-        actual,
         matcher.explain_match(actual),
-        source_location,
     ))
 }
 

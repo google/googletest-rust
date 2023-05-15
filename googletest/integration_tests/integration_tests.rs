@@ -76,7 +76,8 @@ mod tests {
             contains_regex(indoc! {"
                 Value of: value
                 Expected: is equal to 3
-                Actual: 2, which isn't equal to 3
+                Actual: 2,
+                  which isn't equal to 3
                   at .*googletest/integration_tests/simple_assertion_failure.rs:[0-9]+:9"})
         )
     }
@@ -91,7 +92,8 @@ mod tests {
             contains_regex(indoc! {"
                 Value of: value
                 Expected: is equal to 3
-                Actual: 2, which isn't equal to 3
+                Actual: 2,
+                  which isn't equal to 3
                   at .*googletest/integration_tests/simple_assertion_failure_with_assert_that.rs:[0-9]+:9
                 "})
         )
@@ -106,7 +108,8 @@ mod tests {
             contains_regex(indoc! {"
                 Value of: value
                 Expected: is equal to 3
-                Actual: 2, which isn't equal to 3
+                Actual: 2,
+                  which isn't equal to 3
                   at .*googletest/integration_tests/expect_that_failure.rs:[0-9]+:9
                 "})
         )
@@ -122,10 +125,47 @@ mod tests {
             contains_regex(indoc! {"
                 Value of: value
                 Expected: is equal to 4
-                Actual: 2, which isn't equal to 4
+                Actual: 2,
+                  which isn't equal to 4
                   at .*googletest/integration_tests/two_expect_that_failures.rs:[0-9]+:9
                 "})
         )
+    }
+
+    #[googletest::test]
+    fn should_output_failure_message_with_simple_structured_value() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "assertion_failures_with_short_structured_actual_values",
+        )?;
+
+        expect_that!(
+            output,
+            contains_substring(indoc! {"
+                Value of: Some(1)
+                Expected: has a value which is equal to 2
+                Actual: Some(1),
+                  which has a value which isn't equal to 2
+            "})
+        );
+        expect_that!(
+            output,
+            contains_substring(indoc! {"
+                Value of: value
+                Expected: is a success containing a value, which is equal to 2
+                Actual: Ok(1),
+                  which is a success which isn't equal to 2
+            "})
+        );
+        expect_that!(
+            output,
+            contains_substring(indoc! {"
+                Value of: value
+                Expected: is an error which is equal to 2
+                Actual: Err(1),
+                  which is an error which isn't equal to 2
+            "})
+        );
+        Ok(())
     }
 
     #[test]
@@ -158,11 +198,13 @@ mod tests {
             all!(
                 contains_substring(indoc! {"
                     Expected: is equal to 3
-                    Actual: 2, which isn't equal to 3
+                    Actual: 2,
+                      which isn't equal to 3
                     "}),
                 contains_substring(indoc! {"
                     Expected: is equal to 4
-                    Actual: 2, which isn't equal to 4
+                    Actual: 2,
+                      which isn't equal to 4
                     "})
             )
         )
@@ -176,7 +218,8 @@ mod tests {
             output,
             not(contains_substring(indoc! {"
                 Expected: is equal to 4
-                Actual: 2, which isn't equal to 4
+                Actual: 2,
+                  which isn't equal to 4
                 "}))
         )
     }
@@ -189,7 +232,8 @@ mod tests {
             output,
             contains_substring(indoc! {"
                 Expected: is equal to 3
-                Actual: 2, which isn't equal to 3
+                Actual: 2,
+                  which isn't equal to 3
                 "})
         )
     }
@@ -424,7 +468,8 @@ mod tests {
             contains_substring(indoc! {"
                 Value of: 1
                 Expected: is equal to 2
-                Actual: 1, which isn't equal to 2
+                Actual: 1,
+                  which isn't equal to 2
                 "})
         )
     }
@@ -435,23 +480,23 @@ mod tests {
     }
 
     #[test]
-    fn failure_message_uses_pretty_print_for_actual_value() -> Result<()> {
+    fn failure_message_uses_pretty_print_for_actual_value_when_long_enough() -> Result<()> {
         #[derive(Debug)]
         #[allow(unused)]
         struct NontrivialStruct {
-            a: i32,
-            b: i32,
+            a: &'static str,
+            b: &'static str,
         }
-        let value = NontrivialStruct { a: 1, b: 2 };
+        let value = NontrivialStruct { a: "A long enough string", b: "Another long enough string" };
         let failed_assertion_result = verify_that!(value, not(anything()));
 
         verify_that!(
             failed_assertion_result,
-            err(displays_as(contains_substring(indoc! {"
+            err(displays_as(contains_substring(indoc! {r#"
                 Actual: NontrivialStruct {
-                    a: 1,
-                    b: 2,
-                }"})))
+                    a: "A long enough string",
+                    b: "Another long enough string",
+                }"#})))
         )
     }
 

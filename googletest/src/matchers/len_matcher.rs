@@ -203,12 +203,8 @@ mod tests {
                 "
                 Value of: vec![1, 2, 3, 4]
                 Expected: has size, which is equal to 3
-                Actual: [
-                    1,
-                    2,
-                    3,
-                    4,
-                ], which has size 4, which isn't equal to 3"
+                Actual: [1, 2, 3, 4],
+                  which has size 4, which isn't equal to 3"
             ))))
         )
     }

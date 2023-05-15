@@ -54,7 +54,7 @@ fn mismatch_description_two_failed_matchers() -> Result<()> {
     verify_that!(
         all!(starts_with("One"), starts_with("Two")).explain_match("Three"),
         displays_as(eq(
-            "\n  * which does not start with \"One\"\n  * which does not start with \"Two\""
+            "* which does not start with \"One\"\n  * which does not start with \"Two\""
         ))
     )
 }
@@ -76,7 +76,7 @@ fn all_multiple_failed_assertions() -> Result<()> {
               * is equal to 1
               * is equal to 2
               * is equal to 3
-            Actual: 4, 
+            Actual: 4,
               * which isn't equal to 1
               * which isn't equal to 2
               * which isn't equal to 3"

@@ -132,11 +132,8 @@ fn unordered_elements_are_description_mismatch() -> Result<()> {
               0. is equal to 1
               1. is equal to 2
               2. is equal to 3
-            Actual: [
-                1,
-                4,
-                3,
-            ], whose element #1 does not match any expected elements and no elements match the expected element #1"
+            Actual: [1, 4, 3],
+              whose element #1 does not match any expected elements and no elements match the expected element #1"
             ))))
     )
 }

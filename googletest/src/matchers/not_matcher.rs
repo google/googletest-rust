@@ -69,6 +69,7 @@ mod tests {
     use super::not;
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
+    use indoc::indoc;
 
     #[test]
     fn matches_when_inner_matcher_does_not_match() -> Result<()> {
@@ -94,13 +95,12 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Actual: [
-    1,
-], which contains all the elements
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Actual: [1],
+                  which contains all the elements
+                "
+            ))))
         )
     }
 }

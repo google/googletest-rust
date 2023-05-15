@@ -72,6 +72,7 @@ where
 mod tests {
     use super::points_to;
     use crate::prelude::*;
+    use indoc::indoc;
     use std::rc::Rc;
 
     #[test]
@@ -95,13 +96,12 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Actual: [
-    1,
-], which contains the unexpected element 1
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                    Actual: [1],
+                      which contains the unexpected element 1
+                "
+            ))))
         )
     }
 }

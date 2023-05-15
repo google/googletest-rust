@@ -121,6 +121,7 @@ impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ActualT = ValueT>
 mod tests {
     use super::has_entry;
     use crate::prelude::*;
+    use indoc::indoc;
     use std::collections::HashMap;
 
     #[test]
@@ -153,15 +154,14 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: HashMap::from([(0, 0)])
-Expected: contains key 1, which value is equal to 0
-Actual: {
-    0: 0,
-}, which doesn't contain key 1
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: HashMap::from([(0, 0)])
+                Expected: contains key 1, which value is equal to 0
+                Actual: {0: 0},
+                  which doesn't contain key 1
+                "
+            ))))
         )
     }
 
@@ -171,15 +171,14 @@ Actual: {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: HashMap::from([(0, 0)])
-Expected: contains key 0, which value is equal to 1
-Actual: {
-    0: 0,
-}, which contains key 0, but is mapped to value 0, which isn't equal to 1
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: HashMap::from([(0, 0)])
+                Expected: contains key 0, which value is equal to 1
+                Actual: {0: 0},
+                  which contains key 0, but is mapped to value 0, which isn't equal to 1
+                "
+            ))))
         )
     }
 }

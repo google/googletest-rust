@@ -104,6 +104,7 @@ mod tests {
     use super::le;
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
+    use indoc::indoc;
     use std::ffi::OsString;
 
     #[test]
@@ -139,11 +140,14 @@ mod tests {
 
         verify_that!(
             formatted_message.as_str(),
-            contains_substring(
-                "Value of: 489\n\
-                Expected: is less than or equal to 294\n\
-                Actual: 489, which is greater than 294"
-            )
+            contains_substring(indoc!(
+                "
+                Value of: 489
+                Expected: is less than or equal to 294
+                Actual: 489,
+                  which is greater than 294
+                "
+            ))
         )
     }
 

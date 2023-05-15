@@ -182,6 +182,7 @@ mod tests {
     use super::container_eq;
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
+    use indoc::indoc;
     use std::collections::HashSet;
 
     #[test]
@@ -206,17 +207,14 @@ mod tests {
         let result = verify_that!(vec![1, 3, 2], container_eq(vec![1, 2, 3]));
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: vec![1, 3, 2]
-Expected: is equal to [1, 2, 3]
-Actual: [
-    1,
-    3,
-    2,
-], which contains all the elements
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                    Value of: vec![1, 3, 2]
+                    Expected: is equal to [1, 2, 3]
+                    Actual: [1, 3, 2],
+                      which contains all the elements
+                "
+            ))))
         )
     }
 

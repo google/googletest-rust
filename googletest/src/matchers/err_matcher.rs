@@ -83,6 +83,7 @@ mod tests {
     use super::err;
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
+    use indoc::indoc;
 
     #[test]
     fn err_matches_result_with_err_value() -> Result<()> {
@@ -120,15 +121,14 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "\
-Value of: Err::<i32, i32>(1)
-Expected: is an error which is equal to 2
-Actual: Err(
-    1,
-), which is an error which isn't equal to 2
-"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                    Value of: Err::<i32, i32>(1)
+                    Expected: is an error which is equal to 2
+                    Actual: Err(1),
+                      which is an error which isn't equal to 2
+                "
+            ))))
         )
     }
 
