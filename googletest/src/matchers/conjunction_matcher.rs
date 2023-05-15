@@ -15,7 +15,7 @@
 use crate::matcher::{Matcher, MatcherResult};
 use std::{fmt::Debug, marker::PhantomData};
 
-/// Matcher created by [`AndMatcherExt::and`].
+/// Matcher created by [`Matcher::and`].
 ///
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
