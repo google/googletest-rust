@@ -54,7 +54,7 @@
 macro_rules! all {
     ($($matcher:expr),* $(,)?) => {{
         use $crate::matchers::all_matcher::internal::AllMatcher;
-        AllMatcher::new([$(&$matcher),*])
+        AllMatcher::new([$(Box::new($matcher)),*])
     }}
 }
 
@@ -73,24 +73,24 @@ pub mod internal {
     ///
     /// For internal use only. API stablility is not guaranteed!
     #[doc(hidden)]
-    pub struct AllMatcher<'a, T: Debug + ?Sized, const N: usize> {
-        components: [&'a dyn Matcher<ActualT = T>; N],
+    pub struct AllMatcher<T: Debug + ?Sized, const N: usize> {
+        components: [Box<dyn Matcher<ActualT = T>>; N],
     }
 
-    impl<'a, T: Debug + ?Sized, const N: usize> AllMatcher<'a, T, N> {
+    impl<T: Debug + ?Sized, const N: usize> AllMatcher<T, N> {
         /// Constructs an [`AllMatcher`] with the given component matchers.
         ///
         /// Intended for use only by the [`all`] macro.
-        pub fn new(components: [&'a dyn Matcher<ActualT = T>; N]) -> Self {
+        pub fn new(components: [Box<dyn Matcher<ActualT = T>>; N]) -> Self {
             Self { components }
         }
     }
 
-    impl<'a, T: Debug + ?Sized, const N: usize> Matcher for AllMatcher<'a, T, N> {
+    impl<T: Debug + ?Sized, const N: usize> Matcher for AllMatcher<T, N> {
         type ActualT = T;
 
         fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
-            for component in self.components {
+            for component in &self.components {
                 match component.matches(actual) {
                     MatcherResult::DoesNotMatch => {
                         return MatcherResult::DoesNotMatch;
