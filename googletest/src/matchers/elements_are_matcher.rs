@@ -72,24 +72,24 @@ pub mod internal {
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub struct ElementsAre<ContainerT: ?Sized, T: Debug> {
-        elements: Vec<Box<dyn Matcher<ActualT = T>>>,
+    pub struct ElementsAre<'a, ContainerT: ?Sized, T: Debug> {
+        elements: Vec<Box<dyn Matcher<ActualT = T> + 'a>>,
         phantom: PhantomData<ContainerT>,
     }
 
-    impl<ContainerT: ?Sized, T: Debug> ElementsAre<ContainerT, T> {
+    impl<'a, ContainerT: ?Sized, T: Debug> ElementsAre<'a, ContainerT, T> {
         /// Factory only intended for use in the macro `elements_are!`.
         ///
         /// **For internal use only. API stablility is not guaranteed!**
         #[doc(hidden)]
-        pub fn new(elements: Vec<Box<dyn Matcher<ActualT = T>>>) -> Self {
+        pub fn new(elements: Vec<Box<dyn Matcher<ActualT = T> + 'a>>) -> Self {
             Self { elements, phantom: Default::default() }
         }
     }
 
-    impl<T: Debug, ContainerT: Debug + ?Sized> Matcher for ElementsAre<ContainerT, T>
+    impl<'a, T: Debug, ContainerT: Debug + ?Sized> Matcher for ElementsAre<'a, ContainerT, T>
     where
-        for<'a> &'a ContainerT: IntoIterator<Item = &'a T>,
+        for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
     {
         type ActualT = ContainerT;
 

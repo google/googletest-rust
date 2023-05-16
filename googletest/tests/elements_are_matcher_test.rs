@@ -47,6 +47,14 @@ fn elements_are_returns_no_match_when_expected_and_actual_sizes_differ() -> Resu
 }
 
 #[test]
+fn elements_are_admits_matchers_without_static_lifetime() -> Result<()> {
+    #[derive(Debug, PartialEq)]
+    struct AStruct(i32);
+    let expected_value = AStruct(123);
+    verify_that!(vec![AStruct(123)], elements_are![eq_deref_of(&expected_value)])
+}
+
+#[test]
 fn elements_are_produces_correct_failure_message() -> Result<()> {
     let result = verify_that!(vec![1, 4, 3], elements_are![eq(1), eq(2), eq(3)]);
     verify_that!(

@@ -44,8 +44,7 @@ fn unordered_elements_are_matches_slice() -> Result<()> {
 
 #[test]
 fn unordered_elements_are_matches_hash_map() -> Result<()> {
-    let value: HashMap<u32, &'static str> =
-        HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
+    let value: HashMap<u32, &'static str> = HashMap::from([(1, "One"), (2, "Two"), (3, "Three")]);
     verify_that!(
         value,
         unordered_elements_are![(eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three"))]
@@ -54,8 +53,7 @@ fn unordered_elements_are_matches_hash_map() -> Result<()> {
 
 #[test]
 fn unordered_elements_are_matches_hash_map_with_trailing_comma() -> Result<()> {
-    let value: HashMap<u32, &'static str> =
-        HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
+    let value: HashMap<u32, &'static str> = HashMap::from([(1, "One"), (2, "Two"), (3, "Three")]);
     verify_that!(
         value,
         unordered_elements_are![(eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three")),]
@@ -64,8 +62,7 @@ fn unordered_elements_are_matches_hash_map_with_trailing_comma() -> Result<()> {
 
 #[test]
 fn unordered_elements_are_does_not_match_hash_map_with_wrong_key() -> Result<()> {
-    let value: HashMap<u32, &'static str> =
-        HashMap::from_iter([(1, "One"), (2, "Two"), (4, "Three")]);
+    let value: HashMap<u32, &'static str> = HashMap::from([(1, "One"), (2, "Two"), (4, "Three")]);
     verify_that!(
         value,
         not(unordered_elements_are![(eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three"))])
@@ -74,8 +71,7 @@ fn unordered_elements_are_does_not_match_hash_map_with_wrong_key() -> Result<()>
 
 #[test]
 fn unordered_elements_are_does_not_match_hash_map_with_wrong_value() -> Result<()> {
-    let value: HashMap<u32, &'static str> =
-        HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Four")]);
+    let value: HashMap<u32, &'static str> = HashMap::from([(1, "One"), (2, "Two"), (3, "Four")]);
     verify_that!(
         value,
         not(unordered_elements_are![(eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three"))])
@@ -84,7 +80,7 @@ fn unordered_elements_are_does_not_match_hash_map_with_wrong_value() -> Result<(
 
 #[test]
 fn unordered_elements_are_does_not_match_hash_map_missing_element() -> Result<()> {
-    let value: HashMap<u32, &'static str> = HashMap::from_iter([(1, "One"), (2, "Two")]);
+    let value: HashMap<u32, &'static str> = HashMap::from([(1, "One"), (2, "Two")]);
     verify_that!(
         value,
         not(unordered_elements_are![(eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three"))])
@@ -93,15 +89,13 @@ fn unordered_elements_are_does_not_match_hash_map_missing_element() -> Result<()
 
 #[test]
 fn unordered_elements_are_does_not_match_hash_map_with_extra_element() -> Result<()> {
-    let value: HashMap<u32, &'static str> =
-        HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
+    let value: HashMap<u32, &'static str> = HashMap::from([(1, "One"), (2, "Two"), (3, "Three")]);
     verify_that!(value, not(unordered_elements_are![(eq(2), eq("Two")), (eq(1), eq("One"))]))
 }
 
 #[test]
 fn unordered_elements_are_does_not_match_hash_map_with_mismatched_key_and_value() -> Result<()> {
-    let value: HashMap<u32, &'static str> =
-        HashMap::from_iter([(1, "One"), (2, "Three"), (3, "Two")]);
+    let value: HashMap<u32, &'static str> = HashMap::from([(1, "One"), (2, "Three"), (3, "Two")]);
     verify_that!(
         value,
         not(unordered_elements_are![(eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three"))])
@@ -118,6 +112,25 @@ fn unordered_elements_are_matches_vector_with_trailing_comma() -> Result<()> {
 fn unordered_elements_are_matches_size() -> Result<()> {
     let value = vec![1, 2];
     verify_that!(value, not(unordered_elements_are![eq(1), eq(2), eq(3)]))
+}
+
+#[test]
+fn unordered_elements_are_admits_matchers_without_static_lifetime() -> Result<()> {
+    #[derive(Debug, PartialEq)]
+    struct AStruct(i32);
+    let expected_value = AStruct(123);
+    verify_that!(vec![AStruct(123)], unordered_elements_are![eq_deref_of(&expected_value)])
+}
+
+#[test]
+fn unordered_elements_are_with_map_admits_matchers_without_static_lifetime() -> Result<()> {
+    #[derive(Debug, PartialEq)]
+    struct AStruct(i32);
+    let expected_value = AStruct(123);
+    verify_that!(
+        HashMap::from([(1, AStruct(123))]),
+        unordered_elements_are![(eq(1), eq_deref_of(&expected_value))]
+    )
 }
 
 #[test]
@@ -219,15 +232,13 @@ fn contains_each_supports_trailing_comma() -> Result<()> {
 
 #[test]
 fn contains_each_matches_hash_map() -> Result<()> {
-    let value: HashMap<u32, &'static str> =
-        HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
+    let value: HashMap<u32, &'static str> = HashMap::from([(1, "One"), (2, "Two"), (3, "Three")]);
     verify_that!(value, contains_each![(eq(2), eq("Two")), (eq(1), eq("One"))])
 }
 
 #[test]
 fn contains_each_matches_hash_map_with_trailing_comma() -> Result<()> {
-    let value: HashMap<u32, &'static str> =
-        HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
+    let value: HashMap<u32, &'static str> = HashMap::from([(1, "One"), (2, "Two"), (3, "Three")]);
     verify_that!(value, contains_each![(eq(2), eq("Two")), (eq(1), eq("One")),])
 }
 
@@ -317,7 +328,7 @@ fn is_contained_supports_trailing_comma() -> Result<()> {
 
 #[test]
 fn is_contained_in_matches_hash_map() -> Result<()> {
-    let value: HashMap<u32, &'static str> = HashMap::from_iter([(1, "One"), (2, "Two")]);
+    let value: HashMap<u32, &'static str> = HashMap::from([(1, "One"), (2, "Two")]);
     verify_that!(
         value,
         is_contained_in![(eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three"))]
@@ -326,7 +337,7 @@ fn is_contained_in_matches_hash_map() -> Result<()> {
 
 #[test]
 fn is_contained_in_matches_hash_map_with_trailing_comma() -> Result<()> {
-    let value: HashMap<u32, &'static str> = HashMap::from_iter([(1, "One"), (2, "Two")]);
+    let value: HashMap<u32, &'static str> = HashMap::from([(1, "One"), (2, "Two")]);
     verify_that!(
         value,
         is_contained_in![(eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three")),]

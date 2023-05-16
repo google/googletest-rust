@@ -50,6 +50,14 @@ fn supports_trailing_comma() -> Result<()> {
 }
 
 #[test]
+fn admits_matchers_without_static_lifetime() -> Result<()> {
+    #[derive(Debug, PartialEq)]
+    struct AStruct(i32);
+    let expected_value = AStruct(123);
+    verify_that!(AStruct(123), all![eq_deref_of(&expected_value)])
+}
+
+#[test]
 fn mismatch_description_two_failed_matchers() -> Result<()> {
     verify_that!(
         all!(starts_with("One"), starts_with("Two")).explain_match("Three"),
