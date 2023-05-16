@@ -13,30 +13,30 @@
 // limitations under the License.
 
 use crate::matcher::{Matcher, MatcherResult};
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matcher created by [`Matcher::or`].
 ///
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
-pub struct DisjunctionMatcher<T: ?Sized, M1, M2> {
+pub struct DisjunctionMatcher<M1, M2> {
     m1: M1,
     m2: M2,
-    phantom: PhantomData<T>,
 }
 
-impl<T: ?Sized, M1, M2> DisjunctionMatcher<T, M1, M2> {
+impl<M1, M2> DisjunctionMatcher<M1, M2> {
     pub(crate) fn new(m1: M1, m2: M2) -> Self {
-        Self { m1, m2, phantom: Default::default() }
+        Self { m1, m2 }
     }
 }
 
-impl<T: Debug + ?Sized, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matcher
-    for DisjunctionMatcher<T, M1, M2>
+impl<M1: Matcher, M2: Matcher<ActualT = M1::ActualT>> Matcher for DisjunctionMatcher<M1, M2>
+where
+    M1::ActualT: Debug,
 {
-    type ActualT = T;
+    type ActualT = M1::ActualT;
 
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches(&self, actual: &M1::ActualT) -> MatcherResult {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::DoesNotMatch, MatcherResult::DoesNotMatch) => {
                 MatcherResult::DoesNotMatch
@@ -45,7 +45,7 @@ impl<T: Debug + ?Sized, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matc
         }
     }
 
-    fn explain_match(&self, actual: &T) -> String {
+    fn explain_match(&self, actual: &M1::ActualT) -> String {
         format!("{} and\n  {}", self.m1.explain_match(actual), self.m2.explain_match(actual))
     }
 

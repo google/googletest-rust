@@ -159,7 +159,7 @@ pub trait Matcher {
     fn and<Right: Matcher<ActualT = Self::ActualT>>(
         self,
         right: Right,
-    ) -> ConjunctionMatcher<Self::ActualT, Self, Right>
+    ) -> ConjunctionMatcher<Self, Right>
     where
         Self: Sized,
     {
@@ -189,7 +189,7 @@ pub trait Matcher {
     fn or<Right: Matcher<ActualT = Self::ActualT>>(
         self,
         right: Right,
-    ) -> DisjunctionMatcher<Self::ActualT, Self, Right>
+    ) -> DisjunctionMatcher<Self, Right>
     where
         Self: Sized,
     {

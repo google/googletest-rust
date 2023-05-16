@@ -13,37 +13,37 @@
 // limitations under the License.
 
 use crate::matcher::{Matcher, MatcherResult};
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matcher created by [`Matcher::and`].
 ///
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
-pub struct ConjunctionMatcher<T: ?Sized, M1, M2> {
+pub struct ConjunctionMatcher<M1, M2> {
     m1: M1,
     m2: M2,
-    phantom: PhantomData<T>,
 }
 
-impl<T: ?Sized, M1, M2> ConjunctionMatcher<T, M1, M2> {
+impl<M1, M2> ConjunctionMatcher<M1, M2> {
     pub(crate) fn new(m1: M1, m2: M2) -> Self {
-        Self { m1, m2, phantom: Default::default() }
+        Self { m1, m2 }
     }
 }
 
-impl<T: Debug + ?Sized, M1: Matcher<ActualT = T>, M2: Matcher<ActualT = T>> Matcher
-    for ConjunctionMatcher<T, M1, M2>
+impl<M1: Matcher, M2: Matcher<ActualT = M1::ActualT>> Matcher for ConjunctionMatcher<M1, M2>
+where
+    M1::ActualT: Debug,
 {
-    type ActualT = T;
+    type ActualT = M1::ActualT;
 
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches(&self, actual: &M1::ActualT) -> MatcherResult {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::Matches, MatcherResult::Matches) => MatcherResult::Matches,
             _ => MatcherResult::DoesNotMatch,
         }
     }
 
-    fn explain_match(&self, actual: &T) -> String {
+    fn explain_match(&self, actual: &M1::ActualT) -> String {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::Matches, MatcherResult::Matches) => {
                 format!(
