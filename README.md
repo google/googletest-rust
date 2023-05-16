@@ -28,8 +28,8 @@ This library brings the rich assertion types of Google's C++ testing library
 **The minimum supported Rust version is 1.59**. We recommend using at least
 version 1.66 for the best developer experience.
 
-> :warning: The API is not fully stable and may still be changed until we
-> publish version 1.0.
+Warning: The API is not fully stable and may still be changed until we publish
+version 1.0.
 
 ## Assertions and matchers
 
