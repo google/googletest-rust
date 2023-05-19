@@ -95,15 +95,27 @@ impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher for EqMatcher<A, T> {
     }
 
     fn explain_match(&self, actual: &A) -> String {
-        format!(
-            "which {}{}",
-            &self.describe(self.matches(actual)),
+        let expected_debug = format!("{:#?}", self.expected);
+        let actual_debug = format!("{:#?}", actual);
+        let description = self.describe(self.matches(actual));
+
+        let diff = if is_multiline_string_debug(&actual_debug)
+            && is_multiline_string_debug(&expected_debug)
+        {
             create_diff(
-                &format!("{:#?}", self.expected),
-                &format!("{:#?}", actual),
+                // The two calls below return None if and only if the strings expected_debug
+                // respectively actual_debug are not enclosed in ". The calls to
+                // is_multiline_string_debug above ensure that they are. So the calls cannot
+                // actually return None and unwrap() should not panic.
+                &to_display_output(&expected_debug).unwrap(),
+                &to_display_output(&actual_debug).unwrap(),
                 edit_distance::Mode::FullMatch,
             )
-        )
+        } else {
+            create_diff(&expected_debug, &actual_debug, edit_distance::Mode::FullMatch)
+        };
+
+        format!("which {description}{diff}")
     }
 }
 
@@ -153,6 +165,17 @@ fn edit_list_summary(edit_list: &[edit_distance::Edit<&str>]) -> String {
         }
     }
     summary
+}
+
+fn is_multiline_string_debug(string: &str) -> bool {
+    string.starts_with('"')
+        && string.ends_with('"')
+        && !string.contains('\n')
+        && string.contains("\\n")
+}
+
+fn to_display_output(string: &str) -> Option<String> {
+    Some(string.strip_prefix('"')?.strip_suffix('"')?.split("\\n").collect::<Vec<_>>().join("\n"))
 }
 
 #[cfg(test)]
@@ -272,5 +295,69 @@ mod tests {
               which isn't equal to "One\nSix\nThree"
             "#})))
         )
+    }
+
+    #[test]
+    fn match_explanation_contains_diff_of_strings_if_more_than_one_line() -> Result<()> {
+        let result = verify_that!(
+            indoc!(
+                "
+                    First line
+                    Second line
+                    Third line
+                "
+            ),
+            eq(indoc!(
+                "
+                    First line
+                    Second lines
+                    Third line
+                "
+            ))
+        );
+
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc!(
+                r#"
+                     First line
+                    +Second line
+                    -Second lines
+                     Third line
+                "#
+            ))))
+        )
+    }
+
+    #[test]
+    fn match_explanation_does_not_show_diff_if_actual_value_is_single_line() -> Result<()> {
+        let result = verify_that!(
+            "First line",
+            eq(indoc!(
+                "
+                    First line
+                    Second line
+                    Third line
+                "
+            ))
+        );
+
+        verify_that!(result, err(displays_as(not(contains_substring("Difference:")))))
+    }
+
+    #[test]
+    fn match_explanation_does_not_show_diff_if_expected_value_is_single_line() -> Result<()> {
+        let result = verify_that!(
+            indoc!(
+                "
+                    First line
+                    Second line
+                    Third line
+                "
+            ),
+            eq("First line")
+        );
+
+        verify_that!(result, err(displays_as(not(contains_substring("Difference:")))))
     }
 }
