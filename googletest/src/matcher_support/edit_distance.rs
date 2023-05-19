@@ -21,7 +21,7 @@ use std::ops::Index;
 pub(crate) fn edit_list<T: Distance + Copy>(
     left: impl IntoIterator<Item = T>,
     right: impl IntoIterator<Item = T>,
-    configuration: Configuration,
+    mode: Mode,
 ) -> Vec<Edit<T>> {
     let left: Vec<_> = left.into_iter().collect();
     let right: Vec<_> = right.into_iter().collect();
@@ -38,18 +38,18 @@ pub(crate) fn edit_list<T: Distance + Copy>(
         last_edit: Edit::ExtraLeft { left: left[0] },
     });
 
-    // The configuration changes how the beginning and the end of left is consumed.
+    // The mode changes how the beginning and the end of left is consumed.
     // EndsWith and Contains makes the consumption of elements of left before the
     // first element of right is consumed free. In the implementation, this leads
     // to table[(_, 0)] == 0.
     // StartsWith and Contains makes the consumption of character of left after the
     // last element of right is consumed free. In the implementation, this leads to
     // ExtraLeft being free when computing table[(_, right.len())].
-    let (free_start, free_end) = match configuration {
-        Configuration::FullMatch => (false, false),
-        Configuration::StartsWith => (false, true),
-        Configuration::EndsWith => (true, false),
-        Configuration::Contains => (true, true),
+    let (free_start, free_end) = match mode {
+        Mode::FullMatch => (false, false),
+        Mode::StartsWith => (false, true),
+        Mode::EndsWith => (true, false),
+        Mode::Contains => (true, true),
     };
 
     for idx in 1..(left.len() + 1) {
@@ -106,7 +106,7 @@ pub(crate) fn edit_list<T: Distance + Copy>(
 
 /// Controls how `right` should match `left`.
 #[allow(dead_code)]
-pub(crate) enum Configuration {
+pub(crate) enum Mode {
     /// `right` is fully matching `left`
     FullMatch,
     /// `right` should match the beginning of `left`
@@ -157,7 +157,7 @@ impl Distance for &str {
         if left == right {
             return 0.0;
         }
-        let edits: f64 = edit_list(left.chars(), right.chars(), Configuration::FullMatch)
+        let edits: f64 = edit_list(left.chars(), right.chars(), Mode::FullMatch)
             .into_iter()
             .map(|edit| match edit {
                 Edit::Both { distance, .. } => distance,
@@ -211,7 +211,7 @@ mod tests {
     use crate::elements_are;
     use crate::{matcher::Matcher, matchers::predicate, verify_that, Result};
     use indoc::indoc;
-    use Configuration::*;
+    use Mode::*;
 
     fn is_both<E: PartialEq + Debug>(
         l_expected: E,

@@ -112,7 +112,7 @@ pub(super) fn create_diff(expected_debug: &str, actual_debug: &str, description:
     let edit_list = edit_distance::edit_list(
         actual_debug.lines(),
         expected_debug.lines(),
-        edit_distance::Configuration::FullMatch,
+        edit_distance::Mode::FullMatch,
     );
 
     if edit_list.is_empty() {
