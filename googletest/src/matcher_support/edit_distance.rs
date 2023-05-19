@@ -105,15 +105,17 @@ pub(crate) fn edit_list<T: Distance + Copy>(
 }
 
 /// Controls how `right` should match `left`.
-#[allow(dead_code)]
 pub(crate) enum Mode {
     /// `right` is fully matching `left`
     FullMatch,
     /// `right` should match the beginning of `left`
+    #[allow(unused)]
     StartsWith,
     /// `right` should match the end of `left`
+    #[allow(unused)]
     EndsWith,
     /// `right` should be contained in `left`
+    #[allow(unused)]
     Contains,
 }
 

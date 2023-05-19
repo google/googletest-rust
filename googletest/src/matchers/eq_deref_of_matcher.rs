@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
-use crate::matchers::eq_matcher::create_diff;
+use crate::{
+    matcher::{Matcher, MatcherResult},
+    matcher_support::edit_distance,
+    matchers::eq_matcher::create_diff,
+};
 use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
 /// Matches a value equal (in the sense of `==`) to the dereferenced value of
@@ -82,10 +85,14 @@ where
     }
 
     fn explain_match(&self, actual: &ActualT) -> String {
-        create_diff(
-            &format!("{:#?}", self.expected.deref()),
-            &format!("{:#?}", actual),
+        format!(
+            "which {}{}",
             &self.describe(self.matches(actual)),
+            create_diff(
+                &format!("{:#?}", self.expected.deref()),
+                &format!("{:#?}", actual),
+                edit_distance::Mode::FullMatch,
+            )
         )
     }
 }
@@ -132,7 +139,7 @@ mod tests {
             r#"
             Actual: Strukt { int: 123, string: "something" },
               which isn't equal to Strukt { int: 321, string: "someone" }
-            Debug diff:
+            Difference:
              Strukt {
             +    int: 123,
             -    int: 321,

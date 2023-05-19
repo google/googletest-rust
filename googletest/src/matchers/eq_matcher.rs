@@ -14,7 +14,7 @@
 
 use crate::matcher::{Matcher, MatcherResult};
 use crate::matcher_support::edit_distance;
-use std::{fmt::Debug, marker::PhantomData};
+use std::{borrow::Cow, fmt::Debug, marker::PhantomData};
 
 /// Matches a value equal (in the sense of `==`) to `expected`.
 ///
@@ -95,31 +95,35 @@ impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher for EqMatcher<A, T> {
     }
 
     fn explain_match(&self, actual: &A) -> String {
-        create_diff(
-            &format!("{:#?}", self.expected),
-            &format!("{:#?}", actual),
+        format!(
+            "which {}{}",
             &self.describe(self.matches(actual)),
+            create_diff(
+                &format!("{:#?}", self.expected),
+                &format!("{:#?}", actual),
+                edit_distance::Mode::FullMatch,
+            )
         )
     }
 }
 
-pub(super) fn create_diff(expected_debug: &str, actual_debug: &str, description: &str) -> String {
+pub(super) fn create_diff(
+    expected_debug: &str,
+    actual_debug: &str,
+    mode: edit_distance::Mode,
+) -> Cow<'static, str> {
     if actual_debug.lines().count() < 2 {
         // If the actual debug is only one line, then there is no point in doing a
         // line-by-line diff.
-        return format!("which {description}",);
+        return "".into();
     }
-    let edit_list = edit_distance::edit_list(
-        actual_debug.lines(),
-        expected_debug.lines(),
-        edit_distance::Mode::FullMatch,
-    );
+    let edit_list = edit_distance::edit_list(actual_debug.lines(), expected_debug.lines(), mode);
 
     if edit_list.is_empty() {
-        return format!("which {description}\nNo difference found between debug strings.",);
+        return "No difference found between debug strings.".into();
     }
 
-    format!("which {description}\nDebug diff:{}", edit_list_summary(&edit_list))
+    format!("\nDifference:{}", edit_list_summary(&edit_list)).into()
 }
 
 fn edit_list_summary(edit_list: &[edit_distance::Edit<&str>]) -> String {
@@ -197,7 +201,7 @@ mod tests {
             r#"
             Actual: Strukt { int: 123, string: "something" },
               which isn't equal to Strukt { int: 321, string: "someone" }
-            Debug diff:
+            Difference:
              Strukt {
             +    int: 123,
             -    int: 321,
@@ -219,7 +223,7 @@ mod tests {
             Expected: is equal to [1, 3, 4]
             Actual: [1, 2, 3],
               which isn't equal to [1, 3, 4]
-            Debug diff:
+            Difference:
              [
                  1,
             +    2,
@@ -241,7 +245,7 @@ mod tests {
             Expected: is equal to [1, 3, 5]
             Actual: [1, 2, 3, 4, 5],
               which isn't equal to [1, 3, 5]
-            Debug diff:
+            Difference:
              [
                  1,
             +    2,
