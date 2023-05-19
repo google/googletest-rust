@@ -12,8 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
-use crate::matchers::{eq_deref_of_matcher::EqDerefOfMatcher, eq_matcher::EqMatcher};
+use crate::{
+    matcher::{Matcher, MatcherResult},
+    matcher_support::edit_distance,
+    matchers::{
+        eq_deref_of_matcher::EqDerefOfMatcher,
+        eq_matcher::{create_diff, EqMatcher},
+    },
+};
 use std::borrow::Cow;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -300,6 +306,10 @@ where
     fn describe(&self, matcher_result: MatcherResult) -> String {
         self.configuration.describe(matcher_result, self.expected.deref())
     }
+
+    fn explain_match(&self, actual: &ActualT) -> String {
+        self.configuration.explain_match(self.expected.deref(), actual.as_ref())
+    }
 }
 
 impl<ActualT: ?Sized, ExpectedT, MatcherT: Into<StrMatcher<ActualT, ExpectedT>>>
@@ -485,6 +495,55 @@ impl Configuration {
         format!("{match_mode_description} {expected:?}{extra}")
     }
 
+    fn explain_match(&self, expected: &str, actual: &str) -> String {
+        let default_explanation = format!(
+            "which {}",
+            self.describe(self.do_strings_match(expected, actual).into(), expected)
+        );
+        if !expected.contains('\n') || !actual.contains('\n') {
+            return default_explanation;
+        }
+
+        if self.ignore_leading_whitespace {
+            // TODO - b/283448414 : Support StrMatcher with ignore_leading_whitespace.
+            return default_explanation;
+        }
+
+        if self.ignore_trailing_whitespace {
+            // TODO - b/283448414 : Support StrMatcher with ignore_trailing_whitespace.
+            return default_explanation;
+        }
+
+        if self.times.is_some() {
+            // TODO - b/283448414 : Support StrMatcher with times.
+            return default_explanation;
+        }
+        if matches!(self.case_policy, CasePolicy::IgnoreAscii) {
+            // TODO - b/283448414 : Support StrMatcher with ignore ascii case policy.
+            return default_explanation;
+        }
+        if self.do_strings_match(expected, actual) {
+            // TODO - b/283448414 : Consider supporting debug difference if the
+            // strings match. This can be useful when a small contains is found
+            // in a long string.
+            return default_explanation;
+        }
+
+        format!(
+            "{default_explanation}\n{}",
+            create_diff(expected, actual, self.get_edit_distance_mode())
+        )
+    }
+
+    fn get_edit_distance_mode(&self) -> edit_distance::Mode {
+        match self.mode {
+            MatchMode::Equals => edit_distance::Mode::FullMatch,
+            MatchMode::Contains => edit_distance::Mode::Contains,
+            MatchMode::StartsWith => edit_distance::Mode::StartsWith,
+            MatchMode::EndsWith => edit_distance::Mode::EndsWith,
+        }
+    }
+
     fn ignoring_leading_whitespace(self) -> Self {
         Self { ignore_leading_whitespace: true, ..self }
     }
@@ -523,6 +582,7 @@ mod tests {
     use super::{contains_substring, ends_with, starts_with, StrMatcher, StrMatcherConfigurator};
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
+    use indoc::indoc;
 
     #[test]
     fn matches_string_reference_with_equal_string_reference() -> Result<()> {
@@ -880,5 +940,68 @@ mod tests {
             Matcher::describe(&matcher, MatcherResult::DoesNotMatch),
             eq("does not end with \"A string\"")
         )
+    }
+
+    #[test]
+    fn match_explanation_contains_diff_of_strings_if_more_than_one_line() -> Result<()> {
+        let result = verify_that!(
+            indoc!(
+                "
+                    First line
+                    Second line
+                    Third line
+                "
+            ),
+            starts_with(indoc!(
+                "
+                    First line
+                    Second lines
+                    Third line
+                "
+            ))
+        );
+
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                     First line
+                    +Second line
+                    -Second lines
+                     Third line
+                "
+            ))))
+        )
+    }
+
+    #[test]
+    fn match_explanation_does_not_show_diff_if_actual_value_is_single_line() -> Result<()> {
+        let result = verify_that!(
+            "First line",
+            starts_with(indoc!(
+                "
+                    Second line
+                    Third line
+                "
+            ))
+        );
+
+        verify_that!(result, err(displays_as(not(contains_substring("Difference:")))))
+    }
+
+    #[test]
+    fn match_explanation_does_not_show_diff_if_expected_value_is_single_line() -> Result<()> {
+        let result = verify_that!(
+            indoc!(
+                "
+                    First line
+                    Second line
+                    Third line
+                "
+            ),
+            starts_with("Second line")
+        );
+
+        verify_that!(result, err(displays_as(not(contains_substring("Difference:")))))
     }
 }

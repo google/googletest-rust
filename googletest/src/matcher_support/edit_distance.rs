@@ -109,13 +109,10 @@ pub(crate) enum Mode {
     /// `right` is fully matching `left`
     FullMatch,
     /// `right` should match the beginning of `left`
-    #[allow(unused)]
     StartsWith,
     /// `right` should match the end of `left`
-    #[allow(unused)]
     EndsWith,
     /// `right` should be contained in `left`
-    #[allow(unused)]
     Contains,
 }
 
