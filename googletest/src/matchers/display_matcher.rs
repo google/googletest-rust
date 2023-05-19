@@ -43,7 +43,7 @@ impl<T: Debug + Display, InnerMatcher: Matcher<ActualT = String>> Matcher
     }
 
     fn explain_match(&self, actual: &T) -> String {
-        format!("which displays as \"{}\"", actual)
+        format!("which displays as a string {}", self.inner.explain_match(&format!("{actual}")))
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
@@ -67,8 +67,8 @@ impl<T: Debug + Display, InnerMatcher: Matcher<ActualT = String>> Matcher
 #[cfg(test)]
 mod tests {
     use super::displays_as;
-    use crate::matcher::Matcher;
     use crate::prelude::*;
+    use indoc::indoc;
     use std::fmt::{Debug, Display, Error, Formatter};
 
     #[test]
@@ -101,11 +101,22 @@ mod tests {
         verify_that!(Struct { a: 123, b: 321 }, displays_as(eq("Struct { a: 123, b: 321 }")))?;
         Ok(())
     }
+
     #[test]
-    fn display_displays_error_message() -> Result<()> {
+    fn display_displays_error_message_with_explanation_from_inner_matcher() -> Result<()> {
+        let result = verify_that!("123\n234", displays_as(eq("123\n345")));
+
         verify_that!(
-            displays_as(eq("31")).explain_match(&43),
-            displays_as(eq("which displays as \"43\""))
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                    which displays as a string which isn't equal to \"123\\n345\"
+                    Difference:
+                     123
+                    +234
+                    -345
+                "
+            ))))
         )
     }
 }
