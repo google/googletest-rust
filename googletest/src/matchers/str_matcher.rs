@@ -14,7 +14,6 @@
 
 use crate::{
     matcher::{Matcher, MatcherResult},
-    matcher_support::edit_distance,
     matchers::{
         eq_deref_of_matcher::EqDerefOfMatcher,
         eq_matcher::{create_diff, EqMatcher},
@@ -529,19 +528,7 @@ impl Configuration {
             return default_explanation;
         }
 
-        format!(
-            "{default_explanation}\n{}",
-            create_diff(expected, actual, self.get_edit_distance_mode())
-        )
-    }
-
-    fn get_edit_distance_mode(&self) -> edit_distance::Mode {
-        match self.mode {
-            MatchMode::Equals => edit_distance::Mode::FullMatch,
-            MatchMode::Contains => edit_distance::Mode::Contains,
-            MatchMode::StartsWith => edit_distance::Mode::StartsWith,
-            MatchMode::EndsWith => edit_distance::Mode::EndsWith,
-        }
+        format!("{default_explanation}\n{}", create_diff(expected, actual))
     }
 
     fn ignoring_leading_whitespace(self) -> Self {
@@ -718,8 +705,8 @@ mod tests {
     }
 
     #[test]
-    fn matches_string_containing_expected_value_in_contains_mode_while_ignoring_ascii_case()
-    -> Result<()> {
+    fn matches_string_containing_expected_value_in_contains_mode_while_ignoring_ascii_case(
+    ) -> Result<()> {
         verify_that!("Some string", contains_substring("STR").ignoring_ascii_case())
     }
 
@@ -868,8 +855,8 @@ mod tests {
     }
 
     #[test]
-    fn describes_itself_for_matching_result_ignoring_ascii_case_and_leading_whitespace()
-    -> Result<()> {
+    fn describes_itself_for_matching_result_ignoring_ascii_case_and_leading_whitespace(
+    ) -> Result<()> {
         let matcher: StrMatcher<&str, _> = StrMatcher::with_default_config("A string")
             .ignoring_leading_whitespace()
             .ignoring_ascii_case();

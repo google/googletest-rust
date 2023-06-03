@@ -16,6 +16,9 @@
 
 extern crate googletest_macro;
 
+#[cfg(test)]
+extern crate quickcheck;
+
 #[macro_use]
 pub mod assertions;
 pub mod internal;

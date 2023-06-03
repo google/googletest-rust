@@ -109,27 +109,22 @@ impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher for EqMatcher<A, T> {
                 // actually return None and unwrap() should not panic.
                 &to_display_output(&expected_debug).unwrap(),
                 &to_display_output(&actual_debug).unwrap(),
-                edit_distance::Mode::FullMatch,
             )
         } else {
-            create_diff(&expected_debug, &actual_debug, edit_distance::Mode::FullMatch)
+            create_diff(&expected_debug, &actual_debug)
         };
 
         format!("which {description}{diff}")
     }
 }
 
-pub(super) fn create_diff(
-    expected_debug: &str,
-    actual_debug: &str,
-    mode: edit_distance::Mode,
-) -> Cow<'static, str> {
+pub(super) fn create_diff(expected_debug: &str, actual_debug: &str) -> Cow<'static, str> {
     if actual_debug.lines().count() < 2 {
         // If the actual debug is only one line, then there is no point in doing a
         // line-by-line diff.
         return "".into();
     }
-    let edit_list = edit_distance::edit_list(actual_debug.lines(), expected_debug.lines(), mode);
+    let edit_list = edit_distance::edit_list(actual_debug.lines(), expected_debug.lines());
 
     if edit_list.is_empty() {
         return "No difference found between debug strings.".into();
@@ -143,22 +138,15 @@ fn edit_list_summary(edit_list: &[edit_distance::Edit<&str>]) -> String {
     for edit in edit_list {
         summary.push('\n');
         match edit {
-            edit_distance::Edit::Both { left, distance, .. } if *distance == 0.0 => {
+            edit_distance::Edit::Both(left) => {
                 summary.push(' ');
                 summary.push_str(left);
             }
-            edit_distance::Edit::Both { left, right, .. } => {
-                summary.push('+');
-                summary.push_str(left);
-                summary.push('\n');
-                summary.push('-');
-                summary.push_str(right);
-            }
-            edit_distance::Edit::ExtraLeft { left } => {
+            edit_distance::Edit::ExtraLeft(left) => {
                 summary.push('+');
                 summary.push_str(left);
             }
-            edit_distance::Edit::ExtraRight { right } => {
+            edit_distance::Edit::ExtraRight(right) => {
                 summary.push('-');
                 summary.push_str(right);
             }
