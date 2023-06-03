@@ -16,4 +16,5 @@
 members = [
   "googletest_macro",
   "googletest",
+  "integration_tests",
 ]

@@ -1,0 +1,150 @@
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+[package]
+name = "integration_tests"
+version = "0.7.0"
+description = "Integration tests for GoogleTest Rust"
+repository = "https://github.com/google/googletest-rust"
+license = "Apache-2.0"
+edition = "2021"
+rust-version = "1.59.0"
+authors = [
+  "Bradford Hovinen <hovinen@google.com>",
+  "Bastien Jacot-Guillarmod <bjacotg@google.com>",
+  "Maciej Pietrzak <mpi@google.com>",
+  "Martin Geisler <mgeisler@google.com>",
+]
+
+[dependencies]
+googletest = { path = "../googletest", version = "0.7.0", features = ["anyhow"] }
+anyhow = "1"
+indoc = "2"
+rstest = "0.13.0"
+tokio = { version = "1", features = ["time", "macros", "rt"] }
+
+[[bin]]
+name = "integration_tests"
+path = "src/integration_tests.rs"
+test = false
+
+[[bin]]
+name = "assert_predicate_with_failure"
+path = "src/assert_predicate_with_failure.rs"
+test = false
+
+[[bin]]
+name = "assertion_failure_in_subroutine"
+path = "src/assertion_failure_in_subroutine.rs"
+test = false
+
+[[bin]]
+name = "assertion_failures_with_short_structured_actual_values"
+path = "src/assertion_failures_with_short_structured_actual_values.rs"
+test = false
+
+[[bin]]
+name = "async_test_with_expect_that"
+path = "src/async_test_with_expect_that.rs"
+test = false
+
+[[bin]]
+name = "custom_error_message"
+path = "src/custom_error_message.rs"
+test = false
+
+[[bin]]
+name = "expect_that_failure"
+path = "src/expect_that_failure.rs"
+test = false
+
+[[bin]]
+name = "expect_pred_failure"
+path = "src/expect_pred_failure.rs"
+test = false
+
+[[bin]]
+name = "failure_due_to_fail_macro"
+path = "src/failure_due_to_fail_macro.rs"
+test = false
+
+[[bin]]
+name = "failure_due_to_fail_macro_with_empty_message"
+path = "src/failure_due_to_fail_macro_with_empty_message.rs"
+test = false
+
+[[bin]]
+name = "failure_due_to_fail_macro_with_format_arguments"
+path = "src/failure_due_to_fail_macro_with_format_arguments.rs"
+test = false
+
+[[bin]]
+name = "failure_due_to_returned_error"
+path = "src/failure_due_to_returned_error.rs"
+test = false
+
+[[bin]]
+name = "first_failure_aborts"
+path = "src/first_failure_aborts.rs"
+test = false
+
+[[bin]]
+name = "google_test_with_rstest"
+path = "src/google_test_with_rstest.rs"
+test = false
+
+[[bin]]
+name = "non_fatal_failure_in_subroutine"
+path = "src/non_fatal_failure_in_subroutine.rs"
+test = false
+
+[[bin]]
+name = "simple_assertion_failure"
+path = "src/simple_assertion_failure.rs"
+test = false
+
+[[bin]]
+name = "simple_assertion_failure_with_assert_that"
+path = "src/simple_assertion_failure_with_assert_that.rs"
+test = false
+
+[[bin]]
+name = "test_returning_anyhow_error"
+path = "src/test_returning_anyhow_error.rs"
+test = false
+
+[[bin]]
+name = "two_expect_pred_failures"
+path = "src/two_expect_pred_failures.rs"
+test = false
+
+[[bin]]
+name = "two_expect_that_failures"
+path = "src/two_expect_that_failures.rs"
+test = false
+
+[[bin]]
+name = "two_non_fatal_failures"
+path = "src/two_non_fatal_failures.rs"
+test = false
+
+[[bin]]
+name = "verify_predicate_with_failure"
+path = "src/verify_predicate_with_failure.rs"
+test = false
+
+[[bin]]
+name = "verify_predicate_with_failure_as_method_in_submodule"
+path = "src/verify_predicate_with_failure_as_method_in_submodule.rs"
+test = false
