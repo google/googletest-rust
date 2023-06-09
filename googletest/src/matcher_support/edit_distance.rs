@@ -13,364 +13,421 @@
 // limitations under the License.
 
 use std::fmt::Debug;
-use std::ops::Index;
+
+/// Maximum number of edits which can exist before [`edit_list`] falls back to a
+/// complete rewrite to produce the edit list.
+///
+/// Increasing this limit increases the accuracy of [`edit_list`] while
+/// quadratically increasing its worst-case runtime.
+const MAX_DISTANCE: i32 = 25;
 
 /// Compute the edit list of `left` and `right`.
 ///
-/// See <https://en.wikipedia.org/wiki/Edit_distance>
-pub(crate) fn edit_list<T: Distance + Copy>(
+/// This returns a vec of [`Edit`] which can be applied to `left` to obtain
+/// `right`. See <https://en.wikipedia.org/wiki/Edit_distance> for more
+/// information.
+///
+/// It uses [Myers Algorithm](https://neil.fraser.name/writing/diff/myers.pdf)
+/// with a maximum edit distance of [`MAX_DISTANCE`]. If more than
+/// [`MAX_DISTANCE`] insertions or deletions are required to convert `left` to
+/// `right`, it returns a default fallback edit list which deletes all items
+/// from `left` and inserts all items in `right`.
+pub(crate) fn edit_list<T: PartialEq + Copy>(
     left: impl IntoIterator<Item = T>,
     right: impl IntoIterator<Item = T>,
-    mode: Mode,
 ) -> Vec<Edit<T>> {
     let left: Vec<_> = left.into_iter().collect();
     let right: Vec<_> = right.into_iter().collect();
 
-    struct TableElement<U> {
-        cost: f64,
-        last_edit: Edit<U>,
-    }
+    let mut paths_last: Vec<Path<T>> = Vec::new();
 
-    let mut table: Table<TableElement<T>> = Table::new(left.len() + 1, right.len() + 1);
-    table.push(TableElement {
-        cost: 0.0,
-        // This is a placeholder value and should never be read.
-        last_edit: Edit::ExtraLeft { left: left[0] },
-    });
+    for distance in 0..=MAX_DISTANCE {
+        let mut paths_current = Vec::new();
+        for k in (-distance..=distance).step_by(2) {
+            // The following will be None when k is at the edges of the range,
+            // since no paths have been created for k outside the range in the
+            // previous iteration.
+            let path_k_minus_1 = paths_last.get(index_of_k(k - 1, -distance + 1));
+            let path_k_plus_1 = paths_last.get(index_of_k(k + 1, -distance + 1));
 
-    // The mode changes how the beginning and the end of left is consumed.
-    // EndsWith and Contains makes the consumption of elements of left before the
-    // first element of right is consumed free. In the implementation, this leads
-    // to table[(_, 0)] == 0.
-    // StartsWith and Contains makes the consumption of character of left after the
-    // last element of right is consumed free. In the implementation, this leads to
-    // ExtraLeft being free when computing table[(_, right.len())].
-    let (free_start, free_end) = match mode {
-        Mode::FullMatch => (false, false),
-        Mode::StartsWith => (false, true),
-        Mode::EndsWith => (true, false),
-        Mode::Contains => (true, true),
-    };
+            let (mut path, edit) = match (path_k_minus_1, path_k_plus_1) {
+                // This the first (outer) iteration.
+                (None, None) => (Path::default(), None),
 
-    for idx in 1..(left.len() + 1) {
-        table.push(TableElement {
-            cost: if free_start { 0.0 } else { idx as _ },
-            last_edit: Edit::ExtraLeft { left: left[idx - 1] },
-        });
-    }
-    for idy in 1..(right.len() + 1) {
-        table.push(TableElement {
-            cost: idy as _,
-            last_edit: Edit::ExtraRight { right: right[idy - 1] },
-        });
-        for idx in 1..(left.len() + 1) {
-            let left_element = left[idx - 1];
-            let right_element = right[idy - 1];
-            let extra_left_cost = if free_end && idy == right.len() { 0.0 } else { 1.0 };
-            let extra_left = TableElement {
-                cost: extra_left_cost + table[(idx - 1, idy)].cost,
-                last_edit: Edit::ExtraLeft { left: left_element },
+                // k = -distance. There is no previous parent path yet.
+                (None, Some(path_k_plus_1)) => (
+                    path_k_plus_1.clone(),
+                    right.get(path_k_plus_1.right_endpoint).copied().map(Edit::ExtraRight),
+                ),
+
+                // k = distance. There is no next parent path yet.
+                (Some(path_k_minus_1), None) => (
+                    path_k_minus_1.extend_left_endpoint(),
+                    left.get(path_k_minus_1.left_endpoint).copied().map(Edit::ExtraLeft),
+                ),
+
+                // k is strictly between -distance and distance. Both parent paths were set in the
+                // last iteration.
+                (Some(path_k_minus_1), Some(path_k_plus_1)) => {
+                    // This decides whether the algorithm prefers to add an edit
+                    // from the left or from the right when the rows differ. We
+                    // alternate so that the elements of differing blocks
+                    // interleave rather than all elements of each respective
+                    // side being output in a single block.
+                    if (distance % 2 == 0
+                        && path_k_plus_1.left_endpoint > path_k_minus_1.left_endpoint)
+                        || (distance % 2 == 1
+                            && path_k_plus_1.right_endpoint > path_k_minus_1.right_endpoint)
+                    {
+                        (
+                            path_k_plus_1.clone(),
+                            right.get(path_k_plus_1.right_endpoint).copied().map(Edit::ExtraRight),
+                        )
+                    } else {
+                        (
+                            path_k_minus_1.extend_left_endpoint(),
+                            left.get(path_k_minus_1.left_endpoint).copied().map(Edit::ExtraLeft),
+                        )
+                    }
+                }
             };
-            let extra_right = TableElement {
-                cost: 1.0 + table[(idx, idy - 1)].cost,
-                last_edit: Edit::ExtraRight { right: right_element },
-            };
-            let distance = T::distance(left_element, right_element);
-            let both = TableElement {
-                cost: distance + table[(idx - 1, idy - 1)].cost,
-                last_edit: Edit::Both { left: left_element, right: right_element, distance },
-            };
-            table.push(
-                [extra_left, extra_right, both]
-                    .into_iter()
-                    .min_by(|a, b| a.cost.partial_cmp(&b.cost).unwrap())
-                    .unwrap(),
-            );
+            path.edits.extend(edit);
+
+            // Advance through any common elements starting at the current path.
+            let (mut left_endpoint, mut right_endpoint) =
+                (path.left_endpoint, (path.left_endpoint as i32 - k) as usize);
+            while left_endpoint < left.len()
+                && right_endpoint < right.len()
+                && left[left_endpoint] == right[right_endpoint]
+            {
+                path.edits.push(Edit::Both(left[left_endpoint]));
+                (left_endpoint, right_endpoint) = (left_endpoint + 1, right_endpoint + 1);
+            }
+
+            // If we have exhausted both inputs, we are done.
+            if left_endpoint == left.len() && right_endpoint == right.len() {
+                return path.edits;
+            }
+
+            path.left_endpoint = left_endpoint;
+            path.right_endpoint = right_endpoint;
+            paths_current.push(path);
         }
+        paths_last = paths_current;
     }
 
-    let mut path = Vec::with_capacity(left.len() + right.len());
-    let mut current = (left.len(), right.len());
-    while current != (0, 0) {
-        let edit = table[current].last_edit.clone();
-        current = match edit {
-            Edit::ExtraLeft { .. } => (current.0 - 1, current.1),
-            Edit::ExtraRight { .. } => (current.0, current.1 - 1),
-            Edit::Both { .. } => (current.0 - 1, current.1 - 1),
-        };
-        path.push(edit);
-    }
-    path.reverse();
-    path
+    // Fallback when the distance is too large: assume the two are completely
+    // different.
+    let mut result: Vec<_> = left.iter().map(|t| Edit::ExtraLeft(*t)).collect();
+    result.extend(right.iter().map(|t| Edit::ExtraRight(*t)));
+    result
 }
 
-/// Controls how `right` should match `left`.
-pub(crate) enum Mode {
-    /// `right` is fully matching `left`
-    FullMatch,
-    /// `right` should match the beginning of `left`
-    StartsWith,
-    /// `right` should match the end of `left`
-    EndsWith,
-    /// `right` should be contained in `left`
-    Contains,
+fn index_of_k(k: i32, k_min: i32) -> usize {
+    ((k - k_min) / 2) as usize
+}
+
+#[derive(Clone)]
+struct Path<T: Clone> {
+    left_endpoint: usize,
+    right_endpoint: usize,
+    edits: Vec<Edit<T>>,
+}
+
+impl<T: Clone> Default for Path<T> {
+    fn default() -> Self {
+        Self { left_endpoint: 0, right_endpoint: 0, edits: vec![] }
+    }
+}
+
+impl<T: Clone> Path<T> {
+    fn extend_left_endpoint(&self) -> Self {
+        Self {
+            left_endpoint: self.left_endpoint + 1,
+            right_endpoint: self.right_endpoint,
+            edits: self.edits.clone(),
+        }
+    }
 }
 
 /// An edit operation on two sequences of `T`.
 #[derive(Debug, Clone)]
 pub(crate) enum Edit<T> {
     /// An extra `T` was added to the left sequence.
-    ExtraLeft { left: T },
+    ExtraLeft(T),
     /// An extra `T` was added to the right sequence.
-    ExtraRight { right: T },
+    ExtraRight(T),
     /// An element was added to each sequence.
-    Both { left: T, right: T, distance: f64 },
-}
-
-/// Trait to implement the distance between two objects.
-///
-/// This allows to control the behavior of [`edit_list`] notably when two prefer
-/// one [`Edit::Both`] or one [`Edit::ExtraRight`] and [`Edit::ExtraLeft`].
-pub(crate) trait Distance {
-    fn distance(left: Self, right: Self) -> f64;
-}
-
-/// Distance between two `char`s  which are not equal.
-/// This value controls the behavior of [`edit_list`] on `char` to decide
-/// between adding one [`Edit::ExtraLeft`] and one [`Edit::ExtraRight`] or
-/// adding a single [`Edit::Both`]. This can have fairly surprising effect in
-/// the more complicated cases.
-const UNEQUAL_CHAR_DISTANCE: f64 = 1.5;
-
-impl Distance for char {
-    fn distance(left: Self, right: Self) -> f64 {
-        if left == right { 0.0 } else { UNEQUAL_CHAR_DISTANCE }
-    }
-}
-
-impl Distance for &str {
-    /// &str::distance makes it slightly cheaper to consume both left and right
-    /// at the same time than to consume left and then to consume right. The
-    /// discount gets larger if the strings are very similar.
-    fn distance(left: Self, right: Self) -> f64 {
-        if left == right {
-            return 0.0;
-        }
-        let edits: f64 = edit_list(left.chars(), right.chars(), Mode::FullMatch)
-            .into_iter()
-            .map(|edit| match edit {
-                Edit::Both { distance, .. } => distance,
-                _ => 1.0,
-            })
-            .sum();
-        let left_len = left.chars().count() as f64;
-        let right_len = right.chars().count() as f64;
-        let maximum_edit_distance =
-            UNEQUAL_CHAR_DISTANCE * right_len.min(left_len) + (right_len - left_len).abs();
-        1. + edits / maximum_edit_distance
-    }
-}
-
-/// 2D Table implemented with a Vec<_>.
-struct Table<T> {
-    size1: usize,
-    table: Vec<T>,
-}
-
-impl<T> Table<T> {
-    /// Create a new [`Table<T>`].
-    ///
-    /// The internal vector is allocated but not filled. Accessing a value
-    /// before [`push`]ing it will result in a panic.
-    fn new(size1: usize, size2: usize) -> Self {
-        Self { size1, table: Vec::with_capacity(size1 * size2) }
-    }
-
-    /// Add [`new_element`] to [`self`].
-    ///
-    /// New values are added along the first dimension until it is filled. In
-    /// other words, the first element is inserted at (0, 0), the second at
-    /// (1, 0), and so on, until the ([`size1`] + 1)th is inserted at (0, 1).
-    fn push(&mut self, new_element: T) {
-        self.table.push(new_element);
-    }
-}
-
-impl<T> Index<(usize, usize)> for Table<T> {
-    type Output = T;
-
-    fn index(&self, (idx1, idx2): (usize, usize)) -> &T {
-        &self.table[idx1 + self.size1 * idx2]
-    }
+    Both(T),
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::elements_are;
-    use crate::{matcher::Matcher, matchers::predicate, verify_that, Result};
-    use indoc::indoc;
-    use Mode::*;
+    use crate::prelude::*;
+    use quickcheck::{quickcheck, Arbitrary};
 
-    fn is_both<E: PartialEq + Debug>(
-        l_expected: E,
-        r_expected: E,
-    ) -> impl Matcher<ActualT = Edit<E>> {
-        predicate(move |edit: &Edit<E>| {
-            matches!(edit,
-                Edit::Both { left, right,.. } if left == &l_expected && right == &r_expected)
-        })
-    }
-
-    fn is_extra_left<E: PartialEq + Debug>(l_expected: E) -> impl Matcher<ActualT = Edit<E>> {
-        predicate(move |edit: &Edit<E>| {
-            matches!(edit,
-                Edit::ExtraLeft { left } if left == &l_expected)
-        })
-    }
-
-    fn is_extra_right<E: PartialEq + Debug>(r_expected: E) -> impl Matcher<ActualT = Edit<E>> {
-        predicate(move |edit: &Edit<E>| {
-            matches!(edit,
-                Edit::ExtraRight { right } if right == &r_expected)
-        })
+    #[test]
+    fn returns_single_edit_when_strings_are_equal() -> Result<()> {
+        let result = edit_list(["A string"], ["A string"]);
+        verify_that!(result, elements_are![matches_pattern!(Edit::Both(eq("A string")))])
     }
 
     #[test]
-    fn exact_match() -> Result<()> {
-        let edits = edit_list("hello".chars(), "hello".chars(), FullMatch);
+    fn returns_sequence_of_two_common_parts() -> Result<()> {
+        let result = edit_list(["A string (1)", "A string (2)"], ["A string (1)", "A string (2)"]);
         verify_that!(
-            edits,
+            result,
             elements_are![
-                is_both('h', 'h'),
-                is_both('e', 'e'),
-                is_both('l', 'l'),
-                is_both('l', 'l'),
-                is_both('o', 'o'),
+                matches_pattern!(Edit::Both(eq("A string (1)"))),
+                matches_pattern!(Edit::Both(eq("A string (2)")))
             ]
         )
     }
 
     #[test]
-    fn completely_different() -> Result<()> {
-        let edits = edit_list("goodbye".chars(), "hello".chars(), FullMatch);
+    fn returns_extra_left_when_only_left_has_content() -> Result<()> {
+        let result = edit_list(["A string"], []);
+        verify_that!(result, elements_are![matches_pattern!(Edit::ExtraLeft(eq("A string"))),])
+    }
+
+    #[test]
+    fn returns_extra_right_when_only_right_has_content() -> Result<()> {
+        let result = edit_list([], ["A string"]);
+        verify_that!(result, elements_are![matches_pattern!(Edit::ExtraRight(eq("A string"))),])
+    }
+
+    #[test]
+    fn returns_extra_left_followed_by_extra_right_with_two_unequal_strings() -> Result<()> {
+        let result = edit_list(["A string"], ["Another string"]);
         verify_that!(
-            edits,
+            result,
             elements_are![
-                is_both('g', 'h'),
-                is_both('o', 'e'),
-                is_extra_right('l'),
-                is_extra_right('l'),
-                is_both('o', 'o'),
-                is_extra_left('d'),
-                is_extra_left('b'),
-                is_extra_left('y'),
-                is_extra_left('e'),
+                matches_pattern!(Edit::ExtraLeft(eq("A string"))),
+                matches_pattern!(Edit::ExtraRight(eq("Another string"))),
             ]
         )
     }
 
     #[test]
-    fn slightly_different() -> Result<()> {
-        let edits = edit_list("floor".chars(), "flower".chars(), FullMatch);
+    fn interleaves_extra_left_and_extra_right_when_multiple_lines_differ() -> Result<()> {
+        let result = edit_list(["A string", "A string"], ["Another string", "Another string"]);
         verify_that!(
-            edits,
+            result,
             elements_are![
-                is_both('f', 'f'),
-                is_both('l', 'l'),
-                is_both('o', 'o'),
-                is_both('o', 'w'),
-                is_extra_right('e'),
-                is_both('r', 'r'),
+                matches_pattern!(Edit::ExtraLeft(eq("A string"))),
+                matches_pattern!(Edit::ExtraRight(eq("Another string"))),
+                matches_pattern!(Edit::ExtraLeft(eq("A string"))),
+                matches_pattern!(Edit::ExtraRight(eq("Another string"))),
             ]
         )
     }
 
     #[test]
-    fn lines_difference() -> Result<()> {
-        let left = indoc!(
-            r#"
-            int: 123
-            string: "something"
-        "#
+    fn returns_common_part_plus_difference_when_there_is_common_prefix() -> Result<()> {
+        let result = edit_list(["Common part", "Left only"], ["Common part", "Right only"]);
+        verify_that!(
+            result,
+            elements_are![
+                matches_pattern!(Edit::Both(eq("Common part"))),
+                matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
+                matches_pattern!(Edit::ExtraRight(eq("Right only"))),
+            ]
+        )
+    }
+
+    #[test]
+    fn returns_common_part_plus_extra_left_when_left_has_extra_suffix() -> Result<()> {
+        let result = edit_list(["Common part", "Left only"], ["Common part"]);
+        verify_that!(
+            result,
+            elements_are![
+                matches_pattern!(Edit::Both(eq("Common part"))),
+                matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
+            ]
+        )
+    }
+
+    #[test]
+    fn returns_common_part_plus_extra_right_when_right_has_extra_suffix() -> Result<()> {
+        let result = edit_list(["Common part"], ["Common part", "Right only"]);
+        verify_that!(
+            result,
+            elements_are![
+                matches_pattern!(Edit::Both(eq("Common part"))),
+                matches_pattern!(Edit::ExtraRight(eq("Right only"))),
+            ]
+        )
+    }
+
+    #[test]
+    fn returns_difference_plus_common_part_when_there_is_common_suffix() -> Result<()> {
+        let result = edit_list(["Left only", "Common part"], ["Right only", "Common part"]);
+        verify_that!(
+            result,
+            elements_are![
+                matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
+                matches_pattern!(Edit::ExtraRight(eq("Right only"))),
+                matches_pattern!(Edit::Both(eq("Common part"))),
+            ]
+        )
+    }
+
+    #[test]
+    fn returns_difference_plus_common_part_plus_difference_when_there_is_common_infix() -> Result<()>
+    {
+        let result = edit_list(
+            ["Left only (1)", "Common part", "Left only (2)"],
+            ["Right only (1)", "Common part", "Right only (2)"],
         );
-        let right = indoc!(
-            r#"
-            int: 321
-            string: "someone"
-        "#
+        verify_that!(
+            result,
+            elements_are![
+                matches_pattern!(Edit::ExtraLeft(eq("Left only (1)"))),
+                matches_pattern!(Edit::ExtraRight(eq("Right only (1)"))),
+                matches_pattern!(Edit::Both(eq("Common part"))),
+                matches_pattern!(Edit::ExtraLeft(eq("Left only (2)"))),
+                matches_pattern!(Edit::ExtraRight(eq("Right only (2)"))),
+            ]
+        )
+    }
+
+    #[test]
+    fn returns_common_part_plus_difference_plus_common_part_when_there_is_common_prefix_and_suffix()
+    -> Result<()> {
+        let result = edit_list(
+            ["Common part (1)", "Left only", "Common part (2)"],
+            ["Common part (1)", "Right only", "Common part (2)"],
         );
-        let edits = edit_list(left.lines(), right.lines(), FullMatch);
         verify_that!(
-            edits,
+            result,
             elements_are![
-                is_both("int: 123", "int: 321"),
-                is_both(r#"string: "something""#, r#"string: "someone""#),
+                matches_pattern!(Edit::Both(eq("Common part (1)"))),
+                matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
+                matches_pattern!(Edit::ExtraRight(eq("Right only"))),
+                matches_pattern!(Edit::Both(eq("Common part (2)"))),
             ]
         )
     }
 
     #[test]
-    fn starts_with_imperfect_match() -> Result<()> {
-        let edits = edit_list("123123".chars(), "1212".chars(), StartsWith);
+    fn returns_common_part_plus_extra_left_plus_common_part_when_there_is_common_prefix_and_suffix()
+    -> Result<()> {
+        let result = edit_list(
+            ["Common part (1)", "Left only", "Common part (2)"],
+            ["Common part (1)", "Common part (2)"],
+        );
         verify_that!(
-            edits,
+            result,
             elements_are![
-                is_both('1', '1'),
-                is_both('2', '2'),
-                is_extra_left('3'),
-                is_both('1', '1'),
-                is_both('2', '2'),
-                is_extra_left('3'),
+                matches_pattern!(Edit::Both(eq("Common part (1)"))),
+                matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
+                matches_pattern!(Edit::Both(eq("Common part (2)"))),
             ]
         )
     }
 
     #[test]
-    fn ends_with_imperfect_match() -> Result<()> {
-        let edits = edit_list("123123".chars(), "124".chars(), EndsWith);
+    fn returns_common_part_plus_extra_right_plus_common_part_when_there_is_common_prefix_and_suffix()
+    -> Result<()> {
+        let result = edit_list(
+            ["Common part (1)", "Common part (2)"],
+            ["Common part (1)", "Right only", "Common part (2)"],
+        );
         verify_that!(
-            edits,
+            result,
             elements_are![
-                is_extra_left('1'),
-                is_extra_left('2'),
-                is_extra_left('3'),
-                is_both('1', '1'),
-                is_both('2', '2'),
-                is_both('3', '4'),
+                matches_pattern!(Edit::Both(eq("Common part (1)"))),
+                matches_pattern!(Edit::ExtraRight(eq("Right only"))),
+                matches_pattern!(Edit::Both(eq("Common part (2)"))),
             ]
         )
     }
 
     #[test]
-    fn contains_perfect_match() -> Result<()> {
-        let edits = edit_list("123123".chars(), "312".chars(), Contains);
-        verify_that!(
-            edits,
-            elements_are![
-                is_extra_left('1'),
-                is_extra_left('2'),
-                is_both('3', '3'),
-                is_both('1', '1'),
-                is_both('2', '2'),
-                is_extra_left('3'),
-            ]
-        )
+    fn returns_rewrite_fallback_when_maximum_distance_exceeded() -> Result<()> {
+        let result = edit_list(0..=20, 20..40);
+        verify_that!(result, not(contains(matches_pattern!(Edit::Both(anything())))))
     }
 
-    #[test]
-    fn contains_imperfect_match() -> Result<()> {
-        let edits = edit_list("123123".chars(), "342".chars(), Contains);
-        verify_that!(
-            edits,
-            elements_are![
-                is_extra_left('1'),
-                is_extra_left('2'),
-                is_both('3', '3'),
-                is_both('1', '4'),
-                is_both('2', '2'),
-                is_extra_left('3'),
-            ]
-        )
+    quickcheck! {
+        fn edit_list_edits_left_to_right(
+            left: Vec<Alphabet>,
+            right: Vec<Alphabet>
+        ) -> bool {
+            let edit_list = edit_list(left.clone(), right.clone());
+            apply_edits_to_left(&edit_list, &left) == right
+        }
+    }
+
+    quickcheck! {
+        fn edit_list_edits_right_to_left(
+            left: Vec<Alphabet>,
+            right: Vec<Alphabet>
+        ) -> bool {
+            let edit_list = edit_list(left.clone(), right.clone());
+            apply_edits_to_right(&edit_list, &right) == left
+        }
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum Alphabet {
+        A,
+        B,
+        C,
+    }
+
+    impl Arbitrary for Alphabet {
+        fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+            g.choose(&[Alphabet::A, Alphabet::B, Alphabet::C]).copied().unwrap()
+        }
+    }
+
+    fn apply_edits_to_left<T: PartialEq + Debug + Copy>(
+        edit_list: &[Edit<T>],
+        left: &[T],
+    ) -> Vec<T> {
+        let mut result = Vec::new();
+        let mut left_iter = left.iter();
+        for edit in edit_list {
+            match edit {
+                Edit::ExtraLeft(value) => {
+                    assert_that!(left_iter.next(), some(eq(value)));
+                }
+                Edit::ExtraRight(value) => {
+                    result.push(*value);
+                }
+                Edit::Both(value) => {
+                    assert_that!(left_iter.next(), some(eq(value)));
+                    result.push(*value);
+                }
+            }
+        }
+        assert_that!(left_iter.next(), none());
+        result
+    }
+
+    fn apply_edits_to_right<T: PartialEq + Debug + Copy>(
+        edit_list: &[Edit<T>],
+        right: &[T],
+    ) -> Vec<T> {
+        let mut result = Vec::new();
+        let mut right_iter = right.iter();
+        for edit in edit_list {
+            match edit {
+                Edit::ExtraLeft(value) => {
+                    result.push(*value);
+                }
+                Edit::ExtraRight(value) => {
+                    assert_that!(right_iter.next(), some(eq(value)));
+                }
+                Edit::Both(value) => {
+                    assert_that!(right_iter.next(), some(eq(value)));
+                    result.push(*value);
+                }
+            }
+        }
+        assert_that!(right_iter.next(), none());
+        result
     }
 }

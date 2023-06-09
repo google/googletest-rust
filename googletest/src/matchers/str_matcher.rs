@@ -14,7 +14,6 @@
 
 use crate::{
     matcher::{Matcher, MatcherResult},
-    matcher_support::edit_distance,
     matchers::{
         eq_deref_of_matcher::EqDerefOfMatcher,
         eq_matcher::{create_diff, EqMatcher},
@@ -529,19 +528,7 @@ impl Configuration {
             return default_explanation;
         }
 
-        format!(
-            "{default_explanation}\n{}",
-            create_diff(expected, actual, self.get_edit_distance_mode())
-        )
-    }
-
-    fn get_edit_distance_mode(&self) -> edit_distance::Mode {
-        match self.mode {
-            MatchMode::Equals => edit_distance::Mode::FullMatch,
-            MatchMode::Contains => edit_distance::Mode::Contains,
-            MatchMode::StartsWith => edit_distance::Mode::StartsWith,
-            MatchMode::EndsWith => edit_distance::Mode::EndsWith,
-        }
+        format!("{default_explanation}\n{}", create_diff(expected, actual))
     }
 
     fn ignoring_leading_whitespace(self) -> Self {

@@ -14,7 +14,6 @@
 
 use crate::{
     matcher::{Matcher, MatcherResult},
-    matcher_support::edit_distance,
     matchers::eq_matcher::create_diff,
 };
 use std::{fmt::Debug, marker::PhantomData, ops::Deref};
@@ -88,11 +87,7 @@ where
         format!(
             "which {}{}",
             &self.describe(self.matches(actual)),
-            create_diff(
-                &format!("{:#?}", self.expected.deref()),
-                &format!("{:#?}", actual),
-                edit_distance::Mode::FullMatch,
-            )
+            create_diff(&format!("{:#?}", self.expected.deref()), &format!("{:#?}", actual))
         )
     }
 }
