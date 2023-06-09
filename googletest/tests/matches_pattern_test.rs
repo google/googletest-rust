@@ -366,7 +366,46 @@ fn matches_tuple_struct_with_two_fields_and_trailing_comma() -> Result<()> {
 }
 
 #[test]
-fn matches_enum_value() -> Result<()> {
+fn matches_enum_without_field() -> Result<()> {
+    #[derive(Debug)]
+    enum AnEnum {
+        A,
+    }
+    let actual = AnEnum::A;
+
+    verify_that!(actual, matches_pattern!(AnEnum::A))
+}
+
+#[test]
+fn generates_correct_failure_output_when_enum_variant_without_field_is_not_matched() -> Result<()> {
+    #[derive(Debug)]
+    enum AnEnum {
+        #[allow(unused)]
+        A,
+        B,
+    }
+    let actual = AnEnum::B;
+
+    let result = verify_that!(actual, matches_pattern!(AnEnum::A));
+
+    verify_that!(result, err(displays_as(contains_substring("is not AnEnum :: A"))))
+}
+
+#[test]
+fn generates_correct_failure_output_when_enum_variant_without_field_is_matched() -> Result<()> {
+    #[derive(Debug)]
+    enum AnEnum {
+        A,
+    }
+    let actual = AnEnum::A;
+
+    let result = verify_that!(actual, not(matches_pattern!(AnEnum::A)));
+
+    verify_that!(result, err(displays_as(contains_substring("is AnEnum :: A"))))
+}
+
+#[test]
+fn matches_enum_with_field() -> Result<()> {
     #[derive(Debug)]
     enum AnEnum {
         A(u32),

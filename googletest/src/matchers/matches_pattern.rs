@@ -389,6 +389,16 @@ macro_rules! matches_pattern_internal {
 
     (
         [$($struct_name:tt)*],
+    ) => {
+        $crate::matchers::predicate(|v| matches!(v, $($struct_name)*))
+            .with_description(
+                concat!("is ", stringify!($($struct_name)*)),
+                concat!("is not ", stringify!($($struct_name)*)),
+            )
+    };
+
+    (
+        [$($struct_name:tt)*],
         ($matcher:expr $(,)?)
     ) => {
         all!(field!($($struct_name)*.0, $matcher))

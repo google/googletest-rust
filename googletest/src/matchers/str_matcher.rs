@@ -14,6 +14,7 @@
 
 use crate::{
     matcher::{Matcher, MatcherResult},
+    matcher_support::edit_distance,
     matchers::{
         eq_deref_of_matcher::EqDerefOfMatcher,
         eq_matcher::{create_diff, EqMatcher},
@@ -396,6 +397,17 @@ enum MatchMode {
     EndsWith,
 }
 
+impl MatchMode {
+    fn to_diff_mode(&self) -> edit_distance::Mode {
+        // TODO(b/286515736): Once supported, only MatchMode::Equals should map to
+        // Mode::Exact.
+        match self {
+            MatchMode::StartsWith => edit_distance::Mode::Prefix,
+            _ => edit_distance::Mode::Exact,
+        }
+    }
+}
+
 #[derive(Clone)]
 enum CasePolicy {
     Respect,
@@ -528,7 +540,10 @@ impl Configuration {
             return default_explanation;
         }
 
-        format!("{default_explanation}\n{}", create_diff(expected, actual))
+        format!(
+            "{default_explanation}\n{}",
+            create_diff(expected, actual, self.mode.to_diff_mode())
+        )
     }
 
     fn ignoring_leading_whitespace(self) -> Self {
@@ -956,6 +971,63 @@ mod tests {
                     +Second line
                     -Second lines
                      Third line
+                "
+            ))))
+        )
+    }
+
+    #[test]
+    fn match_explanation_for_starts_with_ignores_trailing_lines_in_actual_string() -> Result<()> {
+        let result = verify_that!(
+            indoc!(
+                "
+                    First line
+                    Second line
+                    Third line
+                    Fourth line
+                "
+            ),
+            starts_with(indoc!(
+                "
+                    First line
+                    Second lines
+                    Third line
+                "
+            ))
+        );
+
+        verify_that!(result, err(displays_as(not(contains_substring("+Fourth line")))))
+    }
+
+    #[test]
+    fn match_explanation_for_eq_does_not_ignore_trailing_lines_in_actual_string() -> Result<()> {
+        let result = verify_that!(
+            indoc!(
+                "
+                    First line
+                    Second line
+                    Third line
+                    Fourth line
+                "
+            ),
+            eq(indoc!(
+                "
+                    First line
+                    Second lines
+                    Third line
+                "
+            ))
+        );
+
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                     First line
+                    +Second line
+                    -Second lines
+                     Third line
+                    +Fourth line
                 "
             ))))
         )
