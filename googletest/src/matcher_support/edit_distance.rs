@@ -52,6 +52,27 @@ pub(crate) enum Edit<T> {
 
     /// An element was added to each sequence.
     Both(T),
+
+    /// Additional (unlisted) elements are present in the left sequence.
+    ///
+    /// This is only output in the mode [`Mode::Prefix`]. Its presence precludes
+    /// reconstructing the left sequence from the right sequence.
+    AdditionalLeft,
+}
+
+/// Controls the termination condition of [`edit_list`].
+pub(crate) enum Mode {
+    /// Indicates that the two arguments are intended to be equal.
+    ///
+    /// The entire edit list to transform between `left` and `right` is
+    /// returned.
+    Exact,
+
+    /// Indicates that `right` is inteded to be a prefix of `left`.
+    ///
+    /// Any additional parts of `left` after the prefix `right` are omitted from
+    /// the output.
+    Prefix,
 }
 
 /// Computes the edit list of `left` and `right`.
@@ -69,6 +90,7 @@ pub(crate) enum Edit<T> {
 pub(crate) fn edit_list<T: PartialEq + Copy>(
     left: impl IntoIterator<Item = T>,
     right: impl IntoIterator<Item = T>,
+    mode: Mode,
 ) -> Difference<T> {
     let left: Vec<_> = left.into_iter().collect();
     let right: Vec<_> = right.into_iter().collect();
@@ -151,6 +173,22 @@ pub(crate) fn edit_list<T: PartialEq + Copy>(
             path.right_endpoint = right_endpoint;
             paths_current.push(path);
         }
+
+        if matches!(mode, Mode::Prefix) {
+            if let Some(path) = paths_current
+                .iter_mut()
+                .filter(|p| p.right_endpoint == right.len())
+                .max_by(|p1, p2| p1.edits.len().cmp(&p2.edits.len()))
+            {
+                path.edits.push(Edit::AdditionalLeft);
+                return if path.edits.iter().any(|v| !matches!(v, Edit::Both(_))) {
+                    Difference::Editable(std::mem::take(&mut path.edits))
+                } else {
+                    Difference::Equal
+                };
+            }
+        }
+
         paths_last = paths_current;
     }
 
@@ -192,19 +230,23 @@ mod tests {
 
     #[test]
     fn returns_equal_when_strings_are_equal() -> Result<()> {
-        let result = edit_list(["A string"], ["A string"]);
+        let result = edit_list(["A string"], ["A string"], Mode::Exact);
         verify_that!(result, matches_pattern!(Difference::Equal))
     }
 
     #[test]
     fn returns_sequence_of_two_common_parts() -> Result<()> {
-        let result = edit_list(["A string (1)", "A string (2)"], ["A string (1)", "A string (2)"]);
+        let result = edit_list(
+            ["A string (1)", "A string (2)"],
+            ["A string (1)", "A string (2)"],
+            Mode::Exact,
+        );
         verify_that!(result, matches_pattern!(Difference::Equal))
     }
 
     #[test]
     fn returns_extra_left_when_only_left_has_content() -> Result<()> {
-        let result = edit_list(["A string"], []);
+        let result = edit_list(["A string"], [], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![matches_pattern!(
@@ -215,7 +257,7 @@ mod tests {
 
     #[test]
     fn returns_extra_right_when_only_right_has_content() -> Result<()> {
-        let result = edit_list([], ["A string"]);
+        let result = edit_list([], ["A string"], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![matches_pattern!(
@@ -226,7 +268,7 @@ mod tests {
 
     #[test]
     fn returns_extra_left_followed_by_extra_right_with_two_unequal_strings() -> Result<()> {
-        let result = edit_list(["A string"], ["Another string"]);
+        let result = edit_list(["A string"], ["Another string"], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
@@ -238,7 +280,8 @@ mod tests {
 
     #[test]
     fn interleaves_extra_left_and_extra_right_when_multiple_lines_differ() -> Result<()> {
-        let result = edit_list(["A string", "A string"], ["Another string", "Another string"]);
+        let result =
+            edit_list(["A string", "A string"], ["Another string", "Another string"], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
@@ -252,7 +295,8 @@ mod tests {
 
     #[test]
     fn returns_common_part_plus_difference_when_there_is_common_prefix() -> Result<()> {
-        let result = edit_list(["Common part", "Left only"], ["Common part", "Right only"]);
+        let result =
+            edit_list(["Common part", "Left only"], ["Common part", "Right only"], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
@@ -265,7 +309,7 @@ mod tests {
 
     #[test]
     fn returns_common_part_plus_extra_left_when_left_has_extra_suffix() -> Result<()> {
-        let result = edit_list(["Common part", "Left only"], ["Common part"]);
+        let result = edit_list(["Common part", "Left only"], ["Common part"], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
@@ -277,7 +321,7 @@ mod tests {
 
     #[test]
     fn returns_common_part_plus_extra_right_when_right_has_extra_suffix() -> Result<()> {
-        let result = edit_list(["Common part"], ["Common part", "Right only"]);
+        let result = edit_list(["Common part"], ["Common part", "Right only"], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
@@ -289,7 +333,8 @@ mod tests {
 
     #[test]
     fn returns_difference_plus_common_part_when_there_is_common_suffix() -> Result<()> {
-        let result = edit_list(["Left only", "Common part"], ["Right only", "Common part"]);
+        let result =
+            edit_list(["Left only", "Common part"], ["Right only", "Common part"], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
@@ -306,6 +351,7 @@ mod tests {
         let result = edit_list(
             ["Left only (1)", "Common part", "Left only (2)"],
             ["Right only (1)", "Common part", "Right only (2)"],
+            Mode::Exact,
         );
         verify_that!(
             result,
@@ -325,6 +371,7 @@ mod tests {
         let result = edit_list(
             ["Common part (1)", "Left only", "Common part (2)"],
             ["Common part (1)", "Right only", "Common part (2)"],
+            Mode::Exact,
         );
         verify_that!(
             result,
@@ -343,6 +390,7 @@ mod tests {
         let result = edit_list(
             ["Common part (1)", "Left only", "Common part (2)"],
             ["Common part (1)", "Common part (2)"],
+            Mode::Exact,
         );
         verify_that!(
             result,
@@ -360,6 +408,7 @@ mod tests {
         let result = edit_list(
             ["Common part (1)", "Common part (2)"],
             ["Common part (1)", "Right only", "Common part (2)"],
+            Mode::Exact,
         );
         verify_that!(
             result,
@@ -372,8 +421,35 @@ mod tests {
     }
 
     #[test]
+    fn skips_extra_parts_on_left_at_end_in_prefix_mode() -> Result<()> {
+        let result =
+            edit_list(["Common part", "Left only"], ["Right only", "Common part"], Mode::Prefix);
+        verify_that!(
+            result,
+            matches_pattern!(Difference::Editable(not(contains(matches_pattern!(
+                Edit::ExtraLeft(eq("Left only"))
+            )))))
+        )
+    }
+
+    #[test]
+    fn does_not_skip_extra_parts_on_left_in_prefix_mode_at_end_when_they_are_in_common()
+    -> Result<()> {
+        let result =
+            edit_list(["Left only", "Common part"], ["Right only", "Common part"], Mode::Prefix);
+        verify_that!(
+            result,
+            matches_pattern!(Difference::Editable(elements_are![
+                matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
+                matches_pattern!(Edit::ExtraRight(eq("Right only"))),
+                matches_pattern!(Edit::Both(eq("Common part"))),
+            ]))
+        )
+    }
+
+    #[test]
     fn returns_unrelated_when_maximum_distance_exceeded() -> Result<()> {
-        let result = edit_list(0..=20, 20..40);
+        let result = edit_list(0..=20, 20..40, Mode::Exact);
         verify_that!(result, matches_pattern!(Difference::Unrelated))
     }
 
@@ -382,7 +458,7 @@ mod tests {
             left: Vec<Alphabet>,
             right: Vec<Alphabet>
         ) -> TestResult {
-            match edit_list(left.clone(), right.clone()) {
+            match edit_list(left.clone(), right.clone(), Mode::Exact) {
                 Difference::Equal => TestResult::from_bool(left == right),
                 Difference::Editable(edit_list) => {
                     TestResult::from_bool(apply_edits_to_left(&edit_list, &left) == right)
@@ -403,7 +479,7 @@ mod tests {
             left: Vec<Alphabet>,
             right: Vec<Alphabet>
         ) -> TestResult {
-            match edit_list(left.clone(), right.clone()) {
+            match edit_list(left.clone(), right.clone(), Mode::Exact) {
                 Difference::Equal => TestResult::from_bool(left == right),
                 Difference::Editable(edit_list) => {
                     TestResult::from_bool(apply_edits_to_right(&edit_list, &right) == left)
@@ -450,6 +526,9 @@ mod tests {
                     assert_that!(left_iter.next(), some(eq(value)));
                     result.push(*value);
                 }
+                Edit::AdditionalLeft => {
+                    fail!("Unexpected Edit::AdditionalLeft").unwrap();
+                }
             }
         }
         assert_that!(left_iter.next(), none());
@@ -473,6 +552,9 @@ mod tests {
                 Edit::Both(value) => {
                     assert_that!(right_iter.next(), some(eq(value)));
                     result.push(*value);
+                }
+                Edit::AdditionalLeft => {
+                    fail!("Unexpected Edit::AdditionalLeft").unwrap();
                 }
             }
         }
