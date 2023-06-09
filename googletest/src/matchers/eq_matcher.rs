@@ -135,24 +135,61 @@ pub(super) fn create_diff(expected_debug: &str, actual_debug: &str) -> Cow<'stat
 
 fn edit_list_summary(edit_list: &[edit_distance::Edit<&str>]) -> String {
     let mut summary = String::new();
+    // Use to collect common line and compress them.
+    let mut common_line_buffer = vec![];
     for edit in edit_list {
-        summary.push('\n');
-        match edit {
+        let (start, line) = match edit {
             edit_distance::Edit::Both(left) => {
-                summary.push(' ');
-                summary.push_str(left);
+                common_line_buffer.push(*left);
+                continue;
             }
-            edit_distance::Edit::ExtraLeft(left) => {
-                summary.push('+');
-                summary.push_str(left);
-            }
-            edit_distance::Edit::ExtraRight(right) => {
-                summary.push('-');
-                summary.push_str(right);
-            }
-        }
+            edit_distance::Edit::ExtraLeft(left) => ('+', left),
+            edit_distance::Edit::ExtraRight(right) => ('-', right),
+        };
+        summary.push_str(&compress_common_lines(std::mem::take(&mut common_line_buffer)));
+
+        summary.push('\n');
+        summary.push(start);
+        summary.push_str(line);
     }
+    summary.push_str(&compress_common_lines(common_line_buffer));
+
     summary
+}
+
+// The number of the lines kept before and after the compressed lines.
+const COMMON_LINES_CONTEXT_SIZE: usize = 2;
+
+fn compress_common_lines(common_lines: Vec<&str>) -> String {
+    if common_lines.len() <= 2 * COMMON_LINES_CONTEXT_SIZE + 1 {
+        let mut all_lines = String::new();
+        for line in common_lines {
+            all_lines.push('\n');
+            all_lines.push(' ');
+            all_lines.push_str(line);
+        }
+        return all_lines;
+    }
+
+    let mut truncated_lines = String::new();
+
+    for line in &common_lines[0..COMMON_LINES_CONTEXT_SIZE] {
+        truncated_lines.push('\n');
+        truncated_lines.push(' ');
+        truncated_lines.push_str(line);
+    }
+
+    truncated_lines.push_str(&format!(
+        "\n<---- {} common lines omitted ---->",
+        common_lines.len() - 2 * COMMON_LINES_CONTEXT_SIZE
+    ));
+
+    for line in &common_lines[common_lines.len() - COMMON_LINES_CONTEXT_SIZE..common_lines.len()] {
+        truncated_lines.push('\n');
+        truncated_lines.push(' ');
+        truncated_lines.push_str(line);
+    }
+    truncated_lines
 }
 
 fn is_multiline_string_debug(string: &str) -> bool {
@@ -265,6 +302,88 @@ mod tests {
                  5,
              ]
             "#})))
+        )
+    }
+
+    #[test]
+    fn eq_debug_diff_common_lines_omitted() -> Result<()> {
+        let result = verify_that!((1..50).collect::<Vec<_>>(), eq((3..52).collect::<Vec<_>>()));
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc! {
+            "
+            Difference:
+             [
+            +    1,
+            +    2,
+                 3,
+                 4,
+            <---- 43 common lines omitted ---->
+                 48,
+                 49,
+            -    50,
+            -    51,
+             ]"})))
+        )
+    }
+
+    #[test]
+    fn eq_debug_diff_5_common_lines_not_omitted() -> Result<()> {
+        let result = verify_that!((1..8).collect::<Vec<_>>(), eq((3..10).collect::<Vec<_>>()));
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc! {
+            "
+            Difference:
+             [
+            +    1,
+            +    2,
+                 3,
+                 4,
+                 5,
+                 6,
+                 7,
+            -    8,
+            -    9,
+             ]"})))
+        )
+    }
+
+    #[test]
+    fn eq_debug_diff_start_common_lines_omitted() -> Result<()> {
+        let result = verify_that!((1..50).collect::<Vec<_>>(), eq((1..52).collect::<Vec<_>>()));
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc! {
+            "
+            Difference:
+             [
+                 1,
+            <---- 46 common lines omitted ---->
+                 48,
+                 49,
+            -    50,
+            -    51,
+             ]"})))
+        )
+    }
+
+    #[test]
+    fn eq_debug_diff_end_common_lines_omitted() -> Result<()> {
+        let result = verify_that!((1..52).collect::<Vec<_>>(), eq((3..52).collect::<Vec<_>>()));
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc! {
+            "
+            Difference:
+             [
+            +    1,
+            +    2,
+                 3,
+                 4,
+            <---- 46 common lines omitted ---->
+                 51,
+             ]"})))
         )
     }
 
