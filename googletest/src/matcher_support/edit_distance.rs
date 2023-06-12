@@ -21,21 +21,55 @@ use std::fmt::Debug;
 /// quadratically increasing its worst-case runtime.
 const MAX_DISTANCE: i32 = 25;
 
-/// Compute the edit list of `left` and `right`.
+/// The difference between two inputs as produced by [`edit_list`].
+#[derive(Debug)]
+pub(crate) enum Difference<T> {
+    /// No differences were detected at all.
+    Equal,
+
+    /// At most [`MAX_DISTANCE`] edits are required to convert one input to the
+    /// other.
+    ///
+    /// Contains the list of [`Edit`] to perform the transformation.
+    Editable(Vec<Edit<T>>),
+
+    /// More than [`MAX_DISTANCE`] edits are required to convert one input to
+    /// the other.
+    ///
+    /// The inputs are therefore considered unrelated and no edit list is
+    /// provided.
+    Unrelated,
+}
+
+/// An edit operation on two sequences of `T`.
+#[derive(Debug, Clone)]
+pub(crate) enum Edit<T> {
+    /// An extra `T` was added to the left sequence.
+    ExtraLeft(T),
+
+    /// An extra `T` was added to the right sequence.
+    ExtraRight(T),
+
+    /// An element was added to each sequence.
+    Both(T),
+}
+
+/// Computes the edit list of `left` and `right`.
 ///
-/// This returns a vec of [`Edit`] which can be applied to `left` to obtain
-/// `right`. See <https://en.wikipedia.org/wiki/Edit_distance> for more
-/// information.
+/// If `left` and `right` are equal, then this returns [`Difference::Equal`]. If
+/// they are different but have an
+/// [edit distance](https://en.wikipedia.org/wiki/Edit_distance)
+/// of at most [`MAX_DISTANCE`], this returns [`Difference::Editable`] with the
+/// sequence of [`Edit`] which can be applied to `left` to obtain `right`.
+/// Otherwise this returns [`Difference::Unrelated`].
 ///
-/// It uses [Myers Algorithm](https://neil.fraser.name/writing/diff/myers.pdf)
-/// with a maximum edit distance of [`MAX_DISTANCE`]. If more than
-/// [`MAX_DISTANCE`] insertions or deletions are required to convert `left` to
-/// `right`, it returns a default fallback edit list which deletes all items
-/// from `left` and inserts all items in `right`.
+/// This uses [Myers Algorithm](https://neil.fraser.name/writing/diff/myers.pdf)
+/// with a maximum edit distance of [`MAX_DISTANCE`]. Thus the worst-case
+/// runtime is linear in both the input length and [`MAX_DISTANCE`].
 pub(crate) fn edit_list<T: PartialEq + Copy>(
     left: impl IntoIterator<Item = T>,
     right: impl IntoIterator<Item = T>,
-) -> Vec<Edit<T>> {
+) -> Difference<T> {
     let left: Vec<_> = left.into_iter().collect();
     let right: Vec<_> = right.into_iter().collect();
 
@@ -106,7 +140,11 @@ pub(crate) fn edit_list<T: PartialEq + Copy>(
 
             // If we have exhausted both inputs, we are done.
             if left_endpoint == left.len() && right_endpoint == right.len() {
-                return path.edits;
+                return if path.edits.iter().any(|v| !matches!(v, Edit::Both(_))) {
+                    Difference::Editable(path.edits)
+                } else {
+                    Difference::Equal
+                };
             }
 
             path.left_endpoint = left_endpoint;
@@ -116,11 +154,7 @@ pub(crate) fn edit_list<T: PartialEq + Copy>(
         paths_last = paths_current;
     }
 
-    // Fallback when the distance is too large: assume the two are completely
-    // different.
-    let mut result: Vec<_> = left.iter().map(|t| Edit::ExtraLeft(*t)).collect();
-    result.extend(right.iter().map(|t| Edit::ExtraRight(*t)));
-    result
+    Difference::Unrelated
 }
 
 fn index_of_k(k: i32, k_min: i32) -> usize {
@@ -150,51 +184,44 @@ impl<T: Clone> Path<T> {
     }
 }
 
-/// An edit operation on two sequences of `T`.
-#[derive(Debug, Clone)]
-pub(crate) enum Edit<T> {
-    /// An extra `T` was added to the left sequence.
-    ExtraLeft(T),
-    /// An extra `T` was added to the right sequence.
-    ExtraRight(T),
-    /// An element was added to each sequence.
-    Both(T),
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::prelude::*;
-    use quickcheck::{quickcheck, Arbitrary};
+    use quickcheck::{quickcheck, Arbitrary, TestResult};
 
     #[test]
-    fn returns_single_edit_when_strings_are_equal() -> Result<()> {
+    fn returns_equal_when_strings_are_equal() -> Result<()> {
         let result = edit_list(["A string"], ["A string"]);
-        verify_that!(result, elements_are![matches_pattern!(Edit::Both(eq("A string")))])
+        verify_that!(result, matches_pattern!(Difference::Equal))
     }
 
     #[test]
     fn returns_sequence_of_two_common_parts() -> Result<()> {
         let result = edit_list(["A string (1)", "A string (2)"], ["A string (1)", "A string (2)"]);
-        verify_that!(
-            result,
-            elements_are![
-                matches_pattern!(Edit::Both(eq("A string (1)"))),
-                matches_pattern!(Edit::Both(eq("A string (2)")))
-            ]
-        )
+        verify_that!(result, matches_pattern!(Difference::Equal))
     }
 
     #[test]
     fn returns_extra_left_when_only_left_has_content() -> Result<()> {
         let result = edit_list(["A string"], []);
-        verify_that!(result, elements_are![matches_pattern!(Edit::ExtraLeft(eq("A string"))),])
+        verify_that!(
+            result,
+            matches_pattern!(Difference::Editable(elements_are![matches_pattern!(
+                Edit::ExtraLeft(eq("A string"))
+            )]))
+        )
     }
 
     #[test]
     fn returns_extra_right_when_only_right_has_content() -> Result<()> {
         let result = edit_list([], ["A string"]);
-        verify_that!(result, elements_are![matches_pattern!(Edit::ExtraRight(eq("A string"))),])
+        verify_that!(
+            result,
+            matches_pattern!(Difference::Editable(elements_are![matches_pattern!(
+                Edit::ExtraRight(eq("A string"))
+            )]))
+        )
     }
 
     #[test]
@@ -202,10 +229,10 @@ mod tests {
         let result = edit_list(["A string"], ["Another string"]);
         verify_that!(
             result,
-            elements_are![
+            matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::ExtraLeft(eq("A string"))),
                 matches_pattern!(Edit::ExtraRight(eq("Another string"))),
-            ]
+            ]))
         )
     }
 
@@ -214,12 +241,12 @@ mod tests {
         let result = edit_list(["A string", "A string"], ["Another string", "Another string"]);
         verify_that!(
             result,
-            elements_are![
+            matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::ExtraLeft(eq("A string"))),
                 matches_pattern!(Edit::ExtraRight(eq("Another string"))),
                 matches_pattern!(Edit::ExtraLeft(eq("A string"))),
                 matches_pattern!(Edit::ExtraRight(eq("Another string"))),
-            ]
+            ]))
         )
     }
 
@@ -228,11 +255,11 @@ mod tests {
         let result = edit_list(["Common part", "Left only"], ["Common part", "Right only"]);
         verify_that!(
             result,
-            elements_are![
+            matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::Both(eq("Common part"))),
                 matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
                 matches_pattern!(Edit::ExtraRight(eq("Right only"))),
-            ]
+            ]))
         )
     }
 
@@ -241,10 +268,10 @@ mod tests {
         let result = edit_list(["Common part", "Left only"], ["Common part"]);
         verify_that!(
             result,
-            elements_are![
+            matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::Both(eq("Common part"))),
                 matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
-            ]
+            ]))
         )
     }
 
@@ -253,10 +280,10 @@ mod tests {
         let result = edit_list(["Common part"], ["Common part", "Right only"]);
         verify_that!(
             result,
-            elements_are![
+            matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::Both(eq("Common part"))),
                 matches_pattern!(Edit::ExtraRight(eq("Right only"))),
-            ]
+            ]))
         )
     }
 
@@ -265,11 +292,11 @@ mod tests {
         let result = edit_list(["Left only", "Common part"], ["Right only", "Common part"]);
         verify_that!(
             result,
-            elements_are![
+            matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
                 matches_pattern!(Edit::ExtraRight(eq("Right only"))),
                 matches_pattern!(Edit::Both(eq("Common part"))),
-            ]
+            ]))
         )
     }
 
@@ -282,13 +309,13 @@ mod tests {
         );
         verify_that!(
             result,
-            elements_are![
+            matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::ExtraLeft(eq("Left only (1)"))),
                 matches_pattern!(Edit::ExtraRight(eq("Right only (1)"))),
                 matches_pattern!(Edit::Both(eq("Common part"))),
                 matches_pattern!(Edit::ExtraLeft(eq("Left only (2)"))),
                 matches_pattern!(Edit::ExtraRight(eq("Right only (2)"))),
-            ]
+            ]))
         )
     }
 
@@ -301,12 +328,12 @@ mod tests {
         );
         verify_that!(
             result,
-            elements_are![
+            matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::Both(eq("Common part (1)"))),
                 matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
                 matches_pattern!(Edit::ExtraRight(eq("Right only"))),
                 matches_pattern!(Edit::Both(eq("Common part (2)"))),
-            ]
+            ]))
         )
     }
 
@@ -319,11 +346,11 @@ mod tests {
         );
         verify_that!(
             result,
-            elements_are![
+            matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::Both(eq("Common part (1)"))),
                 matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
                 matches_pattern!(Edit::Both(eq("Common part (2)"))),
-            ]
+            ]))
         )
     }
 
@@ -336,27 +363,38 @@ mod tests {
         );
         verify_that!(
             result,
-            elements_are![
+            matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::Both(eq("Common part (1)"))),
                 matches_pattern!(Edit::ExtraRight(eq("Right only"))),
                 matches_pattern!(Edit::Both(eq("Common part (2)"))),
-            ]
+            ]))
         )
     }
 
     #[test]
-    fn returns_rewrite_fallback_when_maximum_distance_exceeded() -> Result<()> {
+    fn returns_unrelated_when_maximum_distance_exceeded() -> Result<()> {
         let result = edit_list(0..=20, 20..40);
-        verify_that!(result, not(contains(matches_pattern!(Edit::Both(anything())))))
+        verify_that!(result, matches_pattern!(Difference::Unrelated))
     }
 
     quickcheck! {
         fn edit_list_edits_left_to_right(
             left: Vec<Alphabet>,
             right: Vec<Alphabet>
-        ) -> bool {
-            let edit_list = edit_list(left.clone(), right.clone());
-            apply_edits_to_left(&edit_list, &left) == right
+        ) -> TestResult {
+            match edit_list(left.clone(), right.clone()) {
+                Difference::Equal => TestResult::from_bool(left == right),
+                Difference::Editable(edit_list) => {
+                    TestResult::from_bool(apply_edits_to_left(&edit_list, &left) == right)
+                }
+                Difference::Unrelated => {
+                    if left == right {
+                        TestResult::failed()
+                    } else {
+                        TestResult::discard()
+                    }
+                }
+            }
         }
     }
 
@@ -364,9 +402,20 @@ mod tests {
         fn edit_list_edits_right_to_left(
             left: Vec<Alphabet>,
             right: Vec<Alphabet>
-        ) -> bool {
-            let edit_list = edit_list(left.clone(), right.clone());
-            apply_edits_to_right(&edit_list, &right) == left
+        ) -> TestResult {
+            match edit_list(left.clone(), right.clone()) {
+                Difference::Equal => TestResult::from_bool(left == right),
+                Difference::Editable(edit_list) => {
+                    TestResult::from_bool(apply_edits_to_right(&edit_list, &right) == left)
+                }
+                Difference::Unrelated => {
+                    if left == right {
+                        TestResult::failed()
+                    } else {
+                        TestResult::discard()
+                    }
+                }
+            }
         }
     }
 

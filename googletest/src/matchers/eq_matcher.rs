@@ -124,13 +124,13 @@ pub(super) fn create_diff(expected_debug: &str, actual_debug: &str) -> Cow<'stat
         // line-by-line diff.
         return "".into();
     }
-    let edit_list = edit_distance::edit_list(actual_debug.lines(), expected_debug.lines());
-
-    if edit_list.is_empty() {
-        return "No difference found between debug strings.".into();
+    match edit_distance::edit_list(actual_debug.lines(), expected_debug.lines()) {
+        edit_distance::Difference::Equal => "No difference found between debug strings.".into(),
+        edit_distance::Difference::Editable(edit_list) => {
+            format!("\nDifference:{}", edit_list_summary(&edit_list)).into()
+        }
+        edit_distance::Difference::Unrelated => "".into(),
     }
-
-    format!("\nDifference:{}", edit_list_summary(&edit_list)).into()
 }
 
 fn edit_list_summary(edit_list: &[edit_distance::Edit<&str>]) -> String {
