@@ -180,6 +180,11 @@ pub(crate) fn edit_list<T: PartialEq + Copy>(
                 .filter(|p| p.right_endpoint == right.len())
                 .max_by(|p1, p2| p1.edits.len().cmp(&p2.edits.len()))
             {
+                if let Some(Edit::ExtraRight(_)) = path.edits.last() {
+                    if path.left_endpoint < left.len() {
+                        path.edits.push(Edit::ExtraLeft(left[path.left_endpoint]));
+                    }
+                }
                 path.edits.push(Edit::AdditionalLeft);
                 return if path.edits.iter().any(|v| !matches!(v, Edit::Both(_))) {
                     Difference::Editable(std::mem::take(&mut path.edits))
@@ -366,8 +371,8 @@ mod tests {
     }
 
     #[test]
-    fn returns_common_part_plus_difference_plus_common_part_when_there_is_common_prefix_and_suffix()
-    -> Result<()> {
+    fn returns_common_part_plus_difference_plus_common_part_when_there_is_common_prefix_and_suffix(
+    ) -> Result<()> {
         let result = edit_list(
             ["Common part (1)", "Left only", "Common part (2)"],
             ["Common part (1)", "Right only", "Common part (2)"],
@@ -385,8 +390,8 @@ mod tests {
     }
 
     #[test]
-    fn returns_common_part_plus_extra_left_plus_common_part_when_there_is_common_prefix_and_suffix()
-    -> Result<()> {
+    fn returns_common_part_plus_extra_left_plus_common_part_when_there_is_common_prefix_and_suffix(
+    ) -> Result<()> {
         let result = edit_list(
             ["Common part (1)", "Left only", "Common part (2)"],
             ["Common part (1)", "Common part (2)"],
@@ -403,8 +408,8 @@ mod tests {
     }
 
     #[test]
-    fn returns_common_part_plus_extra_right_plus_common_part_when_there_is_common_prefix_and_suffix()
-    -> Result<()> {
+    fn returns_common_part_plus_extra_right_plus_common_part_when_there_is_common_prefix_and_suffix(
+    ) -> Result<()> {
         let result = edit_list(
             ["Common part (1)", "Common part (2)"],
             ["Common part (1)", "Right only", "Common part (2)"],
@@ -433,8 +438,20 @@ mod tests {
     }
 
     #[test]
-    fn does_not_skip_extra_parts_on_left_in_prefix_mode_at_end_when_they_are_in_common()
-    -> Result<()> {
+    fn does_not_skip_left_line_corresponding_to_last_right_line_in_prefix_mode() -> Result<()> {
+        let result = edit_list(["Left only"], ["Right only"], Mode::Prefix);
+        verify_that!(
+            result,
+            matches_pattern!(Difference::Editable(elements_are![
+                matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
+                matches_pattern!(Edit::ExtraRight(eq("Right only"))),
+            ]))
+        )
+    }
+
+    #[test]
+    fn does_not_skip_extra_parts_on_left_in_prefix_mode_at_end_when_they_are_in_common(
+    ) -> Result<()> {
         let result =
             edit_list(["Left only", "Common part"], ["Right only", "Common part"], Mode::Prefix);
         verify_that!(
