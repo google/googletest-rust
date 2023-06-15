@@ -109,22 +109,27 @@ impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher for EqMatcher<A, T> {
                 // actually return None and unwrap() should not panic.
                 &to_display_output(&expected_debug).unwrap(),
                 &to_display_output(&actual_debug).unwrap(),
+                edit_distance::Mode::Exact,
             )
         } else {
-            create_diff(&expected_debug, &actual_debug)
+            create_diff(&expected_debug, &actual_debug, edit_distance::Mode::Exact)
         };
 
         format!("which {description}{diff}")
     }
 }
 
-pub(super) fn create_diff(expected_debug: &str, actual_debug: &str) -> Cow<'static, str> {
+pub(super) fn create_diff(
+    expected_debug: &str,
+    actual_debug: &str,
+    diff_mode: edit_distance::Mode,
+) -> Cow<'static, str> {
     if actual_debug.lines().count() < 2 {
         // If the actual debug is only one line, then there is no point in doing a
         // line-by-line diff.
         return "".into();
     }
-    match edit_distance::edit_list(actual_debug.lines(), expected_debug.lines()) {
+    match edit_distance::edit_list(actual_debug.lines(), expected_debug.lines(), diff_mode) {
         edit_distance::Difference::Equal => "No difference found between debug strings.".into(),
         edit_distance::Difference::Editable(edit_list) => {
             format!("\nDifference:{}", edit_list_summary(&edit_list)).into()
@@ -143,13 +148,14 @@ fn edit_list_summary(edit_list: &[edit_distance::Edit<&str>]) -> String {
                 common_line_buffer.push(*left);
                 continue;
             }
-            edit_distance::Edit::ExtraLeft(left) => ('+', left),
-            edit_distance::Edit::ExtraRight(right) => ('-', right),
+            edit_distance::Edit::ExtraLeft(left) => ("+", *left),
+            edit_distance::Edit::ExtraRight(right) => ("-", *right),
+            edit_distance::Edit::AdditionalLeft => ("<---- remaining lines omitted ---->", ""),
         };
         summary.push_str(&compress_common_lines(std::mem::take(&mut common_line_buffer)));
 
         summary.push('\n');
-        summary.push(start);
+        summary.push_str(start);
         summary.push_str(line);
     }
     summary.push_str(&compress_common_lines(common_line_buffer));
