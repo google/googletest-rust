@@ -1011,6 +1011,38 @@ mod tests {
     }
 
     #[test]
+    fn match_explanation_for_starts_with_includes_both_versions_of_differing_last_line()
+    -> Result<()> {
+        let result = verify_that!(
+            indoc!(
+                "
+                    First line
+                    Second line
+                    Third line
+                "
+            ),
+            starts_with(indoc!(
+                "
+                    First line
+                    Second lines
+                "
+            ))
+        );
+
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                     First line
+                    +Second line
+                    -Second lines
+                    <---- remaining lines omitted ---->
+                "
+            ))))
+        )
+    }
+
+    #[test]
     fn match_explanation_for_eq_does_not_ignore_trailing_lines_in_actual_string() -> Result<()> {
         let result = verify_that!(
             indoc!(

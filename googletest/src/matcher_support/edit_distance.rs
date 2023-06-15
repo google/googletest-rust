@@ -180,6 +180,20 @@ pub(crate) fn edit_list<T: PartialEq + Copy>(
                 .filter(|p| p.right_endpoint == right.len())
                 .max_by(|p1, p2| p1.edits.len().cmp(&p2.edits.len()))
             {
+                // We've reached the end of the right side but there could still be a
+                // corresponding line on the left which we haven't picked up into the edit list.
+                // We'll just add it manually to the edit list. There's no real harm doing so --
+                // worst case is that there's an additional line when there didn't have to be.
+                if let Some(Edit::ExtraRight(_)) = path.edits.last() {
+                    if path.left_endpoint < left.len() {
+                        // The edits from the left should come before the corresponding one from the
+                        // right, so we insert rather than push.
+                        path.edits.insert(
+                            path.edits.len() - 1,
+                            Edit::ExtraLeft(left[path.left_endpoint]),
+                        );
+                    }
+                }
                 path.edits.push(Edit::AdditionalLeft);
                 return if path.edits.iter().any(|v| !matches!(v, Edit::Both(_))) {
                     Difference::Editable(std::mem::take(&mut path.edits))
@@ -443,6 +457,20 @@ mod tests {
                 matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
                 matches_pattern!(Edit::ExtraRight(eq("Right only"))),
                 matches_pattern!(Edit::Both(eq("Common part"))),
+            ]))
+        )
+    }
+
+    #[test]
+    fn does_not_skip_corresponding_line_on_left_when_left_and_right_differ_in_prefix_mode()
+    -> Result<()> {
+        let result = edit_list(["Left only"], ["Right only"], Mode::Prefix);
+        verify_that!(
+            result,
+            matches_pattern!(Difference::Editable(elements_are![
+                matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
+                matches_pattern!(Edit::ExtraRight(eq("Right only"))),
+                matches_pattern!(Edit::AdditionalLeft),
             ]))
         )
     }
