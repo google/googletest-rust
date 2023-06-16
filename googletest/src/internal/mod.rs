@@ -14,5 +14,6 @@
 
 #![doc(hidden)]
 
+pub mod abbreviate;
 pub mod source_location;
 pub mod test_outcome;
