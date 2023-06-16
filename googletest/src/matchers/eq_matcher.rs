@@ -119,6 +119,15 @@ impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher for EqMatcher<A, T> {
     }
 }
 
+/// Returns a string describing how the expected and actual lines differ.
+///
+/// This is included in a match explanation for [`EqMatcher`] and
+/// [`crate::matchers::str_matcher::StrMatcher`].
+///
+/// If the actual value has at most two lines, or the two differ by more than
+/// the maximum edit distance, then this returns the empty string. If the two
+/// are equal, it returns a simple statement that they are equal. Otherwise,
+/// this constructs a unified diff view of the actual and expected values.
 pub(super) fn create_diff(
     expected_debug: &str,
     actual_debug: &str,
@@ -132,6 +141,37 @@ pub(super) fn create_diff(
     match edit_distance::edit_list(actual_debug.lines(), expected_debug.lines(), diff_mode) {
         edit_distance::Difference::Equal => "No difference found between debug strings.".into(),
         edit_distance::Difference::Editable(edit_list) => {
+            format!("\nDifference:{}", edit_list_summary(&edit_list)).into()
+        }
+        edit_distance::Difference::Unrelated => "".into(),
+    }
+}
+
+/// Returns a string describing how the expected and actual differ after
+/// reversing the lines in each.
+///
+/// This is similar to [`create_diff`] except that it first reverses the lines
+/// in both the expected and actual values, then reverses the constructed edit
+/// list. When `diff_mode` is [`edit_distance::Mode::Prefix`], this becomes a
+/// diff of the suffix for use by [`ends_with`][crate::matchers::ends_with].
+pub(super) fn create_diff_reversed(
+    expected_debug: &str,
+    actual_debug: &str,
+    diff_mode: edit_distance::Mode,
+) -> Cow<'static, str> {
+    if actual_debug.lines().count() < 2 {
+        // If the actual debug is only one line, then there is no point in doing a
+        // line-by-line diff.
+        return "".into();
+    }
+    let mut actual_lines_reversed = actual_debug.lines().collect::<Vec<_>>();
+    let mut expected_lines_reversed = expected_debug.lines().collect::<Vec<_>>();
+    actual_lines_reversed.reverse();
+    expected_lines_reversed.reverse();
+    match edit_distance::edit_list(actual_lines_reversed, expected_lines_reversed, diff_mode) {
+        edit_distance::Difference::Equal => "No difference found between debug strings.".into(),
+        edit_distance::Difference::Editable(mut edit_list) => {
+            edit_list.reverse();
             format!("\nDifference:{}", edit_list_summary(&edit_list)).into()
         }
         edit_distance::Difference::Unrelated => "".into(),

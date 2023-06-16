@@ -17,7 +17,7 @@ use crate::{
     matcher_support::edit_distance,
     matchers::{
         eq_deref_of_matcher::EqDerefOfMatcher,
-        eq_matcher::{create_diff, EqMatcher},
+        eq_matcher::{create_diff, create_diff_reversed, EqMatcher},
     },
 };
 use std::borrow::Cow;
@@ -402,7 +402,7 @@ impl MatchMode {
         // TODO(b/286515736): Once supported, only MatchMode::Equals should map to
         // Mode::Exact.
         match self {
-            MatchMode::StartsWith => edit_distance::Mode::Prefix,
+            MatchMode::StartsWith | MatchMode::EndsWith => edit_distance::Mode::Prefix,
             _ => edit_distance::Mode::Exact,
         }
     }
@@ -540,10 +540,14 @@ impl Configuration {
             return default_explanation;
         }
 
-        format!(
-            "{default_explanation}\n{}",
-            create_diff(expected, actual, self.mode.to_diff_mode())
-        )
+        let diff = match self.mode {
+            MatchMode::Equals | MatchMode::StartsWith | MatchMode::Contains => {
+                create_diff(expected, actual, self.mode.to_diff_mode())
+            }
+            MatchMode::EndsWith => create_diff_reversed(expected, actual, self.mode.to_diff_mode()),
+        };
+
+        format!("{default_explanation}\n{diff}",)
     }
 
     fn ignoring_leading_whitespace(self) -> Self {
@@ -1033,10 +1037,46 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc!(
                 "
+                    Difference:
                      First line
                     +Second line
                     -Second lines
                     <---- remaining lines omitted ---->
+                "
+            ))))
+        )
+    }
+
+    #[test]
+    fn match_explanation_for_ends_with_ignores_leading_lines_in_actual_string() -> Result<()> {
+        let result = verify_that!(
+            indoc!(
+                "
+                    First line
+                    Second line
+                    Third line
+                    Fourth line
+                "
+            ),
+            ends_with(indoc!(
+                "
+                    Second line
+                    Third lines
+                    Fourth line
+                "
+            ))
+        );
+
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                    Difference:
+                    <---- remaining lines omitted ---->
+                     Second line
+                    -Third lines
+                    +Third line
+                     Fourth line
                 "
             ))))
         )
