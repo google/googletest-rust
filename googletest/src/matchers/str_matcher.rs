@@ -14,10 +14,10 @@
 
 use crate::{
     matcher::{Matcher, MatcherResult},
-    matcher_support::edit_distance,
+    matcher_support::{edit_distance, summarize_diff::{create_diff_reversed, create_diff}},
     matchers::{
         eq_deref_of_matcher::EqDerefOfMatcher,
-        eq_matcher::{create_diff, create_diff_reversed, EqMatcher},
+        eq_matcher::{ EqMatcher},
     },
 };
 use std::borrow::Cow;
@@ -973,10 +973,10 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc!(
                 "
-                     First line
-                    +Second line
-                    -Second lines
-                     Third line
+                First line
+                \x1B[1;31mSecond line\x1B[0m
+                \x1B[1;34mSecond lines\x1B[0m
+                Third line
                 "
             ))))
         )
@@ -1006,11 +1006,11 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc!(
                 "
-                     First line
-                    +Second line
-                    -Second lines
-                     Third line
-                    <---- remaining lines omitted ---->
+                    First line
+                    \x1B[1;31mSecond line\x1B[0m
+                    \x1B[1;34mSecond lines\x1B[0m
+                    Third line
+                    \x1B[3m<---- remaining lines omitted ---->\x1B[0m
                 "
             ))))
         )
@@ -1039,11 +1039,10 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc!(
                 "
-                    Difference:
-                     First line
-                    +Second line
-                    -Second lines
-                    <---- remaining lines omitted ---->
+                    First line
+                    \x1B[1;31mSecond line\x1B[0m
+                    \x1B[1;34mSecond lines\x1B[0m
+                    \x1B[3m<---- remaining lines omitted ---->\x1B[0m
                 "
             ))))
         )
@@ -1074,11 +1073,11 @@ mod tests {
             err(displays_as(contains_substring(indoc!(
                 "
                     Difference:
-                    <---- remaining lines omitted ---->
-                     Second line
-                    -Third lines
-                    +Third line
-                     Fourth line
+                    \x1B[3m<---- remaining lines omitted ---->\x1B[0m
+                    Second line
+                    \x1B[1;34mThird lines\x1B[0m
+                    \x1B[1;31mThird line\x1B[0m
+                    Fourth line
                 "
             ))))
         )
@@ -1111,13 +1110,12 @@ mod tests {
             err(displays_as(contains_substring(indoc!(
                 "
                     Difference:
-                    <---- remaining lines omitted ---->
-                     Second line
-                    -Third lines
-                    +Third line
-                     Fourth line
-                    <---- remaining lines omitted ---->
-                "
+                    \x1B[3m<---- remaining lines omitted ---->\x1B[0m
+                    Second line
+                    \x1B[1;34mThird lines\x1B[0m
+                    \x1B[1;31mThird line\x1B[0m
+                    Fourth line
+                    \x1B[3m<---- remaining lines omitted ---->\x1B[0m"
             ))))
         )
     }
@@ -1149,15 +1147,15 @@ mod tests {
             err(displays_as(contains_substring(indoc!(
                 "
                     Difference:
-                    <---- remaining lines omitted ---->
-                    -line
-                    +Second line
-                     Third line
-                    -Foorth line
-                    +Fourth line
-                    -Fifth
-                    +Fifth line
-                    <---- remaining lines omitted ---->
+                    \x1B[3m<---- remaining lines omitted ---->\x1B[0m
+                    \x1B[1;34mline\x1B[0m
+                    \x1B[1;31mSecond line\x1B[0m
+                    Third line
+                    \x1B[1;34mFoorth line\x1B[0m
+                    \x1B[1;31mFourth line\x1B[0m
+                    \x1B[1;34mFifth\x1B[0m
+                    \x1B[1;31mFifth line\x1B[0m
+                    \x1B[3m<---- remaining lines omitted ---->\x1B[0m
                 "
             ))))
         )
@@ -1187,11 +1185,11 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc!(
                 "
-                     First line
-                    +Second line
-                    -Second lines
-                     Third line
-                    +Fourth line
+                    First line
+                    \x1B[1;31mSecond line\x1B[0m
+                    \x1B[1;34mSecond lines\x1B[0m
+                    Third line
+                    \x1B[1;31mFourth line\x1B[0m
                 "
             ))))
         )

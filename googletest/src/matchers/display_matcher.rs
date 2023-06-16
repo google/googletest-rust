@@ -112,9 +112,9 @@ mod tests {
                 "
                     which displays as a string which isn't equal to \"123\\n345\"
                     Difference:
-                     123
-                    +234
-                    -345
+                    123
+                    \x1B[1;31m234\x1B[0m
+                    \x1B[1;34m345\x1B[0m
                 "
             ))))
         )

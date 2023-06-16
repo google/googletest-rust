@@ -14,8 +14,8 @@
 
 use crate::{
     matcher::{Matcher, MatcherResult},
-    matcher_support::edit_distance,
-    matchers::eq_matcher::create_diff,
+    matcher_support::{edit_distance, summarize_diff::create_diff},
+    
 };
 use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
@@ -136,17 +136,17 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc! {
-            r#"
-            Actual: Strukt { int: 123, string: "something" },
-              which isn't equal to Strukt { int: 321, string: "someone" }
+            "
+            Actual: Strukt { int: 123, string: \"something\" },
+              which isn't equal to Strukt { int: 321, string: \"someone\" }
             Difference:
-             Strukt {
-            +    int: 123,
-            -    int: 321,
-            +    string: "something",
-            -    string: "someone",
-             }
-            "#})))
+            Strukt {
+            \x1B[1;31m    int: 123,\x1B[0m
+            \x1B[1;34m    int: 321,\x1B[0m
+            \x1B[1;31m    string: \"something\",\x1B[0m
+            \x1B[1;34m    string: \"someone\",\x1B[0m
+            }
+            "})))
         )
     }
 }
