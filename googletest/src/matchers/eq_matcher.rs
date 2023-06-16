@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::internal::abbreviate::abbreviate;
 use crate::matcher::{Matcher, MatcherResult};
 use crate::matcher_support::edit_distance;
 use std::{borrow::Cow, fmt::Debug, marker::PhantomData};
@@ -88,9 +89,12 @@ impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher for EqMatcher<A, T> {
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
+        let formatted_expected = format!("{:?}", self.expected);
         match matcher_result {
-            MatcherResult::Matches => format!("is equal to {:?}", self.expected),
-            MatcherResult::DoesNotMatch => format!("isn't equal to {:?}", self.expected),
+            MatcherResult::Matches => format!("is equal to {}", abbreviate(&formatted_expected)),
+            MatcherResult::DoesNotMatch => {
+                format!("isn't equal to {}", abbreviate(&formatted_expected))
+            }
         }
     }
 
@@ -447,6 +451,20 @@ mod tests {
             Actual: "One\nTwo\nThree",
               which isn't equal to "One\nSix\nThree"
             "#})))
+        )
+    }
+
+    #[test]
+    fn description_abbreviates_long_expected_value() -> Result<()> {
+        let expected_value = "01234567\n".repeat(7);
+
+        let result = verify_that!("", eq(&expected_value));
+
+        verify_that!(
+            result,
+            err(displays_as(not(contains_substring(expected_value.as_str())).and(contains_substring(
+                "Expected: is equal to \"01234567\\n01234567\\n01234567\\n…01234567\\n01234567\\n01234567\\n\""
+            ))))
         )
     }
 

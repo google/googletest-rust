@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::internal::abbreviate::abbreviate;
 use crate::internal::source_location::SourceLocation;
 use crate::internal::test_outcome::TestAssertionFailure;
 use crate::matchers::conjunction_matcher::ConjunctionMatcher;
@@ -222,10 +223,11 @@ pub(crate) fn create_assertion_failure<T: Debug + ?Sized>(
         "\
 Value of: {actual_expr}
 Expected: {}
-Actual: {actual_formatted},
+Actual: {},
   {}
 {source_location}",
         matcher.describe(MatcherResult::Matches),
+        abbreviate(&actual_formatted),
         matcher.explain_match(actual),
     ))
 }
@@ -264,5 +266,24 @@ impl MatcherResult {
     /// type of `into()` to compile.
     pub fn into_bool(self) -> bool {
         self.into()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+
+    #[test]
+    fn actual_value_output_is_abbreviated_if_single_too_long_line() -> Result<()> {
+        let actual = "01234567\n".repeat(7);
+
+        let result = verify_that!(actual, eq(""));
+
+        verify_that!(
+            result,
+            err(displays_as(not(contains_substring(actual)).and(contains_substring(
+                "Actual: \"01234567\\n01234567\\n01234567\\n…01234567\\n01234567\\n01234567\\n\""
+            ))))
+        )
     }
 }
