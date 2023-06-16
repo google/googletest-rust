@@ -399,11 +399,10 @@ enum MatchMode {
 
 impl MatchMode {
     fn to_diff_mode(&self) -> edit_distance::Mode {
-        // TODO(b/286515736): Once supported, only MatchMode::Equals should map to
-        // Mode::Exact.
         match self {
             MatchMode::StartsWith | MatchMode::EndsWith => edit_distance::Mode::Prefix,
-            _ => edit_distance::Mode::Exact,
+            MatchMode::Contains => edit_distance::Mode::Contains,
+            MatchMode::Equals => edit_distance::Mode::Exact,
         }
     }
 }
@@ -542,6 +541,9 @@ impl Configuration {
 
         let diff = match self.mode {
             MatchMode::Equals | MatchMode::StartsWith | MatchMode::Contains => {
+                // TODO(b/287632452): Also consider improving the output in MatchMode::Contains
+                // when the substring begins or ends in the middle of a line of the actual
+                // value.
                 create_diff(expected, actual, self.mode.to_diff_mode())
             }
             MatchMode::EndsWith => create_diff_reversed(expected, actual, self.mode.to_diff_mode()),
@@ -1077,6 +1079,85 @@ mod tests {
                     -Third lines
                     +Third line
                      Fourth line
+                "
+            ))))
+        )
+    }
+
+    #[test]
+    fn match_explanation_for_contains_substring_ignores_outer_lines_in_actual_string() -> Result<()>
+    {
+        let result = verify_that!(
+            indoc!(
+                "
+                    First line
+                    Second line
+                    Third line
+                    Fourth line
+                    Fifth line
+                "
+            ),
+            contains_substring(indoc!(
+                "
+                    Second line
+                    Third lines
+                    Fourth line
+                "
+            ))
+        );
+
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                    Difference:
+                    <---- remaining lines omitted ---->
+                     Second line
+                    -Third lines
+                    +Third line
+                     Fourth line
+                    <---- remaining lines omitted ---->
+                "
+            ))))
+        )
+    }
+
+    #[test]
+    fn match_explanation_for_contains_substring_shows_diff_when_first_and_last_line_are_incomplete()
+    -> Result<()> {
+        let result = verify_that!(
+            indoc!(
+                "
+                    First line
+                    Second line
+                    Third line
+                    Fourth line
+                    Fifth line
+                "
+            ),
+            contains_substring(indoc!(
+                "
+                    line
+                    Third line
+                    Foorth line
+                    Fifth"
+            ))
+        );
+
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                    Difference:
+                    <---- remaining lines omitted ---->
+                    -line
+                    +Second line
+                     Third line
+                    -Foorth line
+                    +Fourth line
+                    -Fifth
+                    +Fifth line
+                    <---- remaining lines omitted ---->
                 "
             ))))
         )

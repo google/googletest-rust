@@ -61,6 +61,7 @@ pub(crate) enum Edit<T> {
 }
 
 /// Controls the termination condition of [`edit_list`].
+#[derive(Clone, Copy)]
 pub(crate) enum Mode {
     /// Indicates that the two arguments are intended to be equal.
     ///
@@ -73,6 +74,15 @@ pub(crate) enum Mode {
     /// Any additional parts of `left` after the prefix `right` are omitted from
     /// the output.
     Prefix,
+
+    /// Similar to [`Mode::Prefix`], except it is also assumed that `left` has
+    /// some number of initial lines which should not be in the output.
+    ///
+    /// Any initial [`Edit::ExtraLeft`] entries are replaced with
+    /// [`Edit::AdditionalLeft`] in the edit list. If the first entry which is
+    /// not an [`Edit::Extraleft`] is [`Edit::ExtraRight`], then the last
+    /// [`Edit::ExtraLeft`] is left in the output.
+    Contains,
 }
 
 /// Computes the edit list of `left` and `right`.
@@ -163,6 +173,9 @@ pub(crate) fn edit_list<T: PartialEq + Copy>(
             // If we have exhausted both inputs, we are done.
             if left_endpoint == left.len() && right_endpoint == right.len() {
                 return if path.edits.iter().any(|v| !matches!(v, Edit::Both(_))) {
+                    if matches!(mode, Mode::Contains) {
+                        compress_prefix_and_suffix(&mut path.edits);
+                    }
                     Difference::Editable(path.edits)
                 } else {
                     Difference::Equal
@@ -211,6 +224,30 @@ pub(crate) fn edit_list<T: PartialEq + Copy>(
 
 fn index_of_k(k: i32, k_min: i32) -> usize {
     ((k - k_min) / 2) as usize
+}
+
+fn compress_prefix_and_suffix<T>(edits: &mut Vec<Edit<T>>) {
+    if let Some(mut first_non_extra_left_edit) =
+        edits.iter().position(|e| !matches!(e, Edit::ExtraLeft(_)))
+    {
+        if first_non_extra_left_edit > 1
+            && matches!(edits[first_non_extra_left_edit], Edit::ExtraRight(_))
+        {
+            first_non_extra_left_edit -= 1;
+        }
+        edits.splice(..first_non_extra_left_edit, [Edit::AdditionalLeft]);
+    }
+
+    if let Some(mut last_non_extra_left_edit) =
+        edits.iter().rposition(|e| !matches!(e, Edit::ExtraLeft(_)))
+    {
+        if last_non_extra_left_edit < edits.len() - 1
+            && matches!(edits[last_non_extra_left_edit], Edit::ExtraRight(_))
+        {
+            last_non_extra_left_edit += 1;
+        }
+        edits.splice(last_non_extra_left_edit + 1.., [Edit::AdditionalLeft]);
+    }
 }
 
 #[derive(Clone)]
