@@ -259,21 +259,30 @@ macro_rules! matches_pattern_internal {
         [$($struct_name:tt)*],
         { $field_name:ident : $matcher:expr $(,)? }
     ) => {
-        all!(field!($($struct_name)*.$field_name, $matcher))
+        $crate::matchers::is_matcher::is(
+            stringify!($($struct_name)*),
+            all!(field!($($struct_name)*.$field_name, $matcher))
+        )
     };
 
     (
         [$($struct_name:tt)*],
         { $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
     ) => {
-        all!(property!($($struct_name)*.$property_name($($argument),*), $matcher))
+        $crate::matchers::is_matcher::is(
+            stringify!($($struct_name)*),
+            all!(property!($($struct_name)*.$property_name($($argument),*), $matcher))
+        )
     };
 
     (
         [$($struct_name:tt)*],
         { ref $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
     ) => {
-        all!(property!(ref $($struct_name)*.$property_name($($argument),*), $matcher))
+        $crate::matchers::is_matcher::is(
+            stringify!($($struct_name)*),
+            all!(property!(ref $($struct_name)*.$property_name($($argument),*), $matcher))
+        )
     };
 
     (
@@ -314,10 +323,10 @@ macro_rules! matches_pattern_internal {
         [$($struct_name:tt)*],
         { $field_name:ident : $matcher:expr $(,)? }
     ) => {
-        all!(
+        $crate::matchers::is_matcher::is(stringify!($($struct_name)*), all!(
             $($processed)*,
             field!($($struct_name)*.$field_name, $matcher)
-        )
+        ))
     };
 
     (
@@ -325,10 +334,10 @@ macro_rules! matches_pattern_internal {
         [$($struct_name:tt)*],
         { $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
     ) => {
-        all!(
+        $crate::matchers::is_matcher::is(stringify!($($struct_name)*), all!(
             $($processed)*,
             property!($($struct_name)*.$property_name($($argument),*), $matcher)
-        )
+        ))
     };
 
     (
@@ -336,10 +345,10 @@ macro_rules! matches_pattern_internal {
         [$($struct_name:tt)*],
         { ref $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
     ) => {
-        all!(
+        $crate::matchers::is_matcher::is(stringify!($($struct_name)*), all!(
             $($processed)*,
             property!(ref $($struct_name)*.$property_name($($argument),*), $matcher)
-        )
+        ))
     };
 
     (
@@ -401,7 +410,10 @@ macro_rules! matches_pattern_internal {
         [$($struct_name:tt)*],
         ($matcher:expr $(,)?)
     ) => {
-        all!(field!($($struct_name)*.0, $matcher))
+        $crate::matchers::is_matcher::is(
+            stringify!($($struct_name)*),
+            all!(field!($($struct_name)*.0, $matcher))
+        )
     };
 
     (
@@ -424,10 +436,10 @@ macro_rules! matches_pattern_internal {
         $field:tt,
         ($matcher:expr $(,)?)
     ) => {
-        all!(
+        $crate::matchers::is_matcher::is(stringify!($($struct_name)*), all!(
             $($processed)*,
             field!($($struct_name)*.$field, $matcher)
-        )
+        ))
     };
 
     // We need to repeat this once for every supported field position, unfortunately. There appears

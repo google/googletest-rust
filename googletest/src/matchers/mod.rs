@@ -32,6 +32,7 @@ pub mod field_matcher;
 pub mod ge_matcher;
 pub mod gt_matcher;
 pub mod has_entry_matcher;
+pub mod is_matcher;
 pub mod is_nan_matcher;
 pub mod le_matcher;
 pub mod len_matcher;

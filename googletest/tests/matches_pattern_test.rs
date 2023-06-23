@@ -121,7 +121,7 @@ fn has_correct_assertion_failure_message_for_single_field() -> Result<()> {
         result,
         err(displays_as(contains_substring(indoc! {"
             Value of: actual
-            Expected: has field `a_field`, which is equal to 234
+            Expected: is AStruct which has field `a_field`, which is equal to 234
             Actual: AStruct { a_field: 123 },
               which has field `a_field`, which isn't equal to 234
             "
@@ -146,7 +146,7 @@ fn has_correct_assertion_failure_message_for_two_fields() -> Result<()> {
         err(displays_as(contains_substring(indoc!(
             "
             Value of: actual
-            Expected: has all the following properties:
+            Expected: is AStruct which has all the following properties:
               * has field `a_field`, which is equal to 234
               * has field `another_field`, which is equal to 123
             Actual: AStruct { a_field: 123, another_field: 234 },
@@ -178,7 +178,7 @@ fn has_correct_assertion_failure_message_for_field_and_property() -> Result<()> 
         err(displays_as(contains_substring(indoc!(
             "
             Value of: actual
-            Expected: has all the following properties:
+            Expected: is AStruct which has all the following properties:
               * has property `get_field ()`, which is equal to 234
               * has field `another_field`, which is equal to 123
             Actual: AStruct { a_field: 123, another_field: 234 },
@@ -426,6 +426,209 @@ fn does_not_match_wrong_enum_value() -> Result<()> {
     let actual = AnEnum::B;
 
     verify_that!(actual, not(matches_pattern!(AnEnum::A(eq(123)))))
+}
+
+#[test]
+fn includes_enum_variant_in_description_with_field() -> Result<()> {
+    #[derive(Debug)]
+    enum AnEnum {
+        A(u32),
+    }
+    let actual = AnEnum::A(123);
+
+    let result = verify_that!(actual, matches_pattern!(AnEnum::A(eq(234))));
+
+    verify_that!(
+        result,
+        err(displays_as(contains_substring("Expected: is AnEnum :: A which has field `0`")))
+    )
+}
+
+#[test]
+fn includes_enum_variant_in_negative_description_with_field() -> Result<()> {
+    #[derive(Debug)]
+    enum AnEnum {
+        A(u32),
+    }
+    let actual = AnEnum::A(123);
+
+    let result = verify_that!(actual, not(matches_pattern!(AnEnum::A(eq(123)))));
+
+    verify_that!(
+        result,
+        err(displays_as(contains_substring(
+            "Expected: is not AnEnum :: A which has field `0`, which is equal to"
+        )))
+    )
+}
+
+#[test]
+fn includes_enum_variant_in_description_with_two_fields() -> Result<()> {
+    #[derive(Debug)]
+    enum AnEnum {
+        A(u32, u32),
+    }
+    let actual = AnEnum::A(123, 234);
+
+    let result = verify_that!(actual, matches_pattern!(AnEnum::A(eq(234), eq(234))));
+
+    verify_that!(
+        result,
+        err(displays_as(contains_substring(
+            "Expected: is AnEnum :: A which has all the following properties"
+        )))
+    )
+}
+
+#[test]
+fn includes_enum_variant_in_description_with_three_fields() -> Result<()> {
+    #[derive(Debug)]
+    enum AnEnum {
+        A(u32, u32, u32),
+    }
+    let actual = AnEnum::A(123, 234, 345);
+
+    let result = verify_that!(actual, matches_pattern!(AnEnum::A(eq(234), eq(234), eq(345))));
+
+    verify_that!(
+        result,
+        err(displays_as(contains_substring(
+            "Expected: is AnEnum :: A which has all the following properties"
+        )))
+    )
+}
+
+#[test]
+fn includes_enum_variant_in_description_with_named_field() -> Result<()> {
+    #[derive(Debug)]
+    enum AnEnum {
+        A { field: u32 },
+    }
+    let actual = AnEnum::A { field: 123 };
+
+    let result = verify_that!(actual, matches_pattern!(AnEnum::A { field: eq(234) }));
+
+    verify_that!(
+        result,
+        err(displays_as(contains_substring("Expected: is AnEnum :: A which has field `field`")))
+    )
+}
+
+#[test]
+fn includes_enum_variant_in_description_with_two_named_fields() -> Result<()> {
+    #[derive(Debug)]
+    enum AnEnum {
+        A { field: u32, another_field: u32 },
+    }
+    let actual = AnEnum::A { field: 123, another_field: 234 };
+
+    let result = verify_that!(
+        actual,
+        matches_pattern!(AnEnum::A { field: eq(234), another_field: eq(234) })
+    );
+
+    verify_that!(
+        result,
+        err(displays_as(contains_substring(
+            "Expected: is AnEnum :: A which has all the following properties"
+        )))
+    )
+}
+
+#[test]
+fn includes_struct_name_in_description_with_property() -> Result<()> {
+    #[derive(Debug)]
+    struct AStruct {
+        field: u32,
+    }
+    impl AStruct {
+        fn get_field(&self) -> u32 {
+            self.field
+        }
+    }
+    let actual = AStruct { field: 123 };
+
+    let result = verify_that!(actual, matches_pattern!(AStruct { get_field(): eq(234) }));
+
+    verify_that!(
+        result,
+        err(displays_as(contains_substring(
+            "Expected: is AStruct which has property `get_field ()`"
+        )))
+    )
+}
+
+#[test]
+fn includes_struct_name_in_description_with_ref_property() -> Result<()> {
+    #[derive(Debug)]
+    struct AStruct {
+        field: u32,
+    }
+    impl AStruct {
+        fn get_field(&self) -> &u32 {
+            &self.field
+        }
+    }
+    let actual = AStruct { field: 123 };
+
+    let result = verify_that!(actual, matches_pattern!(AStruct { ref get_field(): eq(234) }));
+
+    verify_that!(
+        result,
+        err(displays_as(contains_substring(
+            "Expected: is AStruct which has property `get_field ()`"
+        )))
+    )
+}
+
+#[test]
+fn includes_struct_name_in_description_with_property_after_field() -> Result<()> {
+    #[derive(Debug)]
+    struct AStruct {
+        field: u32,
+    }
+    impl AStruct {
+        fn get_field(&self) -> u32 {
+            self.field
+        }
+    }
+    let actual = AStruct { field: 123 };
+
+    let result =
+        verify_that!(actual, matches_pattern!(AStruct { field: eq(123), get_field(): eq(234) }));
+
+    verify_that!(
+        result,
+        err(displays_as(contains_substring(
+            "Expected: is AStruct which has all the following properties"
+        )))
+    )
+}
+
+#[test]
+fn includes_struct_name_in_description_with_ref_property_after_field() -> Result<()> {
+    #[derive(Debug)]
+    struct AStruct {
+        field: u32,
+    }
+    impl AStruct {
+        fn get_field(&self) -> &u32 {
+            &self.field
+        }
+    }
+    let actual = AStruct { field: 123 };
+
+    let result = verify_that!(
+        actual,
+        matches_pattern!(AStruct { field: eq(123), ref get_field(): eq(234) })
+    );
+
+    verify_that!(
+        result,
+        err(displays_as(contains_substring(
+            "Expected: is AStruct which has all the following properties"
+        )))
+    )
 }
 
 #[test]
