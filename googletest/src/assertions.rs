@@ -52,8 +52,30 @@
 /// # verify_that!(should_fail(), err(displays_as(contains_substring("Expected: is equal to 123"))))
 /// #     .unwrap();
 /// ```
+///
+/// This macro has special support for matching against container. Namely:
+///   * `verify_that!(actual, [m1, m2, ...])` is equivalent to
+///     `verify_that!(actual, elements_are![m1, m2, ...])`
+///   * `verify_that!(actual, {m1, m2, ...})` is equivalent to
+///     `verify_that!(actual, unordered_elements_are![m1, m2, ...])`
 #[macro_export]
 macro_rules! verify_that {
+    ($actual:expr, [$($expecteds:expr),+]) => {
+        $crate::assertions::internal::check_matcher(
+            &$actual,
+            $crate::elements_are![$($expecteds),+],
+            stringify!($actual),
+            $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!()),
+        )
+    };
+    ($actual:expr, {$($expecteds:expr),+}) => {
+        $crate::assertions::internal::check_matcher(
+            &$actual,
+            $crate::unordered_elements_are![$($expecteds),+],
+            stringify!($actual),
+            $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!()),
+        )
+    };
     ($actual:expr, $expected:expr) => {
         $crate::assertions::internal::check_matcher(
             &$actual,
