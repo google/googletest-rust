@@ -70,7 +70,7 @@
 /// ```
 ///
 /// Note: This behavior is only possible in [`verify_that!`] macros. In any other cases, it is still necessary
-/// to use the [`unordered_elements_are!`] macro.
+/// to use the [`unordered_elements_are!`][crate::unordered_elements_are] macro.
 ///
 /// ```compile_fail
 /// # use googletest::prelude::*;

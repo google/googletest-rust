@@ -47,7 +47,8 @@
 /// #     .unwrap();
 /// ```
 ///
-/// Note: This behavior is only possible in [`verify_that!`] macros. In any other cases, it is still necessary to use the [`elements_are!`] macro.
+/// Note: This behavior is only possible in [`verify_that!`] macros. In any other cases,
+/// it is still necessary to use the [`elements_are!`][crate::elements_are] macro.
 ///
 /// ```compile_fail
 /// # use googletest::prelude::*;
