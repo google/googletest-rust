@@ -36,6 +36,12 @@ fn unordered_elements_are_matches_vector() -> Result<()> {
 }
 
 #[test]
+fn unordered_elements_are_omitted() -> Result<()> {
+    let value = vec![1, 2, 3];
+    verify_that!(value, {eq(1), eq(2), eq(3)})
+}
+
+#[test]
 fn unordered_elements_are_matches_slice() -> Result<()> {
     let value = vec![1, 2, 3];
     let slice = value.as_slice();

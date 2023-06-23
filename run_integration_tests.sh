@@ -46,6 +46,7 @@ INTEGRATION_TEST_BINARIES=(
   "two_non_fatal_failures"
   "verify_predicate_with_failure"
   "verify_predicate_with_failure_as_method_in_submodule"
+  "verify_that_omitted_container_matcher"
 )
 
 cargo build

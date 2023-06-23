@@ -39,6 +39,14 @@
 /// #    .unwrap();
 /// ```
 ///
+/// This can also be omitted in [`verify_that!`] macros and replaced with square brackets.
+/// 
+/// ```
+/// # use googletest::prelude::*;
+///  verify_that!(vec![1, 2], [eq(1), eq(2)])
+/// #     .unwrap();
+/// ```
+/// 
 /// This matcher does not support matching directly against an [`Iterator`]. To
 /// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
 ///

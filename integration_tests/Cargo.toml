@@ -148,3 +148,8 @@ test = false
 name = "verify_predicate_with_failure_as_method_in_submodule"
 path = "src/verify_predicate_with_failure_as_method_in_submodule.rs"
 test = false
+
+[[bin]]
+name = "verify_that_omitted_container_matcher"
+path = "src/verify_that_omitted_container_matcher.rs"
+test = false
