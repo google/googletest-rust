@@ -62,13 +62,30 @@
 /// ```
 ///
 /// This can also be omitted in [`verify_that!`] macros and replaced with curly brackets.
-/// 
+///
 /// ```
 /// # use googletest::prelude::*;
 ///  verify_that!(vec![1, 2], {eq(2), eq(1)})
 /// #     .unwrap();
 /// ```
-/// 
+///
+/// Note: This behavior is only possible in [`verify_that!`] macros. In any other cases, it is still necessary
+/// to use the [`unordered_elements_are!`] macro.
+///
+/// ```compile_fail
+/// # use googletest::prelude::*;
+/// verify_that!(vec![vec![1,2], vec![3]], {{eq(2), eq(1)}, {eq(3)}})
+/// # .unwrap();
+/// ```
+///
+/// Prefer:
+/// ```
+/// # use googletest::prelude::*;
+/// verify_that!(vec![vec![1,2], vec![3]],
+///   {unordered_elements_are![eq(2), eq(1)], unordered_elements_are![eq(3)]})
+/// # .unwrap();
+/// ```
+///
 /// This matcher does not support matching directly against an [`Iterator`]. To
 /// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
 ///
