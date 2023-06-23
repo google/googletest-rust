@@ -40,11 +40,12 @@
 /// # should_pass().unwrap();
 /// # fn should_fail() -> Result<()> {
 /// # googletest::internal::test_outcome::TestOutcome::init_current_test_outcome();
-/// verify_that!(42, eq(123)).and_log_failure();
+/// let value = 42;
+/// verify_that!(value, eq(123)).and_log_failure();
 ///             // This will log a test failure and allow execution to continue.
-/// let _ = verify_that!(42, eq(123)); // This will do nothing.
-/// verify_that!(42, eq(123))?; // This will fail, returning immediately.
-/// verify_that!(42, eq(0))?; // This will not run.
+/// let _ = verify_that!(value, eq(123)); // This will do nothing.
+/// verify_that!(value, eq(123))?; // This will fail, returning immediately.
+/// verify_that!(value, eq(0))?; // This will not run.
 /// # googletest::internal::test_outcome::TestOutcome::close_current_test_outcome::<&str>(Ok(()))
 /// #     .unwrap_err();
 /// # Ok(())
@@ -52,6 +53,46 @@
 /// # verify_that!(should_fail(), err(displays_as(contains_substring("Expected: is equal to 123"))))
 /// #     .unwrap();
 /// ```
+///
+/// The `Result::Err` to which this evaluates produces a
+/// [`Display`][std::fmt::Display] output which explains the failure. This
+/// includes:
+///
+///  * the expresion which was evaluated to obtain the actual value,
+///  * a description of the expected value (obtained via
+///    [`Matcher::describe`][crate::matcher::Matcher::describe]),
+///  * the evaluated actual value,
+///  * the source code location of the failed assertion, and
+///  * possibly an additional explanation of the failure, depending on the
+///    matcher used (obtained via
+///    [`Matcher::explain_match`][crate::matcher::Matcher::explain_match]).
+///
+/// For example:
+///
+/// ```text
+/// Value of: value
+/// Expected: is equal to 123
+/// Actual: 42,
+///   which isn't equal to 123
+///   at src/example.rs:123:9
+/// ```
+///
+/// The actual value is displayed via its [`Debug`][std::fmt::Debug] output,
+/// which is pretty-printed if it is sufficiently long.
+///
+/// If the pretty-printed debug output of the actual value is:
+///
+///  * a single line,
+///  * containing a least one escaped newline character sequence (`\n`), and
+///  * longer than about 60 characters,
+///
+/// then it is abbreviated by default by printing the first and last ca. 30
+/// characters separated by an ellipsis (`…`). Some matchers, such as
+/// [`eq`][crate::matchers::eq], treat the expected value in the same way.
+///
+/// One can disable this abbreviation behaviour by setting the environment
+/// variable `GTEST_RUST_DISABLE_ABBREVIATION` to any value.
+
 #[macro_export]
 macro_rules! verify_that {
     ($actual:expr, $expected:expr) => {
