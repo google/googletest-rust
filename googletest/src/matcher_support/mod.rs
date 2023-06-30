@@ -21,4 +21,5 @@
 pub(crate) mod count_elements;
 pub mod description;
 pub(crate) mod edit_distance;
+pub(crate) mod summarize_diff;
 pub(crate) mod zipped_iterator;

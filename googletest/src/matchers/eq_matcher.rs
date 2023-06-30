@@ -14,7 +14,9 @@
 
 use crate::matcher::{Matcher, MatcherResult};
 use crate::matcher_support::edit_distance;
-use std::{borrow::Cow, fmt::Debug, marker::PhantomData};
+use crate::matcher_support::summarize_diff::create_diff;
+
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a value equal (in the sense of `==`) to `expected`.
 ///
@@ -119,125 +121,6 @@ impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher for EqMatcher<A, T> {
     }
 }
 
-/// Returns a string describing how the expected and actual lines differ.
-///
-/// This is included in a match explanation for [`EqMatcher`] and
-/// [`crate::matchers::str_matcher::StrMatcher`].
-///
-/// If the actual value has at most two lines, or the two differ by more than
-/// the maximum edit distance, then this returns the empty string. If the two
-/// are equal, it returns a simple statement that they are equal. Otherwise,
-/// this constructs a unified diff view of the actual and expected values.
-pub(super) fn create_diff(
-    expected_debug: &str,
-    actual_debug: &str,
-    diff_mode: edit_distance::Mode,
-) -> Cow<'static, str> {
-    if actual_debug.lines().count() < 2 {
-        // If the actual debug is only one line, then there is no point in doing a
-        // line-by-line diff.
-        return "".into();
-    }
-    match edit_distance::edit_list(actual_debug.lines(), expected_debug.lines(), diff_mode) {
-        edit_distance::Difference::Equal => "No difference found between debug strings.".into(),
-        edit_distance::Difference::Editable(edit_list) => {
-            format!("\nDifference:{}", edit_list_summary(&edit_list)).into()
-        }
-        edit_distance::Difference::Unrelated => "".into(),
-    }
-}
-
-/// Returns a string describing how the expected and actual differ after
-/// reversing the lines in each.
-///
-/// This is similar to [`create_diff`] except that it first reverses the lines
-/// in both the expected and actual values, then reverses the constructed edit
-/// list. When `diff_mode` is [`edit_distance::Mode::Prefix`], this becomes a
-/// diff of the suffix for use by [`ends_with`][crate::matchers::ends_with].
-pub(super) fn create_diff_reversed(
-    expected_debug: &str,
-    actual_debug: &str,
-    diff_mode: edit_distance::Mode,
-) -> Cow<'static, str> {
-    if actual_debug.lines().count() < 2 {
-        // If the actual debug is only one line, then there is no point in doing a
-        // line-by-line diff.
-        return "".into();
-    }
-    let mut actual_lines_reversed = actual_debug.lines().collect::<Vec<_>>();
-    let mut expected_lines_reversed = expected_debug.lines().collect::<Vec<_>>();
-    actual_lines_reversed.reverse();
-    expected_lines_reversed.reverse();
-    match edit_distance::edit_list(actual_lines_reversed, expected_lines_reversed, diff_mode) {
-        edit_distance::Difference::Equal => "No difference found between debug strings.".into(),
-        edit_distance::Difference::Editable(mut edit_list) => {
-            edit_list.reverse();
-            format!("\nDifference:{}", edit_list_summary(&edit_list)).into()
-        }
-        edit_distance::Difference::Unrelated => "".into(),
-    }
-}
-
-fn edit_list_summary(edit_list: &[edit_distance::Edit<&str>]) -> String {
-    let mut summary = String::new();
-    // Use to collect common line and compress them.
-    let mut common_line_buffer = vec![];
-    for edit in edit_list {
-        let (start, line) = match edit {
-            edit_distance::Edit::Both(left) => {
-                common_line_buffer.push(*left);
-                continue;
-            }
-            edit_distance::Edit::ExtraLeft(left) => ("+", *left),
-            edit_distance::Edit::ExtraRight(right) => ("-", *right),
-            edit_distance::Edit::AdditionalLeft => ("<---- remaining lines omitted ---->", ""),
-        };
-        summary.push_str(&compress_common_lines(std::mem::take(&mut common_line_buffer)));
-
-        summary.push('\n');
-        summary.push_str(start);
-        summary.push_str(line);
-    }
-    summary.push_str(&compress_common_lines(common_line_buffer));
-
-    summary
-}
-
-// The number of the lines kept before and after the compressed lines.
-const COMMON_LINES_CONTEXT_SIZE: usize = 2;
-
-fn compress_common_lines(common_lines: Vec<&str>) -> String {
-    if common_lines.len() <= 2 * COMMON_LINES_CONTEXT_SIZE + 1 {
-        let mut all_lines = String::new();
-        for line in common_lines {
-            all_lines.push('\n');
-            all_lines.push(' ');
-            all_lines.push_str(line);
-        }
-        return all_lines;
-    }
-
-    let mut truncated_lines = String::new();
-
-    for line in &common_lines[0..COMMON_LINES_CONTEXT_SIZE] {
-        truncated_lines.push('\n');
-        truncated_lines.push(' ');
-        truncated_lines.push_str(line);
-    }
-
-    truncated_lines.push_str(&format!(
-        "\n<---- {} common lines omitted ---->",
-        common_lines.len() - 2 * COMMON_LINES_CONTEXT_SIZE
-    ));
-
-    for line in &common_lines[common_lines.len() - COMMON_LINES_CONTEXT_SIZE..common_lines.len()] {
-        truncated_lines.push('\n');
-        truncated_lines.push(' ');
-        truncated_lines.push_str(line);
-    }
-    truncated_lines
-}
-
 fn is_multiline_string_debug(string: &str) -> bool {
     string.starts_with('"')
         && string.ends_with('"')
@@ -292,17 +175,17 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc! {
-            r#"
-            Actual: Strukt { int: 123, string: "something" },
-              which isn't equal to Strukt { int: 321, string: "someone" }
+            "
+            Actual: Strukt { int: 123, string: \"something\" },
+              which isn't equal to Strukt { int: 321, string: \"someone\" }
             Difference:
              Strukt {
-            +    int: 123,
-            -    int: 321,
-            +    string: "something",
-            -    string: "someone",
+            +\x1B[1;31m    int: 123,\x1B[0m
+            -\x1B[1;34m    int: 321,\x1B[0m
+            +\x1B[1;31m    string: \"something\",\x1B[0m
+            -\x1B[1;34m    string: \"someone\",\x1B[0m
              }
-            "#})))
+            "})))
         )
     }
 
@@ -312,7 +195,7 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc! {
-            r#"
+            "
             Value of: vec![1, 2, 3]
             Expected: is equal to [1, 3, 4]
             Actual: [1, 2, 3],
@@ -320,11 +203,11 @@ mod tests {
             Difference:
              [
                  1,
-            +    2,
+            +\x1B[1;31m    2,\x1B[0m
                  3,
-            -    4,
+            -\x1B[1;34m    4,\x1B[0m
              ]
-            "#})))
+            "})))
         )
     }
 
@@ -334,7 +217,7 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc! {
-            r#"
+            "
             Value of: vec![1, 2, 3, 4, 5]
             Expected: is equal to [1, 3, 5]
             Actual: [1, 2, 3, 4, 5],
@@ -342,12 +225,12 @@ mod tests {
             Difference:
              [
                  1,
-            +    2,
+            +\x1B[1;31m    2,\x1B[0m
                  3,
-            +    4,
+            +\x1B[1;31m    4,\x1B[0m
                  5,
              ]
-            "#})))
+            "})))
         )
     }
 
@@ -360,15 +243,15 @@ mod tests {
             "
             Difference:
              [
-            +    1,
-            +    2,
+            +\x1B[1;31m    1,\x1B[0m
+            +\x1B[1;31m    2,\x1B[0m
                  3,
                  4,
-            <---- 43 common lines omitted ---->
+             \x1B[3m<---- 43 common lines omitted ---->\x1B[0m
                  48,
                  49,
-            -    50,
-            -    51,
+            -\x1B[1;34m    50,\x1B[0m
+            -\x1B[1;34m    51,\x1B[0m
              ]"})))
         )
     }
@@ -382,15 +265,15 @@ mod tests {
             "
             Difference:
              [
-            +    1,
-            +    2,
+            +\x1B[1;31m    1,\x1B[0m
+            +\x1B[1;31m    2,\x1B[0m
                  3,
                  4,
                  5,
                  6,
                  7,
-            -    8,
-            -    9,
+            -\x1B[1;34m    8,\x1B[0m
+            -\x1B[1;34m    9,\x1B[0m
              ]"})))
         )
     }
@@ -405,11 +288,11 @@ mod tests {
             Difference:
              [
                  1,
-            <---- 46 common lines omitted ---->
+             \x1B[3m<---- 46 common lines omitted ---->\x1B[0m
                  48,
                  49,
-            -    50,
-            -    51,
+            -\x1B[1;34m    50,\x1B[0m
+            -\x1B[1;34m    51,\x1B[0m
              ]"})))
         )
     }
@@ -423,11 +306,11 @@ mod tests {
             "
             Difference:
              [
-            +    1,
-            +    2,
+            +\x1B[1;31m    1,\x1B[0m
+            +\x1B[1;31m    2,\x1B[0m
                  3,
                  4,
-            <---- 46 common lines omitted ---->
+             \x1B[3m<---- 46 common lines omitted ---->\x1B[0m
                  51,
              ]"})))
         )
@@ -472,12 +355,12 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc!(
-                r#"
-                     First line
-                    +Second line
-                    -Second lines
-                     Third line
-                "#
+                "
+                 First line
+                +\x1B[1;31mSecond line\x1B[0m
+                -\x1B[1;34mSecond lines\x1B[0m
+                 Third line
+                "
             ))))
         )
     }
