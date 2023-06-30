@@ -163,3 +163,10 @@ impl<T: std::error::Error> From<T> for TestAssertionFailure {
         TestAssertionFailure::create(format!("{value}"))
     }
 }
+
+#[cfg(feature = "proptest")]
+impl From<TestAssertionFailure> for proptest::test_runner::TestCaseError {
+    fn from(value: TestAssertionFailure) -> Self {
+        proptest::test_runner::TestCaseError::Fail(format!("{value}").into())
+    }
+}

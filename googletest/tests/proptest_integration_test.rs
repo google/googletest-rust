@@ -12,14 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod all_matcher_test;
-mod composition_test;
-mod elements_are_matcher_test;
-mod field_matcher_test;
-mod matches_pattern_test;
-mod pointwise_matcher_test;
-mod property_matcher_test;
-#[cfg(feature = "proptest")]
-mod proptest_integration_test;
-mod tuple_matcher_test;
-mod unordered_elements_are_matcher_test;
+#![cfg(feature = "proptest")]
+
+use googletest::prelude::*;
+use proptest::test_runner::{Config, TestRunner};
+
+#[test]
+fn numbers_are_greater_than_zero() -> Result<()> {
+    let mut runner = TestRunner::new(Config::default());
+    runner.run(&(1..100i32), |v| Ok(verify_that!(v, gt(0))?)).into_test_result()
+}
+
+#[test]
+fn strings_are_nonempty() -> Result<()> {
+    let mut runner = TestRunner::new(Config::default());
+    runner.run(&"[a-zA-Z0-9]+", |v| Ok(verify_that!(v, not(eq("")))?)).into_test_result()
+}

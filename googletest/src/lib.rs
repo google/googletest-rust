@@ -232,3 +232,12 @@ impl<T> IntoTestResult<T> for std::result::Result<T, anyhow::Error> {
         self.map_err(|e| TestAssertionFailure::create(format!("{e}")))
     }
 }
+
+#[cfg(feature = "proptest")]
+impl<OkT, CaseT: std::fmt::Debug> IntoTestResult<OkT>
+    for std::result::Result<OkT, proptest::test_runner::TestError<CaseT>>
+{
+    fn into_test_result(self) -> std::result::Result<OkT, TestAssertionFailure> {
+        self.map_err(|e| TestAssertionFailure::create(format!("{e}")))
+    }
+}
