@@ -183,10 +183,10 @@ pub mod internal {
                     self.inner.explain_match(actual)
                 )
             } else {
-                // TODO(hovinen): This message could be misinterpreted to mean that there were a
-                // typo in the field, when it actually means that the actual value uses the
-                // wrong enum variant. Reword this appropriately.
-                format!("which has no field `{}`", self.field_path)
+                let formatted_actual_value = format!("{actual:?}");
+                let without_fields = formatted_actual_value.split('(').next().unwrap_or("");
+                let without_fields = without_fields.split('{').next().unwrap_or("").trim_end();
+                format!("which has the wrong enum variant `{without_fields}`")
             }
         }
 

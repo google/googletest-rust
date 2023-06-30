@@ -121,7 +121,49 @@ fn shows_correct_failure_message_for_wrong_enum_value() -> Result<()> {
 
     let result = verify_that!(value, field!(AnEnum::AValue.a, eq(123)));
 
-    verify_that!(result, err(displays_as(contains_substring("which has no field `a`"))))
+    verify_that!(
+        result,
+        err(displays_as(contains_substring("which has the wrong enum variant `AnotherValue`")))
+    )
+}
+
+#[test]
+fn shows_correct_failure_message_for_wrong_enum_value_with_tuple_field() -> Result<()> {
+    #[derive(Debug)]
+    enum AnEnum {
+        #[allow(dead_code)] // This variant is intentionally unused.
+        AValue(u32),
+        AnotherValue(u32),
+    }
+    let value = AnEnum::AnotherValue(123);
+
+    let result = verify_that!(value, field!(AnEnum::AValue.0, eq(123)));
+
+    verify_that!(
+        result,
+        err(displays_as(contains_substring("which has the wrong enum variant `AnotherValue`")))
+    )
+}
+
+#[test]
+fn shows_correct_failure_message_for_wrong_enum_value_with_named_field() -> Result<()> {
+    #[derive(Debug)]
+    enum AnEnum {
+        #[allow(dead_code)] // This variant is intentionally unused.
+        AValue(u32),
+        AnotherValue {
+            #[allow(unused)]
+            a: u32,
+        },
+    }
+    let value = AnEnum::AnotherValue { a: 123 };
+
+    let result = verify_that!(value, field!(AnEnum::AValue.0, eq(123)));
+
+    verify_that!(
+        result,
+        err(displays_as(contains_substring("which has the wrong enum variant `AnotherValue`")))
+    )
 }
 
 #[test]

@@ -189,6 +189,29 @@ fn has_correct_assertion_failure_message_for_field_and_property() -> Result<()> 
 }
 
 #[test]
+fn has_meaningful_assertion_failure_message_when_wrong_enum_variant_is_used() -> Result<()> {
+    #[derive(Debug)]
+    enum AnEnum {
+        A(u32),
+        #[allow(unused)]
+        B(u32),
+    }
+    let actual = AnEnum::A(123);
+    let result = verify_that!(actual, matches_pattern!(AnEnum::B(eq(123))));
+
+    verify_that!(
+        result,
+        err(displays_as(contains_substring(indoc! {"
+            Value of: actual
+            Expected: is AnEnum :: B which has field `0`, which is equal to 123
+            Actual: A(123),
+              which has the wrong enum variant `A`
+            "
+        })))
+    )
+}
+
+#[test]
 fn supports_qualified_struct_names() -> Result<()> {
     mod a_module {
         #[derive(Debug)]
