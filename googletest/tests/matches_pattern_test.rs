@@ -189,6 +189,29 @@ fn has_correct_assertion_failure_message_for_field_and_property() -> Result<()> 
 }
 
 #[test]
+fn has_meaningful_assertion_failure_message_when_wrong_enum_variant_is_used() -> Result<()> {
+    #[derive(Debug)]
+    enum AnEnum {
+        A(u32),
+        #[allow(unused)]
+        B(u32),
+    }
+    let actual = AnEnum::A(123);
+    let result = verify_that!(actual, matches_pattern!(AnEnum::B(eq(123))));
+
+    verify_that!(
+        result,
+        err(displays_as(contains_substring(indoc! {"
+            Value of: actual
+            Expected: is AnEnum :: B which has field `0`, which is equal to 123
+            Actual: A(123),
+              which has the wrong enum variant `A`
+            "
+        })))
+    )
+}
+
+#[test]
 fn supports_qualified_struct_names() -> Result<()> {
     mod a_module {
         #[derive(Debug)]
@@ -972,8 +995,8 @@ fn matches_struct_with_a_method_returning_reference_followed_by_a_field() -> Res
 }
 
 #[test]
-fn matches_struct_with_a_method_returning_reference_followed_by_a_field_with_trailing_comma()
--> Result<()> {
+fn matches_struct_with_a_method_returning_reference_followed_by_a_field_with_trailing_comma(
+) -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
@@ -1043,8 +1066,8 @@ fn matches_struct_with_a_method_taking_enum_value_param_ret_ref_followed_by_fiel
 }
 
 #[test]
-fn matches_struct_with_a_method_taking_two_parameters_with_trailing_comma_ret_ref_and_field()
--> Result<()> {
+fn matches_struct_with_a_method_taking_two_parameters_with_trailing_comma_ret_ref_and_field(
+) -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
@@ -1270,8 +1293,8 @@ fn matches_struct_with_field_followed_by_method_taking_enum_value_param_ret_ref(
 }
 
 #[test]
-fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_comma_ret_ref()
--> Result<()> {
+fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_comma_ret_ref(
+) -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
@@ -1320,8 +1343,8 @@ fn matches_struct_with_a_field_followed_by_a_method_followed_by_a_field() -> Res
 }
 
 #[test]
-fn matches_struct_with_a_field_followed_by_a_method_followed_by_a_field_with_trailing_comma()
--> Result<()> {
+fn matches_struct_with_a_field_followed_by_a_method_followed_by_a_field_with_trailing_comma(
+) -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
@@ -1376,8 +1399,8 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_followed_by_a_fi
 }
 
 #[test]
-fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_comma_followed_by_a_field()
--> Result<()> {
+fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_comma_followed_by_a_field(
+) -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
@@ -1404,8 +1427,8 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_com
 }
 
 #[test]
-fn matches_struct_with_field_followed_by_method_taking_enum_value_param_followed_by_field()
--> Result<()> {
+fn matches_struct_with_field_followed_by_method_taking_enum_value_param_followed_by_field(
+) -> Result<()> {
     enum AnEnum {
         AVariant,
     }
@@ -1463,8 +1486,8 @@ fn matches_struct_with_a_field_followed_by_a_method_ret_ref_followed_by_a_field(
 }
 
 #[test]
-fn matches_struct_with_a_field_followed_by_a_method_ret_ref_followed_by_a_field_with_trailing_comma()
--> Result<()> {
+fn matches_struct_with_a_field_followed_by_a_method_ret_ref_followed_by_a_field_with_trailing_comma(
+) -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
@@ -1491,8 +1514,8 @@ fn matches_struct_with_a_field_followed_by_a_method_ret_ref_followed_by_a_field_
 }
 
 #[test]
-fn matches_struct_with_a_field_followed_by_a_method_with_params_ret_ref_followed_by_a_field()
--> Result<()> {
+fn matches_struct_with_a_field_followed_by_a_method_with_params_ret_ref_followed_by_a_field(
+) -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
@@ -1519,8 +1542,8 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_ret_ref_followed
 }
 
 #[test]
-fn matches_struct_with_field_followed_by_method_taking_enum_value_param_ret_ref_followed_by_field()
--> Result<()> {
+fn matches_struct_with_field_followed_by_method_taking_enum_value_param_ret_ref_followed_by_field(
+) -> Result<()> {
     enum AnEnum {
         AVariant,
     }
@@ -1551,8 +1574,8 @@ fn matches_struct_with_field_followed_by_method_taking_enum_value_param_ret_ref_
 }
 
 #[test]
-fn matches_struct_with_a_field_followed_by_a_method_with_params_trailing_comma_ret_ref_followed_by_a_field()
--> Result<()> {
+fn matches_struct_with_a_field_followed_by_a_method_with_params_trailing_comma_ret_ref_followed_by_a_field(
+) -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
