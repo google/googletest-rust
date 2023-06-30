@@ -16,6 +16,7 @@
 
 pub mod all_matcher;
 pub mod anything_matcher;
+pub mod char_count_matcher;
 pub mod conjunction_matcher;
 pub mod container_eq_matcher;
 pub mod contains_matcher;
@@ -55,6 +56,7 @@ pub mod tuple_matcher;
 pub mod unordered_elements_are_matcher;
 
 pub use anything_matcher::anything;
+pub use char_count_matcher::char_count;
 pub use container_eq_matcher::container_eq;
 pub use contains_matcher::contains;
 pub use contains_regex_matcher::contains_regex;

@@ -81,6 +81,7 @@ The following matchers are provided in GoogleTest Rust:
 | [`all!`]             | Anything matched by all given matchers.                                  |
 | [`anything`]         | Any input.                                                               |
 | [`approx_eq`]        | A floating point number within a standard tolerance of the argument.     |
+| [`char_count`]       | A string which a Unicode scalar count matching the argument.             |
 | [`container_eq`]     | Same as [`eq`], but for containers (with a better mismatch description). |
 | [`contains`]         | A container containing an element matched by the given matcher.          |
 | [`contains_each!`]   | A container containing distinct elements each of the arguments match.    |
@@ -122,6 +123,7 @@ The following matchers are provided in GoogleTest Rust:
 
 [`anything`]: matchers::anything
 [`approx_eq`]: matchers::approx_eq
+[`char_count`]: matchers::char_count
 [`container_eq`]: matchers::container_eq
 [`contains`]: matchers::contains
 [`contains_regex`]: matchers::contains_regex
