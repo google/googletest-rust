@@ -71,17 +71,17 @@ where
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
             MatcherResult::Matches => {
-                format!("has size, which {}", self.expected.describe(MatcherResult::Matches))
+                format!("has length, which {}", self.expected.describe(MatcherResult::Matches))
             }
             MatcherResult::DoesNotMatch => {
-                format!("has size, which {}", self.expected.describe(MatcherResult::DoesNotMatch))
+                format!("has length, which {}", self.expected.describe(MatcherResult::DoesNotMatch))
             }
         }
     }
 
     fn explain_match(&self, actual: &T) -> String {
         let actual_size = count_elements(actual);
-        format!("which has size {}, {}", actual_size, self.expected.explain_match(&actual_size))
+        format!("which has length {}, {}", actual_size, self.expected.explain_match(&actual_size))
     }
 }
 
@@ -190,7 +190,7 @@ mod tests {
         }
         verify_that!(
             len(TestMatcher(Default::default())).explain_match(&[1, 2, 3]),
-            displays_as(eq("which has size 3, called explain_match"))
+            displays_as(eq("which has length 3, called explain_match"))
         )
     }
 
@@ -202,9 +202,9 @@ mod tests {
             err(displays_as(contains_substring(indoc!(
                 "
                 Value of: vec![1, 2, 3, 4]
-                Expected: has size, which is equal to 3
+                Expected: has length, which is equal to 3
                 Actual: [1, 2, 3, 4],
-                  which has size 4, which isn't equal to 3"
+                  which has length 4, which isn't equal to 3"
             ))))
         )
     }
