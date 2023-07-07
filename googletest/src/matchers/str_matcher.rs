@@ -544,9 +544,9 @@ impl Configuration {
                 // TODO(b/287632452): Also consider improving the output in MatchMode::Contains
                 // when the substring begins or ends in the middle of a line of the actual
                 // value.
-                create_diff(expected, actual, self.mode.to_diff_mode())
+                create_diff(actual, expected, self.mode.to_diff_mode())
             }
-            MatchMode::EndsWith => create_diff_reversed(expected, actual, self.mode.to_diff_mode()),
+            MatchMode::EndsWith => create_diff_reversed(actual, expected, self.mode.to_diff_mode()),
         };
 
         format!("{default_explanation}\n{diff}",)
@@ -974,8 +974,8 @@ mod tests {
             err(displays_as(contains_substring(indoc!(
                 "
                  First line
-                +\x1B[1;31mSecond line\x1B[0m
-                -\x1B[1;34mSecond lines\x1B[0m
+                -\x1B[1;31mSecond line\x1B[0m
+                +\x1B[1;32mSecond lines\x1B[0m
                  Third line
                 "
             ))))
@@ -1007,8 +1007,8 @@ mod tests {
             err(displays_as(contains_substring(indoc!(
                 "
                      First line
-                    +\x1B[1;31mSecond line\x1B[0m
-                    -\x1B[1;34mSecond lines\x1B[0m
+                    -\x1B[1;31mSecond line\x1B[0m
+                    +\x1B[1;32mSecond lines\x1B[0m
                      Third line
                      \x1B[3m<---- remaining lines omitted ---->\x1B[0m
                 "
@@ -1040,8 +1040,8 @@ mod tests {
             err(displays_as(contains_substring(indoc!(
                 "
                      First line
-                    +\x1B[1;31mSecond line\x1B[0m
-                    -\x1B[1;34mSecond lines\x1B[0m
+                    -\x1B[1;31mSecond line\x1B[0m
+                    +\x1B[1;32mSecond lines\x1B[0m
                      \x1B[3m<---- remaining lines omitted ---->\x1B[0m
                 "
             ))))
@@ -1072,11 +1072,11 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc!(
                 "
-                    Difference:
+                    Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
                      \x1B[3m<---- remaining lines omitted ---->\x1B[0m
                      Second line
-                    -\x1B[1;34mThird lines\x1B[0m
-                    +\x1B[1;31mThird line\x1B[0m
+                    +\x1B[1;32mThird lines\x1B[0m
+                    -\x1B[1;31mThird line\x1B[0m
                      Fourth line
                 "
             ))))
@@ -1109,11 +1109,11 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc!(
                 "
-                    Difference:
+                    Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
                      \x1B[3m<---- remaining lines omitted ---->\x1B[0m
                      Second line
-                    -\x1B[1;34mThird lines\x1B[0m
-                    +\x1B[1;31mThird line\x1B[0m
+                    +\x1B[1;32mThird lines\x1B[0m
+                    -\x1B[1;31mThird line\x1B[0m
                      Fourth line
                      \x1B[3m<---- remaining lines omitted ---->\x1B[0m"
             ))))
@@ -1146,15 +1146,15 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc!(
                 "
-                    Difference:
+                    Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
                      \x1B[3m<---- remaining lines omitted ---->\x1B[0m
-                    -\x1B[1;34mline\x1B[0m
-                    +\x1B[1;31mSecond line\x1B[0m
+                    +\x1B[1;32mline\x1B[0m
+                    -\x1B[1;31mSecond line\x1B[0m
                      Third line
-                    -\x1B[1;34mFoorth line\x1B[0m
-                    +\x1B[1;31mFourth line\x1B[0m
-                    -\x1B[1;34mFifth\x1B[0m
-                    +\x1B[1;31mFifth line\x1B[0m
+                    +\x1B[1;32mFoorth line\x1B[0m
+                    -\x1B[1;31mFourth line\x1B[0m
+                    +\x1B[1;32mFifth\x1B[0m
+                    -\x1B[1;31mFifth line\x1B[0m
                      \x1B[3m<---- remaining lines omitted ---->\x1B[0m
                 "
             ))))
@@ -1186,10 +1186,10 @@ mod tests {
             err(displays_as(contains_substring(indoc!(
                 "
                      First line
-                    +\x1B[1;31mSecond line\x1B[0m
-                    -\x1B[1;34mSecond lines\x1B[0m
+                    -\x1B[1;31mSecond line\x1B[0m
+                    +\x1B[1;32mSecond lines\x1B[0m
                      Third line
-                    +\x1B[1;31mFourth line\x1B[0m
+                    -\x1B[1;31mFourth line\x1B[0m
                 "
             ))))
         )
@@ -1207,7 +1207,12 @@ mod tests {
             ))
         );
 
-        verify_that!(result, err(displays_as(not(contains_substring("Difference:")))))
+        verify_that!(
+            result,
+            err(displays_as(not(contains_substring(
+                "Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):"
+            ))))
+        )
     }
 
     #[test]
@@ -1223,6 +1228,11 @@ mod tests {
             starts_with("Second line")
         );
 
-        verify_that!(result, err(displays_as(not(contains_substring("Difference:")))))
+        verify_that!(
+            result,
+            err(displays_as(not(contains_substring(
+                "Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):"
+            ))))
+        )
     }
 }
