@@ -95,6 +95,11 @@ path = "src/failure_due_to_returned_error.rs"
 test = false
 
 [[bin]]
+name = "fatal_and_non_fatal_failure"
+path = "src/fatal_and_non_fatal_failure.rs"
+test = false
+
+[[bin]]
 name = "first_failure_aborts"
 path = "src/first_failure_aborts.rs"
 test = false

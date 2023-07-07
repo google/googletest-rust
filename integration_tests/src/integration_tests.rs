@@ -126,8 +126,8 @@ mod tests {
     }
 
     #[test]
-    fn should_output_second_failure_message_on_second_assertion_failure_with_expect_that()
-    -> Result<()> {
+    fn should_output_second_failure_message_on_second_assertion_failure_with_expect_that(
+    ) -> Result<()> {
         let output = run_external_process_in_tests_directory("two_expect_that_failures")?;
 
         verify_that!(
@@ -202,6 +202,27 @@ mod tests {
     #[test]
     fn should_log_test_failures_to_stdout() -> Result<()> {
         let output = run_external_process_in_tests_directory("two_non_fatal_failures")?;
+
+        verify_that!(
+            output,
+            all!(
+                contains_substring(indoc! {"
+                    Expected: is equal to 3
+                    Actual: 2,
+                      which isn't equal to 3
+                    "}),
+                contains_substring(indoc! {"
+                    Expected: is equal to 4
+                    Actual: 2,
+                      which isn't equal to 4
+                    "})
+            )
+        )
+    }
+
+    #[test]
+    fn should_log_fatal_and_non_fatal_errors_to_stdout() -> Result<()> {
+        let output = run_external_process_in_tests_directory("fatal_and_non_fatal_failure")?;
 
         verify_that!(
             output,

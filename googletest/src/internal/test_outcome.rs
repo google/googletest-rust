@@ -62,23 +62,23 @@ impl TestOutcome {
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub fn close_current_test_outcome<E: Display>(result: Result<(), E>) -> Result<(), ()> {
+    pub fn close_current_test_outcome<E: Display>(inner_result: Result<(), E>) -> Result<(), ()> {
         TestOutcome::with_current_test_outcome(|mut outcome| {
-            let result = match &*outcome {
-                Some(TestOutcome::Success) => match result {
+            let outer_result = match &*outcome {
+                Some(TestOutcome::Success) => match inner_result {
                     Ok(()) => Ok(()),
-                    Err(f) => {
-                        print!("{}", f);
-                        Err(())
-                    }
+                    Err(_) => Err(()),
                 },
                 Some(TestOutcome::Failure) => Err(()),
                 None => {
                     panic!("No test context found. This indicates a bug in GoogleTest.")
                 }
             };
+            if let Err(fatal_assertion_failure) = inner_result {
+                println!("{fatal_assertion_failure}");
+            }
             *outcome = None;
-            result
+            outer_result
         })
     }
 
