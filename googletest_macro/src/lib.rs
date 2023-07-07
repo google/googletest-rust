@@ -95,7 +95,7 @@ pub fn test(
     };
     let function = quote! {
         #(#attrs)*
-        #sig -> std::result::Result<(), ()> {
+        #sig -> std::result::Result<(), googletest::internal::test_outcome::TestFailure> {
             #maybe_closure
             use googletest::internal::test_outcome::TestOutcome;
             TestOutcome::init_current_test_outcome();

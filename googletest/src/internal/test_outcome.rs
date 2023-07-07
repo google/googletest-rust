@@ -62,14 +62,16 @@ impl TestOutcome {
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub fn close_current_test_outcome<E: Display>(inner_result: Result<(), E>) -> Result<(), ()> {
+    pub fn close_current_test_outcome<E: Display>(
+        inner_result: Result<(), E>,
+    ) -> Result<(), TestFailure> {
         TestOutcome::with_current_test_outcome(|mut outcome| {
             let outer_result = match &*outcome {
                 Some(TestOutcome::Success) => match inner_result {
                     Ok(()) => Ok(()),
-                    Err(_) => Err(()),
+                    Err(_) => Err(TestFailure),
                 },
-                Some(TestOutcome::Failure) => Err(()),
+                Some(TestOutcome::Failure) => Err(TestFailure),
                 None => {
                     panic!("No test context found. This indicates a bug in GoogleTest.")
                 }
@@ -111,6 +113,29 @@ No test context found.
 ",
             );
         })
+    }
+}
+
+/// A marking struct indicating that a test has failed.
+///
+/// This exists to implement the [Error][std::error::Error] trait. It displays
+/// to a message indicating that the actual test assertion failure messages are
+/// in the text above.
+pub struct TestFailure;
+
+impl std::error::Error for TestFailure {}
+
+impl std::fmt::Debug for TestFailure {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        writeln!(f, "See failure output above")?;
+        Ok(())
+    }
+}
+
+impl std::fmt::Display for TestFailure {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        writeln!(f, "See failure output above")?;
+        Ok(())
     }
 }
 
