@@ -34,8 +34,8 @@ const NO_COLOR_VAR: &str = "GTEST_RUST_NO_COLOR";
 /// are equal, it returns a simple statement that they are equal. Otherwise,
 /// this constructs a unified diff view of the actual and expected values.
 pub(crate) fn create_diff(
-    expected_debug: &str,
     actual_debug: &str,
+    expected_debug: &str,
     diff_mode: edit_distance::Mode,
 ) -> Cow<'static, str> {
     if actual_debug.lines().count() < 2 {
@@ -45,9 +45,13 @@ pub(crate) fn create_diff(
     }
     match edit_distance::edit_list(actual_debug.lines(), expected_debug.lines(), diff_mode) {
         edit_distance::Difference::Equal => "No difference found between debug strings.".into(),
-        edit_distance::Difference::Editable(edit_list) => {
-            format!("\nDifference:{}", edit_list_summary(&edit_list)).into()
-        }
+        edit_distance::Difference::Editable(edit_list) => format!(
+            "\nDifference({} / {}):{}",
+            LineStyle::extra_actual_style().style("actual"),
+            LineStyle::extra_expected_style().style("expected"),
+            edit_list_summary(&edit_list)
+        )
+        .into(),
         edit_distance::Difference::Unrelated => "".into(),
     }
 }
@@ -60,8 +64,8 @@ pub(crate) fn create_diff(
 /// list. When `diff_mode` is [`edit_distance::Mode::Prefix`], this becomes a
 /// diff of the suffix for use by [`ends_with`][crate::matchers::ends_with].
 pub(crate) fn create_diff_reversed(
-    expected_debug: &str,
     actual_debug: &str,
+    expected_debug: &str,
     diff_mode: edit_distance::Mode,
 ) -> Cow<'static, str> {
     if actual_debug.lines().count() < 2 {
@@ -77,7 +81,13 @@ pub(crate) fn create_diff_reversed(
         edit_distance::Difference::Equal => "No difference found between debug strings.".into(),
         edit_distance::Difference::Editable(mut edit_list) => {
             edit_list.reverse();
-            format!("\nDifference:{}", edit_list_summary(&edit_list)).into()
+            format!(
+                "\nDifference({} / {}):{}",
+                LineStyle::extra_actual_style().style("actual"),
+                LineStyle::extra_expected_style().style("expected"),
+                edit_list_summary(&edit_list)
+            )
+            .into()
         }
         edit_distance::Difference::Unrelated => "".into(),
     }
@@ -89,13 +99,15 @@ fn edit_list_summary(edit_list: &[edit_distance::Edit<&str>]) -> String {
     let mut common_line_buffer = vec![];
     for edit in edit_list {
         let (style, line) = match edit {
-            edit_distance::Edit::Both(left) => {
-                common_line_buffer.push(*left);
+            edit_distance::Edit::Both(same) => {
+                common_line_buffer.push(*same);
                 continue;
             }
-            edit_distance::Edit::ExtraLeft(left) => (LineStyle::extra_left_style(), *left),
-            edit_distance::Edit::ExtraRight(right) => (LineStyle::extra_right_style(), *right),
-            edit_distance::Edit::AdditionalLeft => {
+            edit_distance::Edit::ExtraActual(actual) => (LineStyle::extra_actual_style(), *actual),
+            edit_distance::Edit::ExtraExpected(expected) => {
+                (LineStyle::extra_expected_style(), *expected)
+            }
+            edit_distance::Edit::AdditionalActual => {
                 (LineStyle::comment_style(), "<---- remaining lines omitted ---->")
             }
         };
@@ -148,12 +160,12 @@ struct LineStyle {
 }
 
 impl LineStyle {
-    fn extra_left_style() -> Self {
-        Self { ansi: Style::new().fg(Color::Red).bold(), header: '+' }
+    fn extra_actual_style() -> Self {
+        Self { ansi: Style::new().fg(Color::Red).bold(), header: '-' }
     }
 
-    fn extra_right_style() -> Self {
-        Self { ansi: Style::new().fg(Color::Blue).bold(), header: '-' }
+    fn extra_expected_style() -> Self {
+        Self { ansi: Style::new().fg(Color::Green).bold(), header: '+' }
     }
 
     fn comment_style() -> Self {
@@ -270,16 +282,17 @@ mod tests {
             eq(indoc! {
                 "
 
-                Difference:
+                Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
                  1
                  2
                  \x1B[3m<---- 45 common lines omitted ---->\x1B[0m
                  48
                  49
-                +\x1B[1;31m50\x1B[0m"
+                +\x1B[1;32m50\x1B[0m"
             })
         )
     }
+
     #[test]
     #[serial]
     fn create_diff_exact_small_difference_no_color() -> Result<()> {
@@ -290,7 +303,7 @@ mod tests {
             eq(indoc! {
                 "
 
-                Difference:
+                Difference(-actual / +expected):
                  1
                  2
                  <---- 45 common lines omitted ---->

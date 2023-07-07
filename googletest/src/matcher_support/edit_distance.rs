@@ -44,20 +44,20 @@ pub(crate) enum Difference<T> {
 /// An edit operation on two sequences of `T`.
 #[derive(Debug, Clone)]
 pub(crate) enum Edit<T> {
-    /// An extra `T` was added to the left sequence.
-    ExtraLeft(T),
+    /// An extra `T` was added to the actual sequence.
+    ExtraActual(T),
 
-    /// An extra `T` was added to the right sequence.
-    ExtraRight(T),
+    /// An extra `T` was added to the expected sequence.
+    ExtraExpected(T),
 
     /// An element was added to each sequence.
     Both(T),
 
-    /// Additional (unlisted) elements are present in the left sequence.
+    /// Additional (unlisted) elements are present in the actual sequence.
     ///
     /// This is only output in the mode [`Mode::Prefix`]. Its presence precludes
-    /// reconstructing the left sequence from the right sequence.
-    AdditionalLeft,
+    /// reconstructing the actual sequence from the expected sequence.
+    AdditionalActual,
 }
 
 /// Controls the termination condition of [`edit_list`].
@@ -65,45 +65,45 @@ pub(crate) enum Edit<T> {
 pub(crate) enum Mode {
     /// Indicates that the two arguments are intended to be equal.
     ///
-    /// The entire edit list to transform between `left` and `right` is
+    /// The entire edit list to transform between `actual` and `expected` is
     /// returned.
     Exact,
 
-    /// Indicates that `right` is inteded to be a prefix of `left`.
+    /// Indicates that `expected` is inteded to be a prefix of `actual`.
     ///
-    /// Any additional parts of `left` after the prefix `right` are omitted from
+    /// Any additional parts of `actual` after the prefix `expected` are omitted from
     /// the output.
     Prefix,
 
-    /// Similar to [`Mode::Prefix`], except it is also assumed that `left` has
+    /// Similar to [`Mode::Prefix`], except it is also assumed that `actual` has
     /// some number of initial lines which should not be in the output.
     ///
-    /// Any initial [`Edit::ExtraLeft`] entries are replaced with
-    /// [`Edit::AdditionalLeft`] in the edit list. If the first entry which is
-    /// not an [`Edit::Extraleft`] is [`Edit::ExtraRight`], then the last
-    /// [`Edit::ExtraLeft`] is left in the output.
+    /// Any initial [`Edit::ExtraActual`] entries are replaced with
+    /// [`Edit::AdditionalActual`] in the edit list. If the first entry which is
+    /// not an [`Edit::Extraactual`] is [`Edit::ExtraExpected`], then the last
+    /// [`Edit::ExtraActual`] is actual in the output.
     Contains,
 }
 
-/// Computes the edit list of `left` and `right`.
+/// Computes the edit list of `actual` and `expected`.
 ///
-/// If `left` and `right` are equal, then this returns [`Difference::Equal`]. If
+/// If `actual` and `expected` are equal, then this returns [`Difference::Equal`]. If
 /// they are different but have an
 /// [edit distance](https://en.wikipedia.org/wiki/Edit_distance)
 /// of at most [`MAX_DISTANCE`], this returns [`Difference::Editable`] with the
-/// sequence of [`Edit`] which can be applied to `left` to obtain `right`.
+/// sequence of [`Edit`] which can be applied to `actual` to obtain `expected`.
 /// Otherwise this returns [`Difference::Unrelated`].
 ///
 /// This uses [Myers Algorithm](https://neil.fraser.name/writing/diff/myers.pdf)
 /// with a maximum edit distance of [`MAX_DISTANCE`]. Thus the worst-case
 /// runtime is linear in both the input length and [`MAX_DISTANCE`].
 pub(crate) fn edit_list<T: PartialEq + Copy>(
-    left: impl IntoIterator<Item = T>,
-    right: impl IntoIterator<Item = T>,
+    actual: impl IntoIterator<Item = T>,
+    expected: impl IntoIterator<Item = T>,
     mode: Mode,
 ) -> Difference<T> {
-    let left: Vec<_> = left.into_iter().collect();
-    let right: Vec<_> = right.into_iter().collect();
+    let actual: Vec<_> = actual.into_iter().collect();
+    let expected: Vec<_> = expected.into_iter().collect();
 
     let mut paths_last: Vec<Path<T>> = Vec::new();
 
@@ -123,36 +123,36 @@ pub(crate) fn edit_list<T: PartialEq + Copy>(
                 // k = -distance. There is no previous parent path yet.
                 (None, Some(path_k_plus_1)) => (
                     path_k_plus_1.clone(),
-                    right.get(path_k_plus_1.right_endpoint).copied().map(Edit::ExtraRight),
+                    expected.get(path_k_plus_1.expected_endpoint).copied().map(Edit::ExtraExpected),
                 ),
 
                 // k = distance. There is no next parent path yet.
                 (Some(path_k_minus_1), None) => (
-                    path_k_minus_1.extend_left_endpoint(),
-                    left.get(path_k_minus_1.left_endpoint).copied().map(Edit::ExtraLeft),
+                    path_k_minus_1.extend_actual_endpoint(),
+                    actual.get(path_k_minus_1.actual_endpoint).copied().map(Edit::ExtraActual),
                 ),
 
                 // k is strictly between -distance and distance. Both parent paths were set in the
                 // last iteration.
                 (Some(path_k_minus_1), Some(path_k_plus_1)) => {
                     // This decides whether the algorithm prefers to add an edit
-                    // from the left or from the right when the rows differ. We
+                    // from the actual or from the expected when the rows differ. We
                     // alternate so that the elements of differing blocks
                     // interleave rather than all elements of each respective
                     // side being output in a single block.
                     if (distance % 2 == 0
-                        && path_k_plus_1.left_endpoint > path_k_minus_1.left_endpoint)
+                        && path_k_plus_1.actual_endpoint > path_k_minus_1.actual_endpoint)
                         || (distance % 2 == 1
-                            && path_k_plus_1.right_endpoint > path_k_minus_1.right_endpoint)
+                            && path_k_plus_1.expected_endpoint > path_k_minus_1.expected_endpoint)
                     {
                         (
                             path_k_plus_1.clone(),
-                            right.get(path_k_plus_1.right_endpoint).copied().map(Edit::ExtraRight),
+                            expected.get(path_k_plus_1.expected_endpoint).copied().map(Edit::ExtraExpected),
                         )
                     } else {
                         (
-                            path_k_minus_1.extend_left_endpoint(),
-                            left.get(path_k_minus_1.left_endpoint).copied().map(Edit::ExtraLeft),
+                            path_k_minus_1.extend_actual_endpoint(),
+                            actual.get(path_k_minus_1.actual_endpoint).copied().map(Edit::ExtraActual),
                         )
                     }
                 }
@@ -160,18 +160,18 @@ pub(crate) fn edit_list<T: PartialEq + Copy>(
             path.edits.extend(edit);
 
             // Advance through any common elements starting at the current path.
-            let (mut left_endpoint, mut right_endpoint) =
-                (path.left_endpoint, (path.left_endpoint as i32 - k) as usize);
-            while left_endpoint < left.len()
-                && right_endpoint < right.len()
-                && left[left_endpoint] == right[right_endpoint]
+            let (mut actual_endpoint, mut expected_endpoint) =
+                (path.actual_endpoint, (path.actual_endpoint as i32 - k) as usize);
+            while actual_endpoint < actual.len()
+                && expected_endpoint < expected.len()
+                && actual[actual_endpoint] == expected[expected_endpoint]
             {
-                path.edits.push(Edit::Both(left[left_endpoint]));
-                (left_endpoint, right_endpoint) = (left_endpoint + 1, right_endpoint + 1);
+                path.edits.push(Edit::Both(actual[actual_endpoint]));
+                (actual_endpoint, expected_endpoint) = (actual_endpoint + 1, expected_endpoint + 1);
             }
 
             // If we have exhausted both inputs, we are done.
-            if left_endpoint == left.len() && right_endpoint == right.len() {
+            if actual_endpoint == actual.len() && expected_endpoint == expected.len() {
                 return if path.edits.iter().any(|v| !matches!(v, Edit::Both(_))) {
                     if matches!(mode, Mode::Contains) {
                         compress_prefix_and_suffix(&mut path.edits);
@@ -182,32 +182,32 @@ pub(crate) fn edit_list<T: PartialEq + Copy>(
                 };
             }
 
-            path.left_endpoint = left_endpoint;
-            path.right_endpoint = right_endpoint;
+            path.actual_endpoint = actual_endpoint;
+            path.expected_endpoint = expected_endpoint;
             paths_current.push(path);
         }
 
         if matches!(mode, Mode::Prefix) {
             if let Some(path) = paths_current
                 .iter_mut()
-                .filter(|p| p.right_endpoint == right.len())
+                .filter(|p| p.expected_endpoint == expected.len())
                 .max_by(|p1, p2| p1.edits.len().cmp(&p2.edits.len()))
             {
-                // We've reached the end of the right side but there could still be a
-                // corresponding line on the left which we haven't picked up into the edit list.
+                // We've reached the end of the expected side but there could still be a
+                // corresponding line on the actual which we haven't picked up into the edit list.
                 // We'll just add it manually to the edit list. There's no real harm doing so --
                 // worst case is that there's an additional line when there didn't have to be.
-                if let Some(Edit::ExtraRight(_)) = path.edits.last() {
-                    if path.left_endpoint < left.len() {
-                        // The edits from the left should come before the corresponding one from the
-                        // right, so we insert rather than push.
+                if let Some(Edit::ExtraExpected(_)) = path.edits.last() {
+                    if path.actual_endpoint < actual.len() {
+                        // The edits from the actual should come before the corresponding one from the
+                        // expected, so we insert rather than push.
                         path.edits.insert(
                             path.edits.len() - 1,
-                            Edit::ExtraLeft(left[path.left_endpoint]),
+                            Edit::ExtraActual(actual[path.actual_endpoint]),
                         );
                     }
                 }
-                path.edits.push(Edit::AdditionalLeft);
+                path.edits.push(Edit::AdditionalActual);
                 return if path.edits.iter().any(|v| !matches!(v, Edit::Both(_))) {
                     Difference::Editable(std::mem::take(&mut path.edits))
                 } else {
@@ -227,47 +227,47 @@ fn index_of_k(k: i32, k_min: i32) -> usize {
 }
 
 fn compress_prefix_and_suffix<T>(edits: &mut Vec<Edit<T>>) {
-    if let Some(mut first_non_extra_left_edit) =
-        edits.iter().position(|e| !matches!(e, Edit::ExtraLeft(_)))
+    if let Some(mut first_non_extra_actual_edit) =
+        edits.iter().position(|e| !matches!(e, Edit::ExtraActual(_)))
     {
-        if first_non_extra_left_edit > 1
-            && matches!(edits[first_non_extra_left_edit], Edit::ExtraRight(_))
+        if first_non_extra_actual_edit > 1
+            && matches!(edits[first_non_extra_actual_edit], Edit::ExtraExpected(_))
         {
-            first_non_extra_left_edit -= 1;
+            first_non_extra_actual_edit -= 1;
         }
-        edits.splice(..first_non_extra_left_edit, [Edit::AdditionalLeft]);
+        edits.splice(..first_non_extra_actual_edit, [Edit::AdditionalActual]);
     }
 
-    if let Some(mut last_non_extra_left_edit) =
-        edits.iter().rposition(|e| !matches!(e, Edit::ExtraLeft(_)))
+    if let Some(mut last_non_extra_actual_edit) =
+        edits.iter().rposition(|e| !matches!(e, Edit::ExtraActual(_)))
     {
-        if last_non_extra_left_edit < edits.len() - 1
-            && matches!(edits[last_non_extra_left_edit], Edit::ExtraRight(_))
+        if last_non_extra_actual_edit < edits.len() - 1
+            && matches!(edits[last_non_extra_actual_edit], Edit::ExtraExpected(_))
         {
-            last_non_extra_left_edit += 1;
+            last_non_extra_actual_edit += 1;
         }
-        edits.splice(last_non_extra_left_edit + 1.., [Edit::AdditionalLeft]);
+        edits.splice(last_non_extra_actual_edit + 1.., [Edit::AdditionalActual]);
     }
 }
 
 #[derive(Clone)]
 struct Path<T: Clone> {
-    left_endpoint: usize,
-    right_endpoint: usize,
+    actual_endpoint: usize,
+    expected_endpoint: usize,
     edits: Vec<Edit<T>>,
 }
 
 impl<T: Clone> Default for Path<T> {
     fn default() -> Self {
-        Self { left_endpoint: 0, right_endpoint: 0, edits: vec![] }
+        Self { actual_endpoint: 0, expected_endpoint: 0, edits: vec![] }
     }
 }
 
 impl<T: Clone> Path<T> {
-    fn extend_left_endpoint(&self) -> Self {
+    fn extend_actual_endpoint(&self) -> Self {
         Self {
-            left_endpoint: self.left_endpoint + 1,
-            right_endpoint: self.right_endpoint,
+            actual_endpoint: self.actual_endpoint + 1,
+            expected_endpoint: self.expected_endpoint,
             edits: self.edits.clone(),
         }
     }
@@ -296,50 +296,50 @@ mod tests {
     }
 
     #[test]
-    fn returns_extra_left_when_only_left_has_content() -> Result<()> {
+    fn returns_extra_actual_when_only_actual_has_content() -> Result<()> {
         let result = edit_list(["A string"], [], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![matches_pattern!(
-                Edit::ExtraLeft(eq("A string"))
+                Edit::ExtraActual(eq("A string"))
             )]))
         )
     }
 
     #[test]
-    fn returns_extra_right_when_only_right_has_content() -> Result<()> {
+    fn returns_extra_expected_when_only_expected_has_content() -> Result<()> {
         let result = edit_list([], ["A string"], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![matches_pattern!(
-                Edit::ExtraRight(eq("A string"))
+                Edit::ExtraExpected(eq("A string"))
             )]))
         )
     }
 
     #[test]
-    fn returns_extra_left_followed_by_extra_right_with_two_unequal_strings() -> Result<()> {
+    fn returns_extra_actual_followed_by_extra_expected_with_two_unequal_strings() -> Result<()> {
         let result = edit_list(["A string"], ["Another string"], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
-                matches_pattern!(Edit::ExtraLeft(eq("A string"))),
-                matches_pattern!(Edit::ExtraRight(eq("Another string"))),
+                matches_pattern!(Edit::ExtraActual(eq("A string"))),
+                matches_pattern!(Edit::ExtraExpected(eq("Another string"))),
             ]))
         )
     }
 
     #[test]
-    fn interleaves_extra_left_and_extra_right_when_multiple_lines_differ() -> Result<()> {
+    fn interleaves_extra_actual_and_extra_expected_when_multiple_lines_differ() -> Result<()> {
         let result =
             edit_list(["A string", "A string"], ["Another string", "Another string"], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
-                matches_pattern!(Edit::ExtraLeft(eq("A string"))),
-                matches_pattern!(Edit::ExtraRight(eq("Another string"))),
-                matches_pattern!(Edit::ExtraLeft(eq("A string"))),
-                matches_pattern!(Edit::ExtraRight(eq("Another string"))),
+                matches_pattern!(Edit::ExtraActual(eq("A string"))),
+                matches_pattern!(Edit::ExtraExpected(eq("Another string"))),
+                matches_pattern!(Edit::ExtraActual(eq("A string"))),
+                matches_pattern!(Edit::ExtraExpected(eq("Another string"))),
             ]))
         )
     }
@@ -347,37 +347,37 @@ mod tests {
     #[test]
     fn returns_common_part_plus_difference_when_there_is_common_prefix() -> Result<()> {
         let result =
-            edit_list(["Common part", "Left only"], ["Common part", "Right only"], Mode::Exact);
+            edit_list(["Common part", "Actual only"], ["Common part", "Expected only"], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::Both(eq("Common part"))),
-                matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
-                matches_pattern!(Edit::ExtraRight(eq("Right only"))),
+                matches_pattern!(Edit::ExtraActual(eq("Actual only"))),
+                matches_pattern!(Edit::ExtraExpected(eq("Expected only"))),
             ]))
         )
     }
 
     #[test]
-    fn returns_common_part_plus_extra_left_when_left_has_extra_suffix() -> Result<()> {
-        let result = edit_list(["Common part", "Left only"], ["Common part"], Mode::Exact);
+    fn returns_common_part_plus_extra_actual_when_actual_has_extra_suffix() -> Result<()> {
+        let result = edit_list(["Common part", "Actual only"], ["Common part"], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::Both(eq("Common part"))),
-                matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
+                matches_pattern!(Edit::ExtraActual(eq("Actual only"))),
             ]))
         )
     }
 
     #[test]
-    fn returns_common_part_plus_extra_right_when_right_has_extra_suffix() -> Result<()> {
-        let result = edit_list(["Common part"], ["Common part", "Right only"], Mode::Exact);
+    fn returns_common_part_plus_extra_expected_when_expected_has_extra_suffix() -> Result<()> {
+        let result = edit_list(["Common part"], ["Common part", "Expected only"], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::Both(eq("Common part"))),
-                matches_pattern!(Edit::ExtraRight(eq("Right only"))),
+                matches_pattern!(Edit::ExtraExpected(eq("Expected only"))),
             ]))
         )
     }
@@ -385,12 +385,12 @@ mod tests {
     #[test]
     fn returns_difference_plus_common_part_when_there_is_common_suffix() -> Result<()> {
         let result =
-            edit_list(["Left only", "Common part"], ["Right only", "Common part"], Mode::Exact);
+            edit_list(["Actual only", "Common part"], ["Expected only", "Common part"], Mode::Exact);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
-                matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
-                matches_pattern!(Edit::ExtraRight(eq("Right only"))),
+                matches_pattern!(Edit::ExtraActual(eq("Actual only"))),
+                matches_pattern!(Edit::ExtraExpected(eq("Expected only"))),
                 matches_pattern!(Edit::Both(eq("Common part"))),
             ]))
         )
@@ -400,18 +400,18 @@ mod tests {
     fn returns_difference_plus_common_part_plus_difference_when_there_is_common_infix() -> Result<()>
     {
         let result = edit_list(
-            ["Left only (1)", "Common part", "Left only (2)"],
-            ["Right only (1)", "Common part", "Right only (2)"],
+            ["Actual only (1)", "Common part", "Actual only (2)"],
+            ["Expected only (1)", "Common part", "Expected only (2)"],
             Mode::Exact,
         );
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
-                matches_pattern!(Edit::ExtraLeft(eq("Left only (1)"))),
-                matches_pattern!(Edit::ExtraRight(eq("Right only (1)"))),
+                matches_pattern!(Edit::ExtraActual(eq("Actual only (1)"))),
+                matches_pattern!(Edit::ExtraExpected(eq("Expected only (1)"))),
                 matches_pattern!(Edit::Both(eq("Common part"))),
-                matches_pattern!(Edit::ExtraLeft(eq("Left only (2)"))),
-                matches_pattern!(Edit::ExtraRight(eq("Right only (2)"))),
+                matches_pattern!(Edit::ExtraActual(eq("Actual only (2)"))),
+                matches_pattern!(Edit::ExtraExpected(eq("Expected only (2)"))),
             ]))
         )
     }
@@ -420,26 +420,26 @@ mod tests {
     fn returns_common_part_plus_difference_plus_common_part_when_there_is_common_prefix_and_suffix()
     -> Result<()> {
         let result = edit_list(
-            ["Common part (1)", "Left only", "Common part (2)"],
-            ["Common part (1)", "Right only", "Common part (2)"],
+            ["Common part (1)", "Actual only", "Common part (2)"],
+            ["Common part (1)", "Expected only", "Common part (2)"],
             Mode::Exact,
         );
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::Both(eq("Common part (1)"))),
-                matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
-                matches_pattern!(Edit::ExtraRight(eq("Right only"))),
+                matches_pattern!(Edit::ExtraActual(eq("Actual only"))),
+                matches_pattern!(Edit::ExtraExpected(eq("Expected only"))),
                 matches_pattern!(Edit::Both(eq("Common part (2)"))),
             ]))
         )
     }
 
     #[test]
-    fn returns_common_part_plus_extra_left_plus_common_part_when_there_is_common_prefix_and_suffix()
+    fn returns_common_part_plus_extra_actual_plus_common_part_when_there_is_common_prefix_and_suffix()
     -> Result<()> {
         let result = edit_list(
-            ["Common part (1)", "Left only", "Common part (2)"],
+            ["Common part (1)", "Actual only", "Common part (2)"],
             ["Common part (1)", "Common part (2)"],
             Mode::Exact,
         );
@@ -447,67 +447,67 @@ mod tests {
             result,
             matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::Both(eq("Common part (1)"))),
-                matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
+                matches_pattern!(Edit::ExtraActual(eq("Actual only"))),
                 matches_pattern!(Edit::Both(eq("Common part (2)"))),
             ]))
         )
     }
 
     #[test]
-    fn returns_common_part_plus_extra_right_plus_common_part_when_there_is_common_prefix_and_suffix()
+    fn returns_common_part_plus_extra_expected_plus_common_part_when_there_is_common_prefix_and_suffix()
     -> Result<()> {
         let result = edit_list(
             ["Common part (1)", "Common part (2)"],
-            ["Common part (1)", "Right only", "Common part (2)"],
+            ["Common part (1)", "Expected only", "Common part (2)"],
             Mode::Exact,
         );
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
                 matches_pattern!(Edit::Both(eq("Common part (1)"))),
-                matches_pattern!(Edit::ExtraRight(eq("Right only"))),
+                matches_pattern!(Edit::ExtraExpected(eq("Expected only"))),
                 matches_pattern!(Edit::Both(eq("Common part (2)"))),
             ]))
         )
     }
 
     #[test]
-    fn skips_extra_parts_on_left_at_end_in_prefix_mode() -> Result<()> {
+    fn skips_extra_parts_on_actual_at_end_in_prefix_mode() -> Result<()> {
         let result =
-            edit_list(["Common part", "Left only"], ["Right only", "Common part"], Mode::Prefix);
+            edit_list(["Common part", "Actual only"], ["Expected only", "Common part"], Mode::Prefix);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(not(contains(matches_pattern!(
-                Edit::ExtraLeft(eq("Left only"))
+                Edit::ExtraActual(eq("Actual only"))
             )))))
         )
     }
 
     #[test]
-    fn does_not_skip_extra_parts_on_left_in_prefix_mode_at_end_when_they_are_in_common()
+    fn does_not_skip_extra_parts_on_actual_in_prefix_mode_at_end_when_they_are_in_common()
     -> Result<()> {
         let result =
-            edit_list(["Left only", "Common part"], ["Right only", "Common part"], Mode::Prefix);
+            edit_list(["Actual only", "Common part"], ["Expected only", "Common part"], Mode::Prefix);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
-                matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
-                matches_pattern!(Edit::ExtraRight(eq("Right only"))),
+                matches_pattern!(Edit::ExtraActual(eq("Actual only"))),
+                matches_pattern!(Edit::ExtraExpected(eq("Expected only"))),
                 matches_pattern!(Edit::Both(eq("Common part"))),
             ]))
         )
     }
 
     #[test]
-    fn does_not_skip_corresponding_line_on_left_when_left_and_right_differ_in_prefix_mode()
+    fn does_not_skip_corresponding_line_on_actual_when_actual_and_expected_differ_in_prefix_mode()
     -> Result<()> {
-        let result = edit_list(["Left only"], ["Right only"], Mode::Prefix);
+        let result = edit_list(["Actual only"], ["Expected only"], Mode::Prefix);
         verify_that!(
             result,
             matches_pattern!(Difference::Editable(elements_are![
-                matches_pattern!(Edit::ExtraLeft(eq("Left only"))),
-                matches_pattern!(Edit::ExtraRight(eq("Right only"))),
-                matches_pattern!(Edit::AdditionalLeft),
+                matches_pattern!(Edit::ExtraActual(eq("Actual only"))),
+                matches_pattern!(Edit::ExtraExpected(eq("Expected only"))),
+                matches_pattern!(Edit::AdditionalActual),
             ]))
         )
     }
@@ -519,17 +519,17 @@ mod tests {
     }
 
     quickcheck! {
-        fn edit_list_edits_left_to_right(
-            left: Vec<Alphabet>,
-            right: Vec<Alphabet>
+        fn edit_list_edits_actual_to_expected(
+            actual: Vec<Alphabet>,
+            expected: Vec<Alphabet>
         ) -> TestResult {
-            match edit_list(left.clone(), right.clone(), Mode::Exact) {
-                Difference::Equal => TestResult::from_bool(left == right),
+            match edit_list(actual.clone(), expected.clone(), Mode::Exact) {
+                Difference::Equal => TestResult::from_bool(actual == expected),
                 Difference::Editable(edit_list) => {
-                    TestResult::from_bool(apply_edits_to_left(&edit_list, &left) == right)
+                    TestResult::from_bool(apply_edits_to_actual(&edit_list, &actual) == expected)
                 }
                 Difference::Unrelated => {
-                    if left == right {
+                    if actual == expected {
                         TestResult::failed()
                     } else {
                         TestResult::discard()
@@ -540,17 +540,17 @@ mod tests {
     }
 
     quickcheck! {
-        fn edit_list_edits_right_to_left(
-            left: Vec<Alphabet>,
-            right: Vec<Alphabet>
+        fn edit_list_edits_expected_to_actual(
+            actual: Vec<Alphabet>,
+            expected: Vec<Alphabet>
         ) -> TestResult {
-            match edit_list(left.clone(), right.clone(), Mode::Exact) {
-                Difference::Equal => TestResult::from_bool(left == right),
+            match edit_list(actual.clone(), expected.clone(), Mode::Exact) {
+                Difference::Equal => TestResult::from_bool(actual == expected),
                 Difference::Editable(edit_list) => {
-                    TestResult::from_bool(apply_edits_to_right(&edit_list, &right) == left)
+                    TestResult::from_bool(apply_edits_to_expected(&edit_list, &expected) == actual)
                 }
                 Difference::Unrelated => {
-                    if left == right {
+                    if actual == expected {
                         TestResult::failed()
                     } else {
                         TestResult::discard()
@@ -573,57 +573,57 @@ mod tests {
         }
     }
 
-    fn apply_edits_to_left<T: PartialEq + Debug + Copy>(
+    fn apply_edits_to_actual<T: PartialEq + Debug + Copy>(
         edit_list: &[Edit<T>],
-        left: &[T],
+        actual: &[T],
     ) -> Vec<T> {
         let mut result = Vec::new();
-        let mut left_iter = left.iter();
+        let mut actual_iter = actual.iter();
         for edit in edit_list {
             match edit {
-                Edit::ExtraLeft(value) => {
-                    assert_that!(left_iter.next(), some(eq(value)));
+                Edit::ExtraActual(value) => {
+                    assert_that!(actual_iter.next(), some(eq(value)));
                 }
-                Edit::ExtraRight(value) => {
+                Edit::ExtraExpected(value) => {
                     result.push(*value);
                 }
                 Edit::Both(value) => {
-                    assert_that!(left_iter.next(), some(eq(value)));
+                    assert_that!(actual_iter.next(), some(eq(value)));
                     result.push(*value);
                 }
-                Edit::AdditionalLeft => {
-                    fail!("Unexpected Edit::AdditionalLeft").unwrap();
+                Edit::AdditionalActual => {
+                    fail!("Unexpected Edit::AdditionalActual").unwrap();
                 }
             }
         }
-        assert_that!(left_iter.next(), none());
+        assert_that!(actual_iter.next(), none());
         result
     }
 
-    fn apply_edits_to_right<T: PartialEq + Debug + Copy>(
+    fn apply_edits_to_expected<T: PartialEq + Debug + Copy>(
         edit_list: &[Edit<T>],
-        right: &[T],
+        expected: &[T],
     ) -> Vec<T> {
         let mut result = Vec::new();
-        let mut right_iter = right.iter();
+        let mut expected_iter = expected.iter();
         for edit in edit_list {
             match edit {
-                Edit::ExtraLeft(value) => {
+                Edit::ExtraActual(value) => {
                     result.push(*value);
                 }
-                Edit::ExtraRight(value) => {
-                    assert_that!(right_iter.next(), some(eq(value)));
+                Edit::ExtraExpected(value) => {
+                    assert_that!(expected_iter.next(), some(eq(value)));
                 }
                 Edit::Both(value) => {
-                    assert_that!(right_iter.next(), some(eq(value)));
+                    assert_that!(expected_iter.next(), some(eq(value)));
                     result.push(*value);
                 }
-                Edit::AdditionalLeft => {
-                    fail!("Unexpected Edit::AdditionalLeft").unwrap();
+                Edit::AdditionalActual => {
+                    fail!("Unexpected Edit::AdditionalActual").unwrap();
                 }
             }
         }
-        assert_that!(right_iter.next(), none());
+        assert_that!(expected_iter.next(), none());
         result
     }
 }
