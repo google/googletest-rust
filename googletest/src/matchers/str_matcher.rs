@@ -14,11 +14,11 @@
 
 use crate::{
     matcher::{Matcher, MatcherResult},
-    matcher_support::{edit_distance, summarize_diff::{create_diff_reversed, create_diff}},
-    matchers::{
-        eq_deref_of_matcher::EqDerefOfMatcher,
-        eq_matcher::{ EqMatcher},
+    matcher_support::{
+        edit_distance,
+        summarize_diff::{create_diff, create_diff_reversed},
     },
+    matchers::{eq_deref_of_matcher::EqDerefOfMatcher, eq_matcher::EqMatcher},
 };
 use std::borrow::Cow;
 use std::fmt::Debug;
