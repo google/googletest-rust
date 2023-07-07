@@ -221,6 +221,27 @@ mod tests {
     }
 
     #[test]
+    fn should_log_fatal_and_non_fatal_errors_to_stdout() -> Result<()> {
+        let output = run_external_process_in_tests_directory("fatal_and_non_fatal_failure")?;
+
+        verify_that!(
+            output,
+            all!(
+                contains_substring(indoc! {"
+                    Expected: is equal to 3
+                    Actual: 2,
+                      which isn't equal to 3
+                    "}),
+                contains_substring(indoc! {"
+                    Expected: is equal to 4
+                    Actual: 2,
+                      which isn't equal to 4
+                    "})
+            )
+        )
+    }
+
+    #[test]
     fn should_abort_after_first_failure() -> Result<()> {
         let output = run_external_process_in_tests_directory("first_failure_aborts")?;
 
