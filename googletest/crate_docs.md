@@ -360,5 +360,62 @@ fn always_fails() -> Result<()> {
 # always_fails().unwrap_err();
 ```
 
+## Integrations with other crates
+
+GoogleTest Rust includes integrations with the
+[Anyhow](https://crates.io/crates/anyhow) and
+[Proptest](https://crates.io/crates/proptest) crates to simplify turning
+errors from those crates into test failures.
+
+To use this, activate the `anyhow`, respectively `proptest` feature in
+GoogleTest Rust and invoke the extension method [`into_test_result()`] on a
+`Result` value in your test. For example:
+
+```
+# use googletest::prelude::*;
+# #[cfg(feature = "anyhow")]
+# use anyhow::anyhow;
+# #[cfg(feature = "anyhow")]
+# /* The attribute macro would prevent the function from being compiled in a doctest.
+#[test]
+# */
+fn has_anyhow_failure() -> Result<()> {
+    Ok(just_return_error().into_test_result()?)
+}
+
+# #[cfg(feature = "anyhow")]
+fn just_return_error() -> anyhow::Result<()> {
+    anyhow::Result::Err(anyhow!("This is an error"))
+}
+# #[cfg(feature = "anyhow")]
+# has_anyhow_failure().unwrap_err();
+```
+
+One can convert Proptest test failures into GoogleTest test failures when the
+test is invoked with
+[`TestRunner::run`](https://docs.rs/proptest/latest/proptest/test_runner/struct.TestRunner.html#method.run):
+
+```
+# use googletest::prelude::*;
+# #[cfg(feature = "proptest")]
+# use proptest::test_runner::{Config, TestRunner};
+# #[cfg(feature = "proptest")]
+# /* The attribute macro would prevent the function from being compiled in a doctest.
+#[test]
+# */
+fn numbers_are_greater_than_zero() -> Result<()> {
+    let mut runner = TestRunner::new(Config::default());
+    runner.run(&(1..100i32), |v| Ok(verify_that!(v, gt(0))?)).into_test_result()
+}
+# #[cfg(feature = "proptest")]
+# numbers_are_greater_than_zero().unwrap();
+```
+
+Similarly, when the `proptest` feature is enabled, GoogleTest assertion failures
+can automatically be converted into Proptest
+[`TestCaseError`](https://docs.rs/proptest/latest/proptest/test_runner/enum.TestCaseError.html)
+through the `?` operator as the example above shows.
+
 [`and_log_failure()`]: GoogleTestSupport::and_log_failure
+[`into_test_result()`]: IntoTestResult::into_test_result
 [`Matcher`]: matcher::Matcher

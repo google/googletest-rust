@@ -44,7 +44,7 @@ jobs:
     name: test / ubuntu / ${{ matrix.toolchain }}
     strategy:
       matrix:
-        toolchain: [stable, 1.59.0, nightly, beta]
+        toolchain: [stable, nightly, beta]
     steps:
       - uses: actions/checkout@v3
       - name: Install ${{ matrix.toolchain }}
@@ -62,7 +62,7 @@ jobs:
     name: test (no default features) / ubuntu / ${{ matrix.toolchain }}
     strategy:
       matrix:
-        toolchain: [stable]
+        toolchain: [stable, 1.59]
     steps:
       - uses: actions/checkout@v3
       - name: Install ${{ matrix.toolchain }}
