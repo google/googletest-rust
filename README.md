@@ -286,9 +286,7 @@ displayed, we recommend setting those variables in the personal
 
 | Variable name       | Description                                        |
 | ------------------- | -------------------------------------------------- |
-| GTEST_RUST_NO_COLOR | If set to any value, disables ANSI output from the |
-:                     : failure message. This is useful when the failure   :
-:                     : description is piped to a file or another process. :
+| GTEST_RUST_NO_COLOR | If set to any value, disables ANSI output from the failure message. This is useful when the failure description is piped to a file or another process. |
 
 ## Contributing Changes
 
