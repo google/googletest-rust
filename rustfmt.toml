@@ -22,8 +22,6 @@ use_small_heuristics = "Max"
 
 newline_style = "Unix"
 
-# This is required to keep the autoformatter from clobbering the markdown table
-# in the crate-level documentation in googletest/src/lib.rs.
-wrap_comments = false
+wrap_comments = true
 
 format_generated_files = false

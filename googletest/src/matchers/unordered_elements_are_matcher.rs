@@ -93,9 +93,9 @@
 ///
 /// The matcher proceeds in three stages:
 ///
-/// 1. It first checks whether the actual value is of the right size to
-///    possibly be matched by each of the given matchers. If not, then it
-///    immediately fails explaining that the size is incorrect.
+/// 1. It first checks whether the actual value is of the right size to possibly
+///    be matched by each of the given matchers. If not, then it immediately
+///    fails explaining that the size is incorrect.
 ///
 /// 2. It then checks whether each matcher matches at least one corresponding
 ///    element in the actual container and each element in the actual container
@@ -107,8 +107,7 @@
 ///    actual elements is a 1-1 correspondence and fails if that is not the
 ///    case. The failure message then shows the best matching it could find,
 ///    including which matchers did not have corresponding unique elements in
-///    the container and which container elements had no corresponding
-///    matchers.
+///    the container and which container elements had no corresponding matchers.
 ///
 /// [`IntoIterator`]: std::iter::IntoIterator
 /// [`Iterator`]: std::iter::Iterator
@@ -199,9 +198,9 @@ macro_rules! unordered_elements_are {
 ///
 /// The matcher proceeds in three stages:
 ///
-/// 1. It first checks whether the actual value is large enough to
-///    possibly be matched by each of the given matchers. If not, then it
-///    immediately fails explaining that the size is too small.
+/// 1. It first checks whether the actual value is large enough to possibly be
+///    matched by each of the given matchers. If not, then it immediately fails
+///    explaining that the size is too small.
 ///
 /// 2. It then checks whether each matcher matches at least one corresponding
 ///    element in the actual container and fails if that is not the case. The
@@ -305,18 +304,18 @@ macro_rules! contains_each {
 ///
 /// The matcher proceeds in three stages:
 ///
-/// 1. It first checks whether the actual value is too large to
-///    possibly be matched by each of the given matchers. If so, it
-///    immediately fails explaining that the size is too large.
+/// 1. It first checks whether the actual value is too large to possibly be
+///    matched by each of the given matchers. If so, it immediately fails
+///    explaining that the size is too large.
 ///
 /// 2. It then checks whether each actual container element is matched by at
 ///    least one matcher and fails if that is not the case. The failure message
 ///    indicates which element had no corresponding matcher.
 ///
 /// 3. Finally, it checks whether the mapping of elements to corresponding
-///    matchers is 1-1 and fails if that is not the case. The failure
-///    message then shows the best matching it could find, including which
-///    container elements did not have corresponding matchers.
+///    matchers is 1-1 and fails if that is not the case. The failure message
+///    then shows the best matching it could find, including which container
+///    elements did not have corresponding matchers.
 ///
 /// [`IntoIterator`]: std::iter::IntoIterator
 /// [`Iterator`]: std::iter::Iterator
@@ -727,17 +726,17 @@ pub mod internal {
         // expected_match[r] == None or actual_match[expected_match[e].unwrap()] ==
         // Some(e)
         //
-        // . [ source ]                                                              .
-        // .   |||                                                                   .
-        // .   |||                                                                   .
-        // .   ||\-> actual_match[0]=Some(1) -\   expected_match[0]=None    ---\     .
-        // .   ||                             |                                |     .
-        // .   |\--> actual_match[1]=None     \-> expected_match[1]=Some(0) --\|     .
-        // .   |                                                              ||     .
-        // .   \---> actual_match[2]=Some(2)  --> expected_match[2]=Some(2) -\||     .
-        // .                                                                 |||     .
-        // .         elements                     matchers                   vvv     .
-        // .                                                               [ sink ]  .
+        // | [ source ]                                                              |
+        // |   |||                                                                   |
+        // |   |||                                                                   |
+        // |   ||\-> actual_match[0]=Some(1) -\   expected_match[0]=None    ---\     |
+        // |   ||                             |                                |     |
+        // |   |\--> actual_match[1]=None     \-> expected_match[1]=Some(0) --\|     |
+        // |   |                                                              ||     |
+        // |   \---> actual_match[2]=Some(2)  --> expected_match[2]=Some(2) -\||     |
+        // |                                                                 |||     |
+        // |         elements                     matchers                   vvv     |
+        // |                                                               [ sink ]  |
         //
         // See Also:
         //   [1] Cormen, et al (2001). "Section 26.2: The Ford-Fulkerson method".
