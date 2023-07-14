@@ -118,7 +118,6 @@ The following matchers are provided in GoogleTest Rust:
 | [`starts_with`]      | A string starting with the given prefix.                                 |
 | [`subset_of`]        | A container all of whose elements are contained in the argument.         |
 | [`superset_of`]      | A container containing all elements of the argument.                     |
-| [`tuple!`]           | A tuple whose elements the arguments match.                              |
 | [`unordered_elements_are!`] | A container whose elements the arguments match, in any order.     |
 
 [`anything`]: matchers::anything

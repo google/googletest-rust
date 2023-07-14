@@ -58,6 +58,61 @@
 ///     `verify_that!(actual, elements_are![m1, m2, ...])`
 ///   * `verify_that!(actual, {m1, m2, ...})` is equivalent to
 ///     `verify_that!(actual, unordered_elements_are![m1, m2, ...])`
+///
+/// ## Matching against tuples
+///
+/// One can match against a tuple by constructing a tuple of matchers as follows:
+///
+/// ```
+/// # use googletest::prelude::*;
+/// # fn should_pass() -> Result<()> {
+/// verify_that!((123, 456), (eq(123), eq(456)))?; // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail() -> Result<()> {
+/// verify_that!((123, 456), (eq(123), eq(0)))?; // Fails: second matcher does not match
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// # should_fail().unwrap_err();
+/// ```
+///
+/// This also works with composed matchers:
+///
+/// ```
+/// # use googletest::prelude::*;
+/// # fn should_pass() -> Result<()> {
+/// verify_that!((123, 456), not((eq(456), eq(123))))?; // Passes
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// ```
+///
+/// Matchers must correspond to the actual tuple in count and type. Otherwise
+/// the test will fail to compile.
+///
+/// ```compile_fail
+/// # use googletest::prelude::*;
+/// # fn should_not_compile() -> Result<()> {
+/// verify_that!((123, 456), (eq(123),))?; // Does not compile: wrong tuple size
+/// verify_that!((123, "A string"), (eq(123), eq(456)))?; // Does not compile: wrong type
+/// #     Ok(())
+/// # }
+/// ```
+///
+/// All fields must be covered by matchers. Use
+/// [`anything`][crate::matchers::anything] for fields which are not relevant
+/// for the test.
+///
+/// ```
+/// # use googletest::prelude::*;
+/// verify_that!((123, 456), (eq(123), anything()))
+/// #     .unwrap();
+/// ```
+///
+/// This supports tuples of up to 12 elements. Tuples longer than that do not
+/// automatically inherit the `Debug` trait from their members, so are generally
+/// not supported; see [Rust by Example](https://doc.rust-lang.org/rust-by-example/primitives/tuples.html#tuples).
 #[macro_export]
 macro_rules! verify_that {
     ($actual:expr, [$($expecteds:expr),+]) => {

@@ -51,7 +51,7 @@ pub mod prelude {
     // Matcher macros
     pub use super::{
         all, contains_each, elements_are, field, is_contained_in, matches_pattern, pat, pointwise,
-        property, tuple, unordered_elements_are,
+        property, unordered_elements_are,
     };
 }
 

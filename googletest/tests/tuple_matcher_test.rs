@@ -18,77 +18,69 @@ use indoc::indoc;
 
 #[test]
 fn empty_matcher_matches_empty_tuple() -> Result<()> {
-    verify_that!((), tuple!())
+    verify_that!((), ())
 }
 
 #[test]
 fn singleton_matcher_matches_matching_singleton_tuple() -> Result<()> {
-    verify_that!((123,), tuple!(eq(123)))
-}
-
-#[test]
-fn singleton_matcher_with_trailing_comma_matches_matching_singleton_tuple() -> Result<()> {
-    verify_that!((123,), tuple!(eq(123),))
+    verify_that!((123,), (eq(123),))
 }
 
 #[test]
 fn singleton_matcher_does_not_match_non_matching_singleton_tuple() -> Result<()> {
-    verify_that!((123,), not(tuple!(eq(456))))
+    verify_that!((123,), not((eq(456),)))
 }
 
 #[test]
 fn pair_matcher_matches_matching_pair_tuple() -> Result<()> {
-    verify_that!((123, 456), tuple!(eq(123), eq(456)))
+    verify_that!((123, 456), (eq(123), eq(456)))
 }
 
 #[test]
 fn pair_matcher_matches_matching_pair_tuple_with_different_types() -> Result<()> {
-    verify_that!((123, "A string"), tuple!(eq(123), eq("A string")))
+    verify_that!((123, "A string"), (eq(123), eq("A string")))
 }
 
 #[test]
 fn pair_matcher_with_trailing_comma_matches_matching_pair_tuple() -> Result<()> {
-    verify_that!((123, 456), tuple!(eq(123), eq(456),))
+    verify_that!((123, 456), (eq(123), eq(456),))
 }
 
 #[test]
 fn tuple_matcher_matches_matching_3_tuple() -> Result<()> {
-    verify_that!((1, 2, 3), tuple!(eq(1), eq(2), eq(3)))
+    verify_that!((1, 2, 3), (eq(1), eq(2), eq(3)))
 }
 
 #[test]
 fn tuple_matcher_matches_matching_4_tuple() -> Result<()> {
-    verify_that!((1, 2, 3, 4), tuple!(eq(1), eq(2), eq(3), eq(4)))
+    verify_that!((1, 2, 3, 4), (eq(1), eq(2), eq(3), eq(4)))
 }
 
 #[test]
 fn tuple_matcher_matches_matching_5_tuple() -> Result<()> {
-    verify_that!((1, 2, 3, 4, 5), tuple!(eq(1), eq(2), eq(3), eq(4), eq(5)))
+    verify_that!((1, 2, 3, 4, 5), (eq(1), eq(2), eq(3), eq(4), eq(5)))
 }
 
 #[test]
 fn tuple_matcher_matches_matching_6_tuple() -> Result<()> {
-    verify_that!((1, 2, 3, 4, 5, 6), tuple!(eq(1), eq(2), eq(3), eq(4), eq(5), eq(6)))
+    verify_that!((1, 2, 3, 4, 5, 6), (eq(1), eq(2), eq(3), eq(4), eq(5), eq(6)))
 }
 
 #[test]
 fn tuple_matcher_matches_matching_7_tuple() -> Result<()> {
-    verify_that!((1, 2, 3, 4, 5, 6, 7), tuple!(eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7)))
+    verify_that!((1, 2, 3, 4, 5, 6, 7), (eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7)))
 }
 
 #[test]
 fn tuple_matcher_matches_matching_8_tuple() -> Result<()> {
-    verify_that!(
-        (1, 2, 3, 4, 5, 6, 7, 8),
-        tuple!(eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8))
-    )
+    verify_that!((1, 2, 3, 4, 5, 6, 7, 8), (eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8)))
 }
 
 #[test]
 fn tuple_matcher_matches_matching_9_tuple() -> Result<()> {
     verify_that!(
         (1, 2, 3, 4, 5, 6, 7, 8, 9),
-        tuple!(eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8), eq(9))
+        (eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8), eq(9))
     )
 }
 
@@ -96,7 +88,7 @@ fn tuple_matcher_matches_matching_9_tuple() -> Result<()> {
 fn tuple_matcher_matches_matching_10_tuple() -> Result<()> {
     verify_that!(
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-        tuple!(eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8), eq(9), eq(10))
+        (eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8), eq(9), eq(10))
     )
 }
 
@@ -104,7 +96,7 @@ fn tuple_matcher_matches_matching_10_tuple() -> Result<()> {
 fn tuple_matcher_matches_matching_11_tuple() -> Result<()> {
     verify_that!(
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11),
-        tuple!(eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8), eq(9), eq(10), eq(11))
+        (eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8), eq(9), eq(10), eq(11))
     )
 }
 
@@ -112,53 +104,40 @@ fn tuple_matcher_matches_matching_11_tuple() -> Result<()> {
 fn tuple_matcher_matches_matching_12_tuple() -> Result<()> {
     verify_that!(
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
-        tuple!(
-            eq(1),
-            eq(2),
-            eq(3),
-            eq(4),
-            eq(5),
-            eq(6),
-            eq(7),
-            eq(8),
-            eq(9),
-            eq(10),
-            eq(11),
-            eq(12)
-        )
+        (eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8), eq(9), eq(10), eq(11), eq(12))
     )
 }
 
 #[test]
 fn tuple_matcher_with_trailing_comma_matches_matching_3_tuple() -> Result<()> {
-    verify_that!((1, 2, 3), tuple!(eq(1), eq(2), eq(3),))
+    verify_that!((1, 2, 3), (eq(1), eq(2), eq(3),))
 }
 
 #[test]
 fn tuple_matcher_with_trailing_comma_matches_matching_4_tuple() -> Result<()> {
-    verify_that!((1, 2, 3, 4), tuple!(eq(1), eq(2), eq(3), eq(4),))
+    verify_that!((1, 2, 3, 4), (eq(1), eq(2), eq(3), eq(4),))
 }
 
 #[test]
 fn tuple_matcher_with_trailing_comma_matches_matching_5_tuple() -> Result<()> {
-    verify_that!((1, 2, 3, 4, 5), tuple!(eq(1), eq(2), eq(3), eq(4), eq(5),))
+    verify_that!((1, 2, 3, 4, 5), (eq(1), eq(2), eq(3), eq(4), eq(5),))
 }
 
 #[test]
 fn tuple_matcher_with_trailing_comma_matches_matching_6_tuple() -> Result<()> {
-    verify_that!((1, 2, 3, 4, 5, 6), tuple!(eq(1), eq(2), eq(3), eq(4), eq(5), eq(6),))
+    verify_that!((1, 2, 3, 4, 5, 6), (eq(1), eq(2), eq(3), eq(4), eq(5), eq(6),))
 }
 
 #[test]
 fn tuple_matcher_with_trailing_comma_matches_matching_7_tuple() -> Result<()> {
-    verify_that!((1, 2, 3, 4, 5, 6, 7), tuple!(eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7),))
+    verify_that!((1, 2, 3, 4, 5, 6, 7), (eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7),))
 }
 
 #[test]
 fn tuple_matcher_with_trailing_comma_matches_matching_8_tuple() -> Result<()> {
     verify_that!(
         (1, 2, 3, 4, 5, 6, 7, 8),
-        tuple!(eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8),)
+        (eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8),)
     )
 }
 
@@ -166,7 +145,7 @@ fn tuple_matcher_with_trailing_comma_matches_matching_8_tuple() -> Result<()> {
 fn tuple_matcher_with_trailing_comma_matches_matching_9_tuple() -> Result<()> {
     verify_that!(
         (1, 2, 3, 4, 5, 6, 7, 8, 9),
-        tuple!(eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8), eq(9),)
+        (eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8), eq(9),)
     )
 }
 
@@ -174,7 +153,7 @@ fn tuple_matcher_with_trailing_comma_matches_matching_9_tuple() -> Result<()> {
 fn tuple_matcher_with_trailing_comma_matches_matching_10_tuple() -> Result<()> {
     verify_that!(
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-        tuple!(eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8), eq(9), eq(10),)
+        (eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8), eq(9), eq(10),)
     )
 }
 
@@ -182,7 +161,7 @@ fn tuple_matcher_with_trailing_comma_matches_matching_10_tuple() -> Result<()> {
 fn tuple_matcher_with_trailing_comma_matches_matching_11_tuple() -> Result<()> {
     verify_that!(
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11),
-        tuple!(eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8), eq(9), eq(10), eq(11),)
+        (eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8), eq(9), eq(10), eq(11),)
     )
 }
 
@@ -190,27 +169,14 @@ fn tuple_matcher_with_trailing_comma_matches_matching_11_tuple() -> Result<()> {
 fn tuple_matcher_with_trailing_comma_matches_matching_12_tuple() -> Result<()> {
     verify_that!(
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
-        tuple!(
-            eq(1),
-            eq(2),
-            eq(3),
-            eq(4),
-            eq(5),
-            eq(6),
-            eq(7),
-            eq(8),
-            eq(9),
-            eq(10),
-            eq(11),
-            eq(12),
-        )
+        (eq(1), eq(2), eq(3), eq(4), eq(5), eq(6), eq(7), eq(8), eq(9), eq(10), eq(11), eq(12),)
     )
 }
 
 #[test]
 fn tuple_matcher_1_has_correct_description_for_match() -> Result<()> {
     verify_that!(
-        tuple!(eq(1)).describe(MatcherResult::Matches),
+        (eq(1),).describe(MatcherResult::Matches),
         eq(indoc!(
             "
             is a tuple whose values respectively match:
@@ -223,7 +189,7 @@ fn tuple_matcher_1_has_correct_description_for_match() -> Result<()> {
 #[test]
 fn tuple_matcher_1_has_correct_description_for_mismatch() -> Result<()> {
     verify_that!(
-        tuple!(eq(1)).describe(MatcherResult::DoesNotMatch),
+        (eq(1),).describe(MatcherResult::DoesNotMatch),
         eq(indoc!(
             "
             is a tuple whose values do not respectively match:
@@ -236,7 +202,7 @@ fn tuple_matcher_1_has_correct_description_for_mismatch() -> Result<()> {
 #[test]
 fn tuple_matcher_2_has_correct_description_for_match() -> Result<()> {
     verify_that!(
-        tuple!(eq(1), eq(2)).describe(MatcherResult::Matches),
+        (eq(1), eq(2)).describe(MatcherResult::Matches),
         eq(indoc!(
             "
             is a tuple whose values respectively match:
@@ -250,7 +216,7 @@ fn tuple_matcher_2_has_correct_description_for_match() -> Result<()> {
 #[test]
 fn tuple_matcher_2_has_correct_description_for_mismatch() -> Result<()> {
     verify_that!(
-        tuple!(eq(1), eq(2)).describe(MatcherResult::DoesNotMatch),
+        (eq(1), eq(2)).describe(MatcherResult::DoesNotMatch),
         eq(indoc!(
             "
             is a tuple whose values do not respectively match:
@@ -264,7 +230,7 @@ fn tuple_matcher_2_has_correct_description_for_mismatch() -> Result<()> {
 #[test]
 fn describe_match_shows_which_tuple_element_did_not_match() -> Result<()> {
     verify_that!(
-        tuple!(eq(1), eq(2)).explain_match(&(1, 3)),
+        (eq(1), eq(2)).explain_match(&(1, 3)),
         displays_as(eq(indoc!(
             "
             which is a tuple whose values do not respectively match:
@@ -279,7 +245,7 @@ fn describe_match_shows_which_tuple_element_did_not_match() -> Result<()> {
 #[test]
 fn describe_match_shows_which_two_tuple_elements_did_not_match() -> Result<()> {
     verify_that!(
-        tuple!(eq(1), eq(2)).explain_match(&(2, 3)),
+        (eq(1), eq(2)).explain_match(&(2, 3)),
         displays_as(eq(indoc!(
             "
             which is a tuple whose values do not respectively match:
