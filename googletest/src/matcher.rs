@@ -251,22 +251,17 @@ impl From<bool> for MatcherResult {
 
 impl From<MatcherResult> for bool {
     fn from(matcher_result: MatcherResult) -> Self {
-        match matcher_result {
-            MatcherResult::Match => true,
-            MatcherResult::NoMatch => false,
-        }
+        matcher_result.is_match()
     }
 }
 
 impl MatcherResult {
     /// Returns `true` if `self` is [`MatcherResult::Match`], otherwise
     /// `false`.
-    ///
-    /// This delegates to `Into<bool>` but coerce the return type to `bool`
-    /// instead only calling `into()`. This is useful in `if
-    /// !matcher_result.into()`, which requires a constraint on the result
-    /// type of `into()` to compile.
-    pub fn into_bool(self) -> bool {
-        self.into()
+    pub fn is_match(self) -> bool {
+        match self {
+            MatcherResult::Match => true,
+            MatcherResult::NoMatch => false,
+        }
     }
 }
