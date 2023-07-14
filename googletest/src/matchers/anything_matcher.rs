@@ -39,13 +39,13 @@ impl<T: Debug + ?Sized> Matcher for Anything<T> {
     type ActualT = T;
 
     fn matches(&self, _: &T) -> MatcherResult {
-        MatcherResult::Matches
+        MatcherResult::Match
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => "is anything".to_string(),
-            MatcherResult::DoesNotMatch => "never matches".to_string(),
+            MatcherResult::Match => "is anything".to_string(),
+            MatcherResult::NoMatch => "never matches".to_string(),
         }
     }
 }

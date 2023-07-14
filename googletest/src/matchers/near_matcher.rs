@@ -168,23 +168,23 @@ impl<T: Debug + Float> Matcher for NearMatcher<T> {
 
     fn matches(&self, actual: &T) -> MatcherResult {
         if self.nans_are_equal && self.expected.is_nan() && actual.is_nan() {
-            return MatcherResult::Matches;
+            return MatcherResult::Match;
         }
 
         let delta = *actual - self.expected;
         if delta >= -self.max_abs_error && delta <= self.max_abs_error {
-            MatcherResult::Matches
+            MatcherResult::Match
         } else {
-            MatcherResult::DoesNotMatch
+            MatcherResult::NoMatch
         }
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => {
+            MatcherResult::Match => {
                 format!("is within {:?} of {:?}", self.max_abs_error, self.expected)
             }
-            MatcherResult::DoesNotMatch => {
+            MatcherResult::NoMatch => {
                 format!("isn't within {:?} of {:?}", self.max_abs_error, self.expected)
             }
         }
@@ -203,7 +203,7 @@ mod tests {
 
         let result = matcher.matches(&1.0f64);
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -212,7 +212,7 @@ mod tests {
 
         let result = matcher.matches(&0.9f64);
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -221,7 +221,7 @@ mod tests {
 
         let result = matcher.matches(&1.25f64);
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -230,7 +230,7 @@ mod tests {
 
         let result = matcher.matches(&0.899999f64);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -239,7 +239,7 @@ mod tests {
 
         let result = matcher.matches(&1.100001f64);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -248,7 +248,7 @@ mod tests {
 
         let result = matcher.matches(&f64::NAN);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -282,7 +282,7 @@ mod tests {
 
         let result = matcher.matches(&f64::INFINITY);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -291,7 +291,7 @@ mod tests {
 
         let result = matcher.matches(&f64::MIN);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -300,7 +300,7 @@ mod tests {
 
         let result = matcher.matches(&f64::MAX);
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[::core::prelude::v1::test]

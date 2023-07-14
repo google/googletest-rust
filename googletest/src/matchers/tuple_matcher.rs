@@ -44,13 +44,13 @@ pub mod internal {
         type ActualT = ();
 
         fn matches(&self, _: &Self::ActualT) -> MatcherResult {
-            MatcherResult::Matches
+            MatcherResult::Match
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> String {
             match matcher_result {
-                MatcherResult::Matches => "is the empty tuple".into(),
-                MatcherResult::DoesNotMatch => "is not the empty tuple".into(),
+                MatcherResult::Match => "is the empty tuple".into(),
+                MatcherResult::NoMatch => "is not the empty tuple".into(),
             }
         }
     }
@@ -68,19 +68,19 @@ pub mod internal {
 
                 fn matches(&self, actual: &($($field_type,)*)) -> MatcherResult {
                     $(match self.$field_number.matches(&actual.$field_number) {
-                        MatcherResult::Matches => {},
-                        MatcherResult::DoesNotMatch => {
-                            return MatcherResult::DoesNotMatch;
+                        MatcherResult::Match => {},
+                        MatcherResult::NoMatch => {
+                            return MatcherResult::NoMatch;
                         }
                     })*
-                    MatcherResult::Matches
+                    MatcherResult::Match
                 }
 
                 fn explain_match(&self, actual: &($($field_type,)*)) -> String {
                     let mut explanation = format!("which {}", self.describe(self.matches(actual)));
                     $(match self.$field_number.matches(&actual.$field_number) {
-                        MatcherResult::Matches => {},
-                        MatcherResult::DoesNotMatch => {
+                        MatcherResult::Match => {},
+                        MatcherResult::NoMatch => {
                             writeln!(
                                 &mut explanation,
                                 concat!("Element #", $field_number, " is {:?}, {}"),
@@ -94,7 +94,7 @@ pub mod internal {
 
                 fn describe(&self, matcher_result: MatcherResult) -> String {
                     match matcher_result {
-                        MatcherResult::Matches => {
+                        MatcherResult::Match => {
                             format!(
                                 concat!(
                                     "is a tuple whose values respectively match:\n",
@@ -103,13 +103,13 @@ pub mod internal {
                                 $(self.$field_number.describe(matcher_result)),*
                             )
                         }
-                        MatcherResult::DoesNotMatch => {
+                        MatcherResult::NoMatch => {
                             format!(
                                 concat!(
                                     "is a tuple whose values do not respectively match:\n",
                                     $(replace_expr!($field_number, "  {},\n")),*
                                 ),
-                                $(self.$field_number.describe(MatcherResult::Matches)),*
+                                $(self.$field_number.describe(MatcherResult::Match)),*
                             )
                         }
                     }

@@ -79,10 +79,10 @@ impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher for ContainsRegexMatcher<Actu
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => {
+            MatcherResult::Match => {
                 format!("contains the regular expression {:#?}", self.regex.as_str())
             }
-            MatcherResult::DoesNotMatch => {
+            MatcherResult::NoMatch => {
                 format!("doesn't contain the regular expression {:#?}", self.regex.as_str())
             }
         }
@@ -101,7 +101,7 @@ mod tests {
 
         let result = matcher.matches("Some value");
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -110,7 +110,7 @@ mod tests {
 
         let result = matcher.matches("Some value");
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -119,7 +119,7 @@ mod tests {
 
         let result = matcher.matches(&"Some value".to_string());
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -128,7 +128,7 @@ mod tests {
 
         let result = matcher.matches("Some value");
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -141,7 +141,7 @@ mod tests {
         let matcher: ContainsRegexMatcher<&str> = contains_regex("\n");
 
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Matches),
+            Matcher::describe(&matcher, MatcherResult::Match),
             eq("contains the regular expression \"\\n\"")
         )
     }

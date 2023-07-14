@@ -92,13 +92,13 @@ pub mod internal {
         fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
             for component in &self.components {
                 match component.matches(actual) {
-                    MatcherResult::DoesNotMatch => {
-                        return MatcherResult::DoesNotMatch;
+                    MatcherResult::NoMatch => {
+                        return MatcherResult::NoMatch;
                     }
-                    MatcherResult::Matches => {}
+                    MatcherResult::Match => {}
                 }
             }
-            MatcherResult::Matches
+            MatcherResult::Match
         }
 
         fn explain_match(&self, actual: &Self::ActualT) -> String {
@@ -161,7 +161,7 @@ mod tests {
         let matcher: internal::AllMatcher<String, 2> = all!(first_matcher, second_matcher);
 
         verify_that!(
-            matcher.describe(MatcherResult::Matches),
+            matcher.describe(MatcherResult::Match),
             eq(indoc!(
                 "
                 has all the following properties:
@@ -176,7 +176,7 @@ mod tests {
         let first_matcher = starts_with("A");
         let matcher: internal::AllMatcher<String, 1> = all!(first_matcher);
 
-        verify_that!(matcher.describe(MatcherResult::Matches), eq("starts with prefix \"A\""))
+        verify_that!(matcher.describe(MatcherResult::Match), eq("starts with prefix \"A\""))
     }
 
     #[test]

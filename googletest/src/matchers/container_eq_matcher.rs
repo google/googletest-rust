@@ -120,8 +120,8 @@ where
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => format!("is equal to {:?}", self.expected),
-            MatcherResult::DoesNotMatch => format!("isn't equal to {:?}", self.expected),
+            MatcherResult::Match => format!("is equal to {:?}", self.expected),
+            MatcherResult::NoMatch => format!("isn't equal to {:?}", self.expected),
         }
     }
 }
@@ -279,7 +279,7 @@ mod tests {
 
         let result = matcher.matches(&actual);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]

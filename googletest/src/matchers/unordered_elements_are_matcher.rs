@@ -431,7 +431,7 @@ pub mod internal {
                 if matcher_result.into() { "contains" } else { "doesn't contain" },
                 self.elements
                     .iter()
-                    .map(|matcher| matcher.describe(MatcherResult::Matches))
+                    .map(|matcher| matcher.describe(MatcherResult::Match))
                     .collect::<Description>()
                     .enumerate()
                     .indent()
@@ -510,8 +510,8 @@ pub mod internal {
                     .iter()
                     .map(|(key_matcher, value_matcher)| format!(
                         "{} => {}",
-                        key_matcher.describe(MatcherResult::Matches),
-                        value_matcher.describe(MatcherResult::Matches)
+                        key_matcher.describe(MatcherResult::Match),
+                        value_matcher.describe(MatcherResult::Match)
                     ))
                     .collect::<Description>()
                     .indent()
@@ -596,8 +596,7 @@ pub mod internal {
         where
             for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
         {
-            let mut matrix =
-                MatchMatrix(vec![[MatcherResult::DoesNotMatch; N]; count_elements(actual)]);
+            let mut matrix = MatchMatrix(vec![[MatcherResult::NoMatch; N]; count_elements(actual)]);
             for (actual_idx, actual) in actual.into_iter().enumerate() {
                 for (expected_idx, expected) in expected.iter().enumerate() {
                     matrix.0[actual_idx][expected_idx] = expected.matches(actual);
@@ -613,8 +612,7 @@ pub mod internal {
         where
             for<'b> &'b ContainerT: IntoIterator<Item = (&'b KeyT, &'b ValueT)>,
         {
-            let mut matrix =
-                MatchMatrix(vec![[MatcherResult::DoesNotMatch; N]; count_elements(actual)]);
+            let mut matrix = MatchMatrix(vec![[MatcherResult::NoMatch; N]; count_elements(actual)]);
             for (actual_idx, (actual_key, actual_value)) in actual.into_iter().enumerate() {
                 for (expected_idx, (expected_key, expected_value)) in expected.iter().enumerate() {
                     matrix.0[actual_idx][expected_idx] = (expected_key.matches(actual_key).into()
@@ -971,7 +969,7 @@ pub mod internal {
                 format!(
                     "Actual element {:?} at index {actual_idx} matched expected element `{}` at index {expected_idx}.",
                     actual[actual_idx],
-                    expected[expected_idx].describe(MatcherResult::Matches),
+                    expected[expected_idx].describe(MatcherResult::Match),
             )});
 
             let unmatched_actual = self.get_unmatched_actual().map(|actual_idx| {
@@ -983,7 +981,7 @@ pub mod internal {
 
             let unmatched_expected = self.get_unmatched_expected().into_iter().map(|expected_idx|{format!(
                 "Expected element `{}` at index {expected_idx} did not match any remaining actual element.",
-                expected[expected_idx].describe(MatcherResult::Matches)
+                expected[expected_idx].describe(MatcherResult::Match)
             )});
 
             let best_match = matches
@@ -1020,8 +1018,8 @@ pub mod internal {
                         "Actual element {:?} => {:?} at index {actual_idx} matched expected element `{}` => `{}` at index {expected_idx}.",
                         actual[actual_idx].0,
                         actual[actual_idx].1,
-                        expected[expected_idx].0.describe(MatcherResult::Matches),
-                        expected[expected_idx].1.describe(MatcherResult::Matches),
+                        expected[expected_idx].0.describe(MatcherResult::Match),
+                        expected[expected_idx].1.describe(MatcherResult::Match),
                     )
                 });
 
@@ -1039,8 +1037,8 @@ pub mod internal {
                 .map(|expected_idx| {
                     format!(
                         "Expected element `{}` => `{}` at index {expected_idx} did not match any remaining actual element.",
-                        expected[expected_idx].0.describe(MatcherResult::Matches),
-                        expected[expected_idx].1.describe(MatcherResult::Matches),
+                        expected[expected_idx].0.describe(MatcherResult::Match),
+                        expected[expected_idx].1.describe(MatcherResult::Match),
                     )
                 });
 
@@ -1078,7 +1076,7 @@ mod tests {
             (matchers.2.0, matchers.2.1)
         ];
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Matches),
+            Matcher::describe(&matcher, MatcherResult::Match),
             eq(indoc!(
                 "
                 contains elements matching in any order:

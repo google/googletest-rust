@@ -123,13 +123,13 @@ pub mod internal {
             let mut zipped_iterator = zip(actual.into_iter(), self.elements.iter());
             for (a, e) in zipped_iterator.by_ref() {
                 if !e.matches(a).into_bool() {
-                    return MatcherResult::DoesNotMatch;
+                    return MatcherResult::NoMatch;
                 }
             }
             if !zipped_iterator.has_size_mismatch() {
-                MatcherResult::Matches
+                MatcherResult::Match
             } else {
-                MatcherResult::DoesNotMatch
+                MatcherResult::NoMatch
             }
         }
 
@@ -164,7 +164,7 @@ pub mod internal {
                 &self
                     .elements
                     .iter()
-                    .map(|matcher| matcher.describe(MatcherResult::Matches))
+                    .map(|matcher| matcher.describe(MatcherResult::Match))
                     .collect::<Description>()
                     .enumerate()
                     .indent()

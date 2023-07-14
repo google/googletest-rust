@@ -411,8 +411,8 @@ pub mod internal {
         source_location: SourceLocation,
     ) -> Result<(), TestAssertionFailure> {
         match expected.matches(actual) {
-            MatcherResult::Matches => Ok(()),
-            MatcherResult::DoesNotMatch => {
+            MatcherResult::Match => Ok(()),
+            MatcherResult::NoMatch => {
                 Err(create_assertion_failure(&expected, actual, actual_expr, source_location))
             }
         }

@@ -48,16 +48,13 @@ impl<T: Debug + Display, InnerMatcher: Matcher<ActualT = String>> Matcher
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => {
-                format!(
-                    "displays as a string which {}",
-                    self.inner.describe(MatcherResult::Matches)
-                )
+            MatcherResult::Match => {
+                format!("displays as a string which {}", self.inner.describe(MatcherResult::Match))
             }
-            MatcherResult::DoesNotMatch => {
+            MatcherResult::NoMatch => {
                 format!(
                     "doesn't display as a string which {}",
-                    self.inner.describe(MatcherResult::Matches)
+                    self.inner.describe(MatcherResult::Match)
                 )
             }
         }

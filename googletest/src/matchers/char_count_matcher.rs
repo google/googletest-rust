@@ -73,16 +73,16 @@ impl<T: Debug + ?Sized + AsRef<str>, E: Matcher<ActualT = usize>> Matcher for Ch
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => {
+            MatcherResult::Match => {
                 format!(
                     "has character count, which {}",
-                    self.expected.describe(MatcherResult::Matches)
+                    self.expected.describe(MatcherResult::Match)
                 )
             }
-            MatcherResult::DoesNotMatch => {
+            MatcherResult::NoMatch => {
                 format!(
                     "has character count, which {}",
-                    self.expected.describe(MatcherResult::DoesNotMatch)
+                    self.expected.describe(MatcherResult::NoMatch)
                 )
             }
         }

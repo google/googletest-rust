@@ -178,18 +178,18 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 
     fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
         if self.expected == *actual {
-            MatcherResult::Matches
+            MatcherResult::Match
         } else {
-            MatcherResult::DoesNotMatch
+            MatcherResult::NoMatch
         }
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => {
+            MatcherResult::Match => {
                 format!("is equal to {:?} the way I define it", self.expected)
             }
-            MatcherResult::DoesNotMatch => {
+            MatcherResult::NoMatch => {
                 format!("isn't equal to {:?} the way I define it", self.expected)
             }
         }
@@ -212,18 +212,18 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
  #
  #    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
  #        if self.expected == *actual {
- #            MatcherResult::Matches
+ #            MatcherResult::Match
  #        } else {
- #            MatcherResult::DoesNotMatch
+ #            MatcherResult::NoMatch
  #        }
  #    }
  #
  #    fn describe(&self, matcher_result: MatcherResult) -> String {
  #        match matcher_result {
- #            MatcherResult::Matches => {
+ #            MatcherResult::Match => {
  #                format!("is equal to {:?} the way I define it", self.expected)
  #            }
- #            MatcherResult::DoesNotMatch => {
+ #            MatcherResult::NoMatch => {
  #                format!("isn't equal to {:?} the way I define it", self.expected)
  #            }
  #        }
@@ -251,18 +251,18 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 #
 #    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
 #        if self.expected == *actual {
-#            MatcherResult::Matches
+#            MatcherResult::Match
 #        } else {
-#            MatcherResult::DoesNotMatch
+#            MatcherResult::NoMatch
 #        }
 #    }
 #
 #    fn describe(&self, matcher_result: MatcherResult) -> String {
 #        match matcher_result {
-#            MatcherResult::Matches => {
+#            MatcherResult::Match => {
 #                format!("is equal to {:?} the way I define it", self.expected)
 #            }
-#            MatcherResult::DoesNotMatch => {
+#            MatcherResult::NoMatch => {
 #                format!("isn't equal to {:?} the way I define it", self.expected)
 #            }
 #        }

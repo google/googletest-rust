@@ -171,7 +171,7 @@ pub mod internal {
             if let Some(value) = (self.field_accessor)(actual) {
                 self.inner.matches(value)
             } else {
-                MatcherResult::DoesNotMatch
+                MatcherResult::NoMatch
             }
         }
 

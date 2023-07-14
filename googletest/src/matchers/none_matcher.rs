@@ -48,8 +48,8 @@ impl<T: Debug> Matcher for NoneMatcher<T> {
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => "is none".to_string(),
-            MatcherResult::DoesNotMatch => "is some(_)".to_string(),
+            MatcherResult::Match => "is none".to_string(),
+            MatcherResult::NoMatch => "is some(_)".to_string(),
         }
     }
 }
@@ -66,7 +66,7 @@ mod tests {
 
         let result = matcher.matches(&None);
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -75,6 +75,6 @@ mod tests {
 
         let result = matcher.matches(&Some(0));
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 }

@@ -91,8 +91,8 @@ impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher for EqMatcher<A, T> {
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => format!("is equal to {:?}", self.expected),
-            MatcherResult::DoesNotMatch => format!("isn't equal to {:?}", self.expected),
+            MatcherResult::Match => format!("is equal to {:?}", self.expected),
+            MatcherResult::NoMatch => format!("isn't equal to {:?}", self.expected),
         }
     }
 

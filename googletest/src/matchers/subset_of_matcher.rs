@@ -103,10 +103,10 @@ where
     fn matches(&self, actual: &ActualT) -> MatcherResult {
         for actual_item in actual {
             if self.expected_is_missing(actual_item) {
-                return MatcherResult::DoesNotMatch;
+                return MatcherResult::NoMatch;
             }
         }
-        MatcherResult::Matches
+        MatcherResult::Match
     }
 
     fn explain_match(&self, actual: &ActualT) -> String {
@@ -126,8 +126,8 @@ where
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => format!("is a subset of {:#?}", self.superset),
-            MatcherResult::DoesNotMatch => format!("isn't a subset of {:#?}", self.superset),
+            MatcherResult::Match => format!("is a subset of {:#?}", self.superset),
+            MatcherResult::NoMatch => format!("isn't a subset of {:#?}", self.superset),
         }
     }
 }

@@ -92,10 +92,10 @@ where
         } else {
             for v in actual.into_iter() {
                 if self.inner.matches(v).into() {
-                    return MatcherResult::Matches;
+                    return MatcherResult::Match;
                 }
             }
-            MatcherResult::DoesNotMatch
+            MatcherResult::NoMatch
         }
     }
 
@@ -110,22 +110,22 @@ where
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match (matcher_result, &self.count) {
-            (MatcherResult::Matches, Some(count)) => format!(
+            (MatcherResult::Match, Some(count)) => format!(
                 "contains n elements which {}\n  where n {}",
-                self.inner.describe(MatcherResult::Matches),
-                count.describe(MatcherResult::Matches)
+                self.inner.describe(MatcherResult::Match),
+                count.describe(MatcherResult::Match)
             ),
-            (MatcherResult::DoesNotMatch, Some(count)) => format!(
+            (MatcherResult::NoMatch, Some(count)) => format!(
                 "doesn't contain n elements which {}\n  where n {}",
-                self.inner.describe(MatcherResult::Matches),
-                count.describe(MatcherResult::Matches)
+                self.inner.describe(MatcherResult::Match),
+                count.describe(MatcherResult::Match)
             ),
-            (MatcherResult::Matches, None) => format!(
+            (MatcherResult::Match, None) => format!(
                 "contains at least one element which {}",
-                self.inner.describe(MatcherResult::Matches)
+                self.inner.describe(MatcherResult::Match)
             ),
-            (MatcherResult::DoesNotMatch, None) => {
-                format!("contains no element which {}", self.inner.describe(MatcherResult::Matches))
+            (MatcherResult::NoMatch, None) => {
+                format!("contains no element which {}", self.inner.describe(MatcherResult::Match))
             }
         }
     }
@@ -159,7 +159,7 @@ mod tests {
 
         let result = matcher.matches(&vec![1]);
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -168,7 +168,7 @@ mod tests {
 
         let result = matcher.matches(&vec![1]);
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -177,7 +177,7 @@ mod tests {
 
         let result = matcher.matches(&[0, 1]);
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -186,7 +186,7 @@ mod tests {
 
         let result = matcher.matches(&[0]);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -195,7 +195,7 @@ mod tests {
 
         let result = matcher.matches(&[]);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -204,7 +204,7 @@ mod tests {
 
         let result = matcher.matches(&[1, 1]);
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -213,7 +213,7 @@ mod tests {
 
         let result = matcher.matches(&[0, 1]);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -222,7 +222,7 @@ mod tests {
 
         let result = matcher.matches(&[1, 1]);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -230,7 +230,7 @@ mod tests {
         let matcher: ContainsMatcher<Vec<i32>, _> = contains(eq(1));
 
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Matches),
+            Matcher::describe(&matcher, MatcherResult::Match),
             eq("contains at least one element which is equal to 1")
         )
     }
@@ -240,7 +240,7 @@ mod tests {
         let matcher: ContainsMatcher<Vec<i32>, _> = contains(eq(1)).times(eq(2));
 
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Matches),
+            Matcher::describe(&matcher, MatcherResult::Match),
             eq("contains n elements which is equal to 1\n  where n is equal to 2")
         )
     }

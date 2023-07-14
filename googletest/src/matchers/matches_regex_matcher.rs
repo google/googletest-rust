@@ -96,10 +96,10 @@ where
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => {
+            MatcherResult::Match => {
                 format!("matches the regular expression {:#?}", self.pattern.deref())
             }
-            MatcherResult::DoesNotMatch => {
+            MatcherResult::NoMatch => {
                 format!("doesn't match the regular expression {:#?}", self.pattern.deref())
             }
         }
@@ -118,7 +118,7 @@ mod tests {
 
         let result = matcher.matches("Some value");
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -127,7 +127,7 @@ mod tests {
 
         let result = matcher.matches("Some value");
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -136,7 +136,7 @@ mod tests {
 
         let result = matcher.matches("Some value");
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -145,7 +145,7 @@ mod tests {
 
         let result = matcher.matches("Some value");
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -154,7 +154,7 @@ mod tests {
 
         let result = matcher.matches(&"Some value".to_string());
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -163,7 +163,7 @@ mod tests {
 
         let result = matcher.matches("Some value");
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -172,7 +172,7 @@ mod tests {
 
         let result = matcher.matches("Some value");
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -181,7 +181,7 @@ mod tests {
 
         let result = matcher.matches("Some value");
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -190,7 +190,7 @@ mod tests {
 
         let result = matcher.matches("Some value");
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -203,7 +203,7 @@ mod tests {
         let matcher: MatchesRegexMatcher<&str, _> = matches_regex("\n");
 
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Matches),
+            Matcher::describe(&matcher, MatcherResult::Match),
             eq("matches the regular expression \"\\n\"")
         )
     }

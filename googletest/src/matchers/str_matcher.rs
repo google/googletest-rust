@@ -460,7 +460,7 @@ impl Configuration {
             // Split returns an iterator over the "boundaries" left and right of the
             // substring to be matched, of which there is one more than the number of
             // substrings.
-            matches!(times.matches(&(actual.split(expected).count() - 1)), MatcherResult::Matches)
+            matches!(times.matches(&(actual.split(expected).count() - 1)), MatcherResult::Match)
         } else {
             actual.contains(expected)
         }
@@ -486,20 +486,20 @@ impl Configuration {
             if !addenda.is_empty() { format!(" ({})", addenda.join(", ")) } else { "".into() };
         let match_mode_description = match self.mode {
             MatchMode::Equals => match matcher_result {
-                MatcherResult::Matches => "is equal to",
-                MatcherResult::DoesNotMatch => "isn't equal to",
+                MatcherResult::Match => "is equal to",
+                MatcherResult::NoMatch => "isn't equal to",
             },
             MatchMode::Contains => match matcher_result {
-                MatcherResult::Matches => "contains a substring",
-                MatcherResult::DoesNotMatch => "does not contain a substring",
+                MatcherResult::Match => "contains a substring",
+                MatcherResult::NoMatch => "does not contain a substring",
             },
             MatchMode::StartsWith => match matcher_result {
-                MatcherResult::Matches => "starts with prefix",
-                MatcherResult::DoesNotMatch => "does not start with",
+                MatcherResult::Match => "starts with prefix",
+                MatcherResult::NoMatch => "does not start with",
             },
             MatchMode::EndsWith => match matcher_result {
-                MatcherResult::Matches => "ends with suffix",
-                MatcherResult::DoesNotMatch => "does not end with",
+                MatcherResult::Match => "ends with suffix",
+                MatcherResult::NoMatch => "does not end with",
             },
         };
         format!("{match_mode_description} {expected:?}{extra}")
@@ -810,7 +810,7 @@ mod tests {
     fn describes_itself_for_matching_result() -> Result<()> {
         let matcher: StrMatcher<&str, _> = StrMatcher::with_default_config("A string");
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Matches),
+            Matcher::describe(&matcher, MatcherResult::Match),
             eq("is equal to \"A string\"")
         )
     }
@@ -819,7 +819,7 @@ mod tests {
     fn describes_itself_for_non_matching_result() -> Result<()> {
         let matcher: StrMatcher<&str, _> = StrMatcher::with_default_config("A string");
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::DoesNotMatch),
+            Matcher::describe(&matcher, MatcherResult::NoMatch),
             eq("isn't equal to \"A string\"")
         )
     }
@@ -829,7 +829,7 @@ mod tests {
         let matcher: StrMatcher<&str, _> =
             StrMatcher::with_default_config("A string").ignoring_leading_whitespace();
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Matches),
+            Matcher::describe(&matcher, MatcherResult::Match),
             eq("is equal to \"A string\" (ignoring leading whitespace)")
         )
     }
@@ -839,7 +839,7 @@ mod tests {
         let matcher: StrMatcher<&str, _> =
             StrMatcher::with_default_config("A string").ignoring_leading_whitespace();
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::DoesNotMatch),
+            Matcher::describe(&matcher, MatcherResult::NoMatch),
             eq("isn't equal to \"A string\" (ignoring leading whitespace)")
         )
     }
@@ -849,7 +849,7 @@ mod tests {
         let matcher: StrMatcher<&str, _> =
             StrMatcher::with_default_config("A string").ignoring_trailing_whitespace();
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Matches),
+            Matcher::describe(&matcher, MatcherResult::Match),
             eq("is equal to \"A string\" (ignoring trailing whitespace)")
         )
     }
@@ -860,7 +860,7 @@ mod tests {
         let matcher: StrMatcher<&str, _> =
             StrMatcher::with_default_config("A string").ignoring_outer_whitespace();
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Matches),
+            Matcher::describe(&matcher, MatcherResult::Match),
             eq("is equal to \"A string\" (ignoring leading and trailing whitespace)")
         )
     }
@@ -870,7 +870,7 @@ mod tests {
         let matcher: StrMatcher<&str, _> =
             StrMatcher::with_default_config("A string").ignoring_ascii_case();
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Matches),
+            Matcher::describe(&matcher, MatcherResult::Match),
             eq("is equal to \"A string\" (ignoring ASCII case)")
         )
     }
@@ -882,7 +882,7 @@ mod tests {
             .ignoring_leading_whitespace()
             .ignoring_ascii_case();
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Matches),
+            Matcher::describe(&matcher, MatcherResult::Match),
             eq("is equal to \"A string\" (ignoring leading whitespace, ignoring ASCII case)")
         )
     }
@@ -891,7 +891,7 @@ mod tests {
     fn describes_itself_for_matching_result_in_contains_mode() -> Result<()> {
         let matcher: StrMatcher<&str, _> = contains_substring("A string");
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Matches),
+            Matcher::describe(&matcher, MatcherResult::Match),
             eq("contains a substring \"A string\"")
         )
     }
@@ -900,7 +900,7 @@ mod tests {
     fn describes_itself_for_non_matching_result_in_contains_mode() -> Result<()> {
         let matcher: StrMatcher<&str, _> = contains_substring("A string");
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::DoesNotMatch),
+            Matcher::describe(&matcher, MatcherResult::NoMatch),
             eq("does not contain a substring \"A string\"")
         )
     }
@@ -909,7 +909,7 @@ mod tests {
     fn describes_itself_with_count_number() -> Result<()> {
         let matcher: StrMatcher<&str, _> = contains_substring("A string").times(gt(2));
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Matches),
+            Matcher::describe(&matcher, MatcherResult::Match),
             eq("contains a substring \"A string\" (count is greater than 2)")
         )
     }
@@ -918,7 +918,7 @@ mod tests {
     fn describes_itself_for_matching_result_in_starts_with_mode() -> Result<()> {
         let matcher: StrMatcher<&str, _> = starts_with("A string");
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Matches),
+            Matcher::describe(&matcher, MatcherResult::Match),
             eq("starts with prefix \"A string\"")
         )
     }
@@ -927,7 +927,7 @@ mod tests {
     fn describes_itself_for_non_matching_result_in_starts_with_mode() -> Result<()> {
         let matcher: StrMatcher<&str, _> = starts_with("A string");
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::DoesNotMatch),
+            Matcher::describe(&matcher, MatcherResult::NoMatch),
             eq("does not start with \"A string\"")
         )
     }
@@ -936,7 +936,7 @@ mod tests {
     fn describes_itself_for_matching_result_in_ends_with_mode() -> Result<()> {
         let matcher: StrMatcher<&str, _> = ends_with("A string");
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Matches),
+            Matcher::describe(&matcher, MatcherResult::Match),
             eq("ends with suffix \"A string\"")
         )
     }
@@ -945,7 +945,7 @@ mod tests {
     fn describes_itself_for_non_matching_result_in_ends_with_mode() -> Result<()> {
         let matcher: StrMatcher<&str, _> = ends_with("A string");
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::DoesNotMatch),
+            Matcher::describe(&matcher, MatcherResult::NoMatch),
             eq("does not end with \"A string\"")
         )
     }
