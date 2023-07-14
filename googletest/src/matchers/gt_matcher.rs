@@ -93,8 +93,8 @@ impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => format!("is greater than {:?}", self.expected),
-            MatcherResult::DoesNotMatch => format!("is less than or equal to {:?}", self.expected),
+            MatcherResult::Match => format!("is greater than {:?}", self.expected),
+            MatcherResult::NoMatch => format!("is less than or equal to {:?}", self.expected),
         }
     }
 }
@@ -118,14 +118,14 @@ mod tests {
     fn gt_does_not_match_equal_i32() -> Result<()> {
         let matcher = gt(10);
         let result = matcher.matches(&10);
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
     fn gt_does_not_match_lower_i32() -> Result<()> {
         let matcher = gt(-50);
         let result = matcher.matches(&-51);
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -137,7 +137,7 @@ mod tests {
     fn gt_does_not_match_lesser_str() -> Result<()> {
         let matcher = gt("B");
         let result = matcher.matches(&"A");
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -175,16 +175,13 @@ mod tests {
 
     #[test]
     fn gt_describe_matches() -> Result<()> {
-        verify_that!(
-            gt::<i32, i32>(232).describe(MatcherResult::Matches),
-            eq("is greater than 232")
-        )
+        verify_that!(gt::<i32, i32>(232).describe(MatcherResult::Match), eq("is greater than 232"))
     }
 
     #[test]
     fn gt_describe_does_not_match() -> Result<()> {
         verify_that!(
-            gt::<i32, i32>(232).describe(MatcherResult::DoesNotMatch),
+            gt::<i32, i32>(232).describe(MatcherResult::NoMatch),
             eq("is less than or equal to 232")
         )
     }

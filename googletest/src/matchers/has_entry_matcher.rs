@@ -83,7 +83,7 @@ impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ActualT = ValueT>
         if let Some(value) = actual.get(&self.key) {
             self.inner.matches(value)
         } else {
-            MatcherResult::DoesNotMatch
+            MatcherResult::NoMatch
         }
     }
 
@@ -102,16 +102,16 @@ impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ActualT = ValueT>
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => format!(
+            MatcherResult::Match => format!(
                 "contains key {:?}, which value {}",
                 self.key,
-                self.inner.describe(MatcherResult::Matches)
+                self.inner.describe(MatcherResult::Match)
             ),
-            MatcherResult::DoesNotMatch => format!(
+            MatcherResult::NoMatch => format!(
                 "doesn't contain key {:?} or contains key {:?}, which value {}",
                 self.key,
                 self.key,
-                self.inner.describe(MatcherResult::DoesNotMatch)
+                self.inner.describe(MatcherResult::NoMatch)
             ),
         }
     }

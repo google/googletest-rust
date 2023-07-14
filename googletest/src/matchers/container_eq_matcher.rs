@@ -120,8 +120,8 @@ where
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => format!("is equal to {:?}", self.expected),
-            MatcherResult::DoesNotMatch => format!("isn't equal to {:?}", self.expected),
+            MatcherResult::Match => format!("is equal to {:?}", self.expected),
+            MatcherResult::NoMatch => format!("isn't equal to {:?}", self.expected),
         }
     }
 }
@@ -265,21 +265,21 @@ mod tests {
     }
 
     #[test]
-    fn container_eq_matches_owned_vec_of_owned_strings_with_slice_of_string_references()
-    -> Result<()> {
+    fn container_eq_matches_owned_vec_of_owned_strings_with_slice_of_string_references(
+    ) -> Result<()> {
         let vector = vec!["A string".to_string(), "Another string".to_string()];
         verify_that!(vector, container_eq(["A string", "Another string"]))
     }
 
     #[test]
-    fn container_eq_matches_owned_vec_of_owned_strings_with_shorter_slice_of_string_references()
-    -> Result<()> {
+    fn container_eq_matches_owned_vec_of_owned_strings_with_shorter_slice_of_string_references(
+    ) -> Result<()> {
         let actual = vec!["A string".to_string(), "Another string".to_string()];
         let matcher = container_eq(["A string"]);
 
         let result = matcher.matches(&actual);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]

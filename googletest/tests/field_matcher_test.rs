@@ -40,7 +40,7 @@ fn field_error_message_shows_field_name_and_inner_matcher() -> Result<()> {
     let matcher = field!(IntField.int, eq(31));
 
     verify_that!(
-        matcher.describe(MatcherResult::Matches),
+        matcher.describe(MatcherResult::Match),
         eq("has field `int`, which is equal to 31")
     )
 }

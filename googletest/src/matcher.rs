@@ -225,7 +225,7 @@ Expected: {}
 Actual: {actual_formatted},
   {}
 {source_location}",
-        matcher.describe(MatcherResult::Matches),
+        matcher.describe(MatcherResult::Match),
         matcher.explain_match(actual),
     ))
 }
@@ -234,28 +234,32 @@ Actual: {actual_formatted},
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum MatcherResult {
     /// The actual value matches according to the [`Matcher`] definition.
-    Matches,
+    Match,
     /// The actual value does not match according to the [`Matcher`] definition.
-    DoesNotMatch,
+    NoMatch,
 }
 
 impl From<bool> for MatcherResult {
     fn from(b: bool) -> Self {
-        if b { MatcherResult::Matches } else { MatcherResult::DoesNotMatch }
+        if b {
+            MatcherResult::Match
+        } else {
+            MatcherResult::NoMatch
+        }
     }
 }
 
 impl From<MatcherResult> for bool {
     fn from(matcher_result: MatcherResult) -> Self {
         match matcher_result {
-            MatcherResult::Matches => true,
-            MatcherResult::DoesNotMatch => false,
+            MatcherResult::Match => true,
+            MatcherResult::NoMatch => false,
         }
     }
 }
 
 impl MatcherResult {
-    /// Returns `true` if `self` is [`MatcherResult::Matches`], otherwise
+    /// Returns `true` if `self` is [`MatcherResult::Match`], otherwise
     /// `false`.
     ///
     /// This delegates to `Into<bool>` but coerce the return type to `bool`

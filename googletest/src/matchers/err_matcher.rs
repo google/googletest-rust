@@ -53,7 +53,7 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<ActualT = E>> Matcher
     type ActualT = std::result::Result<T, E>;
 
     fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
-        actual.as_ref().err().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::DoesNotMatch)
+        actual.as_ref().err().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
     fn explain_match(&self, actual: &Self::ActualT) -> String {
@@ -65,13 +65,13 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<ActualT = E>> Matcher
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => {
-                format!("is an error which {}", self.inner.describe(MatcherResult::Matches))
+            MatcherResult::Match => {
+                format!("is an error which {}", self.inner.describe(MatcherResult::Match))
             }
-            MatcherResult::DoesNotMatch => {
+            MatcherResult::NoMatch => {
                 format!(
                     "is a success or is an error containing a value which {}",
-                    self.inner.describe(MatcherResult::DoesNotMatch)
+                    self.inner.describe(MatcherResult::NoMatch)
                 )
             }
         }
@@ -92,7 +92,7 @@ mod tests {
 
         let result = matcher.matches(&value);
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -102,7 +102,7 @@ mod tests {
 
         let result = matcher.matches(&value);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -112,7 +112,7 @@ mod tests {
 
         let result = matcher.matches(&value);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -139,9 +139,6 @@ mod tests {
             phantom_t: Default::default(),
             phantom_e: Default::default(),
         };
-        verify_that!(
-            matcher.describe(MatcherResult::Matches),
-            eq("is an error which is equal to 1")
-        )
+        verify_that!(matcher.describe(MatcherResult::Match), eq("is an error which is equal to 1"))
     }
 }

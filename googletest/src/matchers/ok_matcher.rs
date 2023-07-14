@@ -53,7 +53,7 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher
     type ActualT = std::result::Result<T, E>;
 
     fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
-        actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::DoesNotMatch)
+        actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
     fn explain_match(&self, actual: &Self::ActualT) -> String {
@@ -65,16 +65,16 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => {
+            MatcherResult::Match => {
                 format!(
                     "is a success containing a value, which {}",
-                    self.inner.describe(MatcherResult::Matches)
+                    self.inner.describe(MatcherResult::Match)
                 )
             }
-            MatcherResult::DoesNotMatch => {
+            MatcherResult::NoMatch => {
                 format!(
                     "is an error or a success containing a value, which {}",
-                    self.inner.describe(MatcherResult::DoesNotMatch)
+                    self.inner.describe(MatcherResult::NoMatch)
                 )
             }
         }
@@ -95,7 +95,7 @@ mod tests {
 
         let result = matcher.matches(&value);
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -105,7 +105,7 @@ mod tests {
 
         let result = matcher.matches(&value);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -115,7 +115,7 @@ mod tests {
 
         let result = matcher.matches(&value);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -143,7 +143,7 @@ mod tests {
             phantom_e: Default::default(),
         };
         verify_that!(
-            matcher.describe(MatcherResult::Matches),
+            matcher.describe(MatcherResult::Match),
             eq("is a success containing a value, which is equal to 1")
         )
     }

@@ -48,7 +48,7 @@ impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for SomeMatcher<T, I
     type ActualT = Option<T>;
 
     fn matches(&self, actual: &Option<T>) -> MatcherResult {
-        actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::DoesNotMatch)
+        actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
     fn explain_match(&self, actual: &Option<T>) -> String {
@@ -60,13 +60,13 @@ impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for SomeMatcher<T, I
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => {
-                format!("has a value which {}", self.inner.describe(MatcherResult::Matches))
+            MatcherResult::Match => {
+                format!("has a value which {}", self.inner.describe(MatcherResult::Match))
             }
-            MatcherResult::DoesNotMatch => {
+            MatcherResult::NoMatch => {
                 format!(
                     "is None or has a value which {}",
-                    self.inner.describe(MatcherResult::DoesNotMatch)
+                    self.inner.describe(MatcherResult::NoMatch)
                 )
             }
         }
@@ -86,7 +86,7 @@ mod tests {
 
         let result = matcher.matches(&Some(1));
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -95,7 +95,7 @@ mod tests {
 
         let result = matcher.matches(&Some(0));
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -104,7 +104,7 @@ mod tests {
 
         let result = matcher.matches(&None);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -126,7 +126,7 @@ mod tests {
     #[test]
     fn some_describe_matches() -> Result<()> {
         verify_that!(
-            some(eq(1)).describe(MatcherResult::Matches),
+            some(eq(1)).describe(MatcherResult::Match),
             eq("has a value which is equal to 1")
         )
     }
@@ -134,7 +134,7 @@ mod tests {
     #[test]
     fn some_describe_does_not_match() -> Result<()> {
         verify_that!(
-            some(eq(1)).describe(MatcherResult::DoesNotMatch),
+            some(eq(1)).describe(MatcherResult::NoMatch),
             eq("is None or has a value which isn't equal to 1")
         )
     }

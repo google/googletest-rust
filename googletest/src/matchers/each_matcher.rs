@@ -81,10 +81,10 @@ where
     fn matches(&self, actual: &ActualT) -> MatcherResult {
         for element in actual {
             if !self.inner.matches(element).into_bool() {
-                return MatcherResult::DoesNotMatch;
+                return MatcherResult::NoMatch;
             }
         }
-        MatcherResult::Matches
+        MatcherResult::Match
     }
 
     fn explain_match(&self, actual: &ActualT) -> String {
@@ -95,7 +95,7 @@ where
             }
         }
         if non_matching_elements.is_empty() {
-            return format!("whose each element {}", self.inner.describe(MatcherResult::Matches));
+            return format!("whose each element {}", self.inner.describe(MatcherResult::Match));
         }
         if non_matching_elements.len() == 1 {
             let (idx, element, explanation) = non_matching_elements.remove(0);
@@ -117,14 +117,11 @@ where
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => {
-                format!(
-                    "only contains elements that {}",
-                    self.inner.describe(MatcherResult::Matches)
-                )
+            MatcherResult::Match => {
+                format!("only contains elements that {}", self.inner.describe(MatcherResult::Match))
             }
-            MatcherResult::DoesNotMatch => {
-                format!("contains no element that {}", self.inner.describe(MatcherResult::Matches))
+            MatcherResult::NoMatch => {
+                format!("contains no element that {}", self.inner.describe(MatcherResult::Match))
             }
         }
     }

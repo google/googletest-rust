@@ -38,10 +38,8 @@ where
 
     fn matches(&self, actual: &M1::ActualT) -> MatcherResult {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
-            (MatcherResult::DoesNotMatch, MatcherResult::DoesNotMatch) => {
-                MatcherResult::DoesNotMatch
-            }
-            _ => MatcherResult::Matches,
+            (MatcherResult::NoMatch, MatcherResult::NoMatch) => MatcherResult::NoMatch,
+            _ => MatcherResult::Match,
         }
     }
 

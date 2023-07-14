@@ -46,8 +46,8 @@ impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for NotMatcher<T, In
 
     fn matches(&self, actual: &T) -> MatcherResult {
         match self.inner.matches(actual) {
-            MatcherResult::Matches => MatcherResult::DoesNotMatch,
-            MatcherResult::DoesNotMatch => MatcherResult::Matches,
+            MatcherResult::Match => MatcherResult::NoMatch,
+            MatcherResult::NoMatch => MatcherResult::Match,
         }
     }
 
@@ -57,9 +57,9 @@ impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for NotMatcher<T, In
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         self.inner.describe(if matcher_result.into() {
-            MatcherResult::DoesNotMatch
+            MatcherResult::NoMatch
         } else {
-            MatcherResult::Matches
+            MatcherResult::Match
         })
     }
 }
@@ -77,7 +77,7 @@ mod tests {
 
         let result = matcher.matches(&0);
 
-        verify_that!(result, eq(MatcherResult::Matches))
+        verify_that!(result, eq(MatcherResult::Match))
     }
 
     #[test]
@@ -86,7 +86,7 @@ mod tests {
 
         let result = matcher.matches(&1);
 
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]

@@ -70,11 +70,11 @@ where
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => {
-                format!("has length, which {}", self.expected.describe(MatcherResult::Matches))
+            MatcherResult::Match => {
+                format!("has length, which {}", self.expected.describe(MatcherResult::Match))
             }
-            MatcherResult::DoesNotMatch => {
-                format!("has length, which {}", self.expected.describe(MatcherResult::DoesNotMatch))
+            MatcherResult::NoMatch => {
+                format!("has length, which {}", self.expected.describe(MatcherResult::NoMatch))
             }
         }
     }

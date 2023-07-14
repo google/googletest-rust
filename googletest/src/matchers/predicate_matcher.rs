@@ -133,8 +133,8 @@ where
 
     fn describe(&self, result: MatcherResult) -> String {
         match result {
-            MatcherResult::Matches => "matches".to_string(),
-            MatcherResult::DoesNotMatch => "does not match".to_string(),
+            MatcherResult::Match => "matches".to_string(),
+            MatcherResult::NoMatch => "does not match".to_string(),
         }
     }
 }
@@ -152,8 +152,8 @@ where
 
     fn describe(&self, result: MatcherResult) -> String {
         match result {
-            MatcherResult::Matches => self.positive_description.to_description(),
-            MatcherResult::DoesNotMatch => self.negative_description.to_description(),
+            MatcherResult::Match => self.positive_description.to_description(),
+            MatcherResult::NoMatch => self.negative_description.to_description(),
         }
     }
 }

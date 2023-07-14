@@ -93,8 +93,8 @@ impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => format!("is less than {:?}", self.expected),
-            MatcherResult::DoesNotMatch => {
+            MatcherResult::Match => format!("is less than {:?}", self.expected),
+            MatcherResult::NoMatch => {
                 format!("is greater than or equal to {:?}", self.expected)
             }
         }
@@ -120,14 +120,14 @@ mod tests {
     fn lt_does_not_match_equal_i32() -> Result<()> {
         let matcher = lt(10);
         let result = matcher.matches(&10);
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
     fn lt_does_not_match_lower_i32() -> Result<()> {
         let matcher = lt(-50);
         let result = matcher.matches(&50);
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
@@ -139,7 +139,7 @@ mod tests {
     fn lt_does_not_match_bigger_str() -> Result<()> {
         let matcher = lt("ab");
         let result = matcher.matches(&"az");
-        verify_that!(result, eq(MatcherResult::DoesNotMatch))
+        verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]

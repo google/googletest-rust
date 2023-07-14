@@ -46,15 +46,15 @@ impl<'a, ActualT: Debug, InnerMatcherT: Matcher<ActualT = ActualT>> Matcher
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
         match matcher_result {
-            MatcherResult::Matches => format!(
+            MatcherResult::Match => format!(
                 "is {} which {}",
                 self.description,
-                self.inner.describe(MatcherResult::Matches)
+                self.inner.describe(MatcherResult::Match)
             ),
-            MatcherResult::DoesNotMatch => format!(
+            MatcherResult::NoMatch => format!(
                 "is not {} which {}",
                 self.description,
-                self.inner.describe(MatcherResult::Matches)
+                self.inner.describe(MatcherResult::Match)
             ),
         }
     }
