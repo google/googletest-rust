@@ -80,7 +80,7 @@ where
 
     fn matches(&self, actual: &ActualT) -> MatcherResult {
         for element in actual {
-            if !self.inner.matches(element).into_bool() {
+            if self.inner.matches(element).is_no_match() {
                 return MatcherResult::NoMatch;
             }
         }
@@ -90,7 +90,7 @@ where
     fn explain_match(&self, actual: &ActualT) -> String {
         let mut non_matching_elements = Vec::new();
         for (index, element) in actual.into_iter().enumerate() {
-            if !self.inner.matches(element).into_bool() {
+            if self.inner.matches(element).is_no_match() {
                 non_matching_elements.push((index, element, self.inner.explain_match(element)));
             }
         }

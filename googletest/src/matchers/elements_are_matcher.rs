@@ -122,7 +122,7 @@ pub mod internal {
         fn matches(&self, actual: &ContainerT) -> MatcherResult {
             let mut zipped_iterator = zip(actual.into_iter(), self.elements.iter());
             for (a, e) in zipped_iterator.by_ref() {
-                if !e.matches(a).into_bool() {
+                if e.matches(a).is_no_match() {
                     return MatcherResult::NoMatch;
                 }
             }
@@ -138,7 +138,7 @@ pub mod internal {
             let mut zipped_iterator = zip(actual_iterator, self.elements.iter());
             let mut mismatches = Vec::new();
             for (idx, (a, e)) in zipped_iterator.by_ref().enumerate() {
-                if !e.matches(a).into_bool() {
+                if e.matches(a).is_no_match() {
                     mismatches.push(format!("element #{idx} is {a:?}, {}", e.explain_match(a)));
                 }
             }

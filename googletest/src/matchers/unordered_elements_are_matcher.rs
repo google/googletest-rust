@@ -655,10 +655,10 @@ pub mod internal {
         // than `find_best_match()`.
         fn find_unmatchable_elements(&self) -> UnmatchableElements<N> {
             let unmatchable_actual =
-                self.0.iter().map(|row| row.iter().all(|&e| !e.into_bool())).collect();
+                self.0.iter().map(|row| row.iter().all(|&e| e.is_no_match())).collect();
             let mut unmatchable_expected = [false; N];
             for (col_idx, expected) in unmatchable_expected.iter_mut().enumerate() {
-                *expected = self.0.iter().map(|row| row[col_idx]).all(|e| !e.into_bool());
+                *expected = self.0.iter().map(|row| row[col_idx]).all(|e| e.is_no_match());
             }
             UnmatchableElements { unmatchable_actual, unmatchable_expected }
         }
@@ -666,14 +666,14 @@ pub mod internal {
         fn find_unmatched_expected(&self) -> UnmatchableElements<N> {
             let mut unmatchable_expected = [false; N];
             for (col_idx, expected) in unmatchable_expected.iter_mut().enumerate() {
-                *expected = self.0.iter().map(|row| row[col_idx]).all(|e| !e.into_bool());
+                *expected = self.0.iter().map(|row| row[col_idx]).all(|e| e.is_no_match());
             }
             UnmatchableElements { unmatchable_actual: vec![false; N], unmatchable_expected }
         }
 
         fn find_unmatched_actual(&self) -> UnmatchableElements<N> {
             let unmatchable_actual =
-                self.0.iter().map(|row| row.iter().all(|e| !e.into_bool())).collect();
+                self.0.iter().map(|row| row.iter().all(|e| e.is_no_match())).collect();
             UnmatchableElements { unmatchable_actual, unmatchable_expected: [false; N] }
         }
 
@@ -794,7 +794,7 @@ pub mod internal {
                 if seen[expected_idx] {
                     continue;
                 }
-                if !self.0[actual_idx][expected_idx].into_bool() {
+                if self.0[actual_idx][expected_idx].is_no_match() {
                     continue;
                 }
                 // There is an edge between `actual_idx` and `expected_idx`.
