@@ -67,5 +67,5 @@ fn elements_are_works_as_inner_matcher() -> Result<()> {
 
 #[test]
 fn tuple_works_as_inner_matcher() -> Result<()> {
-    verify_that!(vec![(123,)], elements_are![tuple!(eq(123))])
+    verify_that!(vec![(123,)], elements_are![(eq(123),)])
 }
