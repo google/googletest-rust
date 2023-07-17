@@ -132,6 +132,7 @@ mod tests {
             Strukt { int: 123, string: "something".into() },
             eq_deref_of(Box::new(Strukt { int: 321, string: "someone".into() }))
         );
+        println!("{result:?}");
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc! {

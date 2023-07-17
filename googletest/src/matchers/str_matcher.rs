@@ -1075,8 +1075,8 @@ mod tests {
                     Difference(-actual / +expected):
                      <---- remaining lines omitted ---->
                      Second line
-                    +Third lines
                     -Third line
+                    +Third lines
                      Fourth line
                 "
             ))))
@@ -1112,8 +1112,8 @@ mod tests {
                     Difference(-actual / +expected):
                      <---- remaining lines omitted ---->
                      Second line
-                    +Third lines
                     -Third line
+                    +Third lines
                      Fourth line
                      <---- remaining lines omitted ---->"
             ))))
@@ -1148,13 +1148,13 @@ mod tests {
                 "
                     Difference(-actual / +expected):
                      <---- remaining lines omitted ---->
-                    +line
                     -Second line
+                    +line
                      Third line
-                    +Foorth line
                     -Fourth line
-                    +Fifth
+                    +Foorth line
                     -Fifth line
+                    +Fifth
                      <---- remaining lines omitted ---->
                 "
             ))))

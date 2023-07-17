@@ -351,7 +351,6 @@ mod tests {
                 "
             ))
         );
-
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc!(
