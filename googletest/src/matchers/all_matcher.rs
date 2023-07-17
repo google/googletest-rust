@@ -109,7 +109,7 @@ pub mod internal {
                     let failures = self
                         .components
                         .iter()
-                        .filter(|component| !component.matches(actual).is_match())
+                        .filter(|component| component.matches(actual).is_no_match())
                         .map(|component| component.explain_match(actual))
                         .collect::<Description>();
                     if failures.len() == 1 {
