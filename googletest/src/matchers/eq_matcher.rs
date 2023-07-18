@@ -178,12 +178,12 @@ mod tests {
             "
             Actual: Strukt { int: 123, string: \"something\" },
               which isn't equal to Strukt { int: 321, string: \"someone\" }
-            Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
+            Difference(-actual / +expected):
              Strukt {
-            -\x1B[1;31m    int: 123,\x1B[0m
-            +\x1B[1;32m    int: 321,\x1B[0m
-            -\x1B[1;31m    string: \"something\",\x1B[0m
-            +\x1B[1;32m    string: \"someone\",\x1B[0m
+            -    int: 123,
+            +    int: 321,
+            -    string: \"something\",
+            +    string: \"someone\",
              }
             "})))
         )
@@ -200,12 +200,12 @@ mod tests {
             Expected: is equal to [1, 3, 4]
             Actual: [1, 2, 3],
               which isn't equal to [1, 3, 4]
-            Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
+            Difference(-actual / +expected):
              [
                  1,
-            -\x1B[1;31m    2,\x1B[0m
+            -    2,
                  3,
-            +\x1B[1;32m    4,\x1B[0m
+            +    4,
              ]
             "})))
         )
@@ -222,12 +222,12 @@ mod tests {
             Expected: is equal to [1, 3, 5]
             Actual: [1, 2, 3, 4, 5],
               which isn't equal to [1, 3, 5]
-            Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
+            Difference(-actual / +expected):
              [
                  1,
-            -\x1B[1;31m    2,\x1B[0m
+            -    2,
                  3,
-            -\x1B[1;31m    4,\x1B[0m
+            -    4,
                  5,
              ]
             "})))
@@ -241,17 +241,17 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc! {
             "
-            Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
+            Difference(-actual / +expected):
              [
-            -\x1B[1;31m    1,\x1B[0m
-            -\x1B[1;31m    2,\x1B[0m
+            -    1,
+            -    2,
                  3,
                  4,
-             \x1B[3m<---- 43 common lines omitted ---->\x1B[0m
+             <---- 43 common lines omitted ---->
                  48,
                  49,
-            +\x1B[1;32m    50,\x1B[0m
-            +\x1B[1;32m    51,\x1B[0m
+            +    50,
+            +    51,
              ]"})))
         )
     }
@@ -263,17 +263,17 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc! {
             "
-            Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
+            Difference(-actual / +expected):
              [
-            -\x1B[1;31m    1,\x1B[0m
-            -\x1B[1;31m    2,\x1B[0m
+            -    1,
+            -    2,
                  3,
                  4,
                  5,
                  6,
                  7,
-            +\x1B[1;32m    8,\x1B[0m
-            +\x1B[1;32m    9,\x1B[0m
+            +    8,
+            +    9,
              ]"})))
         )
     }
@@ -285,14 +285,14 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc! {
             "
-            Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
+            Difference(-actual / +expected):
              [
                  1,
-             \x1B[3m<---- 46 common lines omitted ---->\x1B[0m
+             <---- 46 common lines omitted ---->
                  48,
                  49,
-            +\x1B[1;32m    50,\x1B[0m
-            +\x1B[1;32m    51,\x1B[0m
+            +    50,
+            +    51,
              ]"})))
         )
     }
@@ -304,13 +304,13 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc! {
             "
-            Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
+            Difference(-actual / +expected):
              [
-            -\x1B[1;31m    1,\x1B[0m
-            -\x1B[1;31m    2,\x1B[0m
+            -    1,
+            -    2,
                  3,
                  4,
-             \x1B[3m<---- 46 common lines omitted ---->\x1B[0m
+             <---- 46 common lines omitted ---->
                  51,
              ]"})))
         )
@@ -357,8 +357,8 @@ mod tests {
             err(displays_as(contains_substring(indoc!(
                 "
                  First line
-                -\x1B[1;31mSecond line\x1B[0m
-                +\x1B[1;32mSecond lines\x1B[0m
+                -Second line
+                +Second lines
                  Third line
                 "
             ))))
@@ -381,7 +381,7 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(not(contains_substring(
-                "Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):"
+                "Difference(-actual / +expected):"
             ))))
         )
     }
@@ -402,7 +402,7 @@ mod tests {
         verify_that!(
             result,
             err(displays_as(not(contains_substring(
-                "Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):"
+                "Difference(-actual / +expected):"
             ))))
         )
     }

@@ -16,13 +16,8 @@
 use std::borrow::Cow;
 use std::fmt::{Display, Write};
 
-use nu_ansi_term::{Color, Style};
-
 use crate::matcher_support::edit_distance;
 
-/// Environment variable controlling the usage of ansi color in difference
-/// summary.
-const NO_COLOR_VAR: &str = "GTEST_RUST_NO_COLOR";
 
 /// Returns a string describing how the expected and actual lines differ.
 ///
@@ -155,25 +150,24 @@ fn compress_common_lines(common_lines: Vec<&str>) -> String {
 }
 
 struct LineStyle {
-    ansi: Style,
     header: char,
 }
 
 impl LineStyle {
     fn extra_actual_style() -> Self {
-        Self { ansi: Style::new().fg(Color::Red).bold(), header: '-' }
+        Self { header: '-' }
     }
 
     fn extra_expected_style() -> Self {
-        Self { ansi: Style::new().fg(Color::Green).bold(), header: '+' }
+        Self { header: '+' }
     }
 
     fn comment_style() -> Self {
-        Self { ansi: Style::new().italic(), header: ' ' }
+        Self { header: ' ' }
     }
 
     fn unchanged_style() -> Self {
-        Self { ansi: Style::new(), header: ' ' }
+        Self { header: ' ' }
     }
 
     fn style(self, line: &str) -> StyledLine<'_> {
@@ -188,18 +182,7 @@ struct StyledLine<'a> {
 
 impl<'a> Display for StyledLine<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if std::env::var(NO_COLOR_VAR).is_err() {
-            write!(
-                f,
-                "{}{}{}{}",
-                self.style.header,
-                self.style.ansi.prefix(),
-                self.line,
-                self.style.ansi.suffix()
-            )
-        } else {
-            write!(f, "{}{}", self.style.header, self.line)
-        }
+        write!(f, "{}{}", self.style.header, self.line)
     }
 }
 
@@ -208,31 +191,6 @@ mod tests {
     use super::*;
     use crate::{matcher_support::edit_distance::Mode, prelude::*};
     use indoc::indoc;
-    use serial_test::serial;
-
-    #[must_use]
-    fn remove_var() -> TempVar {
-        let old_value = std::env::var(NO_COLOR_VAR);
-        std::env::remove_var(NO_COLOR_VAR);
-        TempVar(old_value.ok())
-    }
-
-    #[must_use]
-    fn set_var(var: &str) -> TempVar {
-        let old_value = std::env::var(NO_COLOR_VAR);
-        std::env::set_var(NO_COLOR_VAR, var);
-        TempVar(old_value.ok())
-    }
-    struct TempVar(Option<String>);
-
-    impl Drop for TempVar {
-        fn drop(&mut self) {
-            match &self.0 {
-                Some(old_var) => std::env::set_var(NO_COLOR_VAR, old_var),
-                None => std::env::remove_var(NO_COLOR_VAR),
-            }
-        }
-    }
 
     // Make a long text with each element of the iterator on one line.
     // `collection` must contains at least one element.
@@ -272,32 +230,9 @@ mod tests {
         verify_that!(create_diff(&build_text(1..500), &build_text(501..1000), Mode::Exact), eq(""))
     }
 
+
     #[test]
-    #[serial]
     fn create_diff_exact_small_difference() -> Result<()> {
-        let _cleanup = remove_var();
-
-        verify_that!(
-            create_diff(&build_text(1..50), &build_text(1..51), Mode::Exact),
-            eq(indoc! {
-                "
-
-                Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
-                 1
-                 2
-                 \x1B[3m<---- 45 common lines omitted ---->\x1B[0m
-                 48
-                 49
-                +\x1B[1;32m50\x1B[0m"
-            })
-        )
-    }
-
-    #[test]
-    #[serial]
-    fn create_diff_exact_small_difference_no_color() -> Result<()> {
-        let _cleanup = set_var("NO_COLOR");
-
         verify_that!(
             create_diff(&build_text(1..50), &build_text(1..51), Mode::Exact),
             eq(indoc! {
