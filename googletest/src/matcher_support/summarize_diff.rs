@@ -16,7 +16,7 @@
 use std::borrow::Cow;
 use std::fmt::{Display, Write};
 
-use ansi_term::{Color, Style};
+use nu_ansi_term::{Color, Style};
 
 use crate::matcher_support::edit_distance;
 
