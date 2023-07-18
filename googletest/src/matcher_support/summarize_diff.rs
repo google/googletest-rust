@@ -12,17 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[doc(hidden)]
-use std::borrow::Cow;
-use std::fmt::{Display, Write};
-
-use nu_ansi_term::{Color, Style};
+#![doc(hidden)]
 
 use crate::matcher_support::edit_distance;
-
-/// Environment variable controlling the usage of ansi color in difference
-/// summary.
-const NO_COLOR_VAR: &str = "GTEST_RUST_NO_COLOR";
+use owo_colors::{OwoColorize, Stream, Style};
+use std::borrow::Cow;
+use std::fmt::{Display, Write};
 
 /// Returns a string describing how the expected and actual lines differ.
 ///
@@ -47,8 +42,8 @@ pub(crate) fn create_diff(
         edit_distance::Difference::Equal => "No difference found between debug strings.".into(),
         edit_distance::Difference::Editable(edit_list) => format!(
             "\nDifference({} / {}):{}",
-            LineStyle::extra_actual_style().style("actual"),
-            LineStyle::extra_expected_style().style("expected"),
+            LineStyle::ExtraActual.style("actual"),
+            LineStyle::ExtraExpected.style("expected"),
             edit_list_summary(&edit_list)
         )
         .into(),
@@ -83,8 +78,8 @@ pub(crate) fn create_diff_reversed(
             edit_list.reverse();
             format!(
                 "\nDifference({} / {}):{}",
-                LineStyle::extra_actual_style().style("actual"),
-                LineStyle::extra_expected_style().style("expected"),
+                LineStyle::ExtraActual.style("actual"),
+                LineStyle::ExtraExpected.style("expected"),
                 edit_list_summary(&edit_list)
             )
             .into()
@@ -103,12 +98,10 @@ fn edit_list_summary(edit_list: &[edit_distance::Edit<&str>]) -> String {
                 common_line_buffer.push(*same);
                 continue;
             }
-            edit_distance::Edit::ExtraActual(actual) => (LineStyle::extra_actual_style(), *actual),
-            edit_distance::Edit::ExtraExpected(expected) => {
-                (LineStyle::extra_expected_style(), *expected)
-            }
+            edit_distance::Edit::ExtraActual(actual) => (LineStyle::ExtraActual, *actual),
+            edit_distance::Edit::ExtraExpected(expected) => (LineStyle::ExtraExpected, *expected),
             edit_distance::Edit::AdditionalActual => {
-                (LineStyle::comment_style(), "<---- remaining lines omitted ---->")
+                (LineStyle::Comment, "<---- remaining lines omitted ---->")
             }
         };
         summary.push_str(&compress_common_lines(std::mem::take(&mut common_line_buffer)));
@@ -127,7 +120,7 @@ fn compress_common_lines(common_lines: Vec<&str>) -> String {
     if common_lines.len() <= 2 * COMMON_LINES_CONTEXT_SIZE + 1 {
         let mut all_lines = String::new();
         for line in common_lines {
-            write!(&mut all_lines, "\n{}", LineStyle::unchanged_style().style(line)).unwrap();
+            write!(&mut all_lines, "\n{}", LineStyle::Unchanged.style(line)).unwrap();
         }
         return all_lines;
     }
@@ -135,13 +128,13 @@ fn compress_common_lines(common_lines: Vec<&str>) -> String {
     let mut truncated_lines = String::new();
 
     for line in &common_lines[0..COMMON_LINES_CONTEXT_SIZE] {
-        write!(&mut truncated_lines, "\n{}", LineStyle::unchanged_style().style(line)).unwrap();
+        write!(&mut truncated_lines, "\n{}", LineStyle::Unchanged.style(line)).unwrap();
     }
 
     write!(
         &mut truncated_lines,
         "\n{}",
-        LineStyle::comment_style().style(&format!(
+        LineStyle::Comment.style(&format!(
             "<---- {} common lines omitted ---->",
             common_lines.len() - 2 * COMMON_LINES_CONTEXT_SIZE
         )),
@@ -149,56 +142,33 @@ fn compress_common_lines(common_lines: Vec<&str>) -> String {
     .unwrap();
 
     for line in &common_lines[common_lines.len() - COMMON_LINES_CONTEXT_SIZE..common_lines.len()] {
-        write!(&mut truncated_lines, "\n{}", LineStyle::unchanged_style().style(line)).unwrap();
+        write!(&mut truncated_lines, "\n{}", LineStyle::Unchanged.style(line)).unwrap();
     }
     truncated_lines
 }
 
-struct LineStyle {
-    ansi: Style,
-    header: char,
+enum LineStyle {
+    ExtraActual,
+    ExtraExpected,
+    Unchanged,
+    Comment,
 }
 
 impl LineStyle {
-    fn extra_actual_style() -> Self {
-        Self { ansi: Style::new().fg(Color::Red).bold(), header: '-' }
-    }
-
-    fn extra_expected_style() -> Self {
-        Self { ansi: Style::new().fg(Color::Green).bold(), header: '+' }
-    }
-
-    fn comment_style() -> Self {
-        Self { ansi: Style::new().italic(), header: ' ' }
-    }
-
-    fn unchanged_style() -> Self {
-        Self { ansi: Style::new(), header: ' ' }
-    }
-
-    fn style(self, line: &str) -> StyledLine<'_> {
-        StyledLine { style: self, line }
-    }
-}
-
-struct StyledLine<'a> {
-    style: LineStyle,
-    line: &'a str,
-}
-
-impl<'a> Display for StyledLine<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if std::env::var(NO_COLOR_VAR).is_err() {
-            write!(
-                f,
-                "{}{}{}{}",
-                self.style.header,
-                self.style.ansi.prefix(),
-                self.line,
-                self.style.ansi.suffix()
-            )
-        } else {
-            write!(f, "{}{}", self.style.header, self.line)
+    fn style(&self, value: impl Display) -> String {
+        match self {
+            LineStyle::ExtraActual => {
+                let style = Style::new().red().bold();
+                format!("-{}", value.if_supports_color(Stream::Stdout, |text| text.style(style)))
+            }
+            LineStyle::ExtraExpected => {
+                let style = Style::new().green().bold();
+                format!("+{}", value.if_supports_color(Stream::Stdout, |text| text.style(style)))
+            }
+            LineStyle::Unchanged => format!(" {value}"),
+            LineStyle::Comment => {
+                format!(" {}", value.if_supports_color(Stream::Stdout, |text| text.italic()))
+            }
         }
     }
 }
@@ -212,15 +182,15 @@ mod tests {
 
     #[must_use]
     fn remove_var() -> TempVar {
-        let old_value = std::env::var(NO_COLOR_VAR);
-        std::env::remove_var(NO_COLOR_VAR);
+        let old_value = std::env::var("NO_COLOR");
+        std::env::remove_var("NO_COLOR");
         TempVar(old_value.ok())
     }
 
     #[must_use]
     fn set_var(var: &str) -> TempVar {
-        let old_value = std::env::var(NO_COLOR_VAR);
-        std::env::set_var(NO_COLOR_VAR, var);
+        let old_value = std::env::var("NO_COLOR");
+        std::env::set_var("NO_COLOR", var);
         TempVar(old_value.ok())
     }
     struct TempVar(Option<String>);
@@ -228,8 +198,8 @@ mod tests {
     impl Drop for TempVar {
         fn drop(&mut self) {
             match &self.0 {
-                Some(old_var) => std::env::set_var(NO_COLOR_VAR, old_var),
-                None => std::env::remove_var(NO_COLOR_VAR),
+                Some(old_var) => std::env::set_var("NO_COLOR", old_var),
+                None => std::env::remove_var("NO_COLOR"),
             }
         }
     }

@@ -282,12 +282,6 @@ configuration does not impact whether a test fails or not but how a failure is
 displayed, we recommend setting those variables in the personal
 `~/.cargo/config.toml` instead of in the project-scoped `Cargo.toml`.
 
-### Configuration variable list
-
-| Variable name       | Description                                        |
-| ------------------- | -------------------------------------------------- |
-| GTEST_RUST_NO_COLOR | If set to any value, disables ANSI output from the failure message. This is useful when the failure description is piped to a file or another process. |
-
 ## Contributing Changes
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute
