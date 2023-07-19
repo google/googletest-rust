@@ -16,8 +16,6 @@
 use std::borrow::Cow;
 use std::fmt::{Display, Write};
 
-use nu_ansi_term::{Color, Style};
-
 use crate::matcher_support::edit_distance;
 
 /// Environment variable controlling the usage of ansi color in difference
@@ -154,26 +152,34 @@ fn compress_common_lines(common_lines: Vec<&str>) -> String {
     truncated_lines
 }
 
+// Use ANSI code to enable styling on the summary lines.
+//
+// See https://en.wikipedia.org/wiki/ANSI_escape_code.
 struct LineStyle {
-    ansi: Style,
+    ansi_prefix: &'static str,
+    ansi_suffix: &'static str,
     header: char,
 }
 
 impl LineStyle {
+    // Font in red and bold
     fn extra_actual_style() -> Self {
-        Self { ansi: Style::new().fg(Color::Red).bold(), header: '-' }
+        Self { ansi_prefix: "\x1B[1;31m", ansi_suffix: "\x1B[0m", header: '-' }
     }
 
+    // Font in green and bold
     fn extra_expected_style() -> Self {
-        Self { ansi: Style::new().fg(Color::Green).bold(), header: '+' }
+        Self { ansi_prefix: "\x1B[1;32m", ansi_suffix: "\x1B[0m", header: '+' }
     }
 
+    // Font in italic
     fn comment_style() -> Self {
-        Self { ansi: Style::new().italic(), header: ' ' }
+        Self { ansi_prefix: "\x1B[3m", ansi_suffix: "\x1B[0m", header: ' ' }
     }
 
+    // No ansi styling
     fn unchanged_style() -> Self {
-        Self { ansi: Style::new(), header: ' ' }
+        Self { ansi_prefix: "", ansi_suffix: "", header: ' ' }
     }
 
     fn style(self, line: &str) -> StyledLine<'_> {
@@ -192,10 +198,7 @@ impl<'a> Display for StyledLine<'a> {
             write!(
                 f,
                 "{}{}{}{}",
-                self.style.header,
-                self.style.ansi.prefix(),
-                self.line,
-                self.style.ansi.suffix()
+                self.style.header, self.style.ansi_prefix, self.line, self.style.ansi_suffix
             )
         } else {
             write!(f, "{}{}", self.style.header, self.line)
