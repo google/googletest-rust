@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[doc(hidden)]
+#![doc(hidden)]
+
 use std::borrow::Cow;
 use std::fmt::{Display, Write};
 
