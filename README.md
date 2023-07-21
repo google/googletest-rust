@@ -25,7 +25,7 @@ This library brings the rich assertion types of Google's C++ testing library
  * A new set of assertion macros offering similar functionality to those of
    [GoogleTest](https://google.github.io/googletest/primer.html#assertions).
 
-**The minimum supported Rust version is 1.59**. We recommend using at least
+**The minimum supported Rust version is 1.64**. We recommend using at least
 version 1.66 for the best developer experience.
 
 > :warning: The API is not fully stable and may still be changed until we
@@ -284,9 +284,9 @@ displayed, we recommend setting those variables in the personal
 
 ### Configuration variable list
 
-| Variable name       | Description                                        |
-| ------------------- | -------------------------------------------------- |
-| GTEST_RUST_NO_COLOR | If set to any value, disables ANSI output from the failure message. This is useful when the failure description is piped to a file or another process. |
+| Variable name | Description                                            |
+| ------------- | ------------------------------------------------------ |
+| NO_COLOR      | Disables coloured output. See <https://no-color.org/>. |
 
 ## Contributing Changes
 

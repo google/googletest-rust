@@ -13,6 +13,7 @@
 // limitations under the License.
 
 mod all_matcher_test;
+mod colourised_diff_test;
 mod composition_test;
 mod elements_are_matcher_test;
 mod field_matcher_test;
