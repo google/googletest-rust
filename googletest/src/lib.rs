@@ -43,6 +43,7 @@ pub mod matchers;
 pub mod prelude {
     pub use super::matcher::Matcher;
     pub use super::matchers::*;
+    pub use super::verify_current_test_outcome;
     pub use super::GoogleTestSupport;
     pub use super::IntoTestResult;
     pub use super::Result;
@@ -82,6 +83,39 @@ use internal::test_outcome::{TestAssertionFailure, TestOutcome};
 /// assertion failures, which log the failure and report the test as having
 /// failed but allow it to continue running, are not encoded in this type.
 pub type Result<T> = std::result::Result<T, TestAssertionFailure>;
+
+/// Returns a [`Result`] corresponding to the outcome of the currently running
+/// test.
+///
+/// This returns `Result::Err` precisely if the current test has recorded at
+/// least one test assertion failure via [`expect_that!`][crate::expect_that],
+/// [`expect_pred!`][crate::expect_pred], or
+/// [`GoogleTestSupport::and_log_failure`]. It can be used in concert with the
+/// `?` operator to continue execution of the test conditionally on there not
+/// having been any failure yet.
+///
+/// This requires the use of the [`#[googletest::test]`][crate::test] attribute
+/// macro.
+///
+/// ```
+/// # use googletest::prelude::*;
+/// # /* Make sure this also compiles as a doctest.
+/// #[googletest::test]
+/// # */
+/// # fn foo() -> u32 { 1 }
+/// # fn bar() -> u32 { 2 }
+/// fn should_fail_and_not_execute_last_assertion() -> Result<()> {
+/// #   googletest::internal::test_outcome::TestOutcome::init_current_test_outcome();
+///     expect_that!(foo(), eq(2));     // May fail, but will not abort the test.
+///     expect_that!(bar(), gt(1));     // May fail, but will not abort the test.
+///     verify_current_test_outcome()?; // Aborts the test if one of the previous assertions failed.
+///     verify_that!(foo(), gt(0))      // Does not execute if the line above aborts.
+/// }
+/// # verify_that!(should_fail_and_not_execute_last_assertion(), err(displays_as(contains_substring("Test failed")))).unwrap();
+/// ```
+pub fn verify_current_test_outcome() -> Result<()> {
+    TestOutcome::get_current_test_outcome()
+}
 
 /// Adds to `Result` support for GoogleTest Rust functionality.
 pub trait GoogleTestSupport {
