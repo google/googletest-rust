@@ -108,10 +108,10 @@ mod tests {
             err(displays_as(contains_substring(indoc!(
                 "
                     which displays as a string which isn't equal to \"123\\n345\"
-                    Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
+                    Difference(-actual / +expected):
                      123
-                    -\x1B[1;31m234\x1B[0m
-                    +\x1B[1;32m345\x1B[0m
+                    -234
+                    +345
                 "
             ))))
         )

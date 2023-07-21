@@ -14,14 +14,13 @@
 
 #![doc(hidden)]
 
-use std::borrow::Cow;
-use std::fmt::{Display, Write};
-
 use crate::matcher_support::edit_distance;
-
-/// Environment variable controlling the usage of ansi color in difference
-/// summary.
-const NO_COLOR_VAR: &str = "GTEST_RUST_NO_COLOR";
+#[rustversion::since(1.70)]
+use std::io::IsTerminal;
+use std::{
+    borrow::Cow,
+    fmt::{Display, Write},
+};
 
 /// Returns a string describing how the expected and actual lines differ.
 ///
@@ -195,7 +194,7 @@ struct StyledLine<'a> {
 
 impl<'a> Display for StyledLine<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if std::env::var(NO_COLOR_VAR).is_err() {
+        if stdout_supports_colour() {
             write!(
                 f,
                 "{}{}{}{}",
@@ -207,36 +206,29 @@ impl<'a> Display for StyledLine<'a> {
     }
 }
 
+#[rustversion::since(1.70)]
+fn stdout_supports_colour() -> bool {
+    match (is_env_var_set("NO_COLOR"), is_env_var_set("FORCE_COLOR")) {
+        (true, _) => false,
+        (false, true) => true,
+        (false, false) => std::io::stdout().is_terminal(),
+    }
+}
+
+#[rustversion::not(since(1.70))]
+fn stdout_supports_colour() -> bool {
+    is_env_var_set("FORCE_COLOR")
+}
+
+fn is_env_var_set(var: &'static str) -> bool {
+    std::env::var(var).map(|s| !s.is_empty()).unwrap_or(false)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::{matcher_support::edit_distance::Mode, prelude::*};
     use indoc::indoc;
-    use serial_test::serial;
-
-    #[must_use]
-    fn remove_var() -> TempVar {
-        let old_value = std::env::var(NO_COLOR_VAR);
-        std::env::remove_var(NO_COLOR_VAR);
-        TempVar(old_value.ok())
-    }
-
-    #[must_use]
-    fn set_var(var: &str) -> TempVar {
-        let old_value = std::env::var(NO_COLOR_VAR);
-        std::env::set_var(NO_COLOR_VAR, var);
-        TempVar(old_value.ok())
-    }
-    struct TempVar(Option<String>);
-
-    impl Drop for TempVar {
-        fn drop(&mut self) {
-            match &self.0 {
-                Some(old_var) => std::env::set_var(NO_COLOR_VAR, old_var),
-                None => std::env::remove_var(NO_COLOR_VAR),
-            }
-        }
-    }
 
     // Make a long text with each element of the iterator on one line.
     // `collection` must contains at least one element.
@@ -277,30 +269,8 @@ mod tests {
     }
 
     #[test]
-    #[serial]
-    fn create_diff_exact_small_difference() -> Result<()> {
-        let _cleanup = remove_var();
-
-        verify_that!(
-            create_diff(&build_text(1..50), &build_text(1..51), Mode::Exact),
-            eq(indoc! {
-                "
-
-                Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
-                 1
-                 2
-                 \x1B[3m<---- 45 common lines omitted ---->\x1B[0m
-                 48
-                 49
-                +\x1B[1;32m50\x1B[0m"
-            })
-        )
-    }
-
-    #[test]
-    #[serial]
     fn create_diff_exact_small_difference_no_color() -> Result<()> {
-        let _cleanup = set_var("NO_COLOR");
+        std::env::set_var("NO_COLOR", "1");
 
         verify_that!(
             create_diff(&build_text(1..50), &build_text(1..51), Mode::Exact),

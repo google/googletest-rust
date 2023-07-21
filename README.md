@@ -297,9 +297,10 @@ displayed, we recommend setting those variables in the personal
 
 ### Configuration variable list
 
-| Variable name       | Description                                        |
-| ------------------- | -------------------------------------------------- |
-| GTEST_RUST_NO_COLOR | If set to any value, disables ANSI output from the failure message. This is useful when the failure description is piped to a file or another process. |
+| Variable name | Description                                             |
+| ------------- | ------------------------------------------------------- |
+| NO_COLOR      | Disables coloured output. See <https://no-color.org/>.  |
+| FORCE_COLOR   | Forces colours even when the output is piped to a file. |
 
 ## Contributing Changes
 

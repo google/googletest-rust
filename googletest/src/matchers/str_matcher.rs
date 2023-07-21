@@ -974,8 +974,8 @@ mod tests {
             err(displays_as(contains_substring(indoc!(
                 "
                  First line
-                -\x1B[1;31mSecond line\x1B[0m
-                +\x1B[1;32mSecond lines\x1B[0m
+                -Second line
+                +Second lines
                  Third line
                 "
             ))))
@@ -1007,10 +1007,10 @@ mod tests {
             err(displays_as(contains_substring(indoc!(
                 "
                      First line
-                    -\x1B[1;31mSecond line\x1B[0m
-                    +\x1B[1;32mSecond lines\x1B[0m
+                    -Second line
+                    +Second lines
                      Third line
-                     \x1B[3m<---- remaining lines omitted ---->\x1B[0m
+                     <---- remaining lines omitted ---->
                 "
             ))))
         )
@@ -1040,9 +1040,9 @@ mod tests {
             err(displays_as(contains_substring(indoc!(
                 "
                      First line
-                    -\x1B[1;31mSecond line\x1B[0m
-                    +\x1B[1;32mSecond lines\x1B[0m
-                     \x1B[3m<---- remaining lines omitted ---->\x1B[0m
+                    -Second line
+                    +Second lines
+                     <---- remaining lines omitted ---->
                 "
             ))))
         )
@@ -1072,11 +1072,11 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc!(
                 "
-                    Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
-                     \x1B[3m<---- remaining lines omitted ---->\x1B[0m
+                    Difference(-actual / +expected):
+                     <---- remaining lines omitted ---->
                      Second line
-                    +\x1B[1;32mThird lines\x1B[0m
-                    -\x1B[1;31mThird line\x1B[0m
+                    +Third lines
+                    -Third line
                      Fourth line
                 "
             ))))
@@ -1109,13 +1109,13 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc!(
                 "
-                    Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
-                     \x1B[3m<---- remaining lines omitted ---->\x1B[0m
+                    Difference(-actual / +expected):
+                     <---- remaining lines omitted ---->
                      Second line
-                    +\x1B[1;32mThird lines\x1B[0m
-                    -\x1B[1;31mThird line\x1B[0m
+                    +Third lines
+                    -Third line
                      Fourth line
-                     \x1B[3m<---- remaining lines omitted ---->\x1B[0m"
+                     <---- remaining lines omitted ---->"
             ))))
         )
     }
@@ -1146,16 +1146,16 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc!(
                 "
-                    Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
-                     \x1B[3m<---- remaining lines omitted ---->\x1B[0m
-                    +\x1B[1;32mline\x1B[0m
-                    -\x1B[1;31mSecond line\x1B[0m
+                    Difference(-actual / +expected):
+                     <---- remaining lines omitted ---->
+                    +line
+                    -Second line
                      Third line
-                    +\x1B[1;32mFoorth line\x1B[0m
-                    -\x1B[1;31mFourth line\x1B[0m
-                    +\x1B[1;32mFifth\x1B[0m
-                    -\x1B[1;31mFifth line\x1B[0m
-                     \x1B[3m<---- remaining lines omitted ---->\x1B[0m
+                    +Foorth line
+                    -Fourth line
+                    +Fifth
+                    -Fifth line
+                     <---- remaining lines omitted ---->
                 "
             ))))
         )
@@ -1186,10 +1186,10 @@ mod tests {
             err(displays_as(contains_substring(indoc!(
                 "
                      First line
-                    -\x1B[1;31mSecond line\x1B[0m
-                    +\x1B[1;32mSecond lines\x1B[0m
+                    -Second line
+                    +Second lines
                      Third line
-                    -\x1B[1;31mFourth line\x1B[0m
+                    -Fourth line
                 "
             ))))
         )
@@ -1209,9 +1209,7 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(not(contains_substring(
-                "Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):"
-            ))))
+            err(displays_as(not(contains_substring("Difference(-actual / +expected):"))))
         )
     }
 
@@ -1230,9 +1228,7 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(not(contains_substring(
-                "Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):"
-            ))))
+            err(displays_as(not(contains_substring("Difference(-actual / +expected):"))))
         )
     }
 }
