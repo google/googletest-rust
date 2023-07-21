@@ -84,6 +84,20 @@ impl TestOutcome {
         })
     }
 
+    /// Returns a `Result` corresponding to the outcome of the currently running
+    /// test.
+    pub(crate) fn get_current_test_outcome() -> Result<(), TestAssertionFailure> {
+        TestOutcome::with_current_test_outcome(|mut outcome| {
+            let outcome = outcome
+                .as_mut()
+                .expect("No test context found. This indicates a bug in GoogleTest.");
+            match outcome {
+                TestOutcome::Success => Ok(()),
+                TestOutcome::Failure => Err(TestAssertionFailure::create("Test failed".into())),
+            }
+        })
+    }
+
     /// Records that the currently running test has failed.
     fn fail_current_test() {
         TestOutcome::with_current_test_outcome(|mut outcome| {
