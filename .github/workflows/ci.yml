@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install ${{ matrix.toolchain }}
-        uses: dtolnay/rust-toolchain@1f5cdb56c8779e3efa22473ce181ff83143b172c
+        uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
         with:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
@@ -48,7 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install ${{ matrix.toolchain }}
-        uses: dtolnay/rust-toolchain@1f5cdb56c8779e3efa22473ce181ff83143b172c
+        uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
         with:
           toolchain: ${{ matrix.toolchain }}
       - name: cargo generate-lockfile
@@ -66,7 +66,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install ${{ matrix.toolchain }}
-        uses: dtolnay/rust-toolchain@1f5cdb56c8779e3efa22473ce181ff83143b172c
+        uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
         with:
           toolchain: ${{ matrix.toolchain }}
       - name: cargo generate-lockfile
@@ -84,7 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install ${{ matrix.toolchain }}
-        uses: dtolnay/rust-toolchain@1f5cdb56c8779e3efa22473ce181ff83143b172c
+        uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
         with:
           toolchain: ${{ matrix.toolchain }}
       - name: cargo generate-lockfile
@@ -101,7 +101,7 @@ jobs:
         with:
           submodules: true
       - name: Install nightly
-        uses: dtolnay/rust-toolchain@1f5cdb56c8779e3efa22473ce181ff83143b172c
+        uses: dtolnay/rust-toolchain@0e66bd3e6b38ec0ad5312288c83e47c143e6b09e
         with:
           toolchain: nightly
       - name: cargo doc
