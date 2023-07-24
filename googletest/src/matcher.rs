@@ -123,10 +123,7 @@ pub trait Matcher {
     ///
     /// ```ignore
     /// fn explain_match(&self, actual: &Self::ActualT) -> String {
-    ///     (
-    ///         format!("which points to a value {}", self.expected.explain_match(actual.deref()))
-    ///             //   ^^^^^^^^^^^^^^^^^^^^ Expands to "points to a value which ..."
-    ///     )
+    ///     format!("which points to a value {}", self.expected.explain_match(actual.deref()))
     /// }
     /// ```
     fn explain_match(&self, actual: &Self::ActualT) -> String {
