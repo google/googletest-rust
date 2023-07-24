@@ -53,7 +53,7 @@ impl<T, P> PredicateMatcher<T, P, NoDescription, NoDescription> {
     /// For example, to make sure the error message is more useful
     ///
     /// ```
-    /// # use googletest::matchers::{predicate, PredicateMatcher};
+    /// # use googletest::matchers::predicate_matcher::{predicate, PredicateMatcher};
     /// # let _ =
     /// predicate(|x: &i32| x % 2 == 1)
     ///     .with_description("is odd", "is even")

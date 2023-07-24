@@ -102,8 +102,8 @@
 /// ```
 ///
 /// All fields must be covered by matchers. Use
-/// [`anything`][crate::matchers::anything] for fields which are not relevant
-/// for the test.
+/// [`anything`][crate::matchers::anything_matcher::anything] for fields which
+/// are not relevant for the test.
 ///
 /// ```
 /// # use googletest::prelude::*;

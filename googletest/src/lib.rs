@@ -41,16 +41,46 @@ pub mod matchers;
 /// }
 /// ```
 pub mod prelude {
-    pub use super::matcher::Matcher;
-    pub use super::matchers::*;
-    pub use super::verify_current_test_outcome;
-    pub use super::GoogleTestSupport;
-    pub use super::IntoTestResult;
-    pub use super::Result;
+    pub use crate::matcher::Matcher;
+    pub use crate::matchers::anything_matcher::anything;
+    pub use crate::matchers::char_count_matcher::char_count;
+    pub use crate::matchers::container_eq_matcher::container_eq;
+    pub use crate::matchers::contains_matcher::contains;
+    pub use crate::matchers::contains_regex_matcher::contains_regex;
+    pub use crate::matchers::display_matcher::displays_as;
+    pub use crate::matchers::each_matcher::each;
+    pub use crate::matchers::empty_matcher::empty;
+    pub use crate::matchers::eq_deref_of_matcher::eq_deref_of;
+    pub use crate::matchers::eq_matcher::eq;
+    pub use crate::matchers::err_matcher::err;
+    pub use crate::matchers::ge_matcher::ge;
+    pub use crate::matchers::gt_matcher::gt;
+    pub use crate::matchers::has_entry_matcher::has_entry;
+    pub use crate::matchers::is_nan_matcher::is_nan;
+    pub use crate::matchers::le_matcher::le;
+    pub use crate::matchers::len_matcher::len;
+    pub use crate::matchers::lt_matcher::lt;
+    pub use crate::matchers::matches_regex_matcher::matches_regex;
+    pub use crate::matchers::near_matcher::{approx_eq, near};
+    pub use crate::matchers::none_matcher::none;
+    pub use crate::matchers::not_matcher::not;
+    pub use crate::matchers::ok_matcher::ok;
+    pub use crate::matchers::points_to_matcher::points_to;
+    pub use crate::matchers::predicate_matcher::{predicate, PredicateMatcher};
+    pub use crate::matchers::some_matcher::some;
+    pub use crate::matchers::str_matcher::{
+        contains_substring, ends_with, starts_with, StrMatcherConfigurator,
+    };
+    pub use crate::matchers::subset_of_matcher::subset_of;
+    pub use crate::matchers::superset_of_matcher::superset_of;
+    pub use crate::verify_current_test_outcome;
+    pub use crate::GoogleTestSupport;
+    pub use crate::IntoTestResult;
+    pub use crate::Result;
     // Assert macros
-    pub use super::{assert_that, expect_pred, expect_that, fail, verify_pred, verify_that};
+    pub use crate::{assert_that, expect_pred, expect_that, fail, verify_pred, verify_that};
     // Matcher macros
-    pub use super::{
+    pub use crate::{
         all, contains_each, elements_are, field, is_contained_in, matches_pattern, pat, pointwise,
         property, unordered_elements_are,
     };

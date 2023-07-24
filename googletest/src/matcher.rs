@@ -52,7 +52,8 @@ pub trait Matcher {
     /// should invoke [`Self::describe`] on the inner matchers to complete the
     /// description. It should place the inner description at a point where a
     /// verb phrase would fit. For example, the matcher
-    /// [`some`][crate::matchers::some] implements `describe` as follows:
+    /// [`some`][crate::matchers::some_matcher::some] implements `describe` as
+    /// follows:
     ///
     /// ```ignore
     /// fn describe(&self, matcher_result: MatcherResult) -> String {
@@ -96,9 +97,9 @@ pub trait Matcher {
     ///
     /// Override the default implementation to provide additional context on why
     /// a particular value matched or did not match. For example, the
-    /// [`container_eq`][crate::matchers::container_eq] matcher displays
-    /// information on which elements of the actual value were not present in
-    /// the expected value and vice versa.
+    /// [`container_eq`][crate::matchers::container_eq_matcher::container_eq]
+    /// matcher displays information on which elements of the actual value
+    /// were not present in the expected value and vice versa.
     ///
     /// This implementation should be overridden in any matcher which contains
     /// one or more inner matchers. The implementation should invoke
@@ -108,8 +109,8 @@ pub trait Matcher {
     /// actual value at all.
     ///
     /// For example, the `explain_match` implementation of the matcher
-    /// [`points_to`][crate::matchers::points_to] defers immediately to the
-    /// inner matcher and appears as follows:
+    /// [`points_to`][crate::matchers::points_to_matcher::points_to] defers
+    /// immediately to the inner matcher and appears as follows:
     ///
     /// ```ignore
     /// fn explain_match(&self, actual: &Self::ActualT) -> String {

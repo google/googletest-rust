@@ -18,9 +18,9 @@ use std::marker::PhantomData;
 
 /// Matches a container equal (in the sense of `==`) to `expected`.
 ///
-/// This is similar to [`crate::matchers::eq`] except that an assertion failure
-/// message generated from this matcher will include the missing and unexpected
-/// items in the actual value, e.g.:
+/// This is similar to [`crate::matchers::eq_matcher::eq`] except that an
+/// assertion failure message generated from this matcher will include the
+/// missing and unexpected items in the actual value, e.g.:
 ///
 /// ```text
 /// Expected container to equal [1, 2, 3]

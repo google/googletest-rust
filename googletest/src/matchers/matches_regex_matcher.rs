@@ -21,7 +21,8 @@ use std::ops::Deref;
 /// Matches a string the entirety of which which matches the given regular
 /// expression.
 ///
-/// This is similar to [`contains_regex`][crate::matchers::contains_regex],
+/// This is similar to
+/// [`contains_regex`][crate::matchers::contains_regex_matcher::contains_regex],
 /// except that the match must cover the whole string and not a substring.
 ///
 /// Both the actual value and the expected regular expression may be either a

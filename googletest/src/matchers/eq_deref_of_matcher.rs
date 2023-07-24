@@ -21,16 +21,16 @@ use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 /// Matches a value equal (in the sense of `==`) to the dereferenced value of
 /// `expected`.
 ///
-/// This is similar to [`eq`][crate::matchers::eq] but takes a reference or
-/// smart pointer to the expected value rather than consuming it. This is useful
-/// when:
+/// This is similar to [`eq`][crate::matchers::eq_matcher::eq] but takes a
+/// reference or smart pointer to the expected value rather than consuming it.
+/// This is useful when:
 ///
 ///  * one has only a reference to the expected value, and
 ///  * the expected value cannot or should not be copied or cloned to create an
 ///    owned value from it.
 ///
 /// ```
-/// # use googletest::{matchers::eq_deref_of, verify_that};
+/// # use googletest::prelude::*;
 /// #[derive(Debug, PartialEq)]
 /// struct NonCloneableStruct(i32);
 /// let expected = NonCloneableStruct(123);
@@ -49,7 +49,8 @@ use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 /// #    .unwrap()
 /// ```
 ///
-/// Otherwise, this has the same behaviour as [`eq`][crate::matchers::eq].
+/// Otherwise, this has the same behaviour as
+/// [`eq`][crate::matchers::eq_matcher::eq].
 pub fn eq_deref_of<ActualT: ?Sized, ExpectedRefT>(
     expected: ExpectedRefT,
 ) -> EqDerefOfMatcher<ActualT, ExpectedRefT> {
