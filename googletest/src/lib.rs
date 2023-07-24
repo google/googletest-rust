@@ -51,8 +51,8 @@ pub mod prelude {
     pub use super::{assert_that, expect_pred, expect_that, fail, verify_pred, verify_that};
     // Matcher macros
     pub use super::{
-        all, contains_each, elements_are, field, is_contained_in, matches_pattern, pat, pointwise,
-        property, unordered_elements_are,
+        all, any, contains_each, elements_are, field, is_contained_in, matches_pattern, pat,
+        pointwise, property, unordered_elements_are,
     };
 }
 

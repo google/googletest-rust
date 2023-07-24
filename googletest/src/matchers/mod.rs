@@ -15,6 +15,7 @@
 //! All built-in matchers of this crate are in submodules of this module.
 
 pub mod all_matcher;
+pub mod any_matcher;
 pub mod anything_matcher;
 pub mod char_count_matcher;
 pub mod conjunction_matcher;
