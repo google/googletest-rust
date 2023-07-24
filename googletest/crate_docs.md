@@ -298,10 +298,24 @@ use googletest::prelude::*;
 # /* Make sure this also compiles as a doctest.
 #[googletest::test]
 # */
-fn more_than_one_failure() -> Result<()> {
+fn failing_non_fatal_assertion() -> Result<()> {
     let value = 2;
     expect_that!(value, eq(3));  // Just marks the test as having failed.
-    verify_that!(value, eq(2))?;  // Passes, but the test already failed.
+    verify_that!(value, eq(2))?;  // Passes, so does not abort the test.
+    Ok(())        // Because of the failing expect_that! call above, the
+                  // test fails despite returning Ok(())
+}
+```
+
+```no_run
+use googletest::prelude::*;
+
+#[googletest::test]
+fn failing_fatal_assertion_after_non_fatal_assertion() -> Result<()> {
+    let value = 2;
+    expect_that!(value, eq(2));  // Passes; test still considered passing.
+    verify_that!(value, eq(3))?; // Fails and aborts the test.
+    expect_that!(value, eq(3));  // Never executes, since the test already aborted.
     Ok(())
 }
 ```
