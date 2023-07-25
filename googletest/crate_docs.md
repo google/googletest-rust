@@ -79,6 +79,7 @@ The following matchers are provided in GoogleTest Rust:
 | Matcher              | What it matches                                                          |
 |----------------------|--------------------------------------------------------------------------|
 | [`all!`]             | Anything matched by all given matchers.                                  |
+| [`any!`]             | Anything matched by at least one of the given matchers.                  |
 | [`anything`]         | Any input.                                                               |
 | [`approx_eq`]        | A floating point number within a standard tolerance of the argument.     |
 | [`char_count`]       | A string with a Unicode scalar count matching the argument.              |
