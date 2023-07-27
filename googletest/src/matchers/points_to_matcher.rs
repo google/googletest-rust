@@ -68,6 +68,22 @@ where
     }
 }
 
+impl<'a, T: Matcher> Matcher for &'a T {
+    type ActualT = &'a T::ActualT;
+
+    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+        (*self).matches(*actual)
+    }
+
+    fn explain_match(&self, actual: &Self::ActualT) -> String {
+        (*self).explain_match(*actual)
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> String {
+        (*self).describe(matcher_result)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::points_to;
@@ -78,6 +94,11 @@ mod tests {
     #[test]
     fn points_to_matches_box_of_int_with_int() -> Result<()> {
         verify_that!(Box::new(123), points_to(eq(123)))
+    }
+
+    #[test]
+    fn ref_impl_matches_ref_to_int_with_int() -> Result<()> {
+        verify_that!(&123, &eq(123))
     }
 
     #[test]
