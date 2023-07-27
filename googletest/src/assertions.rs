@@ -344,8 +344,8 @@ macro_rules! assert_pred {
 /// execution in the event of assertion failure.
 ///
 /// This can only be invoked inside tests with the
-/// [`google_test`][crate::google_test] attribute. The assertion must occur in
-/// the same thread as that running the test itself.
+/// [`googletest::test`][crate::test] attribute. The assertion must
+/// occur in the same thread as that running the test itself.
 ///
 /// Invoking this macro is equivalent to using
 /// [`and_log_failure`](crate::GoogleTestSupport::and_log_failure) as follows:
@@ -368,8 +368,8 @@ macro_rules! expect_that {
 /// continues execution in the event of assertion failure.
 ///
 /// This can only be invoked inside tests with the
-/// [`google_test`][crate::google_test] attribute. The assertion must occur in
-/// the same thread as that running the test itself.
+/// [`googletest::test`][crate::test] attribute. The assertion must
+/// occur in the same thread as that running the test itself.
 ///
 /// Invoking this macro is equivalent to using
 /// [`and_log_failure`](crate::GoogleTestSupport::and_log_failure) as follows:

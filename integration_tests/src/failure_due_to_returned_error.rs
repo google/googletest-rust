@@ -16,9 +16,7 @@ fn main() {}
 
 #[cfg(test)]
 mod tests {
-    use googletest::google_test;
-
-    #[google_test]
+    #[googletest::test]
     fn should_fail_due_to_returned_error() -> Result<(), i32> {
         Err(123)
     }

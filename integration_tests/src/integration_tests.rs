@@ -36,12 +36,6 @@ mod tests {
         verify_that!(vec![1, 2], {eq(2), eq(1)})
     }
 
-    #[googletest::google_test]
-    fn should_pass_with_google_test() -> Result<()> {
-        let value = 2;
-        verify_that!(value, eq(2))
-    }
-
     #[test]
     fn should_pass_with_assert_that() -> Result<()> {
         let value = 2;

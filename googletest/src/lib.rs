@@ -58,10 +58,6 @@ pub mod prelude {
 
 pub use googletest_macro::test;
 
-// For backwards compatibility.
-#[deprecated(since = "0.5.0", note = "Use googletest::test instead")]
-pub use googletest_macro::test as google_test;
-
 use internal::test_outcome::{TestAssertionFailure, TestOutcome};
 
 /// A `Result` whose `Err` variant indicates a test failure.
