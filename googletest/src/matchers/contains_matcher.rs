@@ -69,16 +69,6 @@ impl<T, InnerMatcherT> ContainsMatcher<T, InnerMatcherT> {
     }
 }
 
-// TODO(hovinen): Revisit the trait bounds to see whether this can be made more
-//  flexible. Namely, the following doesn't compile currently:
-//
-//      let matcher = contains(eq(&42));
-//      let val = 42;
-//      let _ = matcher.matches(&vec![&val]);
-//
-//  because val is dropped before matcher but the trait bound requires that
-//  the argument to matches outlive the matcher. It works fine if one defines
-//  val before matcher.
 impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>, ContainerT: Debug> Matcher
     for ContainsMatcher<ContainerT, InnerMatcherT>
 where
@@ -267,5 +257,13 @@ mod tests {
             contains(eq(3)).explain_match(&vec![1, 2]),
             displays_as(eq("which does not contain a matching element"))
         )
+    }
+
+    #[test]
+    fn contains_lifetime_bound_work() -> Result<()> {
+     let matcher = contains(eq(&42));
+     let val = 42;
+     let _ = matcher.matches(&vec![&val]);
+     Ok(())
     }
 }
