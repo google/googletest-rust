@@ -77,7 +77,7 @@ pub fn lt<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug>(
     LtMatcher::<ActualT, _> { expected, phantom: Default::default() }
 }
 
-pub struct LtMatcher<ActualT, ExpectedT> {
+struct LtMatcher<ActualT, ExpectedT> {
     expected: ExpectedT,
     phantom: PhantomData<ActualT>,
 }

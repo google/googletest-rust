@@ -77,7 +77,7 @@ pub fn ge<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug>(
     GeMatcher::<ActualT, _> { expected, phantom: Default::default() }
 }
 
-pub struct GeMatcher<ActualT, ExpectedT> {
+struct GeMatcher<ActualT, ExpectedT> {
     expected: ExpectedT,
     phantom: PhantomData<ActualT>,
 }

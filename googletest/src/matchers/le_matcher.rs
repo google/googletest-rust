@@ -77,7 +77,7 @@ pub fn le<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug>(
     LeMatcher::<ActualT, _> { expected, phantom: Default::default() }
 }
 
-pub struct LeMatcher<ActualT, ExpectedT> {
+struct LeMatcher<ActualT, ExpectedT> {
     expected: ExpectedT,
     phantom: PhantomData<ActualT>,
 }
