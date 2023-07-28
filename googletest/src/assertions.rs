@@ -302,7 +302,7 @@ macro_rules! fail {
     () => { fail!("Test failed") };
 }
 
-/// Matches the given value against the given matcher, panicing if it does not
+/// Matches the given value against the given matcher, panicking if it does not
 /// match.
 ///
 /// This is analogous to assertions in most Rust test libraries, where a failed
@@ -322,7 +322,7 @@ macro_rules! assert_that {
 }
 
 /// Asserts that the given predicate applied to the given arguments returns
-/// true, panicing if it does not.
+/// true, panicking if it does not.
 #[macro_export]
 macro_rules! assert_pred {
     ($($content:tt)*) => {
