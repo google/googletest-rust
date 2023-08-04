@@ -291,7 +291,22 @@ aborts.
 
 To make a non-fatal assertion, use the macro [`expect_that!`]. The test must
 also be marked with [`googletest::test`][test] instead of the Rust-standard
-`#[test]`. It must return [`Result<()>`].
+`#[test]`.
+
+```no_run
+use googletest::prelude::*;
+
+#[googletest::test]
+fn three_non_fatal_assertions() {
+    let value = 2;
+    expect_that!(value, eq(2));  // Passes; test still considered passing.
+    expect_that!(value, eq(3));  // Fails; logs failure and marks the test failed.
+    expect_that!(value, eq(4));  // A second failure, also logged.
+}
+```
+
+This can be used in the same tests as `verify_that!`, in which case the test
+function must also return [`Result<()>`]:
 
 ```no_run
 use googletest::prelude::*;

@@ -50,6 +50,12 @@ mod tests {
         Ok(())
     }
 
+    #[googletest::test]
+    fn should_pass_with_expect_that_returning_unit() {
+        let value = 2;
+        expect_that!(value, eq(2));
+    }
+
     #[test]
     fn should_fail_on_assertion_failure() -> Result<()> {
         let status = run_external_process("simple_assertion_failure").status()?;
