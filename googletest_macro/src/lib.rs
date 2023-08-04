@@ -21,31 +21,22 @@ use syn::{parse_macro_input, Attribute, ItemFn, ReturnType};
 ///
 /// ```ignore
 /// #[googletest::test]
-/// fn should_work() -> googletest::Result {
+/// fn should_work() {
 ///     ...
-///     Ok(())
 /// }
 /// ```
 ///
-/// The test function should return [`googletest::Result`] so that one can use
-/// `verify_that!` with the question mark operator to abort execution. The last
-/// line of the test should return `Ok(())`.
-///
-/// Any function your test invokes which contains a `verify_that!` call should
-/// be invoked with the `?` operator so that a failure in the subroutine aborts
-/// the rest of the test execution:
+/// The test function is not required to have a return type. If it does have a
+/// return type, that type must be [`googletest::Result`]. One may do this if
+/// one wishes to use both fatal and non-fatal assertions in the same test. For
+/// example:
 ///
 /// ```ignore
 /// #[googletest::test]
-/// fn should_work() -> googletest::Result {
-///     ...
-///     assert_that_everything_is_okay()?;
-///     do_some_more_stuff();  // Will not be executed if assert failed.
-///     Ok(())
-/// }
-///
-/// fn assert_that_everything_is_okay() -> googletest::Result {
-///     verify_that!(...)
+/// fn should_work() -> googletest::Result<()> {
+///     let value = 2;
+///     expect_that!(value, gt(0));
+///     verify_that!(value, eq(2))
 /// }
 /// ```
 ///
@@ -59,14 +50,8 @@ pub fn test(
     let attrs = parsed_fn.attrs.drain(..).collect::<Vec<_>>();
     let (mut sig, block) = (parsed_fn.sig, parsed_fn.block);
     let output_type = match sig.output.clone() {
-        ReturnType::Type(_, output_type) => output_type,
-        _ => {
-            return quote! {
-                compile_error!(
-                    "Test function with the #[googletest::test] attribute must return googletest::Result<()>"
-                );
-            }.into()
-        }
+        ReturnType::Type(_, output_type) => Some(output_type),
+        ReturnType::Default => None,
     };
     sig.output = ReturnType::Default;
     let (maybe_closure, invocation) = if sig.asyncness.is_some() {
@@ -93,14 +78,27 @@ pub fn test(
             },
         )
     };
-    let function = quote! {
-        #(#attrs)*
-        #sig -> std::result::Result<(), googletest::internal::test_outcome::TestFailure> {
-            #maybe_closure
-            use googletest::internal::test_outcome::TestOutcome;
-            TestOutcome::init_current_test_outcome();
-            let result: #output_type = #invocation;
-            TestOutcome::close_current_test_outcome(result)
+    let function = if let Some(output_type) = output_type {
+        quote! {
+            #(#attrs)*
+            #sig -> std::result::Result<(), googletest::internal::test_outcome::TestFailure> {
+                #maybe_closure
+                use googletest::internal::test_outcome::TestOutcome;
+                TestOutcome::init_current_test_outcome();
+                let result: #output_type = #invocation;
+                TestOutcome::close_current_test_outcome(result)
+            }
+        }
+    } else {
+        quote! {
+            #(#attrs)*
+            #sig -> std::result::Result<(), googletest::internal::test_outcome::TestFailure> {
+                #maybe_closure
+                use googletest::internal::test_outcome::TestOutcome;
+                TestOutcome::init_current_test_outcome();
+                #invocation;
+                TestOutcome::close_current_test_outcome(googletest::Result::Ok(()))
+            }
         }
     };
     let output = if attrs.iter().any(is_test_attribute) {
