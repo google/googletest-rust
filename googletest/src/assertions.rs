@@ -307,6 +307,11 @@ macro_rules! fail {
 ///
 /// This is analogous to assertions in most Rust test libraries, where a failed
 /// assertion causes a panic.
+///
+/// **Note for users of [GoogleTest for C++](http://google.github.io/googletest/):**
+/// This differs from the `ASSERT_THAT` macro in that it panics rather
+/// than triggering an early return from the invoking function. To get behaviour
+/// equivalent to `ASSERT_THAT`, use [`verify_that!`] with the `?` operator.
 #[macro_export]
 macro_rules! assert_that {
     ($actual:expr, $expected:expr) => {
@@ -323,6 +328,12 @@ macro_rules! assert_that {
 
 /// Asserts that the given predicate applied to the given arguments returns
 /// true, panicking if it does not.
+///
+/// **Note for users of [GoogleTest for C++](http://google.github.io/googletest/):**
+/// This differs from the `ASSERT_PRED*` family of macros in that it panics
+/// rather than triggering an early return from the invoking function. To get
+/// behaviour equivalent to `ASSERT_PRED*`, use [`verify_pred!`] with the `?`
+/// operator.
 #[macro_export]
 macro_rules! assert_pred {
     ($($content:tt)*) => {
