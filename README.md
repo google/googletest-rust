@@ -44,7 +44,7 @@ To make an assertion using a matcher, GoogleTest offers three macros:
    failed, but allows the test to continue running (called a _non-fatal
    assertion_). It requires the use of the [`googletest::test`] attribute macro
    on the test itself.
- * [`verify_that!`] has no side effects and evaluates to a [`Result`] whose
+ * [`verify_that!`] has no side effects and evaluates to a [`Result<()>`] whose
    `Err` variant describes the assertion failure, if there is one. In
    combination with the
    [`?` operator](https://doc.rust-lang.org/reference/expressions/operator-expr.html#the-question-mark-operator),
