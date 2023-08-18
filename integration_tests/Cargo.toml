@@ -32,7 +32,7 @@ googletest = { path = "../googletest", version = "0.9.0", features = ["anyhow"] 
 anyhow = "1"
 indoc = "2"
 rstest = "0.13.0"
-tokio = { version = "1", features = ["time", "macros", "rt"] }
+tokio = { version = "=1.29.1", features = ["time", "macros", "rt"] }
 
 [[bin]]
 name = "integration_tests"

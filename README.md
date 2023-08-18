@@ -33,37 +33,56 @@ version 1.66 for the best developer experience.
 
 ## Assertions and matchers
 
-Most assertions are made through the macro [`verify_that!`] which evaluates to a
-[`Result<()>`]. It takes two arguments: an actual value to be tested and a
-[`Matcher`].
+The core of GoogleTest is its *matchers*. Matchers indicate what aspect of an
+actual value one is asserting: (in-)equality, containment, regular expression
+matching, and so on.
 
-Unlike the macros used in other test assertion libraries in Rust, `verify_that!`
-does not panic when the test assertion fails. Instead, it evaluates to `Result`,
-which the caller can choose to handle by:
+To make an assertion using a matcher, GoogleTest offers three macros:
 
- * Returning immediately from the function with the `?` operator (a *fatal*
-   assertion), or
- * Logging the failure, marking the test as failed, and allowing execution to
-   continue (see [Non-fatal assertions](#non-fatal-assertions) below).
+ * [`assert_that!`] panics if the assertion fails, aborting the test.
+ * [`expect_that!`] logs an assertion failure, marking the test as having
+   failed, but allows the test to continue running (called a _non-fatal
+   assertion_). It requires the use of the [`googletest::test`] attribute macro
+   on the test itself.
+ * [`verify_that!`] has no side effects and evaluates to a [`Result`] whose
+   `Err` variant describes the assertion failure, if there is one. In
+   combination with the
+   [`?` operator](https://doc.rust-lang.org/reference/expressions/operator-expr.html#the-question-mark-operator),
+   this can be used to abort the test on assertion failure without panicking. It
+   is also the building block for the other two macros above.
 
-Fatal assertions are analogous to the `ASSERT_*` family of macros in GoogleTest.
-
-For example, for fatal assertions:
+For example:
 
 ```rust
 use googletest::prelude::*;
 
 #[test]
-fn more_than_one_failure() -> Result<()> {
+fn fails_and_panics() {
     let value = 2;
-    verify_that!(value, eq(4))?;  // Fails and ends execution of the test.
-    verify_that!(value, eq(2)) // One can also just return the assertion result.
+    assert_that!(value, eq(4));
+}
+
+#[googletest::test]
+fn two_logged_failures() {
+    let value = 2;
+    expect_that!(value, eq(4)); // Test now failed, but continues executing.
+    expect_that!(value, eq(5)); // Second failure is also logged.
+}
+
+#[test]
+fn fails_immediately_without_panic() -> Result<()> {
+    let value = 2;
+    verify_that!(value, eq(4))?; // Test fails and aborts.
+    verify_that!(value, eq(2))?; // Never executes.
+    Ok(())
+}
+
+#[test]
+fn simple_assertion() -> Result<()> {
+    let value = 2;
+    verify_that!(value, eq(4)) // One can also just return the last assertion.
 }
 ```
-
-> In case one wants behaviour closer to other Rust test libraries, the macro
-> [`assert_that!`] has the same parameters as [`verify_that!`] but panics on
-> failure.
 
 This library includes a rich set of matchers, covering:
 
@@ -76,10 +95,10 @@ Matchers are composable:
 ```rust
 use googletest::prelude::*;
 
-#[test]
-fn contains_at_least_one_item_at_least_3() -> Result<()> {
+#[googletest::test]
+fn contains_at_least_one_item_at_least_3() {
     let value = vec![1, 2, 3];
-    verify_that!(value, contains(ge(3)))
+    expect_that!(value, contains(ge(3)));
 }
 ```
 
@@ -88,10 +107,10 @@ They can also be logically combined:
 ```rust
 use googletest::prelude::*;
 
-#[test]
-fn strictly_between_9_and_11() -> Result<()> {
+#[googletest::test]
+fn strictly_between_9_and_11() {
     let value = 10;
-    verify_that!(value, gt(9).and(not(ge(11))))
+    expect_that!(value, gt(9).and(not(ge(11))));
 }
 ```
 
@@ -110,17 +129,17 @@ struct AStruct {
 }
 
 #[test]
-fn struct_has_expected_values() -> Result<()> {
+fn struct_has_expected_values() {
     let value = AStruct {
         a_field: 10,
         another_field: 100,
         a_third_field: "A correct value",
     };
-    verify_that!(value, matches_pattern!(AStruct {
+    expect_that!(value, matches_pattern!(AStruct {
         a_field: eq(10),
         another_field: gt(50),
         a_third_field: contains_substring("correct"),
-    }))
+    }));
 }
 ```
 
@@ -162,12 +181,12 @@ pub fn eq_my_way<T: PartialEq + Debug>(expected: T) -> impl Matcher<ActualT = T>
 }
 ```
 
-The new matcher can then be used in `verify_that!`:
+The new matcher can then be used in the assertion macros:
 
 ```rust
-#[test]
-fn should_be_equal_by_my_definition() -> Result<()> {
-    verify_that!(10, eq_my_way(10))
+#[googletest::test]
+fn should_be_equal_by_my_definition() {
+    expect_that!(10, eq_my_way(10));
 }
 ```
 

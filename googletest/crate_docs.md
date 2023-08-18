@@ -9,20 +9,25 @@ This library provides:
 
 ## Assertions and matchers
 
-Most assertions are made through the macro [`verify_that!`]. It takes two
-arguments: an actual value to be tested and a [`Matcher`].
+The core of GoogleTest is its *matchers*. Matchers indicate what aspect of an
+actual value one is asserting: (in-)equality, containment, regular expression
+matching, and so on.
 
-Unlike the macros used in other test assertion libraries in Rust,
-`verify_that!` does not panic when the test assertion fails. Instead, it
-evaluates to [`googletest::Result<()>`][Result], which the caller can choose
-to handle by:
+To make an assertion using a matcher, GoogleTest offers three macros:
 
- * Returning immediately from the function with the `?` operator (a *fatal*
-   assertion), or
- * Logging the failure, marking the test as failed, and allowing execution to
-   continue (see [Non-fatal assertions](#non-fatal-assertions) below).
+ * [`assert_that!`] panics if the assertion fails, aborting the test.
+ * [`expect_that!`] logs an assertion failure, marking the test as having
+   failed, but allows the test to continue running (called a _non-fatal
+   assertion_). It requires the use of the [`googletest::test`][crate::test]
+   attribute macro on the test itself.
+ * [`verify_that!`] has no side effects and evaluates to a [`Result`] whose
+   `Err` variant describes the assertion failure, if there is one. In
+   combination with the
+   [`?` operator](https://doc.rust-lang.org/reference/expressions/operator-expr.html#the-question-mark-operator),
+   this can be used to abort the test on assertion failure without panicking. It
+   is also the building block for the other two macros above.
 
-For example, for fatal assertions:
+For example:
 
 ```
 use googletest::prelude::*;
@@ -30,17 +35,38 @@ use googletest::prelude::*;
 # /* The attribute macro would prevent the function from being compiled in a doctest.
 #[test]
 # */
-fn more_than_one_failure() -> Result<()> {
+fn fails_and_panics() {
     let value = 2;
-    verify_that!(value, eq(4))?;  // Fails and ends execution of the test.
-    verify_that!(value, eq(2)) // One can also just return the assertion result.
+    assert_that!(value, eq(4));
 }
-# more_than_one_failure().unwrap_err();
-```
 
-> In case one wants behaviour closer to other Rust test libraries, the macro
-> [`assert_that!`] has the same parameters as [`verify_that!`] but panics on
-> failure.
+# /* The attribute macro would prevent the function from being compiled in a doctest.
+#[googletest::test]
+# */
+fn two_logged_failures() {
+    let value = 2;
+    expect_that!(value, eq(4)); // Test now failed, but continues executing.
+    expect_that!(value, eq(5)); // Second failure is also logged.
+}
+
+# /* The attribute macro would prevent the function from being compiled in a doctest.
+#[test]
+# */
+fn fails_immediately_without_panic() -> Result<()> {
+    let value = 2;
+    verify_that!(value, eq(4))?; // Test fails and aborts.
+    verify_that!(value, eq(2))?; // Never executes.
+    Ok(())
+}
+
+# /* The attribute macro would prevent the function from being compiled in a doctest.
+#[test]
+# */
+fn simple_assertion() -> Result<()> {
+    let value = 2;
+    verify_that!(value, eq(4)) // One can also just return the last assertion.
+}
+```
 
 Matchers are composable:
 
@@ -48,13 +74,16 @@ Matchers are composable:
 use googletest::prelude::*;
 
 # /* The attribute macro would prevent the function from being compiled in a doctest.
-#[test]
+#[googletest::test]
 # */
-fn contains_at_least_one_item_at_least_3() -> Result<()> {
+fn contains_at_least_one_item_at_least_3() {
+# googletest::internal::test_outcome::TestOutcome::init_current_test_outcome();
     let value = vec![1, 2, 3];
-    verify_that!(value, contains(ge(3)))
+    expect_that!(value, contains(ge(3)));
+# googletest::internal::test_outcome::TestOutcome::close_current_test_outcome::<&str>(Ok(()))
+#     .unwrap();
 }
-# contains_at_least_one_item_at_least_3().unwrap();
+# contains_at_least_one_item_at_least_3();
 ```
 
 They can also be logically combined:
@@ -63,13 +92,16 @@ They can also be logically combined:
 use googletest::prelude::*;
 
 # /* The attribute macro would prevent the function from being compiled in a doctest.
-#[test]
+#[googletest::test]
 # */
-fn strictly_between_9_and_11() -> Result<()> {
+fn strictly_between_9_and_11() {
+# googletest::internal::test_outcome::TestOutcome::init_current_test_outcome();
     let value = 10;
-    verify_that!(value, gt(9).and(not(ge(11))))
+    expect_that!(value, gt(9).and(not(ge(11))));
+# googletest::internal::test_outcome::TestOutcome::close_current_test_outcome::<&str>(Ok(()))
+#     .unwrap();
 }
-# strictly_between_9_and_11().unwrap();
+# strictly_between_9_and_11();
 ```
 
 ## Available matchers
@@ -236,7 +268,7 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
  }
  ```
 
- The new matcher can then be used in `verify_that!`:
+ The new matcher can then be used in the assertion macros:
 
 ```
 # use googletest::prelude::*;
@@ -274,12 +306,15 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 #    MyEqMatcher { expected }
 # }
 # /* The attribute macro would prevent the function from being compiled in a doctest.
-#[test]
+#[googletest::test]
 # */
-fn should_be_equal_by_my_definition() -> Result<()> {
-    verify_that!(10, eq_my_way(10))
+fn should_be_equal_by_my_definition() {
+# googletest::internal::test_outcome::TestOutcome::init_current_test_outcome();
+    expect_that!(10, eq_my_way(10));
+# googletest::internal::test_outcome::TestOutcome::close_current_test_outcome::<&str>(Ok(()))
+#     .unwrap();
 }
-# should_be_equal_by_my_definition().unwrap();
+# should_be_equal_by_my_definition();
 ```
 
 ## Non-fatal assertions
@@ -290,8 +325,8 @@ having failed, but execution continues until the test completes or otherwise
 aborts.
 
 To make a non-fatal assertion, use the macro [`expect_that!`]. The test must
-also be marked with [`googletest::test`][test] instead of the Rust-standard
-`#[test]`.
+also be marked with [`googletest::test`][crate::test] instead of the
+Rust-standard `#[test]`.
 
 ```no_run
 use googletest::prelude::*;
