@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// There are no visible documentation elements in this module; the declarative
+// macros are documented at the top level.
+#![doc(hidden)]
+
 /// Checks whether the `Matcher` given by the second argument matches the first
 /// argument.
 ///

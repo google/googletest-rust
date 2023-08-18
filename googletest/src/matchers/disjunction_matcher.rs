@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// There are no visible documentation elements in this module.
+#![doc(hidden)]
+
 use crate::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 
