@@ -84,7 +84,7 @@ where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
 {
-    SubsetOfMatcher::<ActualT, _> { superset, phantom: PhantomData::default() }
+    SubsetOfMatcher::<ActualT, _> { superset, phantom: Default::default() }
 }
 
 struct SubsetOfMatcher<ActualT: ?Sized, ExpectedT> {
