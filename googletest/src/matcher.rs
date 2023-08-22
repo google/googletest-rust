@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! The components required to implement matchers.
+
 use crate::internal::source_location::SourceLocation;
 use crate::internal::test_outcome::TestAssertionFailure;
 use crate::matchers::conjunction_matcher::ConjunctionMatcher;

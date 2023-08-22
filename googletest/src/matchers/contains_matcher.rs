@@ -44,6 +44,8 @@ pub fn contains<T, InnerMatcherT>(inner: InnerMatcherT) -> ContainsMatcher<T, In
     ContainsMatcher { inner, count: None, phantom: Default::default() }
 }
 
+/// A matcher which matches a container containing one or more elements a given
+/// inner [`Matcher`] matches.
 pub struct ContainsMatcher<T, InnerMatcherT> {
     inner: InnerMatcherT,
     count: Option<Box<dyn Matcher<ActualT = usize>>>,
