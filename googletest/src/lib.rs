@@ -62,7 +62,10 @@ use internal::test_outcome::{TestAssertionFailure, TestOutcome};
 
 /// A `Result` whose `Err` variant indicates a test failure.
 ///
-/// All test functions should return `Result<()>`.
+/// The assertions [`verify_that!`][crate::verify_that],
+/// [`verify_pred!`][crate::verify_pred], and [`fail!`][crate::fail] evaluate
+/// to `Result<()>`. A test function may return `Result<()>` in combination with
+/// those macros to abort immediately on assertion failure.
 ///
 /// This can be used with subroutines which may cause the test to fatally fail
 /// and which return some value needed by the caller. For example:
