@@ -67,7 +67,7 @@ fn matches_struct_with_matching_property_with_parameters_with_trailing_comma() -
 #[test]
 fn matches_struct_with_matching_property_ref() -> Result<()> {
     let value = SomeStruct { a_property: 10 };
-    verify_that!(value, property!(ref SomeStruct.get_property_ref(), eq(10)))
+    verify_that!(value, property!(*SomeStruct.get_property_ref(), eq(10)))
 }
 
 #[test]
@@ -82,7 +82,7 @@ fn matches_struct_with_matching_string_reference_property() -> Result<()> {
         }
     }
     let value = StructWithString { property: "Something".into() };
-    verify_that!(value, property!(ref StructWithString.get_property_ref(), eq("Something")))
+    verify_that!(value, property!(*StructWithString.get_property_ref(), eq("Something")))
 }
 
 #[test]
@@ -97,19 +97,19 @@ fn matches_struct_with_matching_slice_property() -> Result<()> {
         }
     }
     let value = StructWithVec { property: vec![1, 2, 3] };
-    verify_that!(value, property!(ref StructWithVec.get_property_ref(), eq([1, 2, 3])))
+    verify_that!(value, property!(*StructWithVec.get_property_ref(), eq([1, 2, 3])))
 }
 
 #[test]
 fn matches_struct_with_matching_property_ref_with_parameters() -> Result<()> {
     let value = SomeStruct { a_property: 10 };
-    verify_that!(value, property!(ref SomeStruct.get_property_ref_with_params(2, 3), eq(10)))
+    verify_that!(value, property!(*SomeStruct.get_property_ref_with_params(2, 3), eq(10)))
 }
 
 #[test]
 fn matches_struct_with_matching_property_ref_with_parameters_and_trailing_comma() -> Result<()> {
     let value = SomeStruct { a_property: 10 };
-    verify_that!(value, property!(ref SomeStruct.get_property_ref_with_params(2, 3,), eq(10)))
+    verify_that!(value, property!(*SomeStruct.get_property_ref_with_params(2, 3,), eq(10)))
 }
 
 #[test]
@@ -155,7 +155,7 @@ fn explains_mismatch_referencing_explanation_of_inner_matcher() -> Result<()> {
 #[test]
 fn describes_itself_in_matching_case_for_ref() -> Result<()> {
     verify_that!(
-        property!(ref SomeStruct.get_property_ref(), eq(1)).describe(MatcherResult::Match),
+        property!(*SomeStruct.get_property_ref(), eq(1)).describe(MatcherResult::Match),
         eq("has property `get_property_ref()`, which is equal to 1")
     )
 }
@@ -163,7 +163,7 @@ fn describes_itself_in_matching_case_for_ref() -> Result<()> {
 #[test]
 fn describes_itself_in_not_matching_case_for_ref() -> Result<()> {
     verify_that!(
-        property!(ref SomeStruct.get_property_ref(), eq(1)).describe(MatcherResult::NoMatch),
+        property!(*SomeStruct.get_property_ref(), eq(1)).describe(MatcherResult::NoMatch),
         eq("has property `get_property_ref()`, which isn't equal to 1")
     )
 }
@@ -178,7 +178,7 @@ fn explains_mismatch_referencing_explanation_of_inner_matcher_for_ref() -> Resul
     }
     let value = SomeStruct { a_property: 2 };
     let result =
-        verify_that!(value, property!(ref SomeStruct.get_a_collection_ref(), container_eq([1])));
+        verify_that!(value, property!(*SomeStruct.get_a_collection_ref(), container_eq([1])));
 
     verify_that!(
         result,
