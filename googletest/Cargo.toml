@@ -41,4 +41,3 @@ rustversion = "1.0.14"
 [dev-dependencies]
 indoc = "2"
 quickcheck = "1.0.3"
-serial_test = "2.0.0"
