@@ -120,7 +120,7 @@
 /// not supported; see [Rust by Example](https://doc.rust-lang.org/rust-by-example/primitives/tuples.html#tuples).
 #[macro_export]
 macro_rules! verify_that {
-    ($actual:expr, [$($expecteds:expr),+]) => {
+    ($actual:expr, [$($expecteds:expr),+ $(,)?]) => {
         $crate::assertions::internal::check_matcher(
             &$actual,
             $crate::elements_are![$($expecteds),+],
@@ -128,7 +128,7 @@ macro_rules! verify_that {
             $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!()),
         )
     };
-    ($actual:expr, {$($expecteds:expr),+}) => {
+    ($actual:expr, {$($expecteds:expr),+ $(,)?}) => {
         $crate::assertions::internal::check_matcher(
             &$actual,
             $crate::unordered_elements_are![$($expecteds),+],

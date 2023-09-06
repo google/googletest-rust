@@ -37,6 +37,17 @@ mod tests {
     }
 
     #[test]
+    fn verify_that_with_short_elements_are_syntax_supports_trailing_comma() -> Result<()> {
+        verify_that!(vec![1, 2], [eq(1), eq(2),])
+    }
+
+    #[test]
+    fn verify_that_with_short_unordered_elements_are_syntax_supports_trailing_comma() -> Result<()>
+    {
+        verify_that!(vec![1, 2], {eq(2), eq(1),})
+    }
+
+    #[test]
     fn should_pass_with_assert_that() -> Result<()> {
         let value = 2;
         assert_that!(value, eq(2));
