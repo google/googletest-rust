@@ -162,7 +162,7 @@
 /// #     .unwrap();
 /// ```
 ///
-/// If the method returns a reference, precede it with the keyword `ref`:
+/// If the method returns a reference, precede it with a `*`:
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -177,7 +177,7 @@
 ///
 /// # let my_struct = MyStruct { a_field: "Something to believe in".into() };
 /// verify_that!(my_struct, matches_pattern!(MyStruct {
-///     ref get_a_field_ref(): starts_with("Something"),
+///     *get_a_field_ref(): starts_with("Something"),
 /// }))
 /// #    .unwrap();
 /// ```
@@ -277,11 +277,11 @@ macro_rules! matches_pattern_internal {
 
     (
         [$($struct_name:tt)*],
-        { ref $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
+        { * $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
     ) => {
         $crate::matchers::__internal_unstable_do_not_depend_on_these::is(
             stringify!($($struct_name)*),
-            all!(property!(ref $($struct_name)*.$property_name($($argument),*), $matcher))
+            all!(property!(* $($struct_name)*.$property_name($($argument),*), $matcher))
         )
     };
 
@@ -309,10 +309,10 @@ macro_rules! matches_pattern_internal {
 
     (
         [$($struct_name:tt)*],
-        { ref $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr, $($rest:tt)* }
+        { * $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr, $($rest:tt)* }
     ) => {
         $crate::matches_pattern_internal!(
-            all!(property!(ref $($struct_name)*.$property_name($($argument),*), $matcher)),
+            all!(property!(* $($struct_name)*.$property_name($($argument),*), $matcher)),
             [$($struct_name)*],
             { $($rest)* }
         )
@@ -343,11 +343,11 @@ macro_rules! matches_pattern_internal {
     (
         all!($($processed:tt)*),
         [$($struct_name:tt)*],
-        { ref $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
+        { * $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
     ) => {
         $crate::matchers::__internal_unstable_do_not_depend_on_these::is(stringify!($($struct_name)*), all!(
             $($processed)*,
-            property!(ref $($struct_name)*.$property_name($($argument),*), $matcher)
+            property!(* $($struct_name)*.$property_name($($argument),*), $matcher)
         ))
     };
 
@@ -384,12 +384,12 @@ macro_rules! matches_pattern_internal {
     (
         all!($($processed:tt)*),
         [$($struct_name:tt)*],
-        { ref $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr, $($rest:tt)* }
+        { * $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr, $($rest:tt)* }
     ) => {
         $crate::matches_pattern_internal!(
             all!(
                 $($processed)*,
-                property!(ref $($struct_name)*.$property_name($($argument),*), $matcher)
+                property!(* $($struct_name)*.$property_name($($argument),*), $matcher)
             ),
             [$($struct_name)*],
             { $($rest)* }

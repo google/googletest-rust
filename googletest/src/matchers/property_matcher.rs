@@ -44,8 +44,7 @@
 /// failure, it will be invoked a second time, with the assertion failure output
 /// reflecting the *second* invocation.
 ///
-/// If the method returns a *reference*, then it must be preceded by the keyword
-/// `ref`:
+/// If the method returns a *reference*, then it must be preceded by a `*`:
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -58,7 +57,7 @@
 /// }
 ///
 /// # let value = vec![MyStruct { a_field: 100 }];
-/// verify_that!(value, contains(property!(ref MyStruct.get_a_field(), eq(100))))
+/// verify_that!(value, contains(property!(*MyStruct.get_a_field(), eq(100))))
 /// #    .unwrap();
 /// ```
 ///
@@ -93,7 +92,7 @@
 /// }
 ///
 /// let value = MyStruct { a_string: "A string".into() };
-/// verify_that!(value, property!(ref MyStruct.get_a_string(), eq("A string"))) // Does not compile
+/// verify_that!(value, property!(*MyStruct.get_a_string(), eq("A string"))) // Does not compile
 /// #    .unwrap();
 /// ```
 ///
@@ -120,7 +119,7 @@ macro_rules! property_internal {
             $m)
     }};
 
-    (ref $($t:ident)::+.$method:tt($($argument:tt),* $(,)?), $m:expr) => {{
+    (* $($t:ident)::+.$method:tt($($argument:tt),* $(,)?), $m:expr) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::property_ref_matcher;
         property_ref_matcher(
             |o: &$($t)::+| o.$method($($argument),*),
