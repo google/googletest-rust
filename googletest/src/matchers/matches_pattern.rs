@@ -259,7 +259,7 @@ macro_rules! matches_pattern_internal {
         [$($struct_name:tt)*],
         { $field_name:ident : $matcher:expr $(,)? }
     ) => {
-        $crate::matchers::is_matcher::is(
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::is(
             stringify!($($struct_name)*),
             all!(field!($($struct_name)*.$field_name, $matcher))
         )
@@ -269,7 +269,7 @@ macro_rules! matches_pattern_internal {
         [$($struct_name:tt)*],
         { $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
     ) => {
-        $crate::matchers::is_matcher::is(
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::is(
             stringify!($($struct_name)*),
             all!(property!($($struct_name)*.$property_name($($argument),*), $matcher))
         )
@@ -279,7 +279,7 @@ macro_rules! matches_pattern_internal {
         [$($struct_name:tt)*],
         { ref $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
     ) => {
-        $crate::matchers::is_matcher::is(
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::is(
             stringify!($($struct_name)*),
             all!(property!(ref $($struct_name)*.$property_name($($argument),*), $matcher))
         )
@@ -323,7 +323,7 @@ macro_rules! matches_pattern_internal {
         [$($struct_name:tt)*],
         { $field_name:ident : $matcher:expr $(,)? }
     ) => {
-        $crate::matchers::is_matcher::is(stringify!($($struct_name)*), all!(
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::is(stringify!($($struct_name)*), all!(
             $($processed)*,
             field!($($struct_name)*.$field_name, $matcher)
         ))
@@ -334,7 +334,7 @@ macro_rules! matches_pattern_internal {
         [$($struct_name:tt)*],
         { $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
     ) => {
-        $crate::matchers::is_matcher::is(stringify!($($struct_name)*), all!(
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::is(stringify!($($struct_name)*), all!(
             $($processed)*,
             property!($($struct_name)*.$property_name($($argument),*), $matcher)
         ))
@@ -345,7 +345,7 @@ macro_rules! matches_pattern_internal {
         [$($struct_name:tt)*],
         { ref $property_name:ident($($argument:expr),* $(,)?) : $matcher:expr $(,)? }
     ) => {
-        $crate::matchers::is_matcher::is(stringify!($($struct_name)*), all!(
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::is(stringify!($($struct_name)*), all!(
             $($processed)*,
             property!(ref $($struct_name)*.$property_name($($argument),*), $matcher)
         ))
@@ -410,7 +410,7 @@ macro_rules! matches_pattern_internal {
         [$($struct_name:tt)*],
         ($matcher:expr $(,)?)
     ) => {
-        $crate::matchers::is_matcher::is(
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::is(
             stringify!($($struct_name)*),
             all!(field!($($struct_name)*.0, $matcher))
         )
@@ -436,7 +436,7 @@ macro_rules! matches_pattern_internal {
         $field:tt,
         ($matcher:expr $(,)?)
     ) => {
-        $crate::matchers::is_matcher::is(stringify!($($struct_name)*), all!(
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::is(stringify!($($struct_name)*), all!(
             $($processed)*,
             field!($($struct_name)*.$field, $matcher)
         ))

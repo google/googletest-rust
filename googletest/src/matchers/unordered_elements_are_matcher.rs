@@ -117,7 +117,7 @@
 #[macro_export]
 macro_rules! unordered_elements_are {
     ($(,)?) => {{
-        use $crate::matchers::unordered_elements_are_matcher::internal::{
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsAreMatcher, Requirements
         };
         UnorderedElementsAreMatcher::new([], Requirements::PerfectMatch)
@@ -126,7 +126,7 @@ macro_rules! unordered_elements_are {
     // TODO: Consider an alternative map-like syntax here similar to that used in
     // https://crates.io/crates/maplit.
     ($(($key_matcher:expr, $value_matcher:expr)),* $(,)?) => {{
-        use $crate::matchers::unordered_elements_are_matcher::internal::{
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsOfMapAreMatcher, Requirements
         };
         UnorderedElementsOfMapAreMatcher::new(
@@ -136,7 +136,7 @@ macro_rules! unordered_elements_are {
     }};
 
     ($($matcher:expr),* $(,)?) => {{
-        use $crate::matchers::unordered_elements_are_matcher::internal::{
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsAreMatcher, Requirements
         };
         UnorderedElementsAreMatcher::new([$(Box::new($matcher)),*], Requirements::PerfectMatch)
@@ -219,7 +219,7 @@ macro_rules! unordered_elements_are {
 #[macro_export]
 macro_rules! contains_each {
     ($(,)?) => {{
-        use $crate::matchers::unordered_elements_are_matcher::internal::{
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsAreMatcher, Requirements
         };
         UnorderedElementsAreMatcher::new([], Requirements::Superset)
@@ -228,7 +228,7 @@ macro_rules! contains_each {
     // TODO: Consider an alternative map-like syntax here similar to that used in
     // https://crates.io/crates/maplit.
     ($(($key_matcher:expr, $value_matcher:expr)),* $(,)?) => {{
-        use $crate::matchers::unordered_elements_are_matcher::internal::{
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsOfMapAreMatcher, Requirements
         };
         UnorderedElementsOfMapAreMatcher::new(
@@ -238,7 +238,7 @@ macro_rules! contains_each {
     }};
 
     ($($matcher:expr),* $(,)?) => {{
-        use $crate::matchers::unordered_elements_are_matcher::internal::{
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsAreMatcher, Requirements
         };
         UnorderedElementsAreMatcher::new([$(Box::new($matcher)),*], Requirements::Superset)
@@ -325,7 +325,7 @@ macro_rules! contains_each {
 #[macro_export]
 macro_rules! is_contained_in {
     ($(,)?) => {{
-        use $crate::matchers::unordered_elements_are_matcher::internal::{
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsAreMatcher, Requirements
         };
         UnorderedElementsAreMatcher::new([], Requirements::Subset)
@@ -334,7 +334,7 @@ macro_rules! is_contained_in {
     // TODO: Consider an alternative map-like syntax here similar to that used in
     // https://crates.io/crates/maplit.
     ($(($key_matcher:expr, $value_matcher:expr)),* $(,)?) => {{
-        use $crate::matchers::unordered_elements_are_matcher::internal::{
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsOfMapAreMatcher, Requirements
         };
         UnorderedElementsOfMapAreMatcher::new(
@@ -344,7 +344,7 @@ macro_rules! is_contained_in {
     }};
 
     ($($matcher:expr),* $(,)?) => {{
-        use $crate::matchers::unordered_elements_are_matcher::internal::{
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsAreMatcher, Requirements
         };
         UnorderedElementsAreMatcher::new([$(Box::new($matcher)),*], Requirements::Subset)

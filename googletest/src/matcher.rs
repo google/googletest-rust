@@ -16,8 +16,8 @@
 
 use crate::internal::source_location::SourceLocation;
 use crate::internal::test_outcome::TestAssertionFailure;
-use crate::matchers::conjunction_matcher::ConjunctionMatcher;
-use crate::matchers::disjunction_matcher::DisjunctionMatcher;
+use crate::matchers::__internal_unstable_do_not_depend_on_these::ConjunctionMatcher;
+use crate::matchers::__internal_unstable_do_not_depend_on_these::DisjunctionMatcher;
 use std::fmt::Debug;
 
 /// An interface for checking an arbitrary condition on a datum.

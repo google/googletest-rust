@@ -79,7 +79,7 @@
 #[macro_export]
 macro_rules! elements_are {
     ($($matcher:expr),* $(,)?) => {{
-        use $crate::matchers::elements_are_matcher::internal::ElementsAre;
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::ElementsAre;
         ElementsAre::new(vec![$(Box::new($matcher)),*])
     }}
 }

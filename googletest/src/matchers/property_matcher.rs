@@ -113,7 +113,7 @@ macro_rules! property {
 #[macro_export]
 macro_rules! property_internal {
     ($($t:ident)::+.$method:tt($($argument:tt),* $(,)?), $m:expr) => {{
-         use $crate::matchers::property_matcher::internal::property_matcher;
+         use $crate::matchers::__internal_unstable_do_not_depend_on_these::property_matcher;
         property_matcher(
             |o: &$($t)::+| o.$method($($argument),*),
             &stringify!($method($($argument),*)),
@@ -121,7 +121,7 @@ macro_rules! property_internal {
     }};
 
     (ref $($t:ident)::+.$method:tt($($argument:tt),* $(,)?), $m:expr) => {{
-        use $crate::matchers::property_matcher::internal::property_ref_matcher;
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::property_ref_matcher;
         property_ref_matcher(
             |o: &$($t)::+| o.$method($($argument),*),
             &stringify!($method($($argument),*)),

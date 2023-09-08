@@ -55,7 +55,7 @@
 #[macro_export]
 macro_rules! any {
     ($($matcher:expr),* $(,)?) => {{
-        use $crate::matchers::any_matcher::internal::AnyMatcher;
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::AnyMatcher;
         AnyMatcher::new([$(Box::new($matcher)),*])
     }}
 }

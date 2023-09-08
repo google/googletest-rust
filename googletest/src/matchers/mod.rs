@@ -14,27 +14,27 @@
 
 //! All built-in matchers of this crate are in submodules of this module.
 
-pub mod all_matcher;
-pub mod any_matcher;
+mod all_matcher;
+mod any_matcher;
 mod anything_matcher;
 mod char_count_matcher;
-pub mod conjunction_matcher;
+mod conjunction_matcher;
 mod container_eq_matcher;
 mod contains_matcher;
 mod contains_regex_matcher;
-pub mod disjunction_matcher;
+mod disjunction_matcher;
 mod display_matcher;
 mod each_matcher;
-pub mod elements_are_matcher;
+mod elements_are_matcher;
 mod empty_matcher;
 mod eq_deref_of_matcher;
 mod eq_matcher;
 mod err_matcher;
-pub mod field_matcher;
+mod field_matcher;
 mod ge_matcher;
 mod gt_matcher;
 mod has_entry_matcher;
-pub mod is_matcher;
+mod is_matcher;
 mod is_nan_matcher;
 mod le_matcher;
 mod len_matcher;
@@ -46,15 +46,15 @@ mod none_matcher;
 mod not_matcher;
 mod ok_matcher;
 mod points_to_matcher;
-pub mod pointwise_matcher;
+mod pointwise_matcher;
 mod predicate_matcher;
-pub mod property_matcher;
+mod property_matcher;
 mod some_matcher;
 mod str_matcher;
 mod subset_of_matcher;
 mod superset_of_matcher;
 mod tuple_matcher;
-pub mod unordered_elements_are_matcher;
+mod unordered_elements_are_matcher;
 
 pub use anything_matcher::anything;
 pub use char_count_matcher::char_count;
@@ -87,3 +87,31 @@ pub use str_matcher::{
 };
 pub use subset_of_matcher::subset_of;
 pub use superset_of_matcher::superset_of;
+
+// Reexport of macros.
+// TODO Consider hiding the matchers macro from the top-level, by either
+// mangling or move them to the macro crate.
+pub use crate::{
+    all, any, contains_each, elements_are, field, is_contained_in, matches_pattern, pat, pointwise,
+    property, unordered_elements_are,
+};
+
+// Types and functions used by macros matchers.
+// Do not use directly.
+// We may perform incompatible changes without major release. These elements
+// should only be used through their respective macros.
+#[doc(hidden)]
+pub mod __internal_unstable_do_not_depend_on_these {
+    pub use super::all_matcher::internal::AllMatcher;
+    pub use super::any_matcher::internal::AnyMatcher;
+    pub use super::conjunction_matcher::ConjunctionMatcher;
+    pub use super::disjunction_matcher::DisjunctionMatcher;
+    pub use super::elements_are_matcher::internal::ElementsAre;
+    pub use super::field_matcher::internal::field_matcher;
+    pub use super::is_matcher::is;
+    pub use super::pointwise_matcher::internal::PointwiseMatcher;
+    pub use super::property_matcher::internal::{property_matcher, property_ref_matcher};
+    pub use super::unordered_elements_are_matcher::internal::{
+        Requirements, UnorderedElementsAreMatcher, UnorderedElementsOfMapAreMatcher,
+    };
+}

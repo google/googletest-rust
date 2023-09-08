@@ -117,12 +117,12 @@
 #[macro_export]
 macro_rules! pointwise {
     ($matcher:expr, $container:expr) => {{
-        use $crate::matchers::pointwise_matcher::internal::PointwiseMatcher;
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::PointwiseMatcher;
         PointwiseMatcher::new($container.into_iter().map($matcher).collect())
     }};
 
     ($matcher:expr, $left_container:expr, $right_container:expr) => {{
-        use $crate::matchers::pointwise_matcher::internal::PointwiseMatcher;
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::PointwiseMatcher;
         PointwiseMatcher::new(
             $left_container
                 .into_iter()
@@ -133,7 +133,7 @@ macro_rules! pointwise {
     }};
 
     ($matcher:expr, $left_container:expr, $middle_container:expr, $right_container:expr) => {{
-        use $crate::matchers::pointwise_matcher::internal::PointwiseMatcher;
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::PointwiseMatcher;
         PointwiseMatcher::new(
             $left_container
                 .into_iter()

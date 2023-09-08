@@ -53,7 +53,7 @@
 #[macro_export]
 macro_rules! all {
     ($($matcher:expr),* $(,)?) => {{
-        use $crate::matchers::all_matcher::internal::AllMatcher;
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::AllMatcher;
         AllMatcher::new([$(Box::new($matcher)),*])
     }}
 }
