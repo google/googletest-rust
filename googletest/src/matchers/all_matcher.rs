@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // There are no visible documentation elements in this module; the declarative
-// macro is documented at the top level.
+// macro is documented in the matcher module.
 #![doc(hidden)]
 
 /// Matches a value which all of the given matchers match.
@@ -51,7 +51,8 @@
 ///
 /// Assertion failure messages are not guaranteed to be identical, however.
 #[macro_export]
-macro_rules! all {
+#[doc(hidden)]
+macro_rules! __all {
     ($($matcher:expr),* $(,)?) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::AllMatcher;
         AllMatcher::new([$(Box::new($matcher)),*])

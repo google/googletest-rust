@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // There are no visible documentation elements in this module; the declarative
-// macro is documented at the top level.
+// macro is documented in the matchers module.
 #![doc(hidden)]
 
 /// Matches a container whose elements in any order have a 1:1 correspondence
@@ -73,7 +73,7 @@
 ///
 /// Note: This behavior is only possible in [`verify_that!`] macros. In any
 /// other cases, it is still necessary to use the
-/// [`unordered_elements_are!`][crate::unordered_elements_are] macro.
+/// [`unordered_elements_are!`][crate::matchers::unordered_elements_are] macro.
 ///
 /// ```compile_fail
 /// # use googletest::prelude::*;
@@ -115,7 +115,8 @@
 /// [`Iterator::collect`]: std::iter::Iterator::collect
 /// [`Vec`]: std::vec::Vec
 #[macro_export]
-macro_rules! unordered_elements_are {
+#[doc(hidden)]
+macro_rules! __unordered_elements_are {
     ($(,)?) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsAreMatcher, Requirements
@@ -151,7 +152,9 @@ macro_rules! unordered_elements_are {
 /// additional elements that don't correspond to any matcher.
 ///
 /// Put another way, `contains_each!` matches if there is a subset of the actual
-/// container which [`unordered_elements_are`] would match.
+/// container which
+/// [`unordered_elements_are`][crate::matchers::unordered_elements_are] would
+/// match.
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -217,7 +220,8 @@ macro_rules! unordered_elements_are {
 /// [`Iterator::collect`]: std::iter::Iterator::collect
 /// [`Vec`]: std::vec::Vec
 #[macro_export]
-macro_rules! contains_each {
+#[doc(hidden)]
+macro_rules! __contains_each {
     ($(,)?) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsAreMatcher, Requirements
@@ -255,7 +259,8 @@ macro_rules! contains_each {
 /// container.
 ///
 /// Put another way, `is_contained_in!` matches if there is a subset of the
-/// matchers which would match with [`unordered_elements_are`].
+/// matchers which would match with
+/// [`unordered_elements_are`][crate::matchers::unordered_elements_are].
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -323,7 +328,8 @@ macro_rules! contains_each {
 /// [`Iterator::collect`]: std::iter::Iterator::collect
 /// [`Vec`]: std::vec::Vec
 #[macro_export]
-macro_rules! is_contained_in {
+#[doc(hidden)]
+macro_rules! __is_contained_in {
     ($(,)?) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsAreMatcher, Requirements

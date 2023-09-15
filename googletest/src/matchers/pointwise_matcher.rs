@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // There are no visible documentation elements in this module; the declarative
-// macro is documented at the top level.
+// macro is documented in the matcher module.
 #![doc(hidden)]
 
 /// Generates a matcher which matches a container each of whose elements match
@@ -115,7 +115,8 @@
 /// [`Pointwise`]: https://google.github.io/googletest/reference/matchers.html#container-matchers
 /// [`Vec`]: std::vec::Vec
 #[macro_export]
-macro_rules! pointwise {
+#[doc(hidden)]
+macro_rules! __pointwise {
     ($matcher:expr, $container:expr) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::PointwiseMatcher;
         PointwiseMatcher::new($container.into_iter().map($matcher).collect())

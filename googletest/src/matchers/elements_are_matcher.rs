@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // There are no visible documentation elements in this module; the declarative
-// macro is documented at the top level.
+// macro is documented in the matchers module.
 #![doc(hidden)]
 
 /// Matches a container's elements to each matcher in order.
@@ -50,7 +50,7 @@
 ///
 /// Note: This behavior is only possible in [`verify_that!`] macros. In any
 /// other cases, it is still necessary to use the
-/// [`elements_are!`][crate::elements_are] macro.
+/// [`elements_are!`][crate::matchers::elements_are] macro.
 ///
 /// ```compile_fail
 /// # use googletest::prelude::*;
@@ -69,7 +69,8 @@
 /// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
 ///
 /// Do not use this with unordered containers, since that will lead to flaky
-/// tests. Use [`unordered_elements_are!`][crate::unordered_elements_are]
+/// tests. Use
+/// [`unordered_elements_are!`][crate::matchers::unordered_elements_are]
 /// instead.
 ///
 /// [`IntoIterator`]: std::iter::IntoIterator
@@ -77,7 +78,8 @@
 /// [`Iterator::collect`]: std::iter::Iterator::collect
 /// [`Vec`]: std::vec::Vec
 #[macro_export]
-macro_rules! elements_are {
+#[doc(hidden)]
+macro_rules! __elements_are {
     ($($matcher:expr),* $(,)?) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::ElementsAre;
         ElementsAre::new(vec![$(Box::new($matcher)),*])

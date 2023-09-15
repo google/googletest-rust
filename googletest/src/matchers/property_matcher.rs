@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // There are no visible documentation elements in this module; the declarative
-// macro is documented at the top level.
+// macro is documented in the matcher module.
 #![doc(hidden)]
 
 /// Matches an object which, upon calling the given method on it with the given
@@ -96,13 +96,14 @@
 /// #    .unwrap();
 /// ```
 ///
-/// This macro is analogous to [`field`][crate::field], except that it extracts
-/// the datum to be matched from the given object by invoking a method rather
-/// than accessing a field.
+/// This macro is analogous to [`field`][crate::matchers::field], except that it
+/// extracts the datum to be matched from the given object by invoking a method
+/// rather than accessing a field.
 ///
 /// The list of arguments may optionally have a trailing comma.
 #[macro_export]
-macro_rules! property {
+#[doc(hidden)]
+macro_rules! __property {
     ($($t:tt)*) => { $crate::property_internal!($($t)*) }
 }
 
