@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // There are no visible documentation elements in this module; the declarative
-// macro is documented at the top level.
+// macro is documented in the matchers module.
 #![doc(hidden)]
 
 /// Matches a value according to a pattern of matchers.
@@ -91,7 +91,8 @@
 /// #     .unwrap();
 /// ```
 ///
-/// One can use the alias [`pat`][crate::pat] to make this less verbose:
+/// One can use the alias [`pat`][crate::matchers::pat] to make this less
+/// verbose:
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -246,7 +247,8 @@
 /// #    .unwrap();
 /// ```
 #[macro_export]
-macro_rules! matches_pattern {
+#[doc(hidden)]
+macro_rules! __matches_pattern {
     ($($t:tt)*) => { $crate::matches_pattern_internal!($($t)*) }
 }
 
@@ -587,13 +589,14 @@ macro_rules! matches_pattern_internal {
 
     ($first:tt $($rest:tt)*) => {{
         #[allow(unused)]
-        use $crate::{all, field, property};
+        use $crate::matchers::{all, field, property};
         $crate::matches_pattern_internal!([$first], $($rest)*)
     }};
 }
 
-/// An alias for [`matches_pattern`].
+/// An alias for [`matches_pattern`][crate::matchers::matches_pattern!].
 #[macro_export]
-macro_rules! pat {
+#[doc(hidden)]
+macro_rules! __pat {
     ($($t:tt)*) => { $crate::matches_pattern_internal!($($t)*) }
 }

@@ -49,11 +49,6 @@ pub mod prelude {
     pub use super::Result;
     // Assert macros
     pub use super::{assert_that, expect_pred, expect_that, fail, verify_pred, verify_that};
-    // Matcher macros
-    pub use super::{
-        all, any, contains_each, elements_are, field, is_contained_in, matches_pattern, pat,
-        pointwise, property, unordered_elements_are,
-    };
 }
 
 pub use googletest_macro::test;

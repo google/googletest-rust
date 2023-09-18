@@ -88,12 +88,13 @@ pub use str_matcher::{
 pub use subset_of_matcher::subset_of;
 pub use superset_of_matcher::superset_of;
 
-// Reexport of macros.
-// TODO Consider hiding the matchers macro from the top-level, by either
-// mangling or move them to the macro crate.
+// Reexport and unmangle the macros.
+#[doc(inline)]
 pub use crate::{
-    all, any, contains_each, elements_are, field, is_contained_in, matches_pattern, pat, pointwise,
-    property, unordered_elements_are,
+    __all as all, __any as any, __contains_each as contains_each, __elements_are as elements_are,
+    __field as field, __is_contained_in as is_contained_in, __matches_pattern as matches_pattern,
+    __pat as pat, __pointwise as pointwise, __property as property,
+    __unordered_elements_are as unordered_elements_are,
 };
 
 // Types and functions used by macros matchers.

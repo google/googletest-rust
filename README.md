@@ -30,6 +30,10 @@ version 1.66 for the best developer experience.
 
 > :warning: The API is not fully stable and may still be changed until we
 > publish version 1.0.
+>
+> Moreover, any items or modules starting with `__` (double underscores) must
+> not be used directly. Those items or modules are only for internal uses and
+> their API may change without a major version update.
 
 ## Assertions and matchers
 

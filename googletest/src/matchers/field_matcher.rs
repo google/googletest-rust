@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // There are no visible documentation elements in this module; the declarative
-// macro is documented at the top level.
+// macro is documented in the matchers module.
 #![doc(hidden)]
 
 /// Matches a structure or enum with a given field which is matched by a given
@@ -105,10 +105,11 @@
 /// # }
 /// ```
 ///
-/// See also the macro [`property`][crate::property] for an analogous mechanism
-/// to extract a datum by invoking a method.
+/// See also the macro [`property`][crate::matchers::property] for an analogous
+/// mechanism to extract a datum by invoking a method.
 #[macro_export]
-macro_rules! field {
+#[doc(hidden)]
+macro_rules! __field {
     ($($t:tt)*) => { $crate::field_internal!($($t)*) }
 }
 
