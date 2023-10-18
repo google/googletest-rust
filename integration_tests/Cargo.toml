@@ -19,7 +19,7 @@ description = "Integration tests for GoogleTest Rust"
 repository = "https://github.com/google/googletest-rust"
 license = "Apache-2.0"
 edition = "2021"
-rust-version = "1.59.0"
+rust-version = "1.61.0"
 authors = [
   "Bradford Hovinen <hovinen@google.com>",
   "Bastien Jacot-Guillarmod <bjacotg@google.com>",
