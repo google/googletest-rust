@@ -33,6 +33,7 @@ anyhow = "1"
 indoc = "2"
 rstest = "0.13.0"
 tokio = { version = "=1.29.1", features = ["time", "macros", "rt"] }
+async-executor = { version = "=1.5.1" }
 
 [[bin]]
 name = "integration_tests"
