@@ -22,7 +22,7 @@ repository = "https://github.com/google/googletest-rust"
 readme = "../README.md"
 license = "Apache-2.0"
 edition = "2021"
-rust-version = "1.59.0"
+rust-version = "1.66.0"
 authors = [
   "Bradford Hovinen <hovinen@google.com>",
   "Bastien Jacot-Guillarmod <bjacotg@google.com>",
@@ -33,9 +33,9 @@ authors = [
 [dependencies]
 googletest_macro = { path = "../googletest_macro", version = "0.10.0" }
 anyhow = { version = "1", optional = true }
-num-traits = "0.2.15"
+num-traits = "0.2.17"
 proptest = { version = "1.2.0", optional = true }
-regex = "1.6.0"
+regex = "1.7.3"
 rustversion = "1.0.14"
 
 [dev-dependencies]
