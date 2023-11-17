@@ -137,13 +137,18 @@ mod tests {
     }
 
     #[test]
-    fn should_output_second_failure_message_on_second_assertion_failure_with_expect_that()
-    -> Result<()> {
+    fn should_output_both_failure_messages_when_two_expect_that_assertions_fail() -> Result<()> {
         let output = run_external_process_in_tests_directory("two_expect_that_failures")?;
 
         verify_that!(
             output,
             contains_regex(indoc! {"
+                Value of: value
+                Expected: is equal to 3
+                Actual: 2,
+                  which isn't equal to 3
+                  at .*integration_tests/src/two_expect_that_failures.rs:[0-9]+:9
+
                 Value of: value
                 Expected: is equal to 4
                 Actual: 2,
