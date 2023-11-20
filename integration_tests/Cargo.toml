@@ -19,7 +19,7 @@ description = "Integration tests for GoogleTest Rust"
 repository = "https://github.com/google/googletest-rust"
 license = "Apache-2.0"
 edition = "2021"
-rust-version = "1.59.0"
+rust-version = "1.66.0"
 authors = [
   "Bradford Hovinen <hovinen@google.com>",
   "Bastien Jacot-Guillarmod <bjacotg@google.com>",
@@ -31,9 +31,8 @@ authors = [
 googletest = { path = "../googletest", version = "0.10.0", features = ["anyhow"] }
 anyhow = "1"
 indoc = "2"
-rstest = "0.13.0"
-tokio = { version = "=1.29.1", features = ["time", "macros", "rt"] }
-async-executor = { version = "=1.5.1" }
+rstest = "0.18"
+tokio = { version = "1.34", features = ["time", "macros", "rt"] }
 
 [[bin]]
 name = "integration_tests"
