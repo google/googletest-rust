@@ -174,7 +174,7 @@ impl TestAssertionFailure {
 
     pub(crate) fn log(&self) {
         TestOutcome::fail_current_test();
-        print!("{}", self);
+        println!("{}", self);
     }
 }
 
