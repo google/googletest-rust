@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::description::Description;
 use crate::matcher::{Matcher, MatcherResult};
 use crate::matcher_support::edit_distance;
 use crate::matcher_support::summarize_diff::create_diff;
@@ -89,14 +90,14 @@ impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher for EqMatcher<A, T> {
         (self.expected == *actual).into()
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
-            MatcherResult::Match => format!("is equal to {:?}", self.expected),
-            MatcherResult::NoMatch => format!("isn't equal to {:?}", self.expected),
+            MatcherResult::Match => format!("is equal to {:?}", self.expected).into(),
+            MatcherResult::NoMatch => format!("isn't equal to {:?}", self.expected).into(),
         }
     }
 
-    fn explain_match(&self, actual: &A) -> String {
+    fn explain_match(&self, actual: &A) -> Description {
         let expected_debug = format!("{:#?}", self.expected);
         let actual_debug = format!("{:#?}", actual);
         let description = self.describe(self.matches(actual));
@@ -117,7 +118,7 @@ impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher for EqMatcher<A, T> {
             create_diff(&actual_debug, &expected_debug, edit_distance::Mode::Exact)
         };
 
-        format!("which {description}{diff}")
+        format!("which {description}{diff}").into()
     }
 }
 

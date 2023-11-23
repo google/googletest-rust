@@ -92,7 +92,7 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: &ActualT) -> String {
+    fn explain_match(&self, actual: &ActualT) -> Description {
         let mut non_matching_elements = Vec::new();
         for (index, element) in actual.into_iter().enumerate() {
             if self.inner.matches(element).is_no_match() {
@@ -100,11 +100,12 @@ where
             }
         }
         if non_matching_elements.is_empty() {
-            return format!("whose each element {}", self.inner.describe(MatcherResult::Match));
+            return format!("whose each element {}", self.inner.describe(MatcherResult::Match))
+                .into();
         }
         if non_matching_elements.len() == 1 {
             let (idx, element, explanation) = non_matching_elements.remove(0);
-            return format!("whose element #{idx} is {element:?}, {explanation}");
+            return format!("whose element #{idx} is {element:?}, {explanation}").into();
         }
 
         let failed_indexes = non_matching_elements
@@ -117,16 +118,18 @@ where
             .map(|&(_, element, ref explanation)| format!("{element:?}, {explanation}"))
             .collect::<Description>()
             .indent();
-        format!("whose elements {failed_indexes} don't match\n{element_explanations}")
+        format!("whose elements {failed_indexes} don't match\n{element_explanations}").into()
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => {
                 format!("only contains elements that {}", self.inner.describe(MatcherResult::Match))
+                    .into()
             }
             MatcherResult::NoMatch => {
                 format!("contains no element that {}", self.inner.describe(MatcherResult::Match))
+                    .into()
             }
         }
     }

@@ -96,9 +96,9 @@ pub mod internal {
             MatcherResult::from(self.components.iter().any(|c| c.matches(actual).is_match()))
         }
 
-        fn explain_match(&self, actual: &Self::ActualT) -> String {
+        fn explain_match(&self, actual: &Self::ActualT) -> Description {
             match N {
-                0 => format!("which {}", anything::<T>().describe(MatcherResult::NoMatch)),
+                0 => format!("which {}", anything::<T>().describe(MatcherResult::NoMatch)).into(),
                 1 => self.components[0].explain_match(actual),
                 _ => {
                     let failures = self
@@ -108,15 +108,15 @@ pub mod internal {
                         .map(|component| component.explain_match(actual))
                         .collect::<Description>();
                     if failures.len() == 1 {
-                        format!("{}", failures)
+                        format!("{}", failures).into()
                     } else {
-                        format!("{}", failures.bullet_list().indent_except_first_line())
+                        format!("{}", failures.bullet_list().indent_except_first_line()).into()
                     }
                 }
             }
         }
 
-        fn describe(&self, matcher_result: MatcherResult) -> String {
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
             match N {
                 0 => anything::<T>().describe(matcher_result),
                 1 => self.components[0].describe(matcher_result),
@@ -136,6 +136,7 @@ pub mod internal {
                             "has none of the following properties"
                         }
                     )
+                    .into()
                 }
             }
         }

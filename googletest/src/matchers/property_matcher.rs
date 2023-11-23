@@ -134,7 +134,10 @@ macro_rules! property_internal {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::{
+        description::Description,
+        matcher::{Matcher, MatcherResult},
+    };
     use std::{fmt::Debug, marker::PhantomData};
 
     /// **For internal use only. API stablility is not guaranteed!**
@@ -167,15 +170,16 @@ pub mod internal {
             self.inner.matches(&(self.extractor)(actual))
         }
 
-        fn describe(&self, matcher_result: MatcherResult) -> String {
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
             format!(
                 "has property `{}`, which {}",
                 self.property_desc,
                 self.inner.describe(matcher_result)
             )
+            .into()
         }
 
-        fn explain_match(&self, actual: &OuterT) -> String {
+        fn explain_match(&self, actual: &OuterT) -> Description {
             let actual_inner = (self.extractor)(actual);
             format!(
                 "whose property `{}` is `{:#?}`, {}",
@@ -183,6 +187,7 @@ pub mod internal {
                 actual_inner,
                 self.inner.explain_match(&actual_inner)
             )
+            .into()
         }
     }
 
@@ -216,15 +221,16 @@ pub mod internal {
             self.inner.matches((self.extractor)(actual))
         }
 
-        fn describe(&self, matcher_result: MatcherResult) -> String {
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
             format!(
                 "has property `{}`, which {}",
                 self.property_desc,
                 self.inner.describe(matcher_result)
             )
+            .into()
         }
 
-        fn explain_match(&self, actual: &OuterT) -> String {
+        fn explain_match(&self, actual: &OuterT) -> Description {
             let actual_inner = (self.extractor)(actual);
             format!(
                 "whose property `{}` is `{:#?}`, {}",
@@ -232,6 +238,7 @@ pub mod internal {
                 actual_inner,
                 self.inner.explain_match(actual_inner)
             )
+            .into()
         }
     }
 }

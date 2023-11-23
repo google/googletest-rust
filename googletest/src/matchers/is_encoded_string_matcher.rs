@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a byte sequence which is a UTF-8 encoded string matched by `inner`.
@@ -72,23 +75,27 @@ where
             .unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => format!(
                 "is a UTF-8 encoded string which {}",
                 self.inner.describe(MatcherResult::Match)
-            ),
+            )
+            .into(),
             MatcherResult::NoMatch => format!(
                 "is not a UTF-8 encoded string which {}",
                 self.inner.describe(MatcherResult::Match)
-            ),
+            )
+            .into(),
         }
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> String {
+    fn explain_match(&self, actual: &Self::ActualT) -> Description {
         match String::from_utf8(actual.as_ref().to_vec()) {
-            Ok(s) => format!("which is a UTF-8 encoded string {}", self.inner.explain_match(&s)),
-            Err(e) => format!("which is not a UTF-8 encoded string: {e}"),
+            Ok(s) => {
+                format!("which is a UTF-8 encoded string {}", self.inner.explain_match(&s)).into()
+            }
+            Err(e) => format!("which is not a UTF-8 encoded string: {e}").into(),
         }
     }
 }

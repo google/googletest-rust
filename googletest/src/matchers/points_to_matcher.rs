@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::description::Description;
 use crate::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -59,11 +60,11 @@ where
         self.expected.matches(actual.deref())
     }
 
-    fn explain_match(&self, actual: &ActualT) -> String {
+    fn explain_match(&self, actual: &ActualT) -> Description {
         self.expected.explain_match(actual.deref())
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         self.expected.describe(matcher_result)
     }
 }

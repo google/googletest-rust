@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a `Result` containing `Err` with a value matched by `inner`.
@@ -56,24 +59,23 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<ActualT = E>> Matcher
         actual.as_ref().err().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> String {
+    fn explain_match(&self, actual: &Self::ActualT) -> Description {
         match actual {
-            Err(e) => format!("which is an error {}", self.inner.explain_match(e)),
-            Ok(_) => "which is a success".to_string(),
+            Err(e) => format!("which is an error {}", self.inner.explain_match(e)).into(),
+            Ok(_) => "which is a success".into(),
         }
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => {
-                format!("is an error which {}", self.inner.describe(MatcherResult::Match))
+                format!("is an error which {}", self.inner.describe(MatcherResult::Match)).into()
             }
-            MatcherResult::NoMatch => {
-                format!(
-                    "is a success or is an error containing a value which {}",
-                    self.inner.describe(MatcherResult::NoMatch)
-                )
-            }
+            MatcherResult::NoMatch => format!(
+                "is a success or is an error containing a value which {}",
+                self.inner.describe(MatcherResult::NoMatch)
+            )
+            .into(),
         }
     }
 }

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::description::Description;
 use crate::matcher::{Matcher, MatcherResult};
 use crate::matcher_support::count_elements::count_elements;
 use std::{fmt::Debug, marker::PhantomData};
@@ -70,26 +71,29 @@ where
         self.expected.matches(&count_elements(actual))
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => {
-                format!("has length, which {}", self.expected.describe(MatcherResult::Match))
+                format!("has length, which {}", self.expected.describe(MatcherResult::Match)).into()
             }
             MatcherResult::NoMatch => {
                 format!("has length, which {}", self.expected.describe(MatcherResult::NoMatch))
+                    .into()
             }
         }
     }
 
-    fn explain_match(&self, actual: &T) -> String {
+    fn explain_match(&self, actual: &T) -> Description {
         let actual_size = count_elements(actual);
         format!("which has length {}, {}", actual_size, self.expected.explain_match(&actual_size))
+            .into()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::len;
+    use crate::description::Description;
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
     use indoc::indoc;
@@ -182,11 +186,11 @@ mod tests {
                 false.into()
             }
 
-            fn describe(&self, _: MatcherResult) -> String {
+            fn describe(&self, _: MatcherResult) -> Description {
                 "called described".into()
             }
 
-            fn explain_match(&self, _: &T) -> String {
+            fn explain_match(&self, _: &T) -> Description {
                 "called explain_match".into()
             }
         }

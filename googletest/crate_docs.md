@@ -209,7 +209,7 @@ a struct holding the matcher's data and have it implement the trait
 [`Matcher`]:
 
 ```no_run
-use googletest::matcher::{Matcher, MatcherResult};
+use googletest::{description::Description, matcher::{Matcher, MatcherResult}};
 use std::fmt::Debug;
 
 struct MyEqMatcher<T> {
@@ -227,13 +227,13 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
         }
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => {
-                format!("is equal to {:?} the way I define it", self.expected)
+                format!("is equal to {:?} the way I define it", self.expected).into()
             }
             MatcherResult::NoMatch => {
-                format!("isn't equal to {:?} the way I define it", self.expected)
+                format!("isn't equal to {:?} the way I define it", self.expected).into()
             }
         }
     }
@@ -243,7 +243,7 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
  It is recommended to expose a function which constructs the matcher:
 
  ```no_run
- # use googletest::matcher::{Matcher, MatcherResult};
+ # use googletest::{description::Description, matcher::{Matcher, MatcherResult}};
  # use std::fmt::Debug;
  #
  # struct MyEqMatcher<T> {
@@ -261,13 +261,13 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
  #        }
  #    }
  #
- #    fn describe(&self, matcher_result: MatcherResult) -> String {
+ #    fn describe(&self, matcher_result: MatcherResult) -> Description {
  #        match matcher_result {
  #            MatcherResult::Match => {
- #                format!("is equal to {:?} the way I define it", self.expected)
+ #                format!("is equal to {:?} the way I define it", self.expected).into()
  #            }
  #            MatcherResult::NoMatch => {
- #                format!("isn't equal to {:?} the way I define it", self.expected)
+ #                format!("isn't equal to {:?} the way I define it", self.expected).into()
  #            }
  #        }
  #    }
@@ -282,7 +282,7 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 
 ```
 # use googletest::prelude::*;
-# use googletest::matcher::{Matcher, MatcherResult};
+# use googletest::{description::Description, matcher::{Matcher, MatcherResult}};
 # use std::fmt::Debug;
 #
 # struct MyEqMatcher<T> {
@@ -300,13 +300,13 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 #        }
 #    }
 #
-#    fn describe(&self, matcher_result: MatcherResult) -> String {
+#    fn describe(&self, matcher_result: MatcherResult) -> Description {
 #        match matcher_result {
 #            MatcherResult::Match => {
-#                format!("is equal to {:?} the way I define it", self.expected)
+#                format!("is equal to {:?} the way I define it", self.expected).into()
 #            }
 #            MatcherResult::NoMatch => {
-#                format!("isn't equal to {:?} the way I define it", self.expected)
+#                format!("isn't equal to {:?} the way I define it", self.expected).into()
 #            }
 #        }
 #    }

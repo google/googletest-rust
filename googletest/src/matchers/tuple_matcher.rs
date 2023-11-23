@@ -21,7 +21,10 @@
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::{
+        description::Description,
+        matcher::{Matcher, MatcherResult},
+    };
     use std::fmt::{Debug, Write};
 
     /// Replaces the first expression with the second at compile time.
@@ -47,7 +50,7 @@ pub mod internal {
             MatcherResult::Match
         }
 
-        fn describe(&self, matcher_result: MatcherResult) -> String {
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
             match matcher_result {
                 MatcherResult::Match => "is the empty tuple".into(),
                 MatcherResult::NoMatch => "is not the empty tuple".into(),
@@ -76,7 +79,7 @@ pub mod internal {
                     MatcherResult::Match
                 }
 
-                fn explain_match(&self, actual: &($($field_type,)*)) -> String {
+                fn explain_match(&self, actual: &($($field_type,)*)) -> Description {
                     let mut explanation = format!("which {}", self.describe(self.matches(actual)));
                     $(match self.$field_number.matches(&actual.$field_number) {
                         MatcherResult::Match => {},
@@ -89,10 +92,10 @@ pub mod internal {
                             ).unwrap();
                         }
                     })*
-                    (explanation)
+                    (explanation.into())
                 }
 
-                fn describe(&self, matcher_result: MatcherResult) -> String {
+                fn describe(&self, matcher_result: MatcherResult) -> Description {
                     match matcher_result {
                         MatcherResult::Match => {
                             format!(
@@ -101,7 +104,7 @@ pub mod internal {
                                     $(replace_expr!($field_number, "  {},\n")),*
                                 ),
                                 $(self.$field_number.describe(matcher_result)),*
-                            )
+                            ).into()
                         }
                         MatcherResult::NoMatch => {
                             format!(
@@ -110,7 +113,7 @@ pub mod internal {
                                     $(replace_expr!($field_number, "  {},\n")),*
                                 ),
                                 $(self.$field_number.describe(MatcherResult::Match)),*
-                            )
+                            ).into()
                         }
                     }
                 }

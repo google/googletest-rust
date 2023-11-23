@@ -41,22 +41,24 @@ use std::fmt::{Display, Formatter, Result};
 /// They can also be indented, enumerated and or
 /// bullet listed if [`Description::indent`], [`Description::enumerate`], or
 /// respectively [`Description::bullet_list`] has been called.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Description {
     elements: Vec<String>,
     indent_mode: IndentMode,
     list_style: ListStyle,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 enum IndentMode {
+    #[default]
     NoIndent,
     EveryLine,
     AllExceptFirstLine,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 enum ListStyle {
+    #[default]
     NoList,
     Bullet,
     Enumerate,
@@ -229,6 +231,9 @@ impl Display for Description {
                 writeln!(f)?;
                 write!(f, "{:other_line_indent$}{line}", "")?;
             }
+            if element.ends_with("\n") {
+                writeln!(f)?;
+            }
             first_line_indent = first_line_of_element_indent;
         }
         Ok(())
@@ -240,11 +245,22 @@ impl FromIterator<String> for Description {
     where
         T: IntoIterator<Item = String>,
     {
-        Self {
-            elements: iter.into_iter().collect(),
-            indent_mode: IndentMode::NoIndent,
-            list_style: ListStyle::NoList,
-        }
+        Self { elements: iter.into_iter().collect(), ..Default::default() }
+    }
+}
+
+impl FromIterator<Description> for Description {
+    fn from_iter<T>(iter: T) -> Self
+    where
+        T: IntoIterator<Item = Description>,
+    {
+        Self { elements: iter.into_iter().map(|s| format!("{s}")).collect(), ..Default::default() }
+    }
+}
+
+impl<T: Into<String>> From<T> for Description {
+    fn from(value: T) -> Self {
+        Self { elements: vec![value.into()], ..Default::default() }
     }
 }
 

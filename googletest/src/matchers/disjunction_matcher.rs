@@ -15,7 +15,10 @@
 // There are no visible documentation elements in this module.
 #![doc(hidden)]
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::fmt::Debug;
 
 /// Matcher created by [`Matcher::or`].
@@ -46,12 +49,13 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &M1::ActualT) -> String {
-        format!("{} and\n  {}", self.m1.explain_match(actual), self.m2.explain_match(actual))
+    fn explain_match(&self, actual: &M1::ActualT) -> Description {
+        format!("{} and\n  {}", self.m1.explain_match(actual), self.m2.explain_match(actual)).into()
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         format!("{}, or {}", self.m1.describe(matcher_result), self.m2.describe(matcher_result))
+            .into()
     }
 }
 

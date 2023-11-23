@@ -102,7 +102,7 @@ pub mod internal {
             MatcherResult::Match
         }
 
-        fn explain_match(&self, actual: &Self::ActualT) -> String {
+        fn explain_match(&self, actual: &Self::ActualT) -> Description {
             match N {
                 0 => anything::<T>().explain_match(actual),
                 1 => self.components[0].explain_match(actual),
@@ -114,15 +114,15 @@ pub mod internal {
                         .map(|component| component.explain_match(actual))
                         .collect::<Description>();
                     if failures.len() == 1 {
-                        format!("{}", failures)
+                        format!("{}", failures).into()
                     } else {
-                        format!("{}", failures.bullet_list().indent_except_first_line())
+                        format!("{}", failures.bullet_list().indent_except_first_line()).into()
                     }
                 }
             }
         }
 
-        fn describe(&self, matcher_result: MatcherResult) -> String {
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
             match N {
                 0 => anything::<T>().describe(matcher_result),
                 1 => self.components[0].describe(matcher_result),
@@ -142,6 +142,7 @@ pub mod internal {
                             "has at least one of the following properties"
                         }
                     )
+                    .into()
                 }
             }
         }

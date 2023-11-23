@@ -14,6 +14,7 @@
 
 //! The components required to implement matchers.
 
+use crate::description::Description;
 use crate::internal::source_location::SourceLocation;
 use crate::internal::test_outcome::TestAssertionFailure;
 use crate::matchers::__internal_unstable_do_not_depend_on_these::ConjunctionMatcher;
@@ -57,7 +58,7 @@ pub trait Matcher {
     /// [`some`][crate::matchers::some] implements `describe` as follows:
     ///
     /// ```ignore
-    /// fn describe(&self, matcher_result: MatcherResult) -> String {
+    /// fn describe(&self, matcher_result: MatcherResult) -> Description {
     ///     match matcher_result {
     ///         MatcherResult::Matches => {
     ///             format!("has a value which {}", self.inner.describe(MatcherResult::Matches))
@@ -75,7 +76,7 @@ pub trait Matcher {
     /// output of `explain_match` is always used adjectivally to describe the
     /// actual value, while `describe` is used in contexts where a relative
     /// clause would not make sense.
-    fn describe(&self, matcher_result: MatcherResult) -> String;
+    fn describe(&self, matcher_result: MatcherResult) -> Description;
 
     /// Prepares a [`String`] describing how the expected value
     /// encoded in this instance matches or does not match the given value
@@ -114,7 +115,7 @@ pub trait Matcher {
     /// inner matcher and appears as follows:
     ///
     /// ```ignore
-    /// fn explain_match(&self, actual: &Self::ActualT) -> String {
+    /// fn explain_match(&self, actual: &Self::ActualT) -> Description {
     ///     self.expected.explain_match(actual.deref())
     /// }
     /// ```
@@ -124,12 +125,12 @@ pub trait Matcher {
     /// inner matcher at a point where a relative clause would fit. For example:
     ///
     /// ```ignore
-    /// fn explain_match(&self, actual: &Self::ActualT) -> String {
+    /// fn explain_match(&self, actual: &Self::ActualT) -> Description {
     ///     format!("which points to a value {}", self.expected.explain_match(actual.deref()))
     /// }
     /// ```
-    fn explain_match(&self, actual: &Self::ActualT) -> String {
-        format!("which {}", self.describe(self.matches(actual)))
+    fn explain_match(&self, actual: &Self::ActualT) -> Description {
+        format!("which {}", self.describe(self.matches(actual))).into()
     }
 
     /// Constructs a matcher that matches both `self` and `right`.
@@ -240,7 +241,11 @@ pub enum MatcherResult {
 
 impl From<bool> for MatcherResult {
     fn from(b: bool) -> Self {
-        if b { MatcherResult::Match } else { MatcherResult::NoMatch }
+        if b {
+            MatcherResult::Match
+        } else {
+            MatcherResult::NoMatch
+        }
     }
 }
 

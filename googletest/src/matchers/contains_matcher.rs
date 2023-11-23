@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches an iterable type whose elements contain a value matched by `inner`.
@@ -101,33 +104,37 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> String {
+    fn explain_match(&self, actual: &Self::ActualT) -> Description {
         let count = self.count_matches(actual);
         match (count, &self.count) {
-            (_, Some(_)) => format!("which contains {} matching elements", count),
-            (0, None) => "which does not contain a matching element".to_string(),
-            (_, None) => "which contains a matching element".to_string(),
+            (_, Some(_)) => format!("which contains {} matching elements", count).into(),
+            (0, None) => "which does not contain a matching element".into(),
+            (_, None) => "which contains a matching element".into(),
         }
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match (matcher_result, &self.count) {
             (MatcherResult::Match, Some(count)) => format!(
                 "contains n elements which {}\n  where n {}",
                 self.inner.describe(MatcherResult::Match),
                 count.describe(MatcherResult::Match)
-            ),
+            )
+            .into(),
             (MatcherResult::NoMatch, Some(count)) => format!(
                 "doesn't contain n elements which {}\n  where n {}",
                 self.inner.describe(MatcherResult::Match),
                 count.describe(MatcherResult::Match)
-            ),
+            )
+            .into(),
             (MatcherResult::Match, None) => format!(
                 "contains at least one element which {}",
                 self.inner.describe(MatcherResult::Match)
-            ),
+            )
+            .into(),
             (MatcherResult::NoMatch, None) => {
                 format!("contains no element which {}", self.inner.describe(MatcherResult::Match))
+                    .into()
             }
         }
     }

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use crate::{
+    description::Description,
     matcher::{Matcher, MatcherResult},
     matcher_support::{
         edit_distance,
@@ -303,11 +304,11 @@ where
         self.configuration.do_strings_match(self.expected.deref(), actual.as_ref()).into()
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         self.configuration.describe(matcher_result, self.expected.deref())
     }
 
-    fn explain_match(&self, actual: &ActualT) -> String {
+    fn explain_match(&self, actual: &ActualT) -> Description {
         self.configuration.explain_match(self.expected.deref(), actual.as_ref())
     }
 }
@@ -467,7 +468,7 @@ impl Configuration {
     }
 
     // StrMatcher::describe redirects immediately to this function.
-    fn describe(&self, matcher_result: MatcherResult, expected: &str) -> String {
+    fn describe(&self, matcher_result: MatcherResult, expected: &str) -> Description {
         let mut addenda: Vec<Cow<'static, str>> = Vec::with_capacity(3);
         match (self.ignore_leading_whitespace, self.ignore_trailing_whitespace) {
             (true, true) => addenda.push("ignoring leading and trailing whitespace".into()),
@@ -502,14 +503,15 @@ impl Configuration {
                 MatcherResult::NoMatch => "does not end with",
             },
         };
-        format!("{match_mode_description} {expected:?}{extra}")
+        format!("{match_mode_description} {expected:?}{extra}").into()
     }
 
-    fn explain_match(&self, expected: &str, actual: &str) -> String {
+    fn explain_match(&self, expected: &str, actual: &str) -> Description {
         let default_explanation = format!(
             "which {}",
             self.describe(self.do_strings_match(expected, actual).into(), expected)
-        );
+        )
+        .into();
         if !expected.contains('\n') || !actual.contains('\n') {
             return default_explanation;
         }
@@ -549,7 +551,7 @@ impl Configuration {
             MatchMode::EndsWith => create_diff_reversed(actual, expected, self.mode.to_diff_mode()),
         };
 
-        format!("{default_explanation}\n{diff}")
+        format!("{default_explanation}\n{diff}").into()
     }
 
     fn ignoring_leading_whitespace(self) -> Self {
