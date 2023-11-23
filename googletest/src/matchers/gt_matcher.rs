@@ -175,14 +175,17 @@ mod tests {
 
     #[test]
     fn gt_describe_matches() -> Result<()> {
-        verify_that!(gt::<i32, i32>(232).describe(MatcherResult::Match), eq("is greater than 232"))
+        verify_that!(
+            gt::<i32, i32>(232).describe(MatcherResult::Match),
+            displays_as(eq("is greater than 232"))
+        )
     }
 
     #[test]
     fn gt_describe_does_not_match() -> Result<()> {
         verify_that!(
             gt::<i32, i32>(232).describe(MatcherResult::NoMatch),
-            eq("is less than or equal to 232")
+            displays_as(eq("is less than or equal to 232"))
         )
     }
 

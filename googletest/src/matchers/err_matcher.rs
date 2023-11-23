@@ -139,6 +139,9 @@ mod tests {
             phantom_t: Default::default(),
             phantom_e: Default::default(),
         };
-        verify_that!(matcher.describe(MatcherResult::Match), eq("is an error which is equal to 1"))
+        verify_that!(
+            matcher.describe(MatcherResult::Match),
+            displays_as(eq("is an error which is equal to 1"))
+        )
     }
 }

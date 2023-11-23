@@ -41,7 +41,7 @@ fn field_error_message_shows_field_name_and_inner_matcher() -> Result<()> {
 
     verify_that!(
         matcher.describe(MatcherResult::Match),
-        eq("has field `int`, which is equal to 31")
+        displays_as(eq("has field `int`, which is equal to 31"))
     )
 }
 

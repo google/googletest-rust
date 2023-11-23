@@ -144,7 +144,7 @@ mod tests {
         };
         verify_that!(
             matcher.describe(MatcherResult::Match),
-            eq("is a success containing a value, which is equal to 1")
+            displays_as(eq("is a success containing a value, which is equal to 1"))
         )
     }
 }

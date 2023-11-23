@@ -233,7 +233,7 @@ mod tests {
 
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
-            eq("contains at least one element which is equal to 1")
+            displays_as(eq("contains at least one element which is equal to 1"))
         )
     }
 
@@ -243,7 +243,7 @@ mod tests {
 
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
-            eq("contains n elements which is equal to 1\n  where n is equal to 2")
+            displays_as(eq("contains n elements which is equal to 1\n  where n is equal to 2"))
         )
     }
 

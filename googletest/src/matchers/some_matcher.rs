@@ -127,7 +127,7 @@ mod tests {
     fn some_describe_matches() -> Result<()> {
         verify_that!(
             some(eq(1)).describe(MatcherResult::Match),
-            eq("has a value which is equal to 1")
+            displays_as(eq("has a value which is equal to 1"))
         )
     }
 
@@ -135,7 +135,7 @@ mod tests {
     fn some_describe_does_not_match() -> Result<()> {
         verify_that!(
             some(eq(1)).describe(MatcherResult::NoMatch),
-            eq("is None or has a value which isn't equal to 1")
+            displays_as(eq("is None or has a value which isn't equal to 1"))
         )
     }
 

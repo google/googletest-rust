@@ -177,12 +177,12 @@ fn tuple_matcher_with_trailing_comma_matches_matching_12_tuple() -> Result<()> {
 fn tuple_matcher_1_has_correct_description_for_match() -> Result<()> {
     verify_that!(
         (eq(1),).describe(MatcherResult::Match),
-        eq(indoc!(
+        displays_as(eq(indoc!(
             "
             is a tuple whose values respectively match:
               is equal to 1,
             "
-        ))
+        )))
     )
 }
 
@@ -190,12 +190,12 @@ fn tuple_matcher_1_has_correct_description_for_match() -> Result<()> {
 fn tuple_matcher_1_has_correct_description_for_mismatch() -> Result<()> {
     verify_that!(
         (eq(1),).describe(MatcherResult::NoMatch),
-        eq(indoc!(
+        displays_as(eq(indoc!(
             "
             is a tuple whose values do not respectively match:
               is equal to 1,
             "
-        ))
+        )))
     )
 }
 
@@ -203,13 +203,13 @@ fn tuple_matcher_1_has_correct_description_for_mismatch() -> Result<()> {
 fn tuple_matcher_2_has_correct_description_for_match() -> Result<()> {
     verify_that!(
         (eq(1), eq(2)).describe(MatcherResult::Match),
-        eq(indoc!(
+        displays_as(eq(indoc!(
             "
             is a tuple whose values respectively match:
               is equal to 1,
               is equal to 2,
             "
-        ))
+        )))
     )
 }
 
@@ -217,13 +217,13 @@ fn tuple_matcher_2_has_correct_description_for_match() -> Result<()> {
 fn tuple_matcher_2_has_correct_description_for_mismatch() -> Result<()> {
     verify_that!(
         (eq(1), eq(2)).describe(MatcherResult::NoMatch),
-        eq(indoc!(
+        displays_as(eq(indoc!(
             "
             is a tuple whose values do not respectively match:
               is equal to 1,
               is equal to 2,
             "
-        ))
+        )))
     )
 }
 

@@ -142,7 +142,7 @@ mod tests {
 
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
-            eq("contains the regular expression \"\\n\"")
+            displays_as(eq("contains the regular expression \"\\n\""))
         )
     }
 }

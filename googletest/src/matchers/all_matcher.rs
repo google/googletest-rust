@@ -163,12 +163,12 @@ mod tests {
 
         verify_that!(
             matcher.describe(MatcherResult::Match),
-            eq(indoc!(
+            displays_as(eq(indoc!(
                 "
                 has all the following properties:
                   * starts with prefix \"A\"
                   * ends with suffix \"string\""
-            ))
+            )))
         )
     }
 
@@ -177,7 +177,10 @@ mod tests {
         let first_matcher = starts_with("A");
         let matcher: internal::AllMatcher<String, 1> = all!(first_matcher);
 
-        verify_that!(matcher.describe(MatcherResult::Match), eq("starts with prefix \"A\""))
+        verify_that!(
+            matcher.describe(MatcherResult::Match),
+            displays_as(eq("starts with prefix \"A\""))
+        )
     }
 
     #[test]

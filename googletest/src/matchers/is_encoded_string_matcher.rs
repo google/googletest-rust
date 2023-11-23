@@ -129,7 +129,7 @@ mod tests {
 
         verify_that!(
             matcher.describe(MatcherResult::Match),
-            eq("is a UTF-8 encoded string which is equal to \"A string\"")
+            displays_as(eq("is a UTF-8 encoded string which is equal to \"A string\""))
         )
     }
 
@@ -139,7 +139,7 @@ mod tests {
 
         verify_that!(
             matcher.describe(MatcherResult::NoMatch),
-            eq("is not a UTF-8 encoded string which is equal to \"A string\"")
+            displays_as(eq("is not a UTF-8 encoded string which is equal to \"A string\""))
         )
     }
 
@@ -149,7 +149,7 @@ mod tests {
 
         verify_that!(
             explanation,
-            eq("which is a UTF-8 encoded string which is equal to \"A string\"")
+            displays_as(eq("which is a UTF-8 encoded string which is equal to \"A string\""))
         )
     }
 
@@ -157,7 +157,7 @@ mod tests {
     fn has_correct_explanation_when_byte_array_is_not_utf8_encoded() -> Result<()> {
         let explanation = is_utf8_string(eq("A string")).explain_match(&&[192, 128, 0, 64]);
 
-        verify_that!(explanation, starts_with("which is not a UTF-8 encoded string: "))
+        verify_that!(explanation, displays_as(starts_with("which is not a UTF-8 encoded string: ")))
     }
 
     #[test]
@@ -167,7 +167,7 @@ mod tests {
 
         verify_that!(
             explanation,
-            eq("which is a UTF-8 encoded string which isn't equal to \"A string\"")
+            displays_as(eq("which is a UTF-8 encoded string which isn't equal to \"A string\""))
         )
     }
 }
