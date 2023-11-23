@@ -151,8 +151,8 @@ macro_rules! __pointwise {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
+    use crate::description::Description;
     use crate::matcher::{Matcher, MatcherResult};
-    use crate::matcher_support::description::Description;
     use crate::matcher_support::zipped_iterator::zip;
     use std::{fmt::Debug, marker::PhantomData};
 

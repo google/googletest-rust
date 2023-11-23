@@ -365,9 +365,9 @@ macro_rules! __is_contained_in {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
+    use crate::description::Description;
     use crate::matcher::{Matcher, MatcherResult};
     use crate::matcher_support::count_elements::count_elements;
-    use crate::matcher_support::description::Description;
     use std::collections::HashSet;
     use std::fmt::{Debug, Display};
     use std::marker::PhantomData;

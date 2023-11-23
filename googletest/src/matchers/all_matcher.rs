@@ -64,8 +64,8 @@ macro_rules! __all {
 /// For internal use only. API stablility is not guaranteed!
 #[doc(hidden)]
 pub mod internal {
+    use crate::description::Description;
     use crate::matcher::{Matcher, MatcherResult};
-    use crate::matcher_support::description::Description;
     use crate::matchers::anything;
     use std::fmt::Debug;
 

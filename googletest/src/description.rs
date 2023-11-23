@@ -83,7 +83,7 @@ impl Description {
     ///
     /// ```
     /// # use googletest::prelude::*;
-    /// # use googletest::matcher_support::description::Description;
+    /// # use googletest::description::Description;
     /// let description = std::iter::once("A B C\nD E F".to_string()).collect::<Description>();
     /// verify_that!(description.indent(), displays_as(eq("  A B C\n  D E F")))
     /// # .unwrap();
@@ -103,7 +103,7 @@ impl Description {
     ///
     /// ```
     /// # use googletest::prelude::*;
-    /// # use googletest::matcher_support::description::Description;
+    /// # use googletest::description::Description;
     /// let description = std::iter::once("A B C\nD E F".to_string()).collect::<Description>();
     /// verify_that!(description.indent_except_first_line(), displays_as(eq("A B C\n  D E F")))
     /// # .unwrap();
@@ -123,7 +123,7 @@ impl Description {
     ///
     /// ```
     /// # use googletest::prelude::*;
-    /// # use googletest::matcher_support::description::Description;
+    /// # use googletest::description::Description;
     /// let description = std::iter::once("A B C\nD E F".to_string()).collect::<Description>();
     /// verify_that!(description.bullet_list(), displays_as(eq("* A B C\n  D E F")))
     /// # .unwrap();
@@ -143,7 +143,7 @@ impl Description {
     ///
     /// ```
     /// # use googletest::prelude::*;
-    /// # use googletest::matcher_support::description::Description;
+    /// # use googletest::description::Description;
     /// let description = std::iter::once("A B C\nD E F".to_string()).collect::<Description>();
     /// verify_that!(description.enumerate(), displays_as(eq("0. A B C\n   D E F")))
     /// # .unwrap();

@@ -21,6 +21,7 @@ extern crate quickcheck;
 
 #[macro_use]
 pub mod assertions;
+pub mod description;
 pub mod internal;
 pub mod matcher;
 pub mod matcher_support;
