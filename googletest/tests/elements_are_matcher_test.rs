@@ -91,12 +91,12 @@ fn elements_are_produces_correct_failure_message_nested() -> Result<()> {
                        1. is equal to 3
                 Actual: [[0, 1], [1, 2]],
                   where:
-                  * element #0 is [0, 1], where:
-                      * element #0 is 0, which isn't equal to 1
-                      * element #1 is 1, which isn't equal to 2
-                  * element #1 is [1, 2], where:
-                      * element #0 is 1, which isn't equal to 2
-                      * element #1 is 2, which isn't equal to 3"
+                    * element #0 is [0, 1], where:
+                        * element #0 is 0, which isn't equal to 1
+                        * element #1 is 1, which isn't equal to 2
+                    * element #1 is [1, 2], where:
+                        * element #0 is 1, which isn't equal to 2
+                        * element #1 is 2, which isn't equal to 3"
         ))))
     )
 }

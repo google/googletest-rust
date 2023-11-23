@@ -170,7 +170,8 @@ mod tests {
                 Value of: Some(1)
                 Expected: has a value which is equal to 2
                 Actual: Some(1),
-                  which has a value which isn't equal to 2
+                  which has a value
+                    which isn't equal to 2
             "})
         );
         expect_that!(
@@ -179,7 +180,8 @@ mod tests {
                 Value of: value
                 Expected: is a success containing a value, which is equal to 2
                 Actual: Ok(1),
-                  which is a success which isn't equal to 2
+                  which is a success
+                    which isn't equal to 2
             "})
         );
         expect_that!(
@@ -188,7 +190,8 @@ mod tests {
                 Value of: value
                 Expected: is an error which is equal to 2
                 Actual: Err(1),
-                  which is an error which isn't equal to 2
+                  which is an error
+                    which isn't equal to 2
             "})
         );
         Ok(())

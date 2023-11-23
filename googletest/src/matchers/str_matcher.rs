@@ -1073,12 +1073,12 @@ mod tests {
             result,
             err(displays_as(contains_substring(
                 "
-Difference(-actual / +expected):
- <---- remaining lines omitted ---->
- Second line
-+Third lines
--Third line
- Fourth line"
+  Difference(-actual / +expected):
+   <---- remaining lines omitted ---->
+   Second line
+  +Third lines
+  -Third line
+   Fourth line"
             )))
         )
     }

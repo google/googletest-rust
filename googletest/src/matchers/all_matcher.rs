@@ -111,12 +111,18 @@ pub mod internal {
                         .components
                         .iter()
                         .filter(|component| component.matches(actual).is_no_match())
-                        .map(|component| component.explain_match(actual))
-                        .collect::<Description>();
+                        .collect::<Vec<_>>();
+
                     if failures.len() == 1 {
-                        format!("{}", failures).into()
+                        failures[0].explain_match(actual)
                     } else {
-                        format!("{}", failures.bullet_list().indent_except_first_line()).into()
+                        Description::new()
+                            .collect(
+                                failures
+                                    .into_iter()
+                                    .map(|component| component.explain_match(actual)),
+                            )
+                            .bullet_list()
                     }
                 }
             }
@@ -127,22 +133,16 @@ pub mod internal {
                 0 => anything::<T>().describe(matcher_result),
                 1 => self.components[0].describe(matcher_result),
                 _ => {
-                    let properties = self
-                        .components
-                        .iter()
-                        .map(|m| m.describe(matcher_result))
-                        .collect::<Description>()
-                        .bullet_list()
-                        .indent();
-                    format!(
-                        "{}:\n{properties}",
-                        if matcher_result.into() {
-                            "has all the following properties"
-                        } else {
-                            "has at least one of the following properties"
-                        }
+                    let header = if matcher_result.into() {
+                        "has all the following properties:"
+                    } else {
+                        "has at least one of the following properties:"
+                    };
+                    Description::new().text(header).nested(
+                        Description::new()
+                            .bullet_list()
+                            .collect(self.components.iter().map(|m| m.describe(matcher_result))),
                     )
-                    .into()
                 }
             }
         }

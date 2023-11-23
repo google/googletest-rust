@@ -105,12 +105,18 @@ pub mod internal {
                         .components
                         .iter()
                         .filter(|component| component.matches(actual).is_no_match())
-                        .map(|component| component.explain_match(actual))
-                        .collect::<Description>();
+                        .collect::<Vec<_>>();
+
                     if failures.len() == 1 {
-                        format!("{}", failures).into()
+                        failures[0].explain_match(actual)
                     } else {
-                        format!("{}", failures.bullet_list().indent_except_first_line()).into()
+                        Description::new()
+                            .collect(
+                                failures
+                                    .into_iter()
+                                    .map(|component| component.explain_match(actual)),
+                            )
+                            .bullet_list()
                     }
                 }
             }

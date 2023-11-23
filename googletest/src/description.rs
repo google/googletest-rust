@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt::{Display, Formatter, Result};
+use std::{
+    borrow::Cow,
+    fmt::{Display, Formatter, Result},
+};
+
+use crate::internal::description_renderer::{List, INDENTATION_SIZE};
 
 /// Helper structure to build better output of
 /// [`Matcher::describe`][crate::matcher::Matcher::describe] and
@@ -43,38 +48,40 @@ use std::fmt::{Display, Formatter, Result};
 /// respectively [`Description::bullet_list`] has been called.
 #[derive(Debug, Default)]
 pub struct Description {
-    elements: Vec<String>,
-    indent_mode: IndentMode,
-    list_style: ListStyle,
+    elements: List,
+    initial_indentation: usize,
 }
-
-#[derive(Debug, Default)]
-enum IndentMode {
-    #[default]
-    NoIndent,
-    EveryLine,
-    AllExceptFirstLine,
-}
-
-#[derive(Debug, Default)]
-enum ListStyle {
-    #[default]
-    NoList,
-    Bullet,
-    Enumerate,
-}
-
-struct IndentationSizes {
-    first_line_indent: usize,
-    first_line_of_element_indent: usize,
-    enumeration_padding: usize,
-    other_line_indent: usize,
-}
-
-/// Number of space used to indent lines when no alignement is required.
-const INDENTATION_SIZE: usize = 2;
 
 impl Description {
+    /// Returns a new empty [`Description`].
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    /// Appends a block of text to this instance.
+    ///
+    /// The block is indented uniformly when this instance is rendered.
+    pub fn text(mut self, text: impl Into<Cow<'static, str>>) -> Self {
+        self.elements.push_literal(text.into());
+        self
+    }
+
+    /// Appends a nested [`Description`] to this instance.
+    ///
+    /// The nested [`Description`] `inner` is indented uniformly at the next level of indentation
+    /// when this instance is rendered.
+    pub fn nested(mut self, inner: Description) -> Self {
+        self.elements.push_nested(inner.elements);
+        self
+    }
+
+    /// Appends all [`Description`] in the given sequence `inner` to this instance.
+    ///
+    /// Each element is treated as a nested [`Description`] in the sense of [`Self::nested`].
+    pub fn collect(self, inner: impl IntoIterator<Item = Description>) -> Self {
+        inner.into_iter().fold(self, |outer, inner| outer.nested(inner))
+    }
+
     /// Indents the lines in elements of this description.
     ///
     /// This operation will be performed lazily when [`self`] is displayed.
@@ -91,27 +98,7 @@ impl Description {
     /// # .unwrap();
     /// ```
     pub fn indent(self) -> Self {
-        Self { indent_mode: IndentMode::EveryLine, ..self }
-    }
-
-    /// Indents the lines in elements of this description except for the first
-    /// line.
-    ///
-    /// This is similar to [`Self::indent`] except that the first line is not
-    /// indented. This is useful when the first line has already been indented
-    /// in the output.
-    ///
-    /// For example:
-    ///
-    /// ```
-    /// # use googletest::prelude::*;
-    /// # use googletest::description::Description;
-    /// let description = std::iter::once("A B C\nD E F".to_string()).collect::<Description>();
-    /// verify_that!(description.indent_except_first_line(), displays_as(eq("A B C\n  D E F")))
-    /// # .unwrap();
-    /// ```
-    pub fn indent_except_first_line(self) -> Self {
-        Self { indent_mode: IndentMode::AllExceptFirstLine, ..self }
+        Self { initial_indentation: INDENTATION_SIZE, ..self }
     }
 
     /// Bullet lists the elements of [`self`].
@@ -131,7 +118,7 @@ impl Description {
     /// # .unwrap();
     /// ```
     pub fn bullet_list(self) -> Self {
-        Self { list_style: ListStyle::Bullet, ..self }
+        Self { elements: self.elements.bullet_list(), ..self }
     }
 
     /// Enumerates the elements of [`self`].
@@ -151,7 +138,7 @@ impl Description {
     /// # .unwrap();
     /// ```
     pub fn enumerate(self) -> Self {
-        Self { list_style: ListStyle::Enumerate, ..self }
+        Self { elements: self.elements.enumerate(), ..self }
     }
 
     /// Returns the length of elements.
@@ -163,80 +150,11 @@ impl Description {
     pub fn is_empty(&self) -> bool {
         self.elements.is_empty()
     }
-
-    fn indentation_sizes(&self) -> IndentationSizes {
-        let first_line_indent =
-            if matches!(self.indent_mode, IndentMode::EveryLine) { INDENTATION_SIZE } else { 0 };
-        let first_line_of_element_indent =
-            if !matches!(self.indent_mode, IndentMode::NoIndent) { INDENTATION_SIZE } else { 0 };
-        // Number of digit of the last index. For instance, an array of length 13 will
-        // have 12 as last index (we start at 0), which have a digit size of 2.
-        let enumeration_padding = if self.elements.len() > 1 {
-            ((self.elements.len() - 1) as f64).log10().floor() as usize + 1
-        } else {
-            // Avoid negative logarithm when there is only 0 or 1 element.
-            1
-        };
-
-        let other_line_indent = first_line_of_element_indent
-            + match self.list_style {
-                ListStyle::NoList => 0,
-                ListStyle::Bullet => "* ".len(),
-                ListStyle::Enumerate => enumeration_padding + ". ".len(),
-            };
-        IndentationSizes {
-            first_line_indent,
-            first_line_of_element_indent,
-            enumeration_padding,
-            other_line_indent,
-        }
-    }
 }
 
 impl Display for Description {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        let IndentationSizes {
-            mut first_line_indent,
-            first_line_of_element_indent,
-            enumeration_padding,
-            other_line_indent,
-        } = self.indentation_sizes();
-
-        let mut first = true;
-        for (idx, element) in self.elements.iter().enumerate() {
-            let mut lines = element.lines();
-            if let Some(line) = lines.next() {
-                if first {
-                    first = false;
-                } else {
-                    writeln!(f)?;
-                }
-                match self.list_style {
-                    ListStyle::NoList => {
-                        write!(f, "{:first_line_indent$}{line}", "")?;
-                    }
-                    ListStyle::Bullet => {
-                        write!(f, "{:first_line_indent$}* {line}", "")?;
-                    }
-                    ListStyle::Enumerate => {
-                        write!(
-                            f,
-                            "{:first_line_indent$}{:>enumeration_padding$}. {line}",
-                            "", idx,
-                        )?;
-                    }
-                }
-            }
-            for line in lines {
-                writeln!(f)?;
-                write!(f, "{:other_line_indent$}{line}", "")?;
-            }
-            if element.ends_with("\n") {
-                writeln!(f)?;
-            }
-            first_line_indent = first_line_of_element_indent;
-        }
-        Ok(())
+        self.elements.render(f, self.initial_indentation)
     }
 }
 
@@ -254,13 +172,15 @@ impl FromIterator<Description> for Description {
     where
         T: IntoIterator<Item = Description>,
     {
-        Self { elements: iter.into_iter().map(|s| format!("{s}")).collect(), ..Default::default() }
+        Self { elements: iter.into_iter().map(|s| s.elements).collect(), ..Default::default() }
     }
 }
 
 impl<T: Into<String>> From<T> for Description {
     fn from(value: T) -> Self {
-        Self { elements: vec![value.into()], ..Default::default() }
+        let mut elements = List::default();
+        elements.push_literal(value.into().into());
+        Self { elements, ..Default::default() }
     }
 }
 
@@ -271,124 +191,91 @@ mod tests {
     use indoc::indoc;
 
     #[test]
-    fn description_single_element() -> Result<()> {
-        let description = ["A B C".to_string()].into_iter().collect::<Description>();
+    fn renders_single_fragment() -> Result<()> {
+        let description: Description = "A B C".into();
         verify_that!(description, displays_as(eq("A B C")))
     }
 
     #[test]
-    fn description_two_elements() -> Result<()> {
+    fn renders_two_fragments() -> Result<()> {
         let description =
             ["A B C".to_string(), "D E F".to_string()].into_iter().collect::<Description>();
         verify_that!(description, displays_as(eq("A B C\nD E F")))
     }
 
     #[test]
-    fn description_indent_single_element() -> Result<()> {
-        let description = ["A B C".to_string()].into_iter().collect::<Description>().indent();
-        verify_that!(description, displays_as(eq("  A B C")))
+    fn nested_description_is_indented() -> Result<()> {
+        let description = Description::new()
+            .text("Header")
+            .nested(["A B C".to_string()].into_iter().collect::<Description>());
+        verify_that!(description, displays_as(eq("Header\n  A B C")))
     }
 
     #[test]
-    fn description_indent_two_elements() -> Result<()> {
-        let description = ["A B C".to_string(), "D E F".to_string()]
-            .into_iter()
-            .collect::<Description>()
-            .indent();
-        verify_that!(description, displays_as(eq("  A B C\n  D E F")))
+    fn nested_description_indents_two_elements() -> Result<()> {
+        let description = Description::new().text("Header").nested(
+            ["A B C".to_string(), "D E F".to_string()].into_iter().collect::<Description>(),
+        );
+        verify_that!(description, displays_as(eq("Header\n  A B C\n  D E F")))
     }
 
     #[test]
-    fn description_indent_two_elements_except_first_line() -> Result<()> {
-        let description = ["A B C".to_string(), "D E F".to_string()]
-            .into_iter()
-            .collect::<Description>()
-            .indent_except_first_line();
-        verify_that!(description, displays_as(eq("A B C\n  D E F")))
+    fn nested_description_indents_one_element_on_two_lines() -> Result<()> {
+        let description = Description::new().text("Header").nested("A B C\nD E F".into());
+        verify_that!(description, displays_as(eq("Header\n  A B C\n  D E F")))
     }
 
     #[test]
-    fn description_indent_single_element_two_lines() -> Result<()> {
-        let description =
-            ["A B C\nD E F".to_string()].into_iter().collect::<Description>().indent();
-        verify_that!(description, displays_as(eq("  A B C\n  D E F")))
-    }
-
-    #[test]
-    fn description_indent_single_element_two_lines_except_first_line() -> Result<()> {
-        let description = ["A B C\nD E F".to_string()]
-            .into_iter()
-            .collect::<Description>()
-            .indent_except_first_line();
-        verify_that!(description, displays_as(eq("A B C\n  D E F")))
-    }
-
-    #[test]
-    fn description_bullet_single_element() -> Result<()> {
-        let description = ["A B C".to_string()].into_iter().collect::<Description>().bullet_list();
+    fn single_fragment_renders_with_bullet_when_bullet_list_enabled() -> Result<()> {
+        let description = Description::new().text("A B C").bullet_list();
         verify_that!(description, displays_as(eq("* A B C")))
     }
 
     #[test]
-    fn description_bullet_two_elements() -> Result<()> {
-        let description = ["A B C".to_string(), "D E F".to_string()]
-            .into_iter()
-            .collect::<Description>()
-            .bullet_list();
+    fn single_nested_fragment_renders_with_bullet_when_bullet_list_enabled() -> Result<()> {
+        let description = Description::new().nested("A B C".into()).bullet_list();
+        verify_that!(description, displays_as(eq("* A B C")))
+    }
+
+    #[test]
+    fn two_fragments_render_with_bullet_when_bullet_list_enabled() -> Result<()> {
+        let description = Description::new().text("A B C").text("D E F").bullet_list();
         verify_that!(description, displays_as(eq("* A B C\n* D E F")))
     }
 
     #[test]
-    fn description_bullet_single_element_two_lines() -> Result<()> {
+    fn two_nested_fragments_render_with_bullet_when_bullet_list_enabled() -> Result<()> {
         let description =
-            ["A B C\nD E F".to_string()].into_iter().collect::<Description>().bullet_list();
+            Description::new().nested("A B C".into()).nested("D E F".into()).bullet_list();
+        verify_that!(description, displays_as(eq("* A B C\n* D E F")))
+    }
+
+    #[test]
+    fn single_fragment_with_more_than_one_line_renders_with_one_bullet() -> Result<()> {
+        let description = Description::new().text("A B C\nD E F").bullet_list();
         verify_that!(description, displays_as(eq("* A B C\n  D E F")))
     }
 
     #[test]
-    fn description_bullet_single_element_two_lines_indent_except_first_line() -> Result<()> {
-        let description = ["A B C\nD E F".to_string()]
-            .into_iter()
-            .collect::<Description>()
-            .bullet_list()
-            .indent_except_first_line();
-        verify_that!(description, displays_as(eq("* A B C\n    D E F")))
-    }
-
-    #[test]
-    fn description_bullet_two_elements_indent_except_first_line() -> Result<()> {
-        let description = ["A B C".to_string(), "D E F".to_string()]
-            .into_iter()
-            .collect::<Description>()
-            .bullet_list()
-            .indent_except_first_line();
-        verify_that!(description, displays_as(eq("* A B C\n  * D E F")))
-    }
-
-    #[test]
-    fn description_enumerate_single_element() -> Result<()> {
-        let description = ["A B C".to_string()].into_iter().collect::<Description>().enumerate();
+    fn single_fragment_renders_with_enumeration_when_enumerate_enabled() -> Result<()> {
+        let description = Description::new().text("A B C").enumerate();
         verify_that!(description, displays_as(eq("0. A B C")))
     }
 
     #[test]
-    fn description_enumerate_two_elements() -> Result<()> {
-        let description = ["A B C".to_string(), "D E F".to_string()]
-            .into_iter()
-            .collect::<Description>()
-            .enumerate();
+    fn two_fragments_render_with_enumeration_when_enumerate_enabled() -> Result<()> {
+        let description = Description::new().text("A B C").text("D E F").enumerate();
         verify_that!(description, displays_as(eq("0. A B C\n1. D E F")))
     }
 
     #[test]
-    fn description_enumerate_single_element_two_lines() -> Result<()> {
-        let description =
-            ["A B C\nD E F".to_string()].into_iter().collect::<Description>().enumerate();
+    fn single_fragment_with_two_lines_renders_with_one_enumeration_label() -> Result<()> {
+        let description = Description::new().text("A B C\nD E F").enumerate();
         verify_that!(description, displays_as(eq("0. A B C\n   D E F")))
     }
 
     #[test]
-    fn description_enumerate_correct_indentation_with_large_index() -> Result<()> {
+    fn multi_digit_enumeration_renders_with_correct_offset() -> Result<()> {
         let description = ["A B C\nD E F"; 11]
             .into_iter()
             .map(str::to_string)

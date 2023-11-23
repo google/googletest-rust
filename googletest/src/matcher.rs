@@ -223,10 +223,10 @@ pub(crate) fn create_assertion_failure<T: Debug + ?Sized>(
 Value of: {actual_expr}
 Expected: {}
 Actual: {actual_formatted},
-  {}
+{}
 {source_location}",
         matcher.describe(MatcherResult::Match),
-        matcher.explain_match(actual),
+        matcher.explain_match(actual).indent(),
     ))
 }
 

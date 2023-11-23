@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO: Remove this once this module is actually used.
-#![cfg(test)]
-
 use std::{
     borrow::Cow,
     fmt::{Result, Write},
@@ -132,6 +129,18 @@ impl List {
         self.render_with_prefix(f, indentation, "".into())
     }
 
+    /// Append a new [`Block`] containing `literal`.
+    ///
+    /// The input `literal` is split into lines so that each line will be indented correctly.
+    pub(crate) fn push_literal(&mut self, literal: Cow<'static, str>) {
+        self.0.push(literal.into());
+    }
+
+    /// Append a new [`Block`] containing `inner` as a nested [`List`].
+    pub(crate) fn push_nested(&mut self, inner: List) {
+        self.0.push(Block::Nested(inner));
+    }
+
     /// Render each [`Block`] of this instance preceded with a bullet "* ".
     pub(crate) fn bullet_list(self) -> Self {
         Self(self.0, Decoration::Bullet)
@@ -140,6 +149,16 @@ impl List {
     /// Render each [`Block`] of this instance preceded with its 0-based index.
     pub(crate) fn enumerate(self) -> Self {
         Self(self.0, Decoration::Enumerate)
+    }
+
+    /// Return the number of [`Block`] in this instance.
+    pub(crate) fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    /// Return `true` if there are no [`Block`] in this instance, `false` otherwise.
+    pub(crate) fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 
     fn render_with_prefix(

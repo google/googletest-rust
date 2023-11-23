@@ -61,9 +61,7 @@ fn admits_matchers_without_static_lifetime() -> Result<()> {
 fn mismatch_description_two_failed_matchers() -> Result<()> {
     verify_that!(
         all!(starts_with("One"), starts_with("Two")).explain_match("Three"),
-        displays_as(eq(
-            "* which does not start with \"One\"\n  * which does not start with \"Two\""
-        ))
+        displays_as(eq("* which does not start with \"One\"\n* which does not start with \"Two\""))
     )
 }
 

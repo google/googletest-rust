@@ -228,8 +228,8 @@ mod tests {
                 Expected: only contains elements that is greater than 1
                 Actual: [0, 1, 3],
                   whose elements #0, #1 don't match
-                  0, which is less than or equal to 1
-                  1, which is less than or equal to 1"
+                    0, which is less than or equal to 1
+                    1, which is less than or equal to 1"
             ))))
         )
     }

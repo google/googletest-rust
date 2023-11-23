@@ -51,20 +51,16 @@ where
 
     fn explain_match(&self, actual: &M1::ActualT) -> Description {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
-            (MatcherResult::Match, MatcherResult::Match) => format!(
-                "{} and\n  {}",
-                self.m1.explain_match(actual),
-                self.m2.explain_match(actual)
-            )
-            .into(),
+            (MatcherResult::Match, MatcherResult::Match) => Description::new()
+                .nested(self.m1.explain_match(actual))
+                .text("and")
+                .nested(self.m2.explain_match(actual)),
             (MatcherResult::NoMatch, MatcherResult::Match) => self.m1.explain_match(actual),
             (MatcherResult::Match, MatcherResult::NoMatch) => self.m2.explain_match(actual),
-            (MatcherResult::NoMatch, MatcherResult::NoMatch) => format!(
-                "{} and\n  {}",
-                self.m1.explain_match(actual),
-                self.m2.explain_match(actual)
-            )
-            .into(),
+            (MatcherResult::NoMatch, MatcherResult::NoMatch) => Description::new()
+                .nested(self.m1.explain_match(actual))
+                .text("and")
+                .nested(self.m2.explain_match(actual)),
         }
     }
 
@@ -126,8 +122,9 @@ mod tests {
                 Value of: 1
                 Expected: never matches, and never matches
                 Actual: 1,
-                  which is anything and
-                  which is anything
+                    which is anything
+                  and
+                    which is anything
                 "
             ))))
         )
