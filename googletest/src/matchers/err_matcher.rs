@@ -61,7 +61,9 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<ActualT = E>> Matcher
 
     fn explain_match(&self, actual: &Self::ActualT) -> Description {
         match actual {
-            Err(e) => format!("which is an error {}", self.inner.explain_match(e)).into(),
+            Err(e) => {
+                Description::new().text("which is an error").nested(self.inner.explain_match(e))
+            }
             Ok(_) => "which is a success".into(),
         }
     }
@@ -128,7 +130,8 @@ mod tests {
                     Value of: Err::<i32, i32>(1)
                     Expected: is an error which is equal to 2
                     Actual: Err(1),
-                      which is an error which isn't equal to 2
+                      which is an error
+                        which isn't equal to 2
                 "
             ))))
         )

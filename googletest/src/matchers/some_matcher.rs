@@ -56,7 +56,9 @@ impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for SomeMatcher<T, I
 
     fn explain_match(&self, actual: &Option<T>) -> Description {
         match (self.matches(actual), actual) {
-            (_, Some(t)) => format!("which has a value {}", self.inner.explain_match(t)).into(),
+            (_, Some(t)) => {
+                Description::new().text("which has a value").nested(self.inner.explain_match(t))
+            }
             (_, None) => "which is None".into(),
         }
     }
@@ -119,7 +121,8 @@ mod tests {
                     Value of: Some(2)
                     Expected: has a value which is equal to 1
                     Actual: Some(2),
-                      which has a value which isn't equal to 1
+                      which has a value
+                        which isn't equal to 1
                 "
             ))))
         )
@@ -150,7 +153,7 @@ mod tests {
     fn some_explain_match_with_some_success() -> Result<()> {
         verify_that!(
             some(eq(1)).explain_match(&Some(1)),
-            displays_as(eq("which has a value which is equal to 1"))
+            displays_as(eq("which has a value\n  which is equal to 1"))
         )
     }
 
@@ -158,7 +161,7 @@ mod tests {
     fn some_explain_match_with_some_fail() -> Result<()> {
         verify_that!(
             some(eq(1)).explain_match(&Some(2)),
-            displays_as(eq("which has a value which isn't equal to 1"))
+            displays_as(eq("which has a value\n  which isn't equal to 1"))
         )
     }
 }
