@@ -138,13 +138,13 @@ mod tests {
             "
             Actual: Strukt { int: 123, string: \"something\" },
               which isn't equal to Strukt { int: 321, string: \"someone\" }
-            Difference(-actual / +expected):
-             Strukt {
-            -    int: 123,
-            +    int: 321,
-            -    string: \"something\",
-            +    string: \"someone\",
-             }
+              Difference(-actual / +expected):
+               Strukt {
+              -    int: 123,
+              +    int: 321,
+              -    string: \"something\",
+              +    string: \"someone\",
+               }
             "})))
         )
     }

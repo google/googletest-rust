@@ -43,15 +43,19 @@ pub(crate) fn create_diff(
     }
     match edit_distance::edit_list(actual_debug.lines(), expected_debug.lines(), diff_mode) {
         edit_distance::Difference::Equal => "No difference found between debug strings.".into(),
-        edit_distance::Difference::Editable(edit_list) => format!(
+        edit_distance::Difference::Editable(edit_list) => indent(format!(
             "\nDifference({} / {}):{}",
             LineStyle::extra_actual_style().style("actual"),
             LineStyle::extra_expected_style().style("expected"),
             edit_list.into_iter().collect::<BufferedSummary>(),
-        )
+        ))
         .into(),
         edit_distance::Difference::Unrelated => "".into(),
     }
+}
+
+fn indent(string: impl AsRef<str>) -> String {
+    string.as_ref().lines().collect::<Vec<_>>().join("\n  ")
 }
 
 /// Returns a string describing how the expected and actual differ after
@@ -351,17 +355,14 @@ mod tests {
 
         verify_that!(
             create_diff(&build_text(1..50), &build_text(1..51), Mode::Exact),
-            eq(indoc! {
-                "
-
-                Difference(-actual / +expected):
-                 1
-                 2
-                 <---- 45 common lines omitted ---->
-                 48
-                 49
-                +50"
-            })
+            eq("
+  Difference(-actual / +expected):
+   1
+   2
+   <---- 45 common lines omitted ---->
+   48
+   49
+  +50")
         )
     }
 }

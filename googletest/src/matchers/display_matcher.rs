@@ -51,12 +51,10 @@ impl<T: Debug + Display, InnerMatcher: Matcher<ActualT = String>> Matcher
             MatcherResult::Match => {
                 format!("displays as a string which {}", self.inner.describe(MatcherResult::Match))
             }
-            MatcherResult::NoMatch => {
-                format!(
-                    "doesn't display as a string which {}",
-                    self.inner.describe(MatcherResult::Match)
-                )
-            }
+            MatcherResult::NoMatch => format!(
+                "doesn't display as a string which {}",
+                self.inner.describe(MatcherResult::Match)
+            ),
         }
     }
 }
@@ -107,6 +105,7 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc!(
                 "
+                  Actual: \"123\\n234\",
                     which displays as a string which isn't equal to \"123\\n345\"
                     Difference(-actual / +expected):
                      123

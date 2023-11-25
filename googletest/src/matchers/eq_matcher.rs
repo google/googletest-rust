@@ -178,13 +178,13 @@ mod tests {
             "
             Actual: Strukt { int: 123, string: \"something\" },
               which isn't equal to Strukt { int: 321, string: \"someone\" }
-            Difference(-actual / +expected):
-             Strukt {
-            -    int: 123,
-            +    int: 321,
-            -    string: \"something\",
-            +    string: \"someone\",
-             }
+              Difference(-actual / +expected):
+               Strukt {
+              -    int: 123,
+              +    int: 321,
+              -    string: \"something\",
+              +    string: \"someone\",
+               }
             "})))
         )
     }
@@ -200,13 +200,13 @@ mod tests {
             Expected: is equal to [1, 3, 4]
             Actual: [1, 2, 3],
               which isn't equal to [1, 3, 4]
-            Difference(-actual / +expected):
-             [
-                 1,
-            -    2,
-                 3,
-            +    4,
-             ]
+              Difference(-actual / +expected):
+               [
+                   1,
+              -    2,
+                   3,
+              +    4,
+               ]
             "})))
         )
     }
@@ -222,14 +222,14 @@ mod tests {
             Expected: is equal to [1, 3, 5]
             Actual: [1, 2, 3, 4, 5],
               which isn't equal to [1, 3, 5]
-            Difference(-actual / +expected):
-             [
-                 1,
-            -    2,
-                 3,
-            -    4,
-                 5,
-             ]
+              Difference(-actual / +expected):
+               [
+                   1,
+              -    2,
+                   3,
+              -    4,
+                   5,
+               ]
             "})))
         )
     }
@@ -241,18 +241,20 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc! {
             "
-            Difference(-actual / +expected):
-             [
-            -    1,
-            -    2,
-                 3,
-                 4,
-             <---- 43 common lines omitted ---->
-                 48,
-                 49,
-            +    50,
-            +    51,
-             ]"})))
+            ],
+              which isn't equal to [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51]
+              Difference(-actual / +expected):
+               [
+              -    1,
+              -    2,
+                   3,
+                   4,
+               <---- 43 common lines omitted ---->
+                   48,
+                   49,
+              +    50,
+              +    51,
+               ]"})))
         )
     }
 
@@ -263,18 +265,20 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc! {
             "
-            Difference(-actual / +expected):
-             [
-            -    1,
-            -    2,
-                 3,
-                 4,
-                 5,
-                 6,
-                 7,
-            +    8,
-            +    9,
-             ]"})))
+            Actual: [1, 2, 3, 4, 5, 6, 7],
+              which isn't equal to [3, 4, 5, 6, 7, 8, 9]
+              Difference(-actual / +expected):
+               [
+              -    1,
+              -    2,
+                   3,
+                   4,
+                   5,
+                   6,
+                   7,
+              +    8,
+              +    9,
+               ]"})))
         )
     }
 
@@ -285,15 +289,17 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc! {
             "
-            Difference(-actual / +expected):
-             [
-                 1,
-             <---- 46 common lines omitted ---->
-                 48,
-                 49,
-            +    50,
-            +    51,
-             ]"})))
+            ],
+              which isn't equal to [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51]
+              Difference(-actual / +expected):
+               [
+                   1,
+               <---- 46 common lines omitted ---->
+                   48,
+                   49,
+              +    50,
+              +    51,
+               ]"})))
         )
     }
 
@@ -304,15 +310,17 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc! {
             "
-            Difference(-actual / +expected):
-             [
-            -    1,
-            -    2,
-                 3,
-                 4,
-             <---- 46 common lines omitted ---->
-                 51,
-             ]"})))
+            ],
+              which isn't equal to [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51]
+              Difference(-actual / +expected):
+               [
+              -    1,
+              -    2,
+                   3,
+                   4,
+               <---- 46 common lines omitted ---->
+                   51,
+               ]"})))
         )
     }
 
@@ -354,14 +362,13 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(indoc!(
-                "
-                 First line
-                -Second line
-                +Second lines
-                 Third line
-                "
-            ))))
+            err(displays_as(contains_substring(
+                "\
+   First line
+  -Second line
+  +Second lines
+   Third line"
+            )))
         )
     }
 
