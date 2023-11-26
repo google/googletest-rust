@@ -49,7 +49,7 @@ pub fn is_utf8_string<'a, ActualT: AsRef<[u8]> + Debug + 'a, InnerMatcherT>(
     inner: InnerMatcherT,
 ) -> impl Matcher<ActualT = ActualT>
 where
-    InnerMatcherT: Matcher<ActualT = &'a str>,
+    InnerMatcherT: Matcher<ActualT = String>,
 {
     IsEncodedStringMatcher { inner, phantom: Default::default() }
 }
@@ -62,12 +62,12 @@ struct IsEncodedStringMatcher<ActualT, InnerMatcherT> {
 impl<'a, ActualT: AsRef<[u8]> + Debug + 'a, InnerMatcherT> Matcher
     for IsEncodedStringMatcher<ActualT, InnerMatcherT>
 where
-    InnerMatcherT: Matcher<ActualT = &'a str>,
+    InnerMatcherT: Matcher<ActualT = String>,
 {
     type ActualT = ActualT;
 
     fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
-        std::str::from_utf8(actual.as_ref())
+        String::from_utf8(actual.as_ref().to_vec())
             .map(|s| self.inner.matches(&s))
             .unwrap_or(MatcherResult::NoMatch)
     }
@@ -86,7 +86,7 @@ where
     }
 
     fn explain_match(&self, actual: &Self::ActualT) -> String {
-        match std::str::from_utf8(actual.as_ref()) {
+        match String::from_utf8(actual.as_ref().to_vec()) {
             Ok(s) => format!("which is a UTF-8 encoded string {}", self.inner.explain_match(&s)),
             Err(_) => "which is not a UTF-8 encoded string".into(),
         }
