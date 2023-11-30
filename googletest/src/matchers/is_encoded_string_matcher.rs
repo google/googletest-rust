@@ -95,6 +95,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::matcher::MatcherResult;
     use crate::prelude::*;
 
     #[test]
@@ -120,5 +121,53 @@ mod tests {
     #[test]
     fn does_not_match_non_utf_8_encoded_byte_sequence() -> Result<()> {
         verify_that!(&[192, 64, 255, 32], not(is_utf8_string(eq("A string"))))
+    }
+
+    #[test]
+    fn has_correct_description_in_matched_case() -> Result<()> {
+        let matcher = is_utf8_string::<&[u8], _>(eq("A string"));
+
+        verify_that!(
+            matcher.describe(MatcherResult::Match),
+            eq("is a UTF-8 encoded string which is equal to \"A string\"")
+        )
+    }
+
+    #[test]
+    fn has_correct_description_in_not_matched_case() -> Result<()> {
+        let matcher = is_utf8_string::<&[u8], _>(eq("A string"));
+
+        verify_that!(
+            matcher.describe(MatcherResult::NoMatch),
+            eq("is not a UTF-8 encoded string which is equal to \"A string\"")
+        )
+    }
+
+    #[test]
+    fn has_correct_explanation_in_matched_case() -> Result<()> {
+        let explanation = is_utf8_string(eq("A string")).explain_match(&"A string".as_bytes());
+
+        verify_that!(
+            explanation,
+            eq("which is a UTF-8 encoded string which is equal to \"A string\"")
+        )
+    }
+
+    #[test]
+    fn has_correct_explanation_when_byte_array_is_not_utf8_encoded() -> Result<()> {
+        let explanation = is_utf8_string(eq("A string")).explain_match(&&[192, 128, 0, 64]);
+
+        verify_that!(explanation, eq("which is not a UTF-8 encoded string"))
+    }
+
+    #[test]
+    fn has_correct_explanation_when_inner_matcher_does_not_match() -> Result<()> {
+        let explanation =
+            is_utf8_string(eq("A string")).explain_match(&"Another string".as_bytes());
+
+        verify_that!(
+            explanation,
+            eq("which is a UTF-8 encoded string which isn't equal to \"A string\"")
+        )
     }
 }
