@@ -19,7 +19,7 @@ use std::fmt::Debug;
 ///
 /// Increasing this limit increases the accuracy of [`edit_list`] while
 /// quadratically increasing its worst-case runtime.
-const MAX_DISTANCE: i32 = 25;
+const MAX_DISTANCE: i32 = 50;
 
 /// The difference between two inputs as produced by [`edit_list`].
 #[derive(Debug)]
@@ -533,7 +533,7 @@ mod tests {
 
     #[test]
     fn returns_unrelated_when_maximum_distance_exceeded() -> Result<()> {
-        let result = edit_list(0..=20, 20..40, Mode::Exact);
+        let result = edit_list(0..=50, 60..110, Mode::Exact);
         verify_that!(result, matches_pattern!(Difference::Unrelated))
     }
 
