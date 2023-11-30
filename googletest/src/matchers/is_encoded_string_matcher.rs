@@ -88,7 +88,7 @@ where
     fn explain_match(&self, actual: &Self::ActualT) -> String {
         match String::from_utf8(actual.as_ref().to_vec()) {
             Ok(s) => format!("which is a UTF-8 encoded string {}", self.inner.explain_match(&s)),
-            Err(_) => "which is not a UTF-8 encoded string".into(),
+            Err(e) => format!("which is not a UTF-8 encoded string: {e}"),
         }
     }
 }
@@ -157,7 +157,7 @@ mod tests {
     fn has_correct_explanation_when_byte_array_is_not_utf8_encoded() -> Result<()> {
         let explanation = is_utf8_string(eq("A string")).explain_match(&&[192, 128, 0, 64]);
 
-        verify_that!(explanation, eq("which is not a UTF-8 encoded string"))
+        verify_that!(explanation, starts_with("which is not a UTF-8 encoded string: "))
     }
 
     #[test]
