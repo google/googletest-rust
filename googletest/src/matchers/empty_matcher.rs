@@ -17,8 +17,8 @@ use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches an empty container.
 ///
-/// `T` can be any container such that `&T` implements `IntoIterator`. This
-/// includes common containers such as `Vec` and
+/// `T` can be any container such that `&T` implements `IntoIterator`. For
+/// instance, `T` can be a common container like `Vec` and
 /// [`HashSet`][std::collections::HashSet].
 ///
 /// ```

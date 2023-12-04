@@ -22,8 +22,8 @@ use std::{fmt::Debug, marker::PhantomData};
 /// comparison.
 ///
 /// `ActualT` and `ExpectedT` can each be any container a reference to which
-/// implements `IntoIterator`. This includes common containers such as `Vec`
-/// or arrays. They need not be the same container type.
+/// implements `IntoIterator`. For instance, `T` can be a common container like
+/// `Vec` or arrays. They need not be the same container type.
 ///
 /// ```
 /// # use googletest::prelude::*;
