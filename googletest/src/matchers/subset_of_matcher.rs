@@ -22,7 +22,8 @@ use std::{fmt::Debug, marker::PhantomData};
 /// comparison.
 ///
 /// `ActualT` and `ExpectedT` can each be any container a reference to which
-/// implements `IntoIterator`. They need not be the same container type.
+/// implements `IntoIterator`. This includes common containers such as `Vec`
+/// or arrays. They need not be the same container type.
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -30,6 +31,8 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # fn should_pass_1() -> Result<()> {
 /// let value = vec![1, 2, 3];
 /// verify_that!(value, subset_of([1, 2, 3, 4]))?;  // Passes
+/// let array_value = [1, 2, 3];
+/// verify_that!(array_value, subset_of([1, 2, 3, 4]))?;  // Passes
 /// #     Ok(())
 /// # }
 /// # fn should_fail() -> Result<()> {

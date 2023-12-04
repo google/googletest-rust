@@ -28,8 +28,9 @@
 /// #    .unwrap();
 /// ```
 ///
-/// The actual value must be a container implementing [`IntoIterator`]. This
-/// includes standard containers, slices (when dereferenced) and arrays.
+/// The actual value must be a container such as a `Vec`, an array, or a
+/// dereferenced slice. More precisely, a shared borrow of the actual value must
+/// implement [`IntoIterator`].
 ///
 /// ```
 /// # use googletest::prelude::*;

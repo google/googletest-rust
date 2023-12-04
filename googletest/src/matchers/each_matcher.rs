@@ -19,7 +19,8 @@ use std::{fmt::Debug, marker::PhantomData};
 /// Matches a container all of whose elements are matched by the matcher
 /// `inner`.
 ///
-/// `T` can be any container such that `&T` implements `IntoIterator`.
+/// `T` can be any container such that `&T` implements `IntoIterator`. This
+/// includes `Vec`, arrays, and (dereferenced) slices.
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -27,6 +28,10 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # fn should_pass_1() -> Result<()> {
 /// let value = vec![1, 2, 3];
 /// verify_that!(value, each(gt(0)))?;  // Passes
+/// let array_value = [1, 2, 3];
+/// verify_that!(array_value, each(gt(0)))?;  // Passes
+/// let slice_value = &[1, 2, 3];
+/// verify_that!(*slice_value, each(gt(0)))?;  // Passes
 /// #     Ok(())
 /// # }
 /// # fn should_fail() -> Result<()> {
