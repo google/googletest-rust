@@ -43,8 +43,9 @@
 /// # should_fail_3().unwrap_err();
 /// ```
 ///
-/// The actual value must be a container implementing [`IntoIterator`]. This
-/// includes standard containers, slices (when dereferenced) and arrays.
+/// The actual value must be a container such as a `Vec`, an array, or a
+/// dereferenced slice. More precisely, a shared borrow of the actual value must
+/// implement [`IntoIterator`].
 ///
 /// This can also match against [`HashMap`][std::collections::HashMap] and
 /// similar collections. The arguments are a sequence of pairs of matchers
@@ -181,8 +182,9 @@ macro_rules! __unordered_elements_are {
 /// # should_fail_3().unwrap_err();
 /// ```
 ///
-/// The actual value must be a container implementing [`IntoIterator`]. This
-/// includes standard containers, slices (when dereferenced) and arrays.
+/// The actual value must be a container such as a `Vec`, an array, or a
+/// dereferenced slice. More precisely, a shared borrow of the actual value must
+/// implement [`IntoIterator`].
 ///
 /// This can also match against [`HashMap`][std::collections::HashMap] and
 /// similar collections. The arguments are a sequence of pairs of matchers
@@ -287,8 +289,9 @@ macro_rules! __contains_each {
 /// # should_fail_3().unwrap_err();
 /// ```
 ///
-/// The actual value must be a container implementing [`IntoIterator`]. This
-/// includes standard containers, slices (when dereferenced) and arrays.
+/// The actual value must be a container such as a `Vec`, an array, or a
+/// dereferenced slice. More precisely, a shared borrow of the actual value must
+/// implement [`IntoIterator`].
 ///
 /// This can also match against [`HashMap`][std::collections::HashMap] and
 /// similar collections. The arguments are a sequence of pairs of matchers
