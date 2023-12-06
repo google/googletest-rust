@@ -36,4 +36,60 @@ mod tests {
         verify_that!(value, eq(3))
             .with_failure_message(|| "A custom error message from a closure".to_string())
     }
+
+    #[test]
+    fn should_include_failure_message_in_third_parameter_to_assert_that() {
+        let value = 2;
+        assert_that!(value, eq(3), "assert_that: A custom error message for value {value}");
+    }
+
+    #[test]
+    fn should_include_failure_message_in_third_parameter_with_format_arguments_to_assert_that() {
+        let value = 2;
+        assert_that!(
+            value,
+            eq(3),
+            "assert_that: A custom error message for incremented value {}",
+            value + 1
+        );
+    }
+
+    #[test]
+    fn should_accept_trailing_comma_after_format_arguments_in_assert_that() {
+        let value = 2;
+        assert_that!(
+            value,
+            eq(3),
+            "assert_that: A custom error message for twice incremented value {}",
+            value + 2,
+        );
+    }
+
+    #[googletest::test]
+    fn should_include_failure_message_in_third_parameter_to_expect_that() {
+        let value = 2;
+        expect_that!(value, eq(3), "expect_that: A custom error message for value {value}");
+    }
+
+    #[googletest::test]
+    fn should_include_failure_message_in_third_parameter_with_format_arguments_to_expect_that() {
+        let value = 2;
+        expect_that!(
+            value,
+            eq(3),
+            "expect_that: A custom error message for incremented value {}",
+            value + 1
+        );
+    }
+
+    #[googletest::test]
+    fn should_accept_trailing_comma_after_format_arguments_in_expect_that() {
+        let value = 2;
+        expect_that!(
+            value,
+            eq(3),
+            "expect_that: A custom error message for twice incremented value {}",
+            value + 2,
+        );
+    }
 }
