@@ -83,13 +83,14 @@ impl<T: Debug, M1: Matcher<T>, M2: Matcher<T>> Matcher<T> for ConjunctionMatcher
 
 #[cfg(test)]
 mod tests {
-    use super::AndMatcherExt;
     #[cfg(not(google3))]
     use crate::{field, matchers};
-    use crate::{verify_that, Result};
+    use crate::{verify_that, Result, matcher::Matcher, matchers::AndMatcherExt};
     #[cfg(google3)]
     use matchers::field;
-    use matchers::{anything, contains_substring, displays_as, eq, err, not};
+    use matchers::{
+        anything, contains_substring, displays_as, ends_with, eq, err, not, starts_with,
+    };
 
     #[test]
     fn and_true_true_matches() -> Result<()> {
@@ -148,5 +149,17 @@ mod tests {
             Struct { a: 1, b: 2, c: 3 },
             field!(Struct.a, eq(1)).and(field!(Struct.b, eq(2))).and(field!(Struct.c, eq(3)))
         )
+    }
+
+    fn chained_and_with_string_slice() -> Result<()> {
+        let actual = "what goes up must come down";
+
+        verify_that!(actual, starts_with("what goes up").and(ends_with("must come down")))
+    }
+
+    fn chained_and_with_owned_string() -> Result<()> {
+        let actual = "what goes up must come down".to_string();
+
+        verify_that!(actual, starts_with("what goes up").and(ends_with("must come down")))
     }
 }
