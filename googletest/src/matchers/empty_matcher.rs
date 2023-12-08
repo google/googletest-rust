@@ -47,7 +47,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # should_pass().unwrap();
 /// ```
 
-pub fn empty<T: Debug + ?Sized>() -> impl Matcher<ActualT = T>
+pub fn empty<T: Debug + ?Sized>() -> impl Matcher<T>
 where
     for<'a> &'a T: IntoIterator,
 {
@@ -58,13 +58,14 @@ struct EmptyMatcher<T: ?Sized> {
     phantom: PhantomData<T>,
 }
 
-impl<T: Debug + ?Sized> Matcher for EmptyMatcher<T>
+impl<T: Debug + ?Sized> Matcher<T> for EmptyMatcher<T>
 where
     for<'a> &'a T: IntoIterator,
 {
-    type ActualT = T;
-
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches<'a>(&self, actual: &'a T) -> MatcherResult
+    where
+        T: 'a,
+    {
         actual.into_iter().next().is_none().into()
     }
 

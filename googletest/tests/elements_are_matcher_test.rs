@@ -110,7 +110,7 @@ fn elements_are_explain_match_wrong_size() -> Result<()> {
     )
 }
 
-fn create_matcher() -> impl Matcher<ActualT = Vec<i32>> {
+fn create_matcher() -> impl Matcher<Vec<i32>> {
     elements_are![eq(1)]
 }
 

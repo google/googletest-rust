@@ -77,26 +77,30 @@ pub mod internal {
     /// For internal use only. API stablility is not guaranteed!
     #[doc(hidden)]
     pub struct AnyMatcher<'a, T: Debug + ?Sized, const N: usize> {
-        components: [Box<dyn Matcher<ActualT = T> + 'a>; N],
+        components: [Box<dyn Matcher<T> + 'a>; N],
     }
 
     impl<'a, T: Debug + ?Sized, const N: usize> AnyMatcher<'a, T, N> {
         /// Constructs an [`AnyMatcher`] with the given component matchers.
         ///
         /// Intended for use only by the [`all`] macro.
-        pub fn new(components: [Box<dyn Matcher<ActualT = T> + 'a>; N]) -> Self {
+        pub fn new(components: [Box<dyn Matcher<T> + 'a>; N]) -> Self {
             Self { components }
         }
     }
 
-    impl<'a, T: Debug + ?Sized, const N: usize> Matcher for AnyMatcher<'a, T, N> {
-        type ActualT = T;
-
-        fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    impl<'a, T: Debug + ?Sized, const N: usize> Matcher<T> for AnyMatcher<'a, T, N> {
+        fn matches<'b>(&self, actual: &'b T) -> MatcherResult
+        where
+            T: 'b,
+        {
             MatcherResult::from(self.components.iter().any(|c| c.matches(actual).is_match()))
         }
 
-        fn explain_match(&self, actual: &Self::ActualT) -> String {
+        fn explain_match<'b>(&self, actual: &'b T) -> String
+        where
+            T: 'b,
+        {
             match N {
                 0 => format!("which {}", anything::<T>().describe(MatcherResult::NoMatch)),
                 1 => self.components[0].explain_match(actual),

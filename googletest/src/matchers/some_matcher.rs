@@ -35,7 +35,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # should_fail_1().unwrap_err();
 /// # should_fail_2().unwrap_err();
 /// ```
-pub fn some<T: Debug>(inner: impl Matcher<ActualT = T>) -> impl Matcher<ActualT = Option<T>> {
+pub fn some<T: Debug>(inner: impl Matcher<T>) -> impl Matcher<Option<T>> {
     SomeMatcher { inner, phantom: Default::default() }
 }
 
@@ -44,14 +44,18 @@ struct SomeMatcher<T, InnerMatcherT> {
     phantom: PhantomData<T>,
 }
 
-impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for SomeMatcher<T, InnerMatcherT> {
-    type ActualT = Option<T>;
-
-    fn matches(&self, actual: &Option<T>) -> MatcherResult {
+impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<Option<T>> for SomeMatcher<T, InnerMatcherT> {
+    fn matches<'a>(&self, actual: &'a Option<T>) -> MatcherResult
+    where
+        Option<T>: 'a,
+    {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match(&self, actual: &Option<T>) -> String {
+    fn explain_match<'a>(&self, actual: &'a Option<T>) -> String
+    where
+        Option<T>: 'a,
+    {
         match (self.matches(actual), actual) {
             (_, Some(t)) => format!("which has a value {}", self.inner.explain_match(t)),
             (_, None) => "which is None".to_string(),

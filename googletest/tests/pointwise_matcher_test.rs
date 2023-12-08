@@ -127,8 +127,8 @@ fn pointwise_returns_mismatch_when_actual_value_does_not_match_on_second_item() 
 }
 
 #[test]
-fn pointwise_returns_mismatch_when_actual_value_does_not_match_on_first_and_second_items()
--> Result<()> {
+fn pointwise_returns_mismatch_when_actual_value_does_not_match_on_first_and_second_items(
+) -> Result<()> {
     let result = verify_that!(vec![1, 2, 3], pointwise!(eq, vec![2, 3, 3]));
 
     verify_that!(

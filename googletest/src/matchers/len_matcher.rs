@@ -48,7 +48,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn len<T: Debug + ?Sized, E: Matcher<ActualT = usize>>(expected: E) -> impl Matcher<ActualT = T>
+pub fn len<T: Debug + ?Sized, E: Matcher<usize>>(expected: E) -> impl Matcher<T>
 where
     for<'a> &'a T: IntoIterator,
 {
@@ -60,13 +60,14 @@ struct LenMatcher<T: ?Sized, E> {
     phantom: PhantomData<T>,
 }
 
-impl<T: Debug + ?Sized, E: Matcher<ActualT = usize>> Matcher for LenMatcher<T, E>
+impl<T: Debug + ?Sized, E: Matcher<usize>> Matcher<T> for LenMatcher<T, E>
 where
     for<'a> &'a T: IntoIterator,
 {
-    type ActualT = T;
-
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches<'a>(&self, actual: &'a T) -> MatcherResult
+    where
+        T: 'a,
+    {
         self.expected.matches(&count_elements(actual))
     }
 
@@ -81,7 +82,10 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &T) -> String {
+    fn explain_match<'a>(&self, actual: &'a T) -> String
+    where
+        T: 'a,
+    {
         let actual_size = count_elements(actual);
         format!("which has length {}, {}", actual_size, self.expected.explain_match(&actual_size))
     }
@@ -175,10 +179,11 @@ mod tests {
     #[test]
     fn len_matcher_explain_match() -> Result<()> {
         struct TestMatcher<T>(PhantomData<T>);
-        impl<T: Debug> Matcher for TestMatcher<T> {
-            type ActualT = T;
-
-            fn matches(&self, _: &T) -> MatcherResult {
+        impl<T: Debug> Matcher<T> for TestMatcher<T> {
+            fn matches<'a>(&self, _: &'a T) -> MatcherResult
+            where
+                T: 'a,
+            {
                 false.into()
             }
 
@@ -186,7 +191,10 @@ mod tests {
                 "called described".into()
             }
 
-            fn explain_match(&self, _: &T) -> String {
+            fn explain_match<'a>(&self, _: &'a T) -> String
+            where
+                T: 'a,
+            {
                 "called explain_match".into()
             }
         }

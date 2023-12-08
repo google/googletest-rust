@@ -30,9 +30,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # should_pass().unwrap();
 /// # should_fail().unwrap_err();
 /// ```
-pub fn not<T: Debug, InnerMatcherT: Matcher<ActualT = T>>(
-    inner: InnerMatcherT,
-) -> impl Matcher<ActualT = T> {
+pub fn not<T: Debug, InnerMatcherT: Matcher<T>>(inner: InnerMatcherT) -> impl Matcher<T> {
     NotMatcher::<T, _> { inner, phantom: Default::default() }
 }
 
@@ -41,17 +39,21 @@ struct NotMatcher<T, InnerMatcherT> {
     phantom: PhantomData<T>,
 }
 
-impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for NotMatcher<T, InnerMatcherT> {
-    type ActualT = T;
-
-    fn matches(&self, actual: &T) -> MatcherResult {
+impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<T> for NotMatcher<T, InnerMatcherT> {
+    fn matches<'a>(&self, actual: &'a T) -> MatcherResult
+    where
+        T: 'a,
+    {
         match self.inner.matches(actual) {
             MatcherResult::Match => MatcherResult::NoMatch,
             MatcherResult::NoMatch => MatcherResult::Match,
         }
     }
 
-    fn explain_match(&self, actual: &T) -> String {
+    fn explain_match<'a>(&self, actual: &'a T) -> String
+    where
+        T: 'a,
+    {
         self.inner.explain_match(actual)
     }
 

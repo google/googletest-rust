@@ -103,8 +103,8 @@ pub struct ContainerEqMatcher<ActualContainerT: ?Sized, ExpectedContainerT> {
     phantom: PhantomData<ActualContainerT>,
 }
 
-impl<ActualElementT, ActualContainerT, ExpectedElementT, ExpectedContainerT> Matcher
-    for ContainerEqMatcher<ActualContainerT, ExpectedContainerT>
+impl<ActualElementT, ActualContainerT, ExpectedElementT, ExpectedContainerT>
+    Matcher<ActualContainerT> for ContainerEqMatcher<ActualContainerT, ExpectedContainerT>
 where
     ActualElementT: PartialEq<ExpectedElementT> + Debug + ?Sized,
     ActualContainerT: PartialEq<ExpectedContainerT> + Debug + ?Sized,
@@ -113,13 +113,17 @@ where
     for<'a> &'a ActualContainerT: IntoIterator<Item = &'a ActualElementT>,
     for<'a> &'a ExpectedContainerT: IntoIterator<Item = &'a ExpectedElementT>,
 {
-    type ActualT = ActualContainerT;
-
-    fn matches(&self, actual: &ActualContainerT) -> MatcherResult {
+    fn matches<'a>(&self, actual: &'a ActualContainerT) -> MatcherResult
+    where
+        ActualContainerT: 'a,
+    {
         (*actual == self.expected).into()
     }
 
-    fn explain_match(&self, actual: &ActualContainerT) -> String {
+    fn explain_match<'a>(&self, actual: &'a ActualContainerT) -> String
+    where
+        ActualContainerT: 'a,
+    {
         build_explanation(self.get_missing_items(actual), self.get_unexpected_items(actual))
     }
 
@@ -270,15 +274,15 @@ mod tests {
     }
 
     #[test]
-    fn container_eq_matches_owned_vec_of_owned_strings_with_slice_of_string_references()
-    -> Result<()> {
+    fn container_eq_matches_owned_vec_of_owned_strings_with_slice_of_string_references(
+    ) -> Result<()> {
         let vector = vec!["A string".to_string(), "Another string".to_string()];
         verify_that!(vector, container_eq(["A string", "Another string"]))
     }
 
     #[test]
-    fn container_eq_matches_owned_vec_of_owned_strings_with_shorter_slice_of_string_references()
-    -> Result<()> {
+    fn container_eq_matches_owned_vec_of_owned_strings_with_shorter_slice_of_string_references(
+    ) -> Result<()> {
         let actual = vec!["A string".to_string(), "Another string".to_string()];
         let matcher = container_eq(["A string"]);
 

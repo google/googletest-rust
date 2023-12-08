@@ -271,10 +271,7 @@ pub trait StrMatcherConfigurator<ActualT: ?Sized, ExpectedT> {
     /// This is only meaningful when the matcher was constructed with
     /// [`contains_substring`]. This method will panic when it is used with any
     /// other matcher construction.
-    fn times(
-        self,
-        times: impl Matcher<ActualT = usize> + 'static,
-    ) -> StrMatcher<ActualT, ExpectedT>;
+    fn times(self, times: impl Matcher<usize> + 'static) -> StrMatcher<ActualT, ExpectedT>;
 }
 
 /// A matcher which matches equality or containment of a string-like value in a
@@ -292,14 +289,15 @@ pub struct StrMatcher<ActualT: ?Sized, ExpectedT> {
     phantom: PhantomData<ActualT>,
 }
 
-impl<ExpectedT, ActualT> Matcher for StrMatcher<ActualT, ExpectedT>
+impl<ExpectedT, ActualT> Matcher<ActualT> for StrMatcher<ActualT, ExpectedT>
 where
     ExpectedT: Deref<Target = str> + Debug,
     ActualT: AsRef<str> + Debug + ?Sized,
 {
-    type ActualT = ActualT;
-
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches<'a>(&self, actual: &'a ActualT) -> MatcherResult
+    where
+        ActualT: 'a,
+    {
         self.configuration.do_strings_match(self.expected.deref(), actual.as_ref()).into()
     }
 
@@ -307,7 +305,10 @@ where
         self.configuration.describe(matcher_result, self.expected.deref())
     }
 
-    fn explain_match(&self, actual: &ActualT) -> String {
+    fn explain_match<'a>(&self, actual: &'a ActualT) -> String
+    where
+        ActualT: 'a,
+    {
         self.configuration.explain_match(self.expected.deref(), actual.as_ref())
     }
 }
@@ -341,10 +342,7 @@ impl<ActualT: ?Sized, ExpectedT, MatcherT: Into<StrMatcher<ActualT, ExpectedT>>>
         StrMatcher { configuration: existing.configuration.ignoring_ascii_case(), ..existing }
     }
 
-    fn times(
-        self,
-        times: impl Matcher<ActualT = usize> + 'static,
-    ) -> StrMatcher<ActualT, ExpectedT> {
+    fn times(self, times: impl Matcher<usize> + 'static) -> StrMatcher<ActualT, ExpectedT> {
         let existing = self.into();
         if !matches!(existing.configuration.mode, MatchMode::Contains) {
             panic!("The times() configurator is only meaningful with contains_substring().");
@@ -386,7 +384,7 @@ struct Configuration {
     ignore_leading_whitespace: bool,
     ignore_trailing_whitespace: bool,
     case_policy: CasePolicy,
-    times: Option<Box<dyn Matcher<ActualT = usize>>>,
+    times: Option<Box<dyn Matcher<usize>>>,
 }
 
 #[derive(Clone)]
@@ -568,7 +566,7 @@ impl Configuration {
         Self { case_policy: CasePolicy::IgnoreAscii, ..self }
     }
 
-    fn times(self, times: impl Matcher<ActualT = usize> + 'static) -> Self {
+    fn times(self, times: impl Matcher<usize> + 'static) -> Self {
         Self { times: Some(Box::new(times)), ..self }
     }
 }
@@ -726,8 +724,8 @@ mod tests {
     }
 
     #[test]
-    fn matches_string_containing_expected_value_in_contains_mode_while_ignoring_ascii_case()
-    -> Result<()> {
+    fn matches_string_containing_expected_value_in_contains_mode_while_ignoring_ascii_case(
+    ) -> Result<()> {
         verify_that!("Some string", contains_substring("STR").ignoring_ascii_case())
     }
 
@@ -876,8 +874,8 @@ mod tests {
     }
 
     #[test]
-    fn describes_itself_for_matching_result_ignoring_ascii_case_and_leading_whitespace()
-    -> Result<()> {
+    fn describes_itself_for_matching_result_ignoring_ascii_case_and_leading_whitespace(
+    ) -> Result<()> {
         let matcher: StrMatcher<&str, _> = StrMatcher::with_default_config("A string")
             .ignoring_leading_whitespace()
             .ignoring_ascii_case();
@@ -1017,8 +1015,8 @@ mod tests {
     }
 
     #[test]
-    fn match_explanation_for_starts_with_includes_both_versions_of_differing_last_line()
-    -> Result<()> {
+    fn match_explanation_for_starts_with_includes_both_versions_of_differing_last_line(
+    ) -> Result<()> {
         let result = verify_that!(
             indoc!(
                 "
@@ -1121,8 +1119,8 @@ mod tests {
     }
 
     #[test]
-    fn match_explanation_for_contains_substring_shows_diff_when_first_and_last_line_are_incomplete()
-    -> Result<()> {
+    fn match_explanation_for_contains_substring_shows_diff_when_first_and_last_line_are_incomplete(
+    ) -> Result<()> {
         let result = verify_that!(
             indoc!(
                 "

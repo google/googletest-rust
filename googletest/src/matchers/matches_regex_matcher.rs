@@ -83,14 +83,15 @@ pub struct MatchesRegexMatcher<ActualT: ?Sized, PatternT: Deref<Target = str>> {
     phantom: PhantomData<ActualT>,
 }
 
-impl<PatternT, ActualT> Matcher for MatchesRegexMatcher<ActualT, PatternT>
+impl<PatternT, ActualT> Matcher<ActualT> for MatchesRegexMatcher<ActualT, PatternT>
 where
     PatternT: Deref<Target = str>,
     ActualT: AsRef<str> + Debug + ?Sized,
 {
-    type ActualT = ActualT;
-
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    fn matches<'a>(&self, actual: &'a ActualT) -> MatcherResult
+    where
+        ActualT: 'a,
+    {
         self.regex.is_match(actual.as_ref()).into()
     }
 

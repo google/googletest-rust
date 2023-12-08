@@ -63,10 +63,10 @@ use std::{fmt::Debug, marker::PhantomData};
 /// ```
 pub fn each<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT>(
     inner: MatcherT,
-) -> impl Matcher<ActualT = ActualT>
+) -> impl Matcher<ActualT>
 where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    MatcherT: Matcher<ActualT = ElementT>,
+    MatcherT: Matcher<ElementT>,
 {
     EachMatcher { inner, phantom: Default::default() }
 }
@@ -76,14 +76,16 @@ struct EachMatcher<ActualT: ?Sized, MatcherT> {
     phantom: PhantomData<ActualT>,
 }
 
-impl<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT> Matcher for EachMatcher<ActualT, MatcherT>
+impl<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT> Matcher<ActualT>
+    for EachMatcher<ActualT, MatcherT>
 where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    MatcherT: Matcher<ActualT = ElementT>,
+    MatcherT: Matcher<ElementT>,
 {
-    type ActualT = ActualT;
-
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches<'a>(&self, actual: &'a ActualT) -> MatcherResult
+    where
+        ActualT: 'a,
+    {
         for element in actual {
             if self.inner.matches(element).is_no_match() {
                 return MatcherResult::NoMatch;
@@ -92,7 +94,10 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: &ActualT) -> String {
+    fn explain_match<'a>(&self, actual: &'a ActualT) -> String
+    where
+        ActualT: 'a,
+    {
         let mut non_matching_elements = Vec::new();
         for (index, element) in actual.into_iter().enumerate() {
             if self.inner.matches(element).is_no_match() {

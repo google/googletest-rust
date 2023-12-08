@@ -33,20 +33,21 @@ impl<M1, M2> DisjunctionMatcher<M1, M2> {
     }
 }
 
-impl<M1: Matcher, M2: Matcher<ActualT = M1::ActualT>> Matcher for DisjunctionMatcher<M1, M2>
-where
-    M1::ActualT: Debug,
-{
-    type ActualT = M1::ActualT;
-
-    fn matches(&self, actual: &M1::ActualT) -> MatcherResult {
+impl<T: Debug + ?Sized, M1: Matcher<T>, M2: Matcher<T>> Matcher<T> for DisjunctionMatcher<M1, M2> {
+    fn matches<'a>(&self, actual: &'a T) -> MatcherResult
+    where
+        T: 'a,
+    {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::NoMatch, MatcherResult::NoMatch) => MatcherResult::NoMatch,
             _ => MatcherResult::Match,
         }
     }
 
-    fn explain_match(&self, actual: &M1::ActualT) -> String {
+    fn explain_match<'a>(&self, actual: &'a T) -> String
+    where
+        T: 'a,
+    {
         format!("{} and\n  {}", self.m1.explain_match(actual), self.m2.explain_match(actual))
     }
 
