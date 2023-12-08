@@ -19,33 +19,72 @@ use std::{
 
 use crate::internal::description_renderer::{List, INDENTATION_SIZE};
 
-/// Helper structure to build better output of
-/// [`Matcher::describe`][crate::matcher::Matcher::describe] and
-/// [`Matcher::explain_match`][crate::matcher::Matcher::explain_match]. This
-/// is especially useful with composed matchers and matchers over containers.
+/// A structured description, either of a (composed) matcher or of an
+/// assertion failure.
 ///
-/// It provides simple operations to lazily format lists of strings.
+/// One can compose blocks of text into a `Description`. Each one appears on a
+/// new line. For example:
 ///
-/// Usage:
-/// ```ignore
-/// let iter: impl Iterator<String> = ...
-/// format!("{}", iter.collect::<Description>().indent().bullet_list())
+/// ```
+/// # use googletest::prelude::*;
+/// # use googletest::description::Description;
+/// let description = Description::new()
+///     .text("A block")
+///     .text("Another block");
+/// verify_that!(description, displays_as(eq("A block\nAnother block")))
+/// # .unwrap();
 /// ```
 ///
-/// To construct a [`Description`], use `Iterator<Item=String>::collect()`.
-/// Each element of the collected iterator will be separated by a
-/// newline when displayed. The elements may be multi-line, but they will
-/// nevertheless be indented consistently.
+/// One can embed nested descriptions into a `Description`. The resulting
+/// nested description is then rendered with an additional level of
+/// indentation. For example:
 ///
-/// Note that a newline will only be added between each element, but not
-/// after the last element. This makes it simpler to keep
-/// [`Matcher::describe`][crate::matcher::Matcher::describe]
-/// and [`Matcher::explain_match`][crate::matcher::Matcher::explain_match]
-/// consistent with simpler [`Matchers`][crate::matcher::Matcher].
+/// ```
+/// # use googletest::prelude::*;
+/// # use googletest::description::Description;
+/// let inner_description = Description::new()
+///     .text("A block")
+///     .text("Another block");
+/// let outer_description = Description::new()
+///     .text("Header")
+///     .nested(inner_description);
+/// verify_that!(outer_description, displays_as(eq("\
+/// Header
+///   A block
+///   Another block")))
+/// # .unwrap();
+/// ```
 ///
-/// They can also be indented, enumerated and or
-/// bullet listed if [`Description::indent`], [`Description::enumerate`], or
-/// respectively [`Description::bullet_list`] has been called.
+/// One can also enumerate or bullet list the elements of a `Description`:
+///
+/// ```
+/// # use googletest::prelude::*;
+/// # use googletest::description::Description;
+/// let description = Description::new()
+///     .text("First item")
+///     .text("Second item")
+///     .bullet_list();
+/// verify_that!(description, displays_as(eq("\
+/// * First item
+/// * Second item")))
+/// # .unwrap();
+/// ```
+///
+/// One can construct a `Description` from a [`String`] or a string slice, an
+/// iterator thereof, or from an iterator over other `Description`s:
+///
+/// ```
+/// # use googletest::description::Description;
+/// let single_element_description: Description =
+///     "A single block description".into();
+/// let two_element_description: Description =
+///     ["First item", "Second item"].into_iter().collect();
+/// let two_element_description_from_strings: Description =
+///     ["First item".to_string(), "Second item".to_string()].into_iter().collect();
+/// ```
+///
+/// No newline is added after the last element during rendering. This makes it
+/// easier to support single-line matcher descriptions and match explanations.
 #[derive(Debug, Default)]
 pub struct Description {
     elements: List,
@@ -101,40 +140,48 @@ impl Description {
         Self { initial_indentation: INDENTATION_SIZE, ..self }
     }
 
-    /// Bullet lists the elements of [`self`].
+    /// Instructs this instance to render its elements as a bullet list.
     ///
-    /// This operation will be performed lazily when [`self`] is displayed.
-    ///
-    /// Note that this will only bullet list each element, not each line
-    /// in each element.
+    /// Each element (from either [`Description::text`] or
+    /// [`Description::nested`]) is rendered as a bullet point. If an element
+    /// contains multiple lines, the following lines are aligned with the first
+    /// one in the block.
     ///
     /// For instance:
     ///
     /// ```
     /// # use googletest::prelude::*;
     /// # use googletest::description::Description;
-    /// let description = std::iter::once("A B C\nD E F".to_string()).collect::<Description>();
-    /// verify_that!(description.bullet_list(), displays_as(eq("* A B C\n  D E F")))
+    /// let description = Description::new()
+    ///     .text("First line\nsecond line")
+    ///     .bullet_list();
+    /// verify_that!(description, displays_as(eq("\
+    /// * First line
+    ///   second line")))
     /// # .unwrap();
     /// ```
     pub fn bullet_list(self) -> Self {
         Self { elements: self.elements.bullet_list(), ..self }
     }
 
-    /// Enumerates the elements of [`self`].
+    /// Instructs this instance to render its elements as an enumerated list.
     ///
-    /// This operation will be performed lazily when [`self`] is displayed.
-    ///
-    /// Note that this will only enumerate each element, not each line in
-    /// each element.
+    /// Each element (from either [`Description::text`] or
+    /// [`Description::nested`]) is rendered with its zero-based index. If an
+    /// element contains multiple lines, the following lines are aligned with
+    /// the first one in the block.
     ///
     /// For instance:
     ///
     /// ```
     /// # use googletest::prelude::*;
     /// # use googletest::description::Description;
-    /// let description = std::iter::once("A B C\nD E F".to_string()).collect::<Description>();
-    /// verify_that!(description.enumerate(), displays_as(eq("0. A B C\n   D E F")))
+    /// let description = Description::new()
+    ///     .text("First line\nsecond line")
+    ///     .enumerate();
+    /// verify_that!(description, displays_as(eq("\
+    /// 0. First line
+    ///    second line")))
     /// # .unwrap();
     /// ```
     pub fn enumerate(self) -> Self {
@@ -158,12 +205,12 @@ impl Display for Description {
     }
 }
 
-impl FromIterator<String> for Description {
+impl<ElementT: Into<Cow<'static, str>>> FromIterator<ElementT> for Description {
     fn from_iter<T>(iter: T) -> Self
     where
-        T: IntoIterator<Item = String>,
+        T: IntoIterator<Item = ElementT>,
     {
-        Self { elements: iter.into_iter().collect(), ..Default::default() }
+        Self { elements: iter.into_iter().map(ElementT::into).collect(), ..Default::default() }
     }
 }
 
@@ -176,7 +223,7 @@ impl FromIterator<Description> for Description {
     }
 }
 
-impl<T: Into<String>> From<T> for Description {
+impl<T: Into<Cow<'static, str>>> From<T> for Description {
     fn from(value: T) -> Self {
         let mut elements = List::default();
         elements.push_literal(value.into().into());

@@ -61,8 +61,10 @@ pub trait Matcher {
     /// fn describe(&self, matcher_result: MatcherResult) -> Description {
     ///     match matcher_result {
     ///         MatcherResult::Matches => {
-    ///             format!("has a value which {}", self.inner.describe(MatcherResult::Matches))
-    ///               //  Inner matcher invocation: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ///             Description::new()
+    ///                 .text("has a value which")
+    ///                 .nested(self.inner.describe(MatcherResult::Matches))
+    ///       // Inner matcher: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///         }
     ///         MatcherResult::DoesNotMatch => {...} // Similar to the above
     ///     }
@@ -126,7 +128,9 @@ pub trait Matcher {
     ///
     /// ```ignore
     /// fn explain_match(&self, actual: &Self::ActualT) -> Description {
-    ///     format!("which points to a value {}", self.expected.explain_match(actual.deref()))
+    ///     Description::new()
+    ///         .text("which points to a value")
+    ///         .nested(self.expected.explain_match(actual.deref()))
     /// }
     /// ```
     fn explain_match(&self, actual: &Self::ActualT) -> Description {

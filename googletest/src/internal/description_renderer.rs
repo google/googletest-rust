@@ -226,12 +226,12 @@ impl FromIterator<Block> for List {
     }
 }
 
-impl FromIterator<String> for List {
+impl<ElementT: Into<Cow<'static, str>>> FromIterator<ElementT> for List {
     fn from_iter<T>(iter: T) -> Self
     where
-        T: IntoIterator<Item = String>,
+        T: IntoIterator<Item = ElementT>,
     {
-        Self(iter.into_iter().map(|b| b.into()).collect(), Decoration::None)
+        Self(iter.into_iter().map(|b| b.into().into()).collect(), Decoration::None)
     }
 }
 

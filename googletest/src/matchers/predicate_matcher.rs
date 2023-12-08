@@ -100,13 +100,13 @@ pub trait PredicateDescription {
 
 impl PredicateDescription for &str {
     fn to_description(&self) -> Description {
-        (*self).into()
+        self.to_string().into()
     }
 }
 
 impl PredicateDescription for String {
     fn to_description(&self) -> Description {
-        self.into()
+        self.to_string().into()
     }
 }
 
