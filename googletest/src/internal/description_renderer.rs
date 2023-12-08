@@ -20,87 +20,6 @@ use std::{
 /// Number of space used to indent lines when no alignement is required.
 pub(crate) const INDENTATION_SIZE: usize = 2;
 
-/// A string representing one line of a description or match explanation.
-#[derive(Debug)]
-struct Fragment(Cow<'static, str>);
-
-impl Fragment {
-    fn render(&self, f: &mut dyn Write) -> Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-/// A sequence of [`Fragment`] or a nested [`List`].
-///
-/// This may be rendered with a prefix specified by the [`Decoration`] of the containing [`List`].
-/// In this case, all lines are indented to align with the first character of the first line of the
-/// block.
-#[derive(Debug)]
-enum Block {
-    /// A block of text.
-    ///
-    /// Each constituent [`Fragment`] contains one line of text. The lines are indented
-    /// uniformly to the current indentation of this block when rendered.
-    Literal(Vec<Fragment>),
-
-    /// A nested [`List`].
-    ///
-    /// The [`List`] is rendered recursively at the next level of indentation.
-    Nested(List),
-}
-
-impl Block {
-    fn nested(inner: List) -> Self {
-        Self::Nested(inner)
-    }
-
-    fn render(&self, f: &mut dyn Write, indentation: usize, prefix: Cow<'static, str>) -> Result {
-        match self {
-            Self::Literal(fragments) => {
-                if fragments.is_empty() {
-                    return Ok(());
-                }
-
-                write!(f, "{:indentation$}{prefix}", "")?;
-                fragments[0].render(f)?;
-                let block_indentation = indentation + prefix.as_ref().len();
-                for fragment in &fragments[1..] {
-                    writeln!(f)?;
-                    write!(f, "{:block_indentation$}", "")?;
-                    fragment.render(f)?;
-                }
-                Ok(())
-            }
-            Self::Nested(inner) => inner.render_with_prefix(
-                f,
-                indentation + INDENTATION_SIZE.saturating_sub(prefix.len()),
-                prefix,
-            ),
-        }
-    }
-}
-
-impl From<String> for Block {
-    fn from(value: String) -> Self {
-        Block::Literal(value.lines().map(|v| Fragment(v.to_string().into())).collect())
-    }
-}
-
-impl From<&'static str> for Block {
-    fn from(value: &'static str) -> Self {
-        Block::Literal(value.lines().map(|v| Fragment(v.into())).collect())
-    }
-}
-
-impl From<Cow<'static, str>> for Block {
-    fn from(value: Cow<'static, str>) -> Self {
-        match value {
-            Cow::Borrowed(value) => value.into(),
-            Cow::Owned(value) => value.into(),
-        }
-    }
-}
-
 /// A list of [`Block`] possibly rendered with a [`Decoration`].
 ///
 /// This is the top-level renderable component, corresponding to the description or match
@@ -241,6 +160,87 @@ impl FromIterator<List> for List {
         T: IntoIterator<Item = List>,
     {
         Self(iter.into_iter().map(Block::nested).collect(), Decoration::None)
+    }
+}
+
+/// A sequence of [`Fragment`] or a nested [`List`].
+///
+/// This may be rendered with a prefix specified by the [`Decoration`] of the containing [`List`].
+/// In this case, all lines are indented to align with the first character of the first line of the
+/// block.
+#[derive(Debug)]
+enum Block {
+    /// A block of text.
+    ///
+    /// Each constituent [`Fragment`] contains one line of text. The lines are indented
+    /// uniformly to the current indentation of this block when rendered.
+    Literal(Vec<Fragment>),
+
+    /// A nested [`List`].
+    ///
+    /// The [`List`] is rendered recursively at the next level of indentation.
+    Nested(List),
+}
+
+impl Block {
+    fn nested(inner: List) -> Self {
+        Self::Nested(inner)
+    }
+
+    fn render(&self, f: &mut dyn Write, indentation: usize, prefix: Cow<'static, str>) -> Result {
+        match self {
+            Self::Literal(fragments) => {
+                if fragments.is_empty() {
+                    return Ok(());
+                }
+
+                write!(f, "{:indentation$}{prefix}", "")?;
+                fragments[0].render(f)?;
+                let block_indentation = indentation + prefix.as_ref().len();
+                for fragment in &fragments[1..] {
+                    writeln!(f)?;
+                    write!(f, "{:block_indentation$}", "")?;
+                    fragment.render(f)?;
+                }
+                Ok(())
+            }
+            Self::Nested(inner) => inner.render_with_prefix(
+                f,
+                indentation + INDENTATION_SIZE.saturating_sub(prefix.len()),
+                prefix,
+            ),
+        }
+    }
+}
+
+impl From<String> for Block {
+    fn from(value: String) -> Self {
+        Block::Literal(value.lines().map(|v| Fragment(v.to_string().into())).collect())
+    }
+}
+
+impl From<&'static str> for Block {
+    fn from(value: &'static str) -> Self {
+        Block::Literal(value.lines().map(|v| Fragment(v.into())).collect())
+    }
+}
+
+impl From<Cow<'static, str>> for Block {
+    fn from(value: Cow<'static, str>) -> Self {
+        match value {
+            Cow::Borrowed(value) => value.into(),
+            Cow::Owned(value) => value.into(),
+        }
+    }
+}
+
+/// A string representing one line of a description or match explanation.
+#[derive(Debug)]
+struct Fragment(Cow<'static, str>);
+
+impl Fragment {
+    fn render(&self, f: &mut dyn Write) -> Result {
+        write!(f, "{}", self.0)
     }
 }
 
