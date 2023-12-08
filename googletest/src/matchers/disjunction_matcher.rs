@@ -33,7 +33,7 @@ impl<M1, M2> DisjunctionMatcher<M1, M2> {
     }
 }
 
-impl<M1: Matcher, M2: Matcher<ActualT = M1::ActualT>> Matcher for DisjunctionMatcher<M1, M2>
+impl<'a, M1: Matcher<'a>, M2: Matcher<'a, ActualT = M1::ActualT>> Matcher<'a> for DisjunctionMatcher<M1, M2>
 where
     M1::ActualT: Debug,
 {

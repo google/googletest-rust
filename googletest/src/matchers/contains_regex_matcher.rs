@@ -51,9 +51,9 @@ use std::ops::Deref;
 // compiler treats it as a Matcher<str> only and the code
 //   verify_that!("Some value".to_string(), contains_regex(".*value"))?;
 // doesn't compile.
-pub fn contains_regex<ActualT: ?Sized, PatternT: Deref<Target = str>>(
+pub fn contains_regex<'a, ActualT: ?Sized, PatternT: Deref<Target = str>>(
     pattern: PatternT,
-) -> ContainsRegexMatcher<ActualT> {
+) -> ContainsRegexMatcher<'a, ActualT> {
     ContainsRegexMatcher {
         regex: Regex::new(pattern.deref()).unwrap(),
         phantom: Default::default(),
@@ -65,12 +65,12 @@ pub fn contains_regex<ActualT: ?Sized, PatternT: Deref<Target = str>>(
 ///
 /// Intended only to be used from the function [`contains_regex`] only.
 /// Should not be referenced by code outside this library.
-pub struct ContainsRegexMatcher<ActualT: ?Sized> {
+pub struct ContainsRegexMatcher<'a, ActualT: ?Sized> {
     regex: Regex,
-    phantom: PhantomData<ActualT>,
+    phantom: PhantomData<&'a ActualT>,
 }
 
-impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher for ContainsRegexMatcher<ActualT> {
+impl<'a, ActualT: AsRef<str> + Debug + ?Sized> Matcher<'a> for ContainsRegexMatcher<'a, ActualT> {
     type ActualT = ActualT;
 
     fn matches(&self, actual: &ActualT) -> MatcherResult {

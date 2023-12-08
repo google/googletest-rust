@@ -98,15 +98,15 @@ pub struct ContainerEqMatcher<ActualContainerT: ?Sized, ExpectedContainerT> {
     phantom: PhantomData<ActualContainerT>,
 }
 
-impl<ActualElementT, ActualContainerT, ExpectedElementT, ExpectedContainerT> Matcher
+impl<'a, ActualElementT, ActualContainerT, ExpectedElementT, ExpectedContainerT> Matcher<'a>
     for ContainerEqMatcher<ActualContainerT, ExpectedContainerT>
 where
     ActualElementT: PartialEq<ExpectedElementT> + Debug + ?Sized,
     ActualContainerT: PartialEq<ExpectedContainerT> + Debug + ?Sized,
     ExpectedElementT: Debug,
     ExpectedContainerT: Debug,
-    for<'a> &'a ActualContainerT: IntoIterator<Item = &'a ActualElementT>,
-    for<'a> &'a ExpectedContainerT: IntoIterator<Item = &'a ExpectedElementT>,
+    for<'b> &'b ActualContainerT: IntoIterator<Item = &'b ActualElementT>,
+    for<'b> &'b ExpectedContainerT: IntoIterator<Item = &'b ExpectedElementT>,
 {
     type ActualT = ActualContainerT;
 

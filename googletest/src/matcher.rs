@@ -21,9 +21,9 @@ use crate::matchers::__internal_unstable_do_not_depend_on_these::DisjunctionMatc
 use std::fmt::Debug;
 
 /// An interface for checking an arbitrary condition on a datum.
-pub trait Matcher {
+pub trait Matcher<'a> {
     /// The type against which this matcher matches.
-    type ActualT: Debug + ?Sized;
+    type ActualT: Debug + ?Sized + 'a;
 
     /// Returns whether the condition matches the datum `actual`.
     ///
@@ -31,7 +31,7 @@ pub trait Matcher {
     /// matching condition is based on data stored in the matcher. For example,
     /// `eq` matches when its stored expected value is equal (in the sense of
     /// the `==` operator) to the value `actual`.
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult;
+    fn matches(&self, actual: &'a Self::ActualT) -> MatcherResult;
 
     /// Returns a description of `self` or a negative description if
     /// `matcher_result` is `DoesNotMatch`.
@@ -128,7 +128,7 @@ pub trait Matcher {
     ///     format!("which points to a value {}", self.expected.explain_match(actual.deref()))
     /// }
     /// ```
-    fn explain_match(&self, actual: &Self::ActualT) -> String {
+    fn explain_match(&self, actual: &'a Self::ActualT) -> String {
         format!("which {}", self.describe(self.matches(actual)))
     }
 
@@ -155,7 +155,7 @@ pub trait Matcher {
     // TODO(b/264518763): Replace the return type with impl Matcher and reduce
     // visibility of ConjunctionMatcher once impl in return position in trait
     // methods is stable.
-    fn and<Right: Matcher<ActualT = Self::ActualT>>(
+    fn and<Right: Matcher<'a, ActualT = Self::ActualT>>(
         self,
         right: Right,
     ) -> ConjunctionMatcher<Self, Right>
@@ -185,7 +185,7 @@ pub trait Matcher {
     // TODO(b/264518763): Replace the return type with impl Matcher and reduce
     // visibility of DisjunctionMatcher once impl in return position in trait
     // methods is stable.
-    fn or<Right: Matcher<ActualT = Self::ActualT>>(
+    fn or<Right: Matcher<'a, ActualT = Self::ActualT>>(
         self,
         right: Right,
     ) -> DisjunctionMatcher<Self, Right>
@@ -205,8 +205,8 @@ const PRETTY_PRINT_LENGTH_THRESHOLD: usize = 60;
 ///
 /// The parameter `actual_expr` contains the expression which was evaluated to
 /// obtain `actual`.
-pub(crate) fn create_assertion_failure<T: Debug + ?Sized>(
-    matcher: &impl Matcher<ActualT = T>,
+pub(crate) fn create_assertion_failure<'a, T: Debug + ?Sized>(
+    matcher: &impl Matcher<'a, ActualT = T>,
     actual: &T,
     actual_expr: &'static str,
     source_location: SourceLocation,

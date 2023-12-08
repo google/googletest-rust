@@ -75,7 +75,7 @@ pub mod internal {
     /// For internal use only. API stablility is not guaranteed!
     #[doc(hidden)]
     pub struct AllMatcher<'a, T: Debug + ?Sized, const N: usize> {
-        components: [Box<dyn Matcher<ActualT = T> + 'a>; N],
+        components: [Box<dyn Matcher<'a, ActualT = T> + 'a>; N],
     }
 
     impl<'a, T: Debug + ?Sized, const N: usize> AllMatcher<'a, T, N> {
@@ -87,7 +87,7 @@ pub mod internal {
         }
     }
 
-    impl<'a, T: Debug + ?Sized, const N: usize> Matcher for AllMatcher<'a, T, N> {
+    impl<'a, T: Debug + ?Sized, const N: usize> Matcher<'_> for AllMatcher<'a, T, N> {
         type ActualT = T;
 
         fn matches(&self, actual: &Self::ActualT) -> MatcherResult {

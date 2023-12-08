@@ -33,7 +33,7 @@ impl<M1, M2> ConjunctionMatcher<M1, M2> {
     }
 }
 
-impl<M1: Matcher, M2: Matcher<ActualT = M1::ActualT>> Matcher for ConjunctionMatcher<M1, M2>
+impl<'a, M1: Matcher<'a>, M2: Matcher<'a, ActualT = M1::ActualT>> Matcher<'a> for ConjunctionMatcher<M1, M2>
 where
     M1::ActualT: Debug,
 {
