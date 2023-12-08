@@ -291,7 +291,31 @@ mod tests {
 
         verify_that!(output, contains_substring("A custom error message"))?;
         verify_that!(output, contains_substring("A custom error message in a String"))?;
-        verify_that!(output, contains_substring("A custom error message from a closure"))
+        verify_that!(output, contains_substring("A custom error message from a closure"))?;
+        verify_that!(
+            output,
+            contains_substring("assert_that: A custom error message for value 2")
+        )?;
+        verify_that!(
+            output,
+            contains_substring("assert_that: A custom error message for incremented value 3")
+        )?;
+        verify_that!(
+            output,
+            contains_substring("assert_that: A custom error message for twice incremented value 4")
+        )?;
+        verify_that!(
+            output,
+            contains_substring("expect_that: A custom error message for value 2")
+        )?;
+        verify_that!(
+            output,
+            contains_substring("expect_that: A custom error message for incremented value 3")
+        )?;
+        verify_that!(
+            output,
+            contains_substring("expect_that: A custom error message for twice incremented value 4")
+        )
     }
 
     #[test]

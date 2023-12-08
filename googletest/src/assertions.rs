@@ -309,8 +309,41 @@ macro_rules! fail {
 /// Matches the given value against the given matcher, panicking if it does not
 /// match.
 ///
+/// ```should_panic
+/// # use googletest::prelude::*;
+/// # fn should_fail() {
+/// let value = 2;
+/// assert_that!(value, eq(3));  // Fails and panics.
+/// # }
+/// # should_fail();
+/// ```
+///
 /// This is analogous to assertions in most Rust test libraries, where a failed
 /// assertion causes a panic.
+///
+/// One may optionally add arguments which will be formatted and appended to a
+/// failure message. For example:
+///
+/// ```should_panic
+/// # use googletest::prelude::*;
+/// # fn should_fail() {
+/// let value = 2;
+/// let extra_information = "Some additional information";
+/// assert_that!(value, eq(3), "Test failed. Extra information: {extra_information}.");
+/// # }
+/// # should_fail();
+/// ```
+///
+/// This is output as follows:
+///
+/// ```text
+/// Value of: value
+/// Expected: is equal to 3
+/// Actual: 2,
+///   which isn't equal to 3
+///   at ...
+/// Test failed. Extra information: Some additional information.
+/// ```
 ///
 /// **Note for users of [GoogleTest for C++](http://google.github.io/googletest/):**
 /// This differs from the `ASSERT_THAT` macro in that it panics rather
@@ -320,6 +353,19 @@ macro_rules! fail {
 macro_rules! assert_that {
     ($actual:expr, $expected:expr) => {
         match $crate::verify_that!($actual, $expected) {
+            Ok(_) => {}
+            Err(e) => {
+                // The extra newline before the assertion failure message makes the failure a
+                // bit easier to read when there's some generic boilerplate from the panic.
+                panic!("\n{}", e);
+            }
+        }
+    };
+
+    ($actual:expr, $expected:expr, $($format_args:expr),* $(,)?) => {
+        match $crate::verify_that!($actual, $expected)
+            .with_failure_message(|| format!($($format_args),*))
+        {
             Ok(_) => {}
             Err(e) => {
                 // The extra newline before the assertion failure message makes the failure a
@@ -368,12 +414,44 @@ macro_rules! assert_pred {
 /// ```ignore
 /// verify_that!(actual, expected).and_log_failure()
 /// ```
+///
+/// One may optionally add arguments which will be formatted and appended to a
+/// failure message. For example:
+///
+/// ```
+/// # use googletest::prelude::*;
+/// # fn should_fail() -> std::result::Result<(), googletest::internal::test_outcome::TestFailure> {
+/// # googletest::internal::test_outcome::TestOutcome::init_current_test_outcome();
+/// let value = 2;
+/// let extra_information = "Some additional information";
+/// expect_that!(value, eq(3), "Test failed. Extra information: {extra_information}.");
+/// # googletest::internal::test_outcome::TestOutcome::close_current_test_outcome::<&str>(Ok(()))
+/// # }
+/// # should_fail().unwrap_err();
+/// ```
+///
+/// This is output as follows:
+///
+/// ```text
+/// Value of: value
+/// Expected: is equal to 3
+/// Actual: 2,
+///   which isn't equal to 3
+///   at ...
+/// Test failed. Extra information: Some additional information.
+/// ```
 #[macro_export]
 macro_rules! expect_that {
     ($actual:expr, $expected:expr) => {{
         use $crate::GoogleTestSupport;
         $crate::verify_that!($actual, $expected).and_log_failure();
     }};
+
+    ($actual:expr, $expected:expr, $($format_args:expr),* $(,)?) => {
+        $crate::verify_that!($actual, $expected)
+            .with_failure_message(|| format!($($format_args),*))
+            .and_log_failure()
+    };
 }
 
 /// Asserts that the given predicate applied to the given arguments returns
