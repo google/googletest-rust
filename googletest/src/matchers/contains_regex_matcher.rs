@@ -70,10 +70,11 @@ pub struct ContainsRegexMatcher<ActualT: ?Sized> {
     phantom: PhantomData<ActualT>,
 }
 
-impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher for ContainsRegexMatcher<ActualT> {
-    type ActualT = ActualT;
-
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher<ActualT> for ContainsRegexMatcher<ActualT> {
+    fn matches<'a>(&self, actual: &'a ActualT) -> MatcherResult
+    where
+        ActualT: 'a,
+    {
         self.regex.is_match(actual.as_ref()).into()
     }
 

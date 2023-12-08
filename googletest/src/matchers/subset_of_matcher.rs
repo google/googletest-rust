@@ -82,7 +82,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// items. It should not be used on especially large containers.
 pub fn subset_of<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug>(
     superset: ExpectedT,
-) -> impl Matcher<ActualT = ActualT>
+) -> impl Matcher<ActualT>
 where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
@@ -95,15 +95,16 @@ struct SubsetOfMatcher<ActualT: ?Sized, ExpectedT> {
     phantom: PhantomData<ActualT>,
 }
 
-impl<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug> Matcher
+impl<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug> Matcher<ActualT>
     for SubsetOfMatcher<ActualT, ExpectedT>
 where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
 {
-    type ActualT = ActualT;
-
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches<'a>(&self, actual: &'a ActualT) -> MatcherResult
+    where
+        ActualT: 'a,
+    {
         for actual_item in actual {
             if self.expected_is_missing(actual_item) {
                 return MatcherResult::NoMatch;
@@ -112,7 +113,10 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: &ActualT) -> String {
+    fn explain_match<'a>(&self, actual: &'a ActualT) -> String
+    where
+        ActualT: 'a,
+    {
         let unexpected_elements = actual
             .into_iter()
             .enumerate()

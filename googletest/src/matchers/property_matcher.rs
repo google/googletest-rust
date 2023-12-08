@@ -139,11 +139,11 @@ pub mod internal {
 
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub fn property_matcher<OuterT: Debug, InnerT: Debug, MatcherT: Matcher<ActualT = InnerT>>(
+    pub fn property_matcher<OuterT: Debug, InnerT: Debug, MatcherT: Matcher<InnerT>>(
         extractor: impl Fn(&OuterT) -> InnerT,
         property_desc: &'static str,
         inner: MatcherT,
-    ) -> impl Matcher<ActualT = OuterT> {
+    ) -> impl Matcher<OuterT> {
         PropertyMatcher { extractor, property_desc, inner, phantom: Default::default() }
     }
 
@@ -154,16 +154,18 @@ pub mod internal {
         phantom: PhantomData<OuterT>,
     }
 
-    impl<InnerT, OuterT, ExtractorT, MatcherT> Matcher for PropertyMatcher<OuterT, ExtractorT, MatcherT>
+    impl<InnerT, OuterT, ExtractorT, MatcherT> Matcher<OuterT>
+        for PropertyMatcher<OuterT, ExtractorT, MatcherT>
     where
         InnerT: Debug,
         OuterT: Debug,
         ExtractorT: Fn(&OuterT) -> InnerT,
-        MatcherT: Matcher<ActualT = InnerT>,
+        MatcherT: Matcher<InnerT>,
     {
-        type ActualT = OuterT;
-
-        fn matches(&self, actual: &OuterT) -> MatcherResult {
+        fn matches<'a>(&self, actual: &'a OuterT) -> MatcherResult
+        where
+            OuterT: 'a,
+        {
             self.inner.matches(&(self.extractor)(actual))
         }
 
@@ -175,7 +177,10 @@ pub mod internal {
             )
         }
 
-        fn explain_match(&self, actual: &OuterT) -> String {
+        fn explain_match<'a>(&self, actual: &'a OuterT) -> String
+        where
+            OuterT: 'a,
+        {
             let actual_inner = (self.extractor)(actual);
             format!(
                 "whose property `{}` is `{:#?}`, {}",
@@ -192,11 +197,11 @@ pub mod internal {
         extractor: fn(&OuterT) -> &InnerT,
         property_desc: &'static str,
         inner: MatcherT,
-    ) -> impl Matcher<ActualT = OuterT>
+    ) -> impl Matcher<OuterT>
     where
         OuterT: Debug,
         InnerT: Debug + ?Sized,
-        MatcherT: Matcher<ActualT = InnerT>,
+        MatcherT: Matcher<InnerT>,
     {
         PropertyRefMatcher { extractor, property_desc, inner }
     }
@@ -207,12 +212,13 @@ pub mod internal {
         inner: MatcherT,
     }
 
-    impl<InnerT: Debug + ?Sized, OuterT: Debug, MatcherT: Matcher<ActualT = InnerT>> Matcher
+    impl<InnerT: Debug + ?Sized, OuterT: Debug, MatcherT: Matcher<InnerT>> Matcher<OuterT>
         for PropertyRefMatcher<InnerT, OuterT, MatcherT>
     {
-        type ActualT = OuterT;
-
-        fn matches(&self, actual: &OuterT) -> MatcherResult {
+        fn matches<'a>(&self, actual: &'a OuterT) -> MatcherResult
+        where
+            OuterT: 'a,
+        {
             self.inner.matches((self.extractor)(actual))
         }
 
@@ -224,7 +230,10 @@ pub mod internal {
             )
         }
 
-        fn explain_match(&self, actual: &OuterT) -> String {
+        fn explain_match<'a>(&self, actual: &'a OuterT) -> String
+        where
+            OuterT: 'a,
+        {
             let actual_inner = (self.extractor)(actual);
             format!(
                 "whose property `{}` is `{:#?}`, {}",

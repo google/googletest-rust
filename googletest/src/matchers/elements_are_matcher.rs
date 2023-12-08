@@ -102,7 +102,7 @@ pub mod internal {
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
     pub struct ElementsAre<'a, ContainerT: ?Sized, T: Debug> {
-        elements: Vec<Box<dyn Matcher<ActualT = T> + 'a>>,
+        elements: Vec<Box<dyn Matcher<T> + 'a>>,
         phantom: PhantomData<ContainerT>,
     }
 
@@ -111,18 +111,20 @@ pub mod internal {
         ///
         /// **For internal use only. API stablility is not guaranteed!**
         #[doc(hidden)]
-        pub fn new(elements: Vec<Box<dyn Matcher<ActualT = T> + 'a>>) -> Self {
+        pub fn new(elements: Vec<Box<dyn Matcher<T> + 'a>>) -> Self {
             Self { elements, phantom: Default::default() }
         }
     }
 
-    impl<'a, T: Debug, ContainerT: Debug + ?Sized> Matcher for ElementsAre<'a, ContainerT, T>
+    impl<'a, T: Debug, ContainerT: Debug + ?Sized> Matcher<ContainerT>
+        for ElementsAre<'a, ContainerT, T>
     where
         for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
     {
-        type ActualT = ContainerT;
-
-        fn matches(&self, actual: &ContainerT) -> MatcherResult {
+        fn matches<'b>(&self, actual: &'b ContainerT) -> MatcherResult
+        where
+            ContainerT: 'b,
+        {
             let mut zipped_iterator = zip(actual.into_iter(), self.elements.iter());
             for (a, e) in zipped_iterator.by_ref() {
                 if e.matches(a).is_no_match() {
@@ -136,7 +138,10 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> String {
+        fn explain_match<'b>(&self, actual: &'b ContainerT) -> String
+        where
+            ContainerT: 'b,
+        {
             let actual_iterator = actual.into_iter();
             let mut zipped_iterator = zip(actual_iterator, self.elements.iter());
             let mut mismatches = Vec::new();
