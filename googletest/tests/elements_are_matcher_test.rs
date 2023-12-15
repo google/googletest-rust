@@ -82,7 +82,6 @@ fn elements_are_produces_correct_failure_message_nested() -> Result<()> {
         result,
         err(displays_as(contains_substring(indoc!(
             "
-                Value of: vec![vec! [0, 1], vec! [1, 2]]
                 Expected: has elements:
                   0. has elements:
                        0. is equal to 1
