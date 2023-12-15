@@ -238,7 +238,6 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc!(
                 "
-                Value of: vec![vec! [1, 2], vec! [1]]
                 Expected: only contains elements that only contains elements that is equal to 1
                 Actual: [[1, 2], [1]],
                   whose element #0 is [1, 2], whose element #1 is 2, which isn't equal to 1"

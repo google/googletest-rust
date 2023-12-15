@@ -202,8 +202,6 @@ fn has_meaningful_assertion_failure_message_when_wrong_enum_variant_is_used() ->
     verify_that!(
         result,
         err(displays_as(contains_substring(indoc! {"
-            Value of: actual
-            Expected: is AnEnum :: B which has field `0`, which is equal to 123
             Actual: A(123),
               which has the wrong enum variant `A`
             "
@@ -411,7 +409,7 @@ fn generates_correct_failure_output_when_enum_variant_without_field_is_not_match
 
     let result = verify_that!(actual, matches_pattern!(AnEnum::A));
 
-    verify_that!(result, err(displays_as(contains_substring("is not AnEnum :: A"))))
+    verify_that!(result, err(displays_as(contains_substring(format!("is not {ANENUM_A_REPR}")))))
 }
 
 #[test]
@@ -424,7 +422,7 @@ fn generates_correct_failure_output_when_enum_variant_without_field_is_matched()
 
     let result = verify_that!(actual, not(matches_pattern!(AnEnum::A)));
 
-    verify_that!(result, err(displays_as(contains_substring("is AnEnum :: A"))))
+    verify_that!(result, err(displays_as(contains_substring(format!("is {ANENUM_A_REPR}")))))
 }
 
 #[test]
@@ -451,6 +449,11 @@ fn does_not_match_wrong_enum_value() -> Result<()> {
     verify_that!(actual, not(matches_pattern!(AnEnum::A(eq(123)))))
 }
 
+#[rustversion::all(not(nightly), before(1.76))]
+const ANENUM_A_REPR: &str = "AnEnum :: A";
+#[rustversion::any(nightly, since(1.76))]
+const ANENUM_A_REPR: &str = "AnEnum::A";
+
 #[test]
 fn includes_enum_variant_in_description_with_field() -> Result<()> {
     #[derive(Debug)]
@@ -463,7 +466,9 @@ fn includes_enum_variant_in_description_with_field() -> Result<()> {
 
     verify_that!(
         result,
-        err(displays_as(contains_substring("Expected: is AnEnum :: A which has field `0`")))
+        err(displays_as(contains_substring(format!(
+            "Expected: is {ANENUM_A_REPR} which has field `0`"
+        ))))
     )
 }
 
@@ -479,9 +484,9 @@ fn includes_enum_variant_in_negative_description_with_field() -> Result<()> {
 
     verify_that!(
         result,
-        err(displays_as(contains_substring(
-            "Expected: is not AnEnum :: A which has field `0`, which is equal to"
-        )))
+        err(displays_as(contains_substring(format!(
+            "Expected: is not {ANENUM_A_REPR} which has field `0`, which is equal to"
+        ))))
     )
 }
 
@@ -497,9 +502,9 @@ fn includes_enum_variant_in_description_with_two_fields() -> Result<()> {
 
     verify_that!(
         result,
-        err(displays_as(contains_substring(
-            "Expected: is AnEnum :: A which has all the following properties"
-        )))
+        err(displays_as(contains_substring(format!(
+            "Expected: is {ANENUM_A_REPR} which has all the following properties"
+        ))))
     )
 }
 
@@ -515,9 +520,9 @@ fn includes_enum_variant_in_description_with_three_fields() -> Result<()> {
 
     verify_that!(
         result,
-        err(displays_as(contains_substring(
-            "Expected: is AnEnum :: A which has all the following properties"
-        )))
+        err(displays_as(contains_substring(format!(
+            "Expected: is {ANENUM_A_REPR} which has all the following properties"
+        ))))
     )
 }
 
@@ -533,7 +538,9 @@ fn includes_enum_variant_in_description_with_named_field() -> Result<()> {
 
     verify_that!(
         result,
-        err(displays_as(contains_substring("Expected: is AnEnum :: A which has field `field`")))
+        err(displays_as(contains_substring(format!(
+            "Expected: is {ANENUM_A_REPR} which has field `field`"
+        ))))
     )
 }
 
@@ -552,9 +559,9 @@ fn includes_enum_variant_in_description_with_two_named_fields() -> Result<()> {
 
     verify_that!(
         result,
-        err(displays_as(contains_substring(
-            "Expected: is AnEnum :: A which has all the following properties"
-        )))
+        err(displays_as(contains_substring(format!(
+            "Expected: is {ANENUM_A_REPR} which has all the following properties"
+        ))))
     )
 }
 
