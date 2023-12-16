@@ -27,6 +27,12 @@ mod tests {
     }
 
     #[test]
+    fn verify_that_supports_trailing_comma() -> Result<()> {
+        let value = 2;
+        verify_that!(value, eq(2),)
+    }
+
+    #[test]
     fn should_pass_with_omitted_elements_are() -> Result<()> {
         verify_that!(vec![1, 2], [eq(1), eq(2)])
     }
@@ -48,10 +54,21 @@ mod tests {
     }
 
     #[test]
-    fn should_pass_with_assert_that() -> Result<()> {
+    fn should_pass_with_assert_that() {
         let value = 2;
         assert_that!(value, eq(2));
-        Ok(())
+    }
+
+    #[test]
+    fn assert_that_supports_trailing_comma() {
+        let value = 2;
+        assert_that!(value, eq(2),);
+    }
+
+    #[test]
+    fn assert_that_with_custom_failure_message_supports_trailing_comma() {
+        let value = 2;
+        assert_that!(value, eq(2), "A custom error message",);
     }
 
     #[googletest::test]
@@ -65,6 +82,18 @@ mod tests {
     fn should_pass_with_expect_that_returning_unit() {
         let value = 2;
         expect_that!(value, eq(2));
+    }
+
+    #[googletest::test]
+    fn expect_that_supports_trailing_comma() {
+        let value = 2;
+        expect_that!(value, eq(2),);
+    }
+
+    #[googletest::test]
+    fn expect_that_with_custom_failure_message_supports_trailing_comma() {
+        let value = 2;
+        expect_that!(value, eq(2), "A custom error message",);
     }
 
     #[test]
