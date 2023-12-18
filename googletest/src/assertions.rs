@@ -136,7 +136,7 @@ macro_rules! verify_that {
             $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!()),
         )
     };
-    ($actual:expr, $expected:expr) => {
+    ($actual:expr, $expected:expr $(,)?) => {
         $crate::assertions::internal::check_matcher(
             &$actual,
             $expected,
@@ -351,7 +351,7 @@ macro_rules! fail {
 /// equivalent to `ASSERT_THAT`, use [`verify_that!`] with the `?` operator.
 #[macro_export]
 macro_rules! assert_that {
-    ($actual:expr, $expected:expr) => {
+    ($actual:expr, $expected:expr $(,)?) => {
         match $crate::verify_that!($actual, $expected) {
             Ok(_) => {}
             Err(e) => {
@@ -442,7 +442,7 @@ macro_rules! assert_pred {
 /// ```
 #[macro_export]
 macro_rules! expect_that {
-    ($actual:expr, $expected:expr) => {{
+    ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport;
         $crate::verify_that!($actual, $expected).and_log_failure();
     }};
