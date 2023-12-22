@@ -83,10 +83,7 @@ pub struct EqMatcher<A: ?Sized, T> {
 }
 
 impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher<A> for EqMatcher<A, T> {
-    fn matches<'a>(&self, actual: &'a A) -> MatcherResult
-    where
-        A: 'a,
-    {
+    fn matches(&self, actual: &A) -> MatcherResult {
         (self.expected == *actual).into()
     }
 
@@ -97,10 +94,7 @@ impl<A: Debug + ?Sized, T: PartialEq<A> + Debug> Matcher<A> for EqMatcher<A, T> 
         }
     }
 
-    fn explain_match<'a>(&self, actual: &'a A) -> String
-    where
-        A: 'a,
-    {
+    fn explain_match(&self, actual: &A) -> String {
         let expected_debug = format!("{:#?}", self.expected);
         let actual_debug = format!("{:#?}", actual);
         let description = self.describe(self.matches(actual));

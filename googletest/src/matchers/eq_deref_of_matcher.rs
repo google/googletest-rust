@@ -70,10 +70,7 @@ where
     ExpectedRefT: Deref<Target = ExpectedT> + Debug,
     ExpectedT: PartialEq<ActualT> + Debug,
 {
-    fn matches<'a>(&self, actual: &'a ActualT) -> MatcherResult
-    where
-        ActualT: 'a,
-    {
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
         (self.expected.deref() == actual).into()
     }
 
@@ -84,10 +81,7 @@ where
         }
     }
 
-    fn explain_match<'a>(&self, actual: &'a ActualT) -> String
-    where
-        ActualT: 'a,
-    {
+    fn explain_match(&self, actual: &ActualT) -> String {
         format!(
             "which {}{}",
             &self.describe(self.matches(actual)),

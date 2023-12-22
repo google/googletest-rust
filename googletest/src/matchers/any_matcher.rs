@@ -90,17 +90,11 @@ pub mod internal {
     }
 
     impl<'a, T: Debug + ?Sized, const N: usize> Matcher<T> for AnyMatcher<'a, T, N> {
-        fn matches<'b>(&self, actual: &'b T) -> MatcherResult
-        where
-            T: 'b,
-        {
+        fn matches(&self, actual: &T) -> MatcherResult {
             MatcherResult::from(self.components.iter().any(|c| c.matches(actual).is_match()))
         }
 
-        fn explain_match<'b>(&self, actual: &'b T) -> String
-        where
-            T: 'b,
-        {
+        fn explain_match(&self, actual: &T) -> String {
             match N {
                 0 => format!("which {}", anything::<T>().describe(MatcherResult::NoMatch)),
                 1 => self.components[0].explain_match(actual),

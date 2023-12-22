@@ -101,10 +101,7 @@ where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
 {
-    fn matches<'a>(&self, actual: &'a ActualT) -> MatcherResult
-    where
-        ActualT: 'a,
-    {
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
         for actual_item in actual {
             if self.expected_is_missing(actual_item) {
                 return MatcherResult::NoMatch;
@@ -113,10 +110,7 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match<'a>(&self, actual: &'a ActualT) -> String
-    where
-        ActualT: 'a,
-    {
+    fn explain_match(&self, actual: &ActualT) -> String {
         let unexpected_elements = actual
             .into_iter()
             .enumerate()

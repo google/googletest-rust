@@ -405,18 +405,12 @@ pub mod internal {
     where
         for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
     {
-        fn matches<'b>(&self, actual: &'b ContainerT) -> MatcherResult
-        where
-            ContainerT: 'b,
-        {
+        fn matches(&self, actual: &ContainerT) -> MatcherResult {
             let match_matrix = MatchMatrix::generate(actual, &self.elements);
             match_matrix.is_match_for(self.requirements).into()
         }
 
-        fn explain_match<'b>(&self, actual: &'b ContainerT) -> String
-        where
-            ContainerT: 'b,
-        {
+        fn explain_match(&self, actual: &ContainerT) -> String {
             if let Some(size_mismatch_explanation) =
                 self.requirements.explain_size_mismatch(actual, N)
             {
@@ -485,18 +479,12 @@ pub mod internal {
     where
         for<'b> &'b ContainerT: IntoIterator<Item = (&'b KeyT, &'b ValueT)>,
     {
-        fn matches<'b>(&self, actual: &'b ContainerT) -> MatcherResult
-        where
-            ContainerT: 'b,
-        {
+        fn matches(&self, actual: &ContainerT) -> MatcherResult {
             let match_matrix = MatchMatrix::generate_for_map(actual, &self.elements);
             match_matrix.is_match_for(self.requirements).into()
         }
 
-        fn explain_match<'b>(&self, actual: &'b ContainerT) -> String
-        where
-            ContainerT: 'b,
-        {
+        fn explain_match(&self, actual: &ContainerT) -> String {
             if let Some(size_mismatch_explanation) =
                 self.requirements.explain_size_mismatch(actual, N)
             {
@@ -1086,9 +1074,9 @@ mod tests {
         // aren't dropped too early.
         let matchers = ((eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three")));
         let matcher: UnorderedElementsOfMapAreMatcher<HashMap<i32, &str>, _, _, 3> = unordered_elements_are![
-            (matchers.0 .0, matchers.0 .1),
-            (matchers.1 .0, matchers.1 .1),
-            (matchers.2 .0, matchers.2 .1)
+            (matchers.0.0, matchers.0.1),
+            (matchers.1.0, matchers.1.1),
+            (matchers.2.0, matchers.2.1)
         ];
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
@@ -1111,9 +1099,9 @@ mod tests {
         // aren't dropped too early.
         let matchers = ((anything(), eq(1)), (anything(), eq(2)), (anything(), eq(2)));
         let matcher: UnorderedElementsOfMapAreMatcher<HashMap<u32, u32>, _, _, 3> = unordered_elements_are![
-            (matchers.0 .0, matchers.0 .1),
-            (matchers.1 .0, matchers.1 .1),
-            (matchers.2 .0, matchers.2 .1),
+            (matchers.0.0, matchers.0.1),
+            (matchers.1.0, matchers.1.1),
+            (matchers.2.0, matchers.2.1),
         ];
         let value: HashMap<u32, u32> = HashMap::from_iter([(0, 1), (1, 1), (2, 2)]);
         verify_that!(

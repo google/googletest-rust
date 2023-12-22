@@ -24,10 +24,7 @@ pub fn is_nan<T: Float + Debug>() -> impl Matcher<T> {
 struct IsNanMatcher<T>(PhantomData<T>);
 
 impl<T: Float + Debug> Matcher<T> for IsNanMatcher<T> {
-    fn matches<'a>(&self, actual: &'a T) -> MatcherResult
-    where
-        T: 'a,
-    {
+    fn matches(&self, actual: &T) -> MatcherResult {
         actual.is_nan().into()
     }
 

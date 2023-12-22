@@ -164,10 +164,7 @@ impl<T: Debug> NearMatcher<T> {
 }
 
 impl<T: Debug + Float> Matcher<T> for NearMatcher<T> {
-    fn matches<'a>(&self, actual: &'a T) -> MatcherResult
-    where
-        T: 'a,
-    {
+    fn matches(&self, actual: &T) -> MatcherResult {
         if self.nans_are_equal && self.expected.is_nan() && actual.is_nan() {
             return MatcherResult::Match;
         }

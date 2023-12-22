@@ -40,20 +40,14 @@ struct NotMatcher<T, InnerMatcherT> {
 }
 
 impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<T> for NotMatcher<T, InnerMatcherT> {
-    fn matches<'a>(&self, actual: &'a T) -> MatcherResult
-    where
-        T: 'a,
-    {
+    fn matches(&self, actual: &T) -> MatcherResult {
         match self.inner.matches(actual) {
             MatcherResult::Match => MatcherResult::NoMatch,
             MatcherResult::NoMatch => MatcherResult::Match,
         }
     }
 
-    fn explain_match<'a>(&self, actual: &'a T) -> String
-    where
-        T: 'a,
-    {
+    fn explain_match(&self, actual: &T) -> String {
         self.inner.explain_match(actual)
     }
 

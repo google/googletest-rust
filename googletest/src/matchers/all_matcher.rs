@@ -88,10 +88,7 @@ pub mod internal {
     }
 
     impl<'a, T: Debug + ?Sized, const N: usize> Matcher<T> for AllMatcher<'a, T, N> {
-        fn matches<'b>(&self, actual: &'b T) -> MatcherResult
-        where
-            T: 'b,
-        {
+        fn matches(&self, actual: &T) -> MatcherResult {
             for component in &self.components {
                 match component.matches(actual) {
                     MatcherResult::NoMatch => {
@@ -103,10 +100,7 @@ pub mod internal {
             MatcherResult::Match
         }
 
-        fn explain_match<'b>(&self, actual: &'b T) -> String
-        where
-            T: 'b,
-        {
+        fn explain_match(&self, actual: &T) -> String {
             match N {
                 0 => anything::<T>().explain_match(actual),
                 1 => self.components[0].explain_match(actual),

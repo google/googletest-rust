@@ -45,17 +45,11 @@ struct SomeMatcher<T, InnerMatcherT> {
 }
 
 impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<Option<T>> for SomeMatcher<T, InnerMatcherT> {
-    fn matches<'a>(&self, actual: &'a Option<T>) -> MatcherResult
-    where
-        Option<T>: 'a,
-    {
+    fn matches(&self, actual: &Option<T>) -> MatcherResult {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match<'a>(&self, actual: &'a Option<T>) -> String
-    where
-        Option<T>: 'a,
-    {
+    fn explain_match(&self, actual: &Option<T>) -> String {
         match (self.matches(actual), actual) {
             (_, Some(t)) => format!("which has a value {}", self.inner.explain_match(t)),
             (_, None) => "which is None".to_string(),

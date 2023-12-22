@@ -40,10 +40,7 @@ struct NoneMatcher<T> {
 }
 
 impl<T: Debug> Matcher<Option<T>> for NoneMatcher<T> {
-    fn matches<'a>(&self, actual: &'a Option<T>) -> MatcherResult
-    where
-        Option<T>: 'a,
-    {
+    fn matches(&self, actual: &Option<T>) -> MatcherResult {
         (actual.is_none()).into()
     }
 

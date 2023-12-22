@@ -108,7 +108,7 @@ impl<'a> BufferedSummary<'a> {
     }
 
     // Appends a new line which is found only in the actual string.
-    fn feed_extra_actual(&mut self, extra_actual: &'a str) {
+    fn feed_extra_actual(&mut self, extra_actual: &str) {
         self.buffer.flush(&mut self.summary).unwrap();
         write!(&mut self.summary, "\n{}", LineStyle::extra_actual_style().style(extra_actual))
             .unwrap();

@@ -28,9 +28,7 @@ pub trait Matcher<ActualT: Debug + ?Sized> {
     /// matching condition is based on data stored in the matcher. For example,
     /// `eq` matches when its stored expected value is equal (in the sense of
     /// the `==` operator) to the value `actual`.
-    fn matches<'a>(&self, actual: &'a ActualT) -> MatcherResult
-    where
-        ActualT: 'a;
+    fn matches(&self, actual: &ActualT) -> MatcherResult;
 
     /// Returns a description of `self` or a negative description if
     /// `matcher_result` is `DoesNotMatch`.
@@ -127,10 +125,7 @@ pub trait Matcher<ActualT: Debug + ?Sized> {
     ///     format!("which points to a value {}", self.expected.explain_match(actual.deref()))
     /// }
     /// ```
-    fn explain_match<'a>(&self, actual: &'a ActualT) -> String
-    where
-        ActualT: 'a,
-    {
+    fn explain_match(&self, actual: &ActualT) -> String {
         format!("which {}", self.describe(self.matches(actual)))
     }
 
@@ -236,11 +231,7 @@ pub enum MatcherResult {
 
 impl From<bool> for MatcherResult {
     fn from(b: bool) -> Self {
-        if b {
-            MatcherResult::Match
-        } else {
-            MatcherResult::NoMatch
-        }
+        if b { MatcherResult::Match } else { MatcherResult::NoMatch }
     }
 }
 

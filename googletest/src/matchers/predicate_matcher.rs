@@ -125,10 +125,7 @@ impl<T: Debug, P> Matcher<T> for PredicateMatcher<T, P, NoDescription, NoDescrip
 where
     for<'a> P: Fn(&'a T) -> bool,
 {
-    fn matches<'a>(&self, actual: &'a T) -> MatcherResult
-    where
-        T: 'a,
-    {
+    fn matches(&self, actual: &T) -> MatcherResult {
         (self.predicate)(actual).into()
     }
 
@@ -145,10 +142,7 @@ impl<T: Debug, P, D1: PredicateDescription, D2: PredicateDescription> Matcher<T>
 where
     for<'a> P: Fn(&'a T) -> bool,
 {
-    fn matches<'a>(&self, actual: &'a T) -> MatcherResult
-    where
-        T: 'a,
-    {
+    fn matches(&self, actual: &T) -> MatcherResult {
         (self.predicate)(actual).into()
     }
 

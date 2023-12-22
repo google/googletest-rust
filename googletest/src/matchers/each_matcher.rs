@@ -82,10 +82,7 @@ where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
     MatcherT: Matcher<ElementT>,
 {
-    fn matches<'a>(&self, actual: &'a ActualT) -> MatcherResult
-    where
-        ActualT: 'a,
-    {
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
         for element in actual {
             if self.inner.matches(element).is_no_match() {
                 return MatcherResult::NoMatch;
@@ -94,10 +91,7 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match<'a>(&self, actual: &'a ActualT) -> String
-    where
-        ActualT: 'a,
-    {
+    fn explain_match(&self, actual: &ActualT) -> String {
         let mut non_matching_elements = Vec::new();
         for (index, element) in actual.into_iter().enumerate() {
             if self.inner.matches(element).is_no_match() {

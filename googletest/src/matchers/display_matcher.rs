@@ -36,17 +36,11 @@ struct DisplayMatcher<T, InnerMatcher: Matcher<String>> {
 impl<T: Debug + Display, InnerMatcher: Matcher<String>> Matcher<T>
     for DisplayMatcher<T, InnerMatcher>
 {
-    fn matches<'a>(&self, actual: &'a T) -> MatcherResult
-    where
-        T: 'a,
-    {
+    fn matches(&self, actual: &T) -> MatcherResult {
         self.inner.matches(&format!("{actual}"))
     }
 
-    fn explain_match<'a>(&self, actual: &'a T) -> String
-    where
-        T: 'a,
-    {
+    fn explain_match(&self, actual: &T) -> String {
         format!("which displays as a string {}", self.inner.explain_match(&format!("{actual}")))
     }
 

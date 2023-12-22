@@ -47,9 +47,9 @@ use std::{fmt::Debug, marker::PhantomData};
 /// ```
 pub fn is_utf8_string<'a, ActualT: AsRef<[u8]> + Debug + 'a, InnerMatcherT>(
     inner: InnerMatcherT,
-) -> impl Matcher<ActualT = ActualT>
+) -> impl Matcher<ActualT>
 where
-    InnerMatcherT: Matcher<ActualT = String>,
+    InnerMatcherT: Matcher<String>,
 {
     IsEncodedStringMatcher { inner, phantom: Default::default() }
 }
@@ -59,14 +59,12 @@ struct IsEncodedStringMatcher<ActualT, InnerMatcherT> {
     phantom: PhantomData<ActualT>,
 }
 
-impl<'a, ActualT: AsRef<[u8]> + Debug + 'a, InnerMatcherT> Matcher
+impl<'a, ActualT: AsRef<[u8]> + Debug + 'a, InnerMatcherT> Matcher<ActualT>
     for IsEncodedStringMatcher<ActualT, InnerMatcherT>
 where
-    InnerMatcherT: Matcher<ActualT = String>,
+    InnerMatcherT: Matcher<String>,
 {
-    type ActualT = ActualT;
-
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
         String::from_utf8(actual.as_ref().to_vec())
             .map(|s| self.inner.matches(&s))
             .unwrap_or(MatcherResult::NoMatch)
@@ -85,7 +83,7 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> String {
+    fn explain_match(&self, actual: &ActualT) -> String {
         match String::from_utf8(actual.as_ref().to_vec()) {
             Ok(s) => format!("which is a UTF-8 encoded string {}", self.inner.explain_match(&s)),
             Err(e) => format!("which is not a UTF-8 encoded string: {e}"),

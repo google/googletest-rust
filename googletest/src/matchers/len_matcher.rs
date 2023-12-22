@@ -64,10 +64,7 @@ impl<T: Debug + ?Sized, E: Matcher<usize>> Matcher<T> for LenMatcher<T, E>
 where
     for<'a> &'a T: IntoIterator,
 {
-    fn matches<'a>(&self, actual: &'a T) -> MatcherResult
-    where
-        T: 'a,
-    {
+    fn matches(&self, actual: &T) -> MatcherResult {
         self.expected.matches(&count_elements(actual))
     }
 
@@ -82,10 +79,7 @@ where
         }
     }
 
-    fn explain_match<'a>(&self, actual: &'a T) -> String
-    where
-        T: 'a,
-    {
+    fn explain_match(&self, actual: &T) -> String {
         let actual_size = count_elements(actual);
         format!("which has length {}, {}", actual_size, self.expected.explain_match(&actual_size))
     }
@@ -180,10 +174,7 @@ mod tests {
     fn len_matcher_explain_match() -> Result<()> {
         struct TestMatcher<T>(PhantomData<T>);
         impl<T: Debug> Matcher<T> for TestMatcher<T> {
-            fn matches<'a>(&self, _: &'a T) -> MatcherResult
-            where
-                T: 'a,
-            {
+            fn matches(&self, _: &T) -> MatcherResult {
                 false.into()
             }
 
@@ -191,10 +182,7 @@ mod tests {
                 "called described".into()
             }
 
-            fn explain_match<'a>(&self, _: &'a T) -> String
-            where
-                T: 'a,
-            {
+            fn explain_match(&self, _: &T) -> String {
                 "called explain_match".into()
             }
         }

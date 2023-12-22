@@ -48,17 +48,11 @@ struct OkMatcher<T, E, InnerMatcherT> {
 impl<T: Debug, E: Debug, InnerMatcherT: Matcher<T>> Matcher<std::result::Result<T, E>>
     for OkMatcher<T, E, InnerMatcherT>
 {
-    fn matches<'a>(&self, actual: &'a std::result::Result<T, E>) -> MatcherResult
-    where
-        std::result::Result<T, E>: 'a,
-    {
+    fn matches(&self, actual: &std::result::Result<T, E>) -> MatcherResult {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match<'a>(&self, actual: &'a std::result::Result<T, E>) -> String
-    where
-        std::result::Result<T, E>: 'a,
-    {
+    fn explain_match(&self, actual: &std::result::Result<T, E>) -> String {
         match actual {
             Ok(o) => format!("which is a success {}", self.inner.explain_match(o)),
             Err(_) => "which is an error".to_string(),

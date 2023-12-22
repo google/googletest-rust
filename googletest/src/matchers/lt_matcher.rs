@@ -85,10 +85,7 @@ struct LtMatcher<ActualT, ExpectedT> {
 impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher<ActualT>
     for LtMatcher<ActualT, ExpectedT>
 {
-    fn matches<'a>(&self, actual: &'a ActualT) -> MatcherResult
-    where
-        ActualT: 'a,
-    {
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
         (*actual < self.expected).into()
     }
 

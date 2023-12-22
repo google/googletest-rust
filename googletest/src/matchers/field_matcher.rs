@@ -166,10 +166,7 @@ pub mod internal {
     impl<OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<InnerT>> Matcher<OuterT>
         for FieldMatcher<OuterT, InnerT, InnerMatcher>
     {
-        fn matches<'a>(&self, actual: &'a OuterT) -> MatcherResult
-        where
-            OuterT: 'a,
-        {
+        fn matches(&self, actual: &OuterT) -> MatcherResult {
             if let Some(value) = (self.field_accessor)(actual) {
                 self.inner.matches(value)
             } else {
@@ -177,10 +174,7 @@ pub mod internal {
             }
         }
 
-        fn explain_match<'a>(&self, actual: &'a OuterT) -> String
-        where
-            OuterT: 'a,
-        {
+        fn explain_match(&self, actual: &OuterT) -> String {
             if let Some(actual) = (self.field_accessor)(actual) {
                 format!(
                     "which has field `{}`, {}",

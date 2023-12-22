@@ -121,10 +121,7 @@ pub mod internal {
     where
         for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
     {
-        fn matches<'b>(&self, actual: &'b ContainerT) -> MatcherResult
-        where
-            ContainerT: 'b,
-        {
+        fn matches(&self, actual: &ContainerT) -> MatcherResult {
             let mut zipped_iterator = zip(actual.into_iter(), self.elements.iter());
             for (a, e) in zipped_iterator.by_ref() {
                 if e.matches(a).is_no_match() {
@@ -138,10 +135,7 @@ pub mod internal {
             }
         }
 
-        fn explain_match<'b>(&self, actual: &'b ContainerT) -> String
-        where
-            ContainerT: 'b,
-        {
+        fn explain_match(&self, actual: &ContainerT) -> String {
             let actual_iterator = actual.into_iter();
             let mut zipped_iterator = zip(actual_iterator, self.elements.iter());
             let mut mismatches = Vec::new();

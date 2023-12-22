@@ -65,10 +65,7 @@ struct CharLenMatcher<T: ?Sized, E> {
 }
 
 impl<T: Debug + ?Sized + AsRef<str>, E: Matcher<usize>> Matcher<T> for CharLenMatcher<T, E> {
-    fn matches<'a>(&self, actual: &'a T) -> MatcherResult
-    where
-        T: 'a,
-    {
+    fn matches(&self, actual: &T) -> MatcherResult {
         self.expected.matches(&actual.as_ref().chars().count())
     }
 
@@ -89,10 +86,7 @@ impl<T: Debug + ?Sized + AsRef<str>, E: Matcher<usize>> Matcher<T> for CharLenMa
         }
     }
 
-    fn explain_match<'a>(&self, actual: &'a T) -> String
-    where
-        T: 'a,
-    {
+    fn explain_match(&self, actual: &T) -> String {
         let actual_size = actual.as_ref().chars().count();
         format!(
             "which has character count {}, {}",
@@ -133,10 +127,7 @@ mod tests {
     fn char_count_explains_match() -> Result<()> {
         struct TestMatcher<T>(PhantomData<T>);
         impl<T: Debug> Matcher<T> for TestMatcher<T> {
-            fn matches<'a>(&self, _: &'a T) -> MatcherResult
-            where
-                T: 'a,
-            {
+            fn matches(&self, _: &T) -> MatcherResult {
                 false.into()
             }
 
@@ -144,10 +135,7 @@ mod tests {
                 "called described".into()
             }
 
-            fn explain_match<'a>(&self, _: &'a T) -> String
-            where
-                T: 'a,
-            {
+            fn explain_match(&self, _: &T) -> String {
                 "called explain_match".into()
             }
         }

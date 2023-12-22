@@ -88,10 +88,7 @@ where
     PatternT: Deref<Target = str>,
     ActualT: AsRef<str> + Debug + ?Sized,
 {
-    fn matches<'a>(&self, actual: &'a ActualT) -> MatcherResult
-    where
-        ActualT: 'a,
-    {
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
         self.regex.is_match(actual.as_ref()).into()
     }
 

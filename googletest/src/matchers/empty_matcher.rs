@@ -62,10 +62,7 @@ impl<T: Debug + ?Sized> Matcher<T> for EmptyMatcher<T>
 where
     for<'a> &'a T: IntoIterator,
 {
-    fn matches<'a>(&self, actual: &'a T) -> MatcherResult
-    where
-        T: 'a,
-    {
+    fn matches(&self, actual: &T) -> MatcherResult {
         actual.into_iter().next().is_none().into()
     }
 

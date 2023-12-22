@@ -77,10 +77,7 @@ struct HasEntryMatcher<KeyT, ValueT, MatcherT> {
 impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ValueT>>
     Matcher<HashMap<KeyT, ValueT>> for HasEntryMatcher<KeyT, ValueT, MatcherT>
 {
-    fn matches<'a>(&self, actual: &'a HashMap<KeyT, ValueT>) -> MatcherResult
-    where
-        HashMap<KeyT, ValueT>: 'a,
-    {
+    fn matches(&self, actual: &HashMap<KeyT, ValueT>) -> MatcherResult {
         if let Some(value) = actual.get(&self.key) {
             self.inner.matches(value)
         } else {
@@ -88,10 +85,7 @@ impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ValueT>>
         }
     }
 
-    fn explain_match<'a>(&self, actual: &'a HashMap<KeyT, ValueT>) -> String
-    where
-        HashMap<KeyT, ValueT>: 'a,
-    {
+    fn explain_match(&self, actual: &HashMap<KeyT, ValueT>) -> String {
         if let Some(value) = actual.get(&self.key) {
             format!(
                 "which contains key {:?}, but is mapped to value {:#?}, {}",

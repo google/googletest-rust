@@ -48,17 +48,11 @@ struct ErrMatcher<T, E, InnerMatcherT> {
 impl<T: Debug, E: Debug, InnerMatcherT: Matcher<E>> Matcher<std::result::Result<T, E>>
     for ErrMatcher<T, E, InnerMatcherT>
 {
-    fn matches<'a>(&self, actual: &'a std::result::Result<T, E>) -> MatcherResult
-    where
-        std::result::Result<T, E>: 'a,
-    {
+    fn matches(&self, actual: &std::result::Result<T, E>) -> MatcherResult {
         actual.as_ref().err().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match<'a>(&self, actual: &'a std::result::Result<T, E>) -> String
-    where
-        std::result::Result<T, E>: 'a,
-    {
+    fn explain_match(&self, actual: &std::result::Result<T, E>) -> String {
         match actual {
             Err(e) => format!("which is an error {}", self.inner.explain_match(e)),
             Ok(_) => "which is a success".to_string(),

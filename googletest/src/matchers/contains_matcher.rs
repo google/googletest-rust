@@ -86,10 +86,7 @@ impl<T: Debug, InnerMatcherT: Matcher<T>, ContainerT: Debug> Matcher<ContainerT>
 where
     for<'a> &'a ContainerT: IntoIterator<Item = &'a T>,
 {
-    fn matches<'a>(&self, actual: &'a ContainerT) -> MatcherResult
-    where
-        ContainerT: 'a,
-    {
+    fn matches(&self, actual: &ContainerT) -> MatcherResult {
         if let Some(count) = &self.count {
             count.matches(&self.count_matches(actual))
         } else {
@@ -102,10 +99,7 @@ where
         }
     }
 
-    fn explain_match<'a>(&self, actual: &'a ContainerT) -> String
-    where
-        ContainerT: 'a,
-    {
+    fn explain_match(&self, actual: &ContainerT) -> String {
         let count = self.count_matches(actual);
         match (count, &self.count) {
             (_, Some(_)) => format!("which contains {} matching elements", count),

@@ -1001,8 +1001,8 @@ fn matches_struct_with_a_method_returning_reference_followed_by_a_field() -> Res
 }
 
 #[test]
-fn matches_struct_with_a_method_returning_reference_followed_by_a_field_with_trailing_comma(
-) -> Result<()> {
+fn matches_struct_with_a_method_returning_reference_followed_by_a_field_with_trailing_comma()
+-> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
@@ -1072,8 +1072,8 @@ fn matches_struct_with_a_method_taking_enum_value_param_ret_ref_followed_by_fiel
 }
 
 #[test]
-fn matches_struct_with_a_method_taking_two_parameters_with_trailing_comma_ret_ref_and_field(
-) -> Result<()> {
+fn matches_struct_with_a_method_taking_two_parameters_with_trailing_comma_ret_ref_and_field()
+-> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
@@ -1299,8 +1299,8 @@ fn matches_struct_with_field_followed_by_method_taking_enum_value_param_ret_ref(
 }
 
 #[test]
-fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_comma_ret_ref(
-) -> Result<()> {
+fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_comma_ret_ref()
+-> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
@@ -1349,8 +1349,8 @@ fn matches_struct_with_a_field_followed_by_a_method_followed_by_a_field() -> Res
 }
 
 #[test]
-fn matches_struct_with_a_field_followed_by_a_method_followed_by_a_field_with_trailing_comma(
-) -> Result<()> {
+fn matches_struct_with_a_field_followed_by_a_method_followed_by_a_field_with_trailing_comma()
+-> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
@@ -1405,8 +1405,8 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_followed_by_a_fi
 }
 
 #[test]
-fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_comma_followed_by_a_field(
-) -> Result<()> {
+fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_comma_followed_by_a_field()
+-> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
@@ -1433,8 +1433,8 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_com
 }
 
 #[test]
-fn matches_struct_with_field_followed_by_method_taking_enum_value_param_followed_by_field(
-) -> Result<()> {
+fn matches_struct_with_field_followed_by_method_taking_enum_value_param_followed_by_field()
+-> Result<()> {
     enum AnEnum {
         AVariant,
     }
@@ -1492,8 +1492,8 @@ fn matches_struct_with_a_field_followed_by_a_method_ret_ref_followed_by_a_field(
 }
 
 #[test]
-fn matches_struct_with_a_field_followed_by_a_method_ret_ref_followed_by_a_field_with_trailing_comma(
-) -> Result<()> {
+fn matches_struct_with_a_field_followed_by_a_method_ret_ref_followed_by_a_field_with_trailing_comma()
+-> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
@@ -1520,8 +1520,8 @@ fn matches_struct_with_a_field_followed_by_a_method_ret_ref_followed_by_a_field_
 }
 
 #[test]
-fn matches_struct_with_a_field_followed_by_a_method_with_params_ret_ref_followed_by_a_field(
-) -> Result<()> {
+fn matches_struct_with_a_field_followed_by_a_method_with_params_ret_ref_followed_by_a_field()
+-> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
@@ -1548,8 +1548,8 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_ret_ref_followed
 }
 
 #[test]
-fn matches_struct_with_field_followed_by_method_taking_enum_value_param_ret_ref_followed_by_field(
-) -> Result<()> {
+fn matches_struct_with_field_followed_by_method_taking_enum_value_param_ret_ref_followed_by_field()
+-> Result<()> {
     enum AnEnum {
         AVariant,
     }
@@ -1580,8 +1580,8 @@ fn matches_struct_with_field_followed_by_method_taking_enum_value_param_ret_ref_
 }
 
 #[test]
-fn matches_struct_with_a_field_followed_by_a_method_with_params_trailing_comma_ret_ref_followed_by_a_field(
-) -> Result<()> {
+fn matches_struct_with_a_field_followed_by_a_method_with_params_trailing_comma_ret_ref_followed_by_a_field()
+-> Result<()> {
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,

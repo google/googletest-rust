@@ -51,17 +51,11 @@ where
     MatcherT: Matcher<ExpectedT>,
     ActualT: Deref<Target = ExpectedT> + Debug + ?Sized,
 {
-    fn matches<'a>(&self, actual: &'a ActualT) -> MatcherResult
-    where
-        ActualT: 'a,
-    {
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
         self.expected.matches(actual.deref())
     }
 
-    fn explain_match<'a>(&self, actual: &'a ActualT) -> String
-    where
-        ActualT: 'a,
-    {
+    fn explain_match(&self, actual: &ActualT) -> String {
         self.expected.explain_match(actual.deref())
     }
 

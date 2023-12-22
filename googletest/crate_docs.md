@@ -217,7 +217,7 @@ struct MyEqMatcher<T> {
 }
 
 impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
-    fn matches<'a>(&self, actual: &'a T) -> MatcherResult where T: 'a{
+    fn matches(&self, actual: & T) -> MatcherResult {
         if self.expected == *actual {
             MatcherResult::Match
         } else {
@@ -249,7 +249,7 @@ impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
  # }
  #
  # impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
- #    fn matches<'a>(&self, actual: &'a T) -> MatcherResult where T: 'a{
+ #    fn matches(&self, actual: & T) -> MatcherResult {
  #        if self.expected == *actual {
  #            MatcherResult::Match
  #        } else {
@@ -286,7 +286,7 @@ impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
 # }
 #
 # impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
-#    fn matches<'a>(&self, actual: &'a T) -> MatcherResult where T: 'a{
+#    fn matches(&self, actual: & T) -> MatcherResult {
 #        if self.expected == *actual {
 #            MatcherResult::Match
 #        } else {
