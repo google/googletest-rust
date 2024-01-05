@@ -200,7 +200,7 @@ mod tests {
 
     #[test]
     fn contains_does_not_match_empty_slice() -> Result<()> {
-        let matcher = contains(eq(1));
+        let matcher = contains(eq::<i32, _>(1));
 
         let result = matcher.matches(&[]);
 
