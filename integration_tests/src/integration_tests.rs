@@ -695,6 +695,31 @@ mod tests {
         Ok(())
     }
 
+    #[googletest::test]
+    #[should_panic]
+    fn should_pass_with_should_panic() {
+        expect_that!(2, eq(4));
+    }
+
+    #[googletest::test]
+    #[should_panic(expected = "See failure output above")]
+    fn should_pass_with_should_panic_with_expectation() {
+        expect_that!(2, eq(4));
+    }
+
+    #[should_panic]
+    #[googletest::test]
+    fn should_pass_with_should_panic_in_first_position() {
+        expect_that!(2, eq(4));
+    }
+
+    #[test]
+    fn should_fail_when_should_panic_is_present_and_no_panic_occurs() -> Result<()> {
+        let output = run_external_process_in_tests_directory("passing_test_with_should_panic")?;
+
+        verify_that!(output, contains_substring("should panic"))
+    }
+
     #[::core::prelude::v1::test]
     #[should_panic]
     fn should_panic_when_expect_that_runs_without_attribute_macro_after_another_test() {
