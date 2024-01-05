@@ -17,10 +17,7 @@
 use crate::matcher_support::edit_distance;
 #[rustversion::since(1.70)]
 use std::io::IsTerminal;
-use std::{
-    borrow::Cow,
-    fmt::{Display, Write},
-};
+use std::{borrow::Cow, fmt::Display};
 
 /// Returns a string describing how the expected and actual lines differ.
 ///
@@ -43,13 +40,10 @@ pub(crate) fn create_diff(
     }
     match edit_distance::edit_list(actual_debug.lines(), expected_debug.lines(), diff_mode) {
         edit_distance::Difference::Equal => "No difference found between debug strings.".into(),
-        edit_distance::Difference::Editable(edit_list) => format!(
-            "\nDifference({} / {}):{}",
-            LineStyle::extra_actual_style().style("actual"),
-            LineStyle::extra_expected_style().style("expected"),
-            edit_list.into_iter().collect::<BufferedSummary>(),
-        )
-        .into(),
+        edit_distance::Difference::Editable(edit_list) => {
+            format!("\n{}{}", summary_header(), edit_list.into_iter().collect::<BufferedSummary>(),)
+                .into()
+        }
         edit_distance::Difference::Unrelated => "".into(),
     }
 }
@@ -79,15 +73,22 @@ pub(crate) fn create_diff_reversed(
         edit_distance::Difference::Equal => "No difference found between debug strings.".into(),
         edit_distance::Difference::Editable(mut edit_list) => {
             edit_list.reverse();
-            format!(
-                "\nDifference({} / {}):{}",
-                LineStyle::extra_actual_style().style("actual"),
-                LineStyle::extra_expected_style().style("expected"),
-                edit_list.into_iter().collect::<BufferedSummary>(),
-            )
-            .into()
+            format!("\n{}{}", summary_header(), edit_list.into_iter().collect::<BufferedSummary>(),)
+                .into()
         }
         edit_distance::Difference::Unrelated => "".into(),
+    }
+}
+
+// Produces the header, with or without coloring depending on
+// stdout_supports_color()
+fn summary_header() -> Cow<'static, str> {
+    if stdout_supports_color() {
+        format!(
+            "Difference(-{ACTUAL_ONLY_STYLE}actual{RESET_ALL} / +{EXPECTED_ONLY_STYLE}expected{RESET_ALL}):"
+        ).into()
+    } else {
+        "Difference(-actual / +expected):".into()
     }
 }
 
@@ -95,53 +96,102 @@ pub(crate) fn create_diff_reversed(
 //
 // This is buffered in order to allow a future line to potentially impact how
 // the current line would be printed.
+#[derive(Default)]
 struct BufferedSummary<'a> {
-    summary: String,
+    summary: SummaryBuilder,
     buffer: Buffer<'a>,
 }
 
 impl<'a> BufferedSummary<'a> {
     // Appends a new line which is common to both actual and expected.
     fn feed_common_lines(&mut self, common_line: &'a str) {
-        let Buffer::CommonLineBuffer(ref mut common_lines) = self.buffer;
-        common_lines.push(common_line);
+        if let Buffer::CommonLineBuffer(ref mut common_lines) = self.buffer {
+            common_lines.push(common_line);
+        } else {
+            self.flush_buffer();
+            self.buffer = Buffer::CommonLineBuffer(vec![common_line]);
+        }
     }
 
     // Appends a new line which is found only in the actual string.
     fn feed_extra_actual(&mut self, extra_actual: &'a str) {
-        self.buffer.flush(&mut self.summary).unwrap();
-        write!(&mut self.summary, "\n{}", LineStyle::extra_actual_style().style(extra_actual))
-            .unwrap();
+        if let Buffer::ExtraExpectedLineChunk(extra_expected) = self.buffer {
+            self.print_inline_diffs(extra_actual, extra_expected);
+            self.buffer = Buffer::Empty;
+        } else {
+            self.flush_buffer();
+            self.buffer = Buffer::ExtraActualLineChunk(extra_actual);
+        }
     }
 
     // Appends a new line which is found only in the expected string.
-    fn feed_extra_expected(&mut self, extra_expected: &str) {
-        self.flush_buffer();
-        write!(&mut self.summary, "\n{}", LineStyle::extra_expected_style().style(extra_expected))
-            .unwrap();
+    fn feed_extra_expected(&mut self, extra_expected: &'a str) {
+        if let Buffer::ExtraActualLineChunk(extra_actual) = self.buffer {
+            self.print_inline_diffs(extra_actual, extra_expected);
+            self.buffer = Buffer::Empty;
+        } else {
+            self.flush_buffer();
+            self.buffer = Buffer::ExtraExpectedLineChunk(extra_expected);
+        }
     }
 
     // Appends a comment for the additional line at the start or the end of the
     // actual string which should be omitted.
     fn feed_additional_actual(&mut self) {
         self.flush_buffer();
-        write!(
-            &mut self.summary,
-            "\n{}",
-            LineStyle::comment_style().style("<---- remaining lines omitted ---->")
-        )
-        .unwrap();
+        self.summary.new_line();
+        self.summary.push_str_as_comment("<---- remaining lines omitted ---->");
     }
 
     fn flush_buffer(&mut self) {
-        self.buffer.flush(&mut self.summary).unwrap();
+        self.buffer.flush(&mut self.summary);
+    }
+
+    fn print_inline_diffs(&mut self, actual_line: &str, expected_line: &str) {
+        let line_edits = edit_distance::edit_list(
+            actual_line.chars(),
+            expected_line.chars(),
+            edit_distance::Mode::Exact,
+        );
+
+        if let edit_distance::Difference::Editable(edit_list) = line_edits {
+            let mut actual_summary = SummaryBuilder::default();
+            actual_summary.new_line_for_actual();
+            let mut expected_summary = SummaryBuilder::default();
+            expected_summary.new_line_for_expected();
+            for edit in &edit_list {
+                match edit {
+                    edit_distance::Edit::ExtraActual(c) => actual_summary.push_actual_only(*c),
+                    edit_distance::Edit::ExtraExpected(c) => {
+                        expected_summary.push_expected_only(*c)
+                    }
+                    edit_distance::Edit::Both(c) => {
+                        actual_summary.push_actual_with_match(*c);
+                        expected_summary.push_expected_with_match(*c);
+                    }
+                    edit_distance::Edit::AdditionalActual => {
+                        // Calling edit_distance::edit_list(_, _, Mode::Exact) should never return
+                        // this enum
+                        panic!("This should not happen. This is a bug in gtest_rust")
+                    }
+                }
+            }
+            actual_summary.reset_ansi();
+            expected_summary.reset_ansi();
+            self.summary.push_str(&actual_summary.summary);
+            self.summary.push_str(&expected_summary.summary);
+        } else {
+            self.summary.new_line_for_actual();
+            self.summary.push_str_actual_only(actual_line);
+            self.summary.new_line_for_expected();
+            self.summary.push_str_expected_only(expected_line);
+        }
     }
 }
 
 impl<'a> FromIterator<edit_distance::Edit<&'a str>> for BufferedSummary<'a> {
     fn from_iter<T: IntoIterator<Item = edit_distance::Edit<&'a str>>>(iter: T) -> Self {
-        let mut buffered_summary =
-            BufferedSummary { summary: String::new(), buffer: Buffer::CommonLineBuffer(vec![]) };
+        let mut buffered_summary = BufferedSummary::default();
         for edit in iter {
             match edit {
                 edit_distance::Edit::Both(same) => {
@@ -159,6 +209,7 @@ impl<'a> FromIterator<edit_distance::Edit<&'a str>> for BufferedSummary<'a> {
             };
         }
         buffered_summary.flush_buffer();
+        buffered_summary.summary.reset_ansi();
 
         buffered_summary
     }
@@ -166,120 +217,80 @@ impl<'a> FromIterator<edit_distance::Edit<&'a str>> for BufferedSummary<'a> {
 
 impl<'a> Display for BufferedSummary<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if !matches!(self.buffer, Buffer::CommonLineBuffer(ref b) if b.is_empty()) {
+        if !matches!(self.buffer, Buffer::Empty) {
             panic!("Buffer is not empty. This is a bug in gtest_rust.")
         }
-        self.summary.fmt(f)
+        if !self.summary.last_ansi_style.is_empty() {
+            panic!("ANSI style has not been reset. This is a bug in gtest_rust.")
+        }
+        self.summary.summary.fmt(f)
     }
 }
 
-// This needs to be an enum as there will be in a follow-up PR new types of
-// buffer, most likely actual and expected lines, to be compared with expected
-// and actual lines for line to line comparison.
 enum Buffer<'a> {
+    Empty,
     CommonLineBuffer(Vec<&'a str>),
+    ExtraActualLineChunk(&'a str),
+    ExtraExpectedLineChunk(&'a str),
 }
 
 impl<'a> Buffer<'a> {
-    fn flush(&mut self, writer: impl std::fmt::Write) -> std::fmt::Result {
+    fn flush(&mut self, summary: &mut SummaryBuilder) {
         match self {
+            Buffer::Empty => {}
             Buffer::CommonLineBuffer(common_lines) => {
-                Self::flush_common_lines(std::mem::take(common_lines), writer)?
+                Self::flush_common_lines(std::mem::take(common_lines), summary);
+            }
+            Buffer::ExtraActualLineChunk(extra_actual) => {
+                summary.new_line_for_actual();
+                summary.push_str_actual_only(extra_actual);
+            }
+            Buffer::ExtraExpectedLineChunk(extra_expected) => {
+                summary.new_line_for_expected();
+                summary.push_str_expected_only(extra_expected);
             }
         };
-        Ok(())
+        *self = Buffer::Empty;
     }
 
-    fn flush_common_lines(
-        common_lines: Vec<&'a str>,
-        mut writer: impl std::fmt::Write,
-    ) -> std::fmt::Result {
+    fn flush_common_lines(common_lines: Vec<&'a str>, summary: &mut SummaryBuilder) {
         // The number of the lines kept before and after the compressed lines.
         const COMMON_LINES_CONTEXT_SIZE: usize = 2;
 
         if common_lines.len() <= 2 * COMMON_LINES_CONTEXT_SIZE + 1 {
             for line in common_lines {
-                write!(writer, "\n{}", LineStyle::unchanged_style().style(line))?;
+                summary.new_line();
+                summary.push_str(line);
             }
-            return Ok(());
+            return;
         }
 
         let start_context = &common_lines[0..COMMON_LINES_CONTEXT_SIZE];
 
         for line in start_context {
-            write!(writer, "\n{}", LineStyle::unchanged_style().style(line))?;
+            summary.new_line();
+            summary.push_str(line);
         }
 
-        write!(
-            writer,
-            "\n{}",
-            LineStyle::comment_style().style(&format!(
-                "<---- {} common lines omitted ---->",
-                common_lines.len() - 2 * COMMON_LINES_CONTEXT_SIZE
-            )),
-        )?;
+        summary.new_line();
+        summary.push_str_as_comment(&format!(
+            "<---- {} common lines omitted ---->",
+            common_lines.len() - 2 * COMMON_LINES_CONTEXT_SIZE,
+        ));
 
         let end_context =
             &common_lines[common_lines.len() - COMMON_LINES_CONTEXT_SIZE..common_lines.len()];
 
         for line in end_context {
-            write!(writer, "\n{}", LineStyle::unchanged_style().style(line))?;
+            summary.new_line();
+            summary.push_str(line);
         }
-        Ok(())
     }
 }
 
-// Use ANSI code to enable styling on the summary lines.
-//
-// See https://en.wikipedia.org/wiki/ANSI_escape_code.
-struct LineStyle {
-    ansi_prefix: &'static str,
-    ansi_suffix: &'static str,
-    header: char,
-}
-
-impl LineStyle {
-    // Font in red and bold
-    fn extra_actual_style() -> Self {
-        Self { ansi_prefix: "\x1B[1;31m", ansi_suffix: "\x1B[0m", header: '-' }
-    }
-
-    // Font in green and bold
-    fn extra_expected_style() -> Self {
-        Self { ansi_prefix: "\x1B[1;32m", ansi_suffix: "\x1B[0m", header: '+' }
-    }
-
-    // Font in italic
-    fn comment_style() -> Self {
-        Self { ansi_prefix: "\x1B[3m", ansi_suffix: "\x1B[0m", header: ' ' }
-    }
-
-    // No ansi styling
-    fn unchanged_style() -> Self {
-        Self { ansi_prefix: "", ansi_suffix: "", header: ' ' }
-    }
-
-    fn style(self, line: &str) -> StyledLine<'_> {
-        StyledLine { style: self, line }
-    }
-}
-
-struct StyledLine<'a> {
-    style: LineStyle,
-    line: &'a str,
-}
-
-impl<'a> Display for StyledLine<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if stdout_supports_color() {
-            write!(
-                f,
-                "{}{}{}{}",
-                self.style.header, self.style.ansi_prefix, self.line, self.style.ansi_suffix
-            )
-        } else {
-            write!(f, "{}{}", self.style.header, self.line)
-        }
+impl<'a> Default for Buffer<'a> {
+    fn default() -> Self {
+        Self::Empty
     }
 }
 
@@ -301,11 +312,107 @@ fn is_env_var_set(var: &'static str) -> bool {
     std::env::var(var).map(|s| !s.is_empty()).unwrap_or(false)
 }
 
+// Font in italic
+const COMMENT_STYLE: &str = "\x1B[3m";
+// Font in green and bold
+const EXPECTED_ONLY_STYLE: &str = "\x1B[1;32m";
+// Font in red and bold
+const ACTUAL_ONLY_STYLE: &str = "\x1B[1;31m";
+// Font in green onlyh
+const EXPECTED_WITH_MATCH_STYLE: &str = "\x1B[32m";
+// Font in red only
+const ACTUAL_WITH_MATCH_STYLE: &str = "\x1B[31m";
+// Reset all ANSI formatting
+const RESET_ALL: &str = "\x1B[0m";
+
+#[derive(Default)]
+struct SummaryBuilder {
+    summary: String,
+    last_ansi_style: &'static str,
+}
+
+impl SummaryBuilder {
+    fn push_str(&mut self, element: &str) {
+        self.reset_ansi();
+        self.summary.push_str(element);
+    }
+
+    fn push_str_as_comment(&mut self, element: &str) {
+        self.set_ansi(COMMENT_STYLE);
+        self.summary.push_str(element);
+    }
+
+    fn push_str_actual_only(&mut self, element: &str) {
+        self.set_ansi(ACTUAL_ONLY_STYLE);
+        self.summary.push_str(element);
+    }
+
+    fn push_str_expected_only(&mut self, element: &str) {
+        self.set_ansi(EXPECTED_ONLY_STYLE);
+        self.summary.push_str(element);
+    }
+
+    fn push_actual_only(&mut self, element: char) {
+        self.set_ansi(ACTUAL_ONLY_STYLE);
+        self.summary.push(element);
+    }
+
+    fn push_expected_only(&mut self, element: char) {
+        self.set_ansi(EXPECTED_ONLY_STYLE);
+        self.summary.push(element);
+    }
+
+    fn push_actual_with_match(&mut self, element: char) {
+        self.set_ansi(ACTUAL_WITH_MATCH_STYLE);
+        self.summary.push(element);
+    }
+
+    fn push_expected_with_match(&mut self, element: char) {
+        self.set_ansi(EXPECTED_WITH_MATCH_STYLE);
+        self.summary.push(element);
+    }
+
+    fn new_line(&mut self) {
+        self.reset_ansi();
+        self.summary.push_str("\n ");
+    }
+
+    fn new_line_for_actual(&mut self) {
+        self.reset_ansi();
+        self.summary.push_str("\n-");
+    }
+
+    fn new_line_for_expected(&mut self) {
+        self.reset_ansi();
+        self.summary.push_str("\n+");
+    }
+
+    fn reset_ansi(&mut self) {
+        if !self.last_ansi_style.is_empty() && stdout_supports_color() {
+            self.summary.push_str(RESET_ALL);
+            self.last_ansi_style = "";
+        }
+    }
+
+    fn set_ansi(&mut self, ansi_style: &'static str) {
+        if !stdout_supports_color() || self.last_ansi_style == ansi_style {
+            return;
+        }
+        if !self.last_ansi_style.is_empty() {
+            self.summary.push_str(RESET_ALL);
+        }
+        self.summary.push_str(ansi_style);
+        self.last_ansi_style = ansi_style;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::{matcher_support::edit_distance::Mode, prelude::*};
     use indoc::indoc;
+    use serial_test::{parallel, serial};
+    use std::fmt::Write;
 
     // Make a long text with each element of the iterator on one line.
     // `collection` must contains at least one element.
@@ -320,11 +427,13 @@ mod tests {
     }
 
     #[test]
+    #[parallel]
     fn create_diff_smaller_than_one_line() -> Result<()> {
         verify_that!(create_diff("One", "Two", Mode::Exact), eq(""))
     }
 
     #[test]
+    #[parallel]
     fn create_diff_exact_same() -> Result<()> {
         let expected = indoc! {"
             One
@@ -341,14 +450,47 @@ mod tests {
     }
 
     #[test]
+    #[parallel]
+    fn create_diff_multiline_diff() -> Result<()> {
+        let expected = indoc! {"
+            prefix
+            Actual#1
+            Actual#2
+            Actual#3
+            suffix"};
+        let actual = indoc! {"
+            prefix
+            Expected@one
+            Expected@two
+            suffix"};
+        // TODO: It would be better to have all the Actual together followed by all the
+        // Expected together.
+        verify_that!(
+            create_diff(expected, actual, Mode::Exact),
+            eq(indoc!(
+                "
+
+                Difference(-actual / +expected):
+                 prefix
+                -Actual#1
+                +Expected@one
+                -Actual#2
+                +Expected@two
+                -Actual#3
+                 suffix"
+            ))
+        )
+    }
+
+    #[test]
+    #[parallel]
     fn create_diff_exact_unrelated() -> Result<()> {
         verify_that!(create_diff(&build_text(1..500), &build_text(501..1000), Mode::Exact), eq(""))
     }
 
     #[test]
-    fn create_diff_exact_small_difference_no_color() -> Result<()> {
-        std::env::set_var("NO_COLOR", "1");
-
+    #[parallel]
+    fn create_diff_exact_small_difference() -> Result<()> {
         verify_that!(
             create_diff(&build_text(1..50), &build_text(1..51), Mode::Exact),
             eq(indoc! {
@@ -361,6 +503,76 @@ mod tests {
                  48
                  49
                 +50"
+            })
+        )
+    }
+
+    // Test with color enabled.
+
+    struct ForceColor;
+
+    fn force_color() -> ForceColor {
+        std::env::set_var("FORCE_COLOR", "1");
+        std::env::remove_var("NO_COLOR");
+        ForceColor
+    }
+
+    impl Drop for ForceColor {
+        fn drop(&mut self) {
+            std::env::remove_var("FORCE_COLOR");
+            std::env::set_var("NO_COLOR", "1");
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn create_diff_exact_small_difference_with_color() -> Result<()> {
+        let _keep = force_color();
+
+        verify_that!(
+            create_diff(&build_text(1..50), &build_text(1..51), Mode::Exact),
+            eq(indoc! {
+                "
+
+                Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
+                 1
+                 2
+                 \x1B[3m<---- 45 common lines omitted ---->\x1B[0m
+                 48
+                 49
+                +\x1B[1;32m50\x1B[0m"
+            })
+        )
+    }
+
+    #[test]
+    #[serial]
+    fn create_diff_exact_difference_with_inline_color() -> Result<()> {
+        let _keep = force_color();
+        let actual = indoc!(
+            "There is a home in Nouvelle Orleans
+            They say, it is the rising sons
+            And it has been the ruin of many a po'boy"
+        );
+
+        let expected = indoc!(
+            "There is a house way down in New Orleans
+            They call the rising sun
+            And it has been the ruin of many a poor boy"
+        );
+
+        verify_that!(
+            create_diff(actual, expected, Mode::Exact),
+            eq(indoc! {
+                "
+
+                Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
+                -\x1B[31mThere is a ho\x1B[0m\x1B[1;31mm\x1B[0m\x1B[31me in N\x1B[0m\x1B[1;31mouv\x1B[0m\x1B[31me\x1B[0m\x1B[1;31mlle\x1B[0m\x1B[31m Orleans\x1B[0m
+                +\x1B[32mThere is a ho\x1B[0m\x1B[1;32mus\x1B[0m\x1B[32me \x1B[0m\x1B[1;32mway down \x1B[0m\x1B[32min Ne\x1B[0m\x1B[1;32mw\x1B[0m\x1B[32m Orleans\x1B[0m
+                -\x1B[31mThey \x1B[0m\x1B[1;31ms\x1B[0m\x1B[31ma\x1B[0m\x1B[1;31my,\x1B[0m\x1B[31m \x1B[0m\x1B[1;31mi\x1B[0m\x1B[31mt\x1B[0m\x1B[1;31m is t\x1B[0m\x1B[31mhe rising s\x1B[0m\x1B[1;31mo\x1B[0m\x1B[31mn\x1B[0m\x1B[1;31ms\x1B[0m
+                +\x1B[32mThey \x1B[0m\x1B[1;32mc\x1B[0m\x1B[32ma\x1B[0m\x1B[1;32mll\x1B[0m\x1B[32m the rising s\x1B[0m\x1B[1;32mu\x1B[0m\x1B[32mn\x1B[0m
+                -\x1B[31mAnd it has been the ruin of many a po\x1B[0m\x1B[1;31m'\x1B[0m\x1B[31mboy\x1B[0m
+                +\x1B[32mAnd it has been the ruin of many a po\x1B[0m\x1B[1;32mor \x1B[0m\x1B[32mboy\x1B[0m"
             })
         )
     }
