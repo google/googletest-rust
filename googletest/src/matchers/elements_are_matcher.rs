@@ -92,8 +92,8 @@ macro_rules! __elements_are {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
+    use crate::description::Description;
     use crate::matcher::{Matcher, MatcherResult};
-    use crate::matcher_support::description::Description;
     use crate::matcher_support::zipped_iterator::zip;
     use std::{fmt::Debug, marker::PhantomData};
 
@@ -136,7 +136,7 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> String {
+        fn explain_match(&self, actual: &ContainerT) -> Description {
             let actual_iterator = actual.into_iter();
             let mut zipped_iterator = zip(actual_iterator, self.elements.iter());
             let mut mismatches = Vec::new();
@@ -147,20 +147,20 @@ pub mod internal {
             }
             if mismatches.is_empty() {
                 if !zipped_iterator.has_size_mismatch() {
-                    "whose elements all match".to_string()
+                    "whose elements all match".into()
                 } else {
-                    format!("whose size is {}", zipped_iterator.left_size())
+                    format!("whose size is {}", zipped_iterator.left_size()).into()
                 }
             } else if mismatches.len() == 1 {
                 let mismatches = mismatches.into_iter().collect::<Description>();
-                format!("where {mismatches}")
+                format!("where {mismatches}").into()
             } else {
                 let mismatches = mismatches.into_iter().collect::<Description>();
-                format!("where:\n{}", mismatches.bullet_list().indent())
+                format!("where:\n{}", mismatches.bullet_list().indent()).into()
             }
         }
 
-        fn describe(&self, matcher_result: MatcherResult) -> String {
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
             format!(
                 "{} elements:\n{}",
                 if matcher_result.into() { "has" } else { "doesn't have" },
@@ -172,6 +172,7 @@ pub mod internal {
                     .enumerate()
                     .indent()
             )
+            .into()
         }
     }
 }

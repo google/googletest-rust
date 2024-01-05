@@ -13,7 +13,6 @@
 // limitations under the License.
 
 use googletest::prelude::*;
-use indoc::indoc;
 use std::fmt::{Display, Write};
 
 // Make a long text with each element of the iterator on one line.
@@ -37,16 +36,15 @@ fn colors_appear_when_no_color_is_no_set_and_force_color_is_set() -> Result<()> 
 
     verify_that!(
         result,
-        err(displays_as(contains_substring(indoc! {
+        err(displays_as(contains_substring(
             "
-
-            Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
-             1
-             2
-             \x1B[3m<---- 45 common lines omitted ---->\x1B[0m
-             48
-             49
-            +\x1B[1;32m50\x1B[0m"
-        })))
+  Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
+   1
+   2
+   \x1B[3m<---- 45 common lines omitted ---->\x1B[0m
+   48
+   49
+  +\x1B[1;32m50\x1B[0m"
+        )))
     )
 }

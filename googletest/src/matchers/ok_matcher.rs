@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a `Result` containing `Ok` with a value matched by `inner`.
@@ -56,27 +59,27 @@ impl<T: Debug, E: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> String {
+    fn explain_match(&self, actual: &Self::ActualT) -> Description {
         match actual {
-            Ok(o) => format!("which is a success {}", self.inner.explain_match(o)),
-            Err(_) => "which is an error".to_string(),
+            Ok(o) => {
+                Description::new().text("which is a success").nested(self.inner.explain_match(o))
+            }
+            Err(_) => "which is an error".into(),
         }
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
-            MatcherResult::Match => {
-                format!(
-                    "is a success containing a value, which {}",
-                    self.inner.describe(MatcherResult::Match)
-                )
-            }
-            MatcherResult::NoMatch => {
-                format!(
-                    "is an error or a success containing a value, which {}",
-                    self.inner.describe(MatcherResult::NoMatch)
-                )
-            }
+            MatcherResult::Match => format!(
+                "is a success containing a value, which {}",
+                self.inner.describe(MatcherResult::Match)
+            )
+            .into(),
+            MatcherResult::NoMatch => format!(
+                "is an error or a success containing a value, which {}",
+                self.inner.describe(MatcherResult::NoMatch)
+            )
+            .into(),
         }
     }
 }
@@ -129,7 +132,8 @@ mod tests {
                     Value of: Ok::<i32, i32>(1)
                     Expected: is a success containing a value, which is equal to 2
                     Actual: Ok(1),
-                      which is a success which isn't equal to 2
+                      which is a success
+                        which isn't equal to 2
                 "
             ))))
         )
@@ -144,7 +148,7 @@ mod tests {
         };
         verify_that!(
             matcher.describe(MatcherResult::Match),
-            eq("is a success containing a value, which is equal to 1")
+            displays_as(eq("is a success containing a value, which is equal to 1"))
         )
     }
 }

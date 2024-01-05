@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a container containing all of the items in the given container
@@ -113,7 +116,7 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: &ActualT) -> String {
+    fn explain_match(&self, actual: &ActualT) -> Description {
         let missing_items: Vec<_> = self
             .subset
             .into_iter()
@@ -121,16 +124,16 @@ where
             .map(|expected_item| format!("{expected_item:#?}"))
             .collect();
         match missing_items.len() {
-            0 => "whose no element is missing".to_string(),
-            1 => format!("whose element {} is missing", &missing_items[0]),
-            _ => format!("whose elements {} are missing", missing_items.join(", ")),
+            0 => "whose no element is missing".into(),
+            1 => format!("whose element {} is missing", &missing_items[0]).into(),
+            _ => format!("whose elements {} are missing", missing_items.join(", ")).into(),
         }
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
-            MatcherResult::Match => format!("is a superset of {:#?}", self.subset),
-            MatcherResult::NoMatch => format!("isn't a superset of {:#?}", self.subset),
+            MatcherResult::Match => format!("is a superset of {:#?}", self.subset).into(),
+            MatcherResult::NoMatch => format!("isn't a superset of {:#?}", self.subset).into(),
         }
     }
 }

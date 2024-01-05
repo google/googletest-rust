@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use crate::{
+    description::Description,
     matcher::{Matcher, MatcherResult},
     matcher_support::{edit_distance, summarize_diff::create_diff},
 };
@@ -76,14 +77,14 @@ where
         (self.expected.deref() == actual).into()
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
-            MatcherResult::Match => format!("is equal to {:?}", self.expected),
-            MatcherResult::NoMatch => format!("isn't equal to {:?}", self.expected),
+            MatcherResult::Match => format!("is equal to {:?}", self.expected).into(),
+            MatcherResult::NoMatch => format!("isn't equal to {:?}", self.expected).into(),
         }
     }
 
-    fn explain_match(&self, actual: &ActualT) -> String {
+    fn explain_match(&self, actual: &ActualT) -> Description {
         format!(
             "which {}{}",
             &self.describe(self.matches(actual)),
@@ -93,6 +94,7 @@ where
                 edit_distance::Mode::Exact,
             )
         )
+        .into()
     }
 }
 
@@ -138,13 +140,13 @@ mod tests {
             "
             Actual: Strukt { int: 123, string: \"something\" },
               which isn't equal to Strukt { int: 321, string: \"someone\" }
-            Difference(-actual / +expected):
-             Strukt {
-            -    int: 123,
-            +    int: 321,
-            -    string: \"something\",
-            +    string: \"someone\",
-             }
+              Difference(-actual / +expected):
+               Strukt {
+              -    int: 123,
+              +    int: 321,
+              -    string: \"something\",
+              +    string: \"someone\",
+               }
             "})))
         )
     }

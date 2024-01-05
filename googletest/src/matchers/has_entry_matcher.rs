@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::description::Description;
 use crate::matcher::{Matcher, MatcherResult};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -87,7 +88,7 @@ impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ActualT = ValueT>
         }
     }
 
-    fn explain_match(&self, actual: &HashMap<KeyT, ValueT>) -> String {
+    fn explain_match(&self, actual: &HashMap<KeyT, ValueT>) -> Description {
         if let Some(value) = actual.get(&self.key) {
             format!(
                 "which contains key {:?}, but is mapped to value {:#?}, {}",
@@ -95,24 +96,27 @@ impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ActualT = ValueT>
                 value,
                 self.inner.explain_match(value)
             )
+            .into()
         } else {
-            format!("which doesn't contain key {:?}", self.key)
+            format!("which doesn't contain key {:?}", self.key).into()
         }
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => format!(
                 "contains key {:?}, which value {}",
                 self.key,
                 self.inner.describe(MatcherResult::Match)
-            ),
+            )
+            .into(),
             MatcherResult::NoMatch => format!(
                 "doesn't contain key {:?} or contains key {:?}, which value {}",
                 self.key,
                 self.key,
                 self.inner.describe(MatcherResult::NoMatch)
-            ),
+            )
+            .into(),
         }
     }
 }

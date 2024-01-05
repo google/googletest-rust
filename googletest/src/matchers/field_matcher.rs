@@ -141,7 +141,10 @@ macro_rules! field_internal {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::{
+        description::Description,
+        matcher::{Matcher, MatcherResult},
+    };
     use std::fmt::Debug;
 
     /// Creates a matcher to verify a specific field of the actual struct using
@@ -176,27 +179,29 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &OuterT) -> String {
+        fn explain_match(&self, actual: &OuterT) -> Description {
             if let Some(actual) = (self.field_accessor)(actual) {
                 format!(
                     "which has field `{}`, {}",
                     self.field_path,
                     self.inner.explain_match(actual)
                 )
+                .into()
             } else {
                 let formatted_actual_value = format!("{actual:?}");
                 let without_fields = formatted_actual_value.split('(').next().unwrap_or("");
                 let without_fields = without_fields.split('{').next().unwrap_or("").trim_end();
-                format!("which has the wrong enum variant `{without_fields}`")
+                format!("which has the wrong enum variant `{without_fields}`").into()
             }
         }
 
-        fn describe(&self, matcher_result: MatcherResult) -> String {
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
             format!(
                 "has field `{}`, which {}",
                 self.field_path,
                 self.inner.describe(matcher_result)
             )
+            .into()
         }
     }
 }

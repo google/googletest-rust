@@ -66,8 +66,8 @@ macro_rules! __any {
 /// For internal use only. API stablility is not guaranteed!
 #[doc(hidden)]
 pub mod internal {
+    use crate::description::Description;
     use crate::matcher::{Matcher, MatcherResult};
-    use crate::matcher_support::description::Description;
     use crate::matchers::anything;
     use std::fmt::Debug;
 
@@ -96,27 +96,33 @@ pub mod internal {
             MatcherResult::from(self.components.iter().any(|c| c.matches(actual).is_match()))
         }
 
-        fn explain_match(&self, actual: &Self::ActualT) -> String {
+        fn explain_match(&self, actual: &Self::ActualT) -> Description {
             match N {
-                0 => format!("which {}", anything::<T>().describe(MatcherResult::NoMatch)),
+                0 => format!("which {}", anything::<T>().describe(MatcherResult::NoMatch)).into(),
                 1 => self.components[0].explain_match(actual),
                 _ => {
                     let failures = self
                         .components
                         .iter()
                         .filter(|component| component.matches(actual).is_no_match())
-                        .map(|component| component.explain_match(actual))
-                        .collect::<Description>();
+                        .collect::<Vec<_>>();
+
                     if failures.len() == 1 {
-                        format!("{}", failures)
+                        failures[0].explain_match(actual)
                     } else {
-                        format!("{}", failures.bullet_list().indent_except_first_line())
+                        Description::new()
+                            .collect(
+                                failures
+                                    .into_iter()
+                                    .map(|component| component.explain_match(actual)),
+                            )
+                            .bullet_list()
                     }
                 }
             }
         }
 
-        fn describe(&self, matcher_result: MatcherResult) -> String {
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
             match N {
                 0 => anything::<T>().describe(matcher_result),
                 1 => self.components[0].describe(matcher_result),
@@ -136,6 +142,7 @@ pub mod internal {
                             "has none of the following properties"
                         }
                     )
+                    .into()
                 }
             }
         }
@@ -157,12 +164,12 @@ mod tests {
 
         verify_that!(
             matcher.describe(MatcherResult::Match),
-            eq(indoc!(
+            displays_as(eq(indoc!(
                 "
                 has at least one of the following properties:
                   * starts with prefix \"A\"
                   * ends with suffix \"string\""
-            ))
+            )))
         )
     }
 
@@ -171,7 +178,10 @@ mod tests {
         let first_matcher = starts_with("A");
         let matcher: internal::AnyMatcher<String, 1> = any!(first_matcher);
 
-        verify_that!(matcher.describe(MatcherResult::Match), eq("starts with prefix \"A\""))
+        verify_that!(
+            matcher.describe(MatcherResult::Match),
+            displays_as(eq("starts with prefix \"A\""))
+        )
     }
 
     #[test]

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use crate::{
+    description::Description,
     matcher::{Matcher, MatcherResult},
     matcher_support::{
         edit_distance,
@@ -303,11 +304,11 @@ where
         self.configuration.do_strings_match(self.expected.deref(), actual.as_ref()).into()
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         self.configuration.describe(matcher_result, self.expected.deref())
     }
 
-    fn explain_match(&self, actual: &ActualT) -> String {
+    fn explain_match(&self, actual: &ActualT) -> Description {
         self.configuration.explain_match(self.expected.deref(), actual.as_ref())
     }
 }
@@ -467,7 +468,7 @@ impl Configuration {
     }
 
     // StrMatcher::describe redirects immediately to this function.
-    fn describe(&self, matcher_result: MatcherResult, expected: &str) -> String {
+    fn describe(&self, matcher_result: MatcherResult, expected: &str) -> Description {
         let mut addenda: Vec<Cow<'static, str>> = Vec::with_capacity(3);
         match (self.ignore_leading_whitespace, self.ignore_trailing_whitespace) {
             (true, true) => addenda.push("ignoring leading and trailing whitespace".into()),
@@ -502,14 +503,15 @@ impl Configuration {
                 MatcherResult::NoMatch => "does not end with",
             },
         };
-        format!("{match_mode_description} {expected:?}{extra}")
+        format!("{match_mode_description} {expected:?}{extra}").into()
     }
 
-    fn explain_match(&self, expected: &str, actual: &str) -> String {
+    fn explain_match(&self, expected: &str, actual: &str) -> Description {
         let default_explanation = format!(
             "which {}",
             self.describe(self.do_strings_match(expected, actual).into(), expected)
-        );
+        )
+        .into();
         if !expected.contains('\n') || !actual.contains('\n') {
             return default_explanation;
         }
@@ -549,7 +551,7 @@ impl Configuration {
             MatchMode::EndsWith => create_diff_reversed(actual, expected, self.mode.to_diff_mode()),
         };
 
-        format!("{default_explanation}\n{diff}",)
+        format!("{default_explanation}\n{diff}").into()
     }
 
     fn ignoring_leading_whitespace(self) -> Self {
@@ -811,7 +813,7 @@ mod tests {
         let matcher: StrMatcher<&str, _> = StrMatcher::with_default_config("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
-            eq("is equal to \"A string\"")
+            displays_as(eq("is equal to \"A string\""))
         )
     }
 
@@ -820,7 +822,7 @@ mod tests {
         let matcher: StrMatcher<&str, _> = StrMatcher::with_default_config("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::NoMatch),
-            eq("isn't equal to \"A string\"")
+            displays_as(eq("isn't equal to \"A string\""))
         )
     }
 
@@ -830,7 +832,7 @@ mod tests {
             StrMatcher::with_default_config("A string").ignoring_leading_whitespace();
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
-            eq("is equal to \"A string\" (ignoring leading whitespace)")
+            displays_as(eq("is equal to \"A string\" (ignoring leading whitespace)"))
         )
     }
 
@@ -840,7 +842,7 @@ mod tests {
             StrMatcher::with_default_config("A string").ignoring_leading_whitespace();
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::NoMatch),
-            eq("isn't equal to \"A string\" (ignoring leading whitespace)")
+            displays_as(eq("isn't equal to \"A string\" (ignoring leading whitespace)"))
         )
     }
 
@@ -850,7 +852,7 @@ mod tests {
             StrMatcher::with_default_config("A string").ignoring_trailing_whitespace();
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
-            eq("is equal to \"A string\" (ignoring trailing whitespace)")
+            displays_as(eq("is equal to \"A string\" (ignoring trailing whitespace)"))
         )
     }
 
@@ -861,7 +863,7 @@ mod tests {
             StrMatcher::with_default_config("A string").ignoring_outer_whitespace();
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
-            eq("is equal to \"A string\" (ignoring leading and trailing whitespace)")
+            displays_as(eq("is equal to \"A string\" (ignoring leading and trailing whitespace)"))
         )
     }
 
@@ -871,7 +873,7 @@ mod tests {
             StrMatcher::with_default_config("A string").ignoring_ascii_case();
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
-            eq("is equal to \"A string\" (ignoring ASCII case)")
+            displays_as(eq("is equal to \"A string\" (ignoring ASCII case)"))
         )
     }
 
@@ -883,7 +885,9 @@ mod tests {
             .ignoring_ascii_case();
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
-            eq("is equal to \"A string\" (ignoring leading whitespace, ignoring ASCII case)")
+            displays_as(eq(
+                "is equal to \"A string\" (ignoring leading whitespace, ignoring ASCII case)"
+            ))
         )
     }
 
@@ -892,7 +896,7 @@ mod tests {
         let matcher: StrMatcher<&str, _> = contains_substring("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
-            eq("contains a substring \"A string\"")
+            displays_as(eq("contains a substring \"A string\""))
         )
     }
 
@@ -901,7 +905,7 @@ mod tests {
         let matcher: StrMatcher<&str, _> = contains_substring("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::NoMatch),
-            eq("does not contain a substring \"A string\"")
+            displays_as(eq("does not contain a substring \"A string\""))
         )
     }
 
@@ -910,7 +914,7 @@ mod tests {
         let matcher: StrMatcher<&str, _> = contains_substring("A string").times(gt(2));
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
-            eq("contains a substring \"A string\" (count is greater than 2)")
+            displays_as(eq("contains a substring \"A string\" (count is greater than 2)"))
         )
     }
 
@@ -919,7 +923,7 @@ mod tests {
         let matcher: StrMatcher<&str, _> = starts_with("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
-            eq("starts with prefix \"A string\"")
+            displays_as(eq("starts with prefix \"A string\""))
         )
     }
 
@@ -928,7 +932,7 @@ mod tests {
         let matcher: StrMatcher<&str, _> = starts_with("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::NoMatch),
-            eq("does not start with \"A string\"")
+            displays_as(eq("does not start with \"A string\""))
         )
     }
 
@@ -937,7 +941,7 @@ mod tests {
         let matcher: StrMatcher<&str, _> = ends_with("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
-            eq("ends with suffix \"A string\"")
+            displays_as(eq("ends with suffix \"A string\""))
         )
     }
 
@@ -946,7 +950,7 @@ mod tests {
         let matcher: StrMatcher<&str, _> = ends_with("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::NoMatch),
-            eq("does not end with \"A string\"")
+            displays_as(eq("does not end with \"A string\""))
         )
     }
 
@@ -971,14 +975,13 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(indoc!(
-                "
-                 First line
-                -Second line
-                +Second lines
-                 Third line
-                "
-            ))))
+            err(displays_as(contains_substring(
+                "\
+   First line
+  -Second line
+  +Second lines
+   Third line"
+            )))
         )
     }
 
@@ -1004,15 +1007,14 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(indoc!(
+            err(displays_as(contains_substring(
                 "
-                     First line
-                    -Second line
-                    +Second lines
-                     Third line
-                     <---- remaining lines omitted ---->
-                "
-            ))))
+   First line
+  -Second line
+  +Second lines
+   Third line
+   <---- remaining lines omitted ---->"
+            )))
         )
     }
 
@@ -1037,14 +1039,13 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(indoc!(
-                "
-                     First line
-                    -Second line
-                    +Second lines
-                     <---- remaining lines omitted ---->
-                "
-            ))))
+            err(displays_as(contains_substring(
+                "\
+   First line
+  -Second line
+  +Second lines
+   <---- remaining lines omitted ---->"
+            )))
         )
     }
 
@@ -1070,16 +1071,15 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(indoc!(
+            err(displays_as(contains_substring(
                 "
-                    Difference(-actual / +expected):
-                     <---- remaining lines omitted ---->
-                     Second line
-                    +Third lines
-                    -Third line
-                     Fourth line
-                "
-            ))))
+  Difference(-actual / +expected):
+   <---- remaining lines omitted ---->
+   Second line
+  +Third lines
+  -Third line
+   Fourth line"
+            )))
         )
     }
 
@@ -1107,16 +1107,16 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(indoc!(
-                "
-                    Difference(-actual / +expected):
-                     <---- remaining lines omitted ---->
-                     Second line
-                    +Third lines
-                    -Third line
-                     Fourth line
-                     <---- remaining lines omitted ---->"
-            ))))
+            err(displays_as(contains_substring(
+                "\
+  Difference(-actual / +expected):
+   <---- remaining lines omitted ---->
+   Second line
+  +Third lines
+  -Third line
+   Fourth line
+   <---- remaining lines omitted ---->"
+            )))
         )
     }
 
@@ -1144,20 +1144,19 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(indoc!(
-                "
-                    Difference(-actual / +expected):
-                     <---- remaining lines omitted ---->
-                    +line
-                    -Second line
-                     Third line
-                    +Foorth line
-                    -Fourth line
-                    +Fifth
-                    -Fifth line
-                     <---- remaining lines omitted ---->
-                "
-            ))))
+            err(displays_as(contains_substring(
+                "\
+  Difference(-actual / +expected):
+   <---- remaining lines omitted ---->
+  +line
+  -Second line
+   Third line
+  +Foorth line
+  -Fourth line
+  +Fifth
+  -Fifth line
+   <---- remaining lines omitted ---->"
+            )))
         )
     }
 
@@ -1183,15 +1182,14 @@ mod tests {
 
         verify_that!(
             result,
-            err(displays_as(contains_substring(indoc!(
-                "
-                     First line
-                    -Second line
-                    +Second lines
-                     Third line
-                    -Fourth line
-                "
-            ))))
+            err(displays_as(contains_substring(
+                "\
+   First line
+  -Second line
+  +Second lines
+   Third line
+  -Fourth line"
+            )))
         )
     }
 

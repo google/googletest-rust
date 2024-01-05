@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::description::Description;
 use crate::matcher::{Matcher, MatcherResult};
 use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
@@ -42,21 +43,22 @@ impl<T: Debug + Display, InnerMatcher: Matcher<ActualT = String>> Matcher
         self.inner.matches(&format!("{actual}"))
     }
 
-    fn explain_match(&self, actual: &T) -> String {
+    fn explain_match(&self, actual: &T) -> Description {
         format!("which displays as a string {}", self.inner.explain_match(&format!("{actual}")))
+            .into()
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => {
                 format!("displays as a string which {}", self.inner.describe(MatcherResult::Match))
+                    .into()
             }
-            MatcherResult::NoMatch => {
-                format!(
-                    "doesn't display as a string which {}",
-                    self.inner.describe(MatcherResult::Match)
-                )
-            }
+            MatcherResult::NoMatch => format!(
+                "doesn't display as a string which {}",
+                self.inner.describe(MatcherResult::Match)
+            )
+            .into(),
         }
     }
 }
@@ -107,6 +109,7 @@ mod tests {
             result,
             err(displays_as(contains_substring(indoc!(
                 "
+                  Actual: \"123\\n234\",
                     which displays as a string which isn't equal to \"123\\n345\"
                     Difference(-actual / +expected):
                      123

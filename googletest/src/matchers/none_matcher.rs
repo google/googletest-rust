@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::description::Description;
 use crate::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -46,10 +47,10 @@ impl<T: Debug> Matcher for NoneMatcher<T> {
         (actual.is_none()).into()
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
-            MatcherResult::Match => "is none".to_string(),
-            MatcherResult::NoMatch => "is some(_)".to_string(),
+            MatcherResult::Match => "is none".into(),
+            MatcherResult::NoMatch => "is some(_)".into(),
         }
     }
 }

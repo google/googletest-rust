@@ -15,7 +15,10 @@
 // There are no visible documentation elements in this module.
 #![doc(hidden)]
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::fmt::Debug;
 
 /// Matcher created by [`Matcher::and`].
@@ -46,29 +49,24 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &M1::ActualT) -> String {
+    fn explain_match(&self, actual: &M1::ActualT) -> Description {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
-            (MatcherResult::Match, MatcherResult::Match) => {
-                format!(
-                    "{} and\n  {}",
-                    self.m1.explain_match(actual),
-                    self.m2.explain_match(actual)
-                )
-            }
+            (MatcherResult::Match, MatcherResult::Match) => Description::new()
+                .nested(self.m1.explain_match(actual))
+                .text("and")
+                .nested(self.m2.explain_match(actual)),
             (MatcherResult::NoMatch, MatcherResult::Match) => self.m1.explain_match(actual),
             (MatcherResult::Match, MatcherResult::NoMatch) => self.m2.explain_match(actual),
-            (MatcherResult::NoMatch, MatcherResult::NoMatch) => {
-                format!(
-                    "{} and\n  {}",
-                    self.m1.explain_match(actual),
-                    self.m2.explain_match(actual)
-                )
-            }
+            (MatcherResult::NoMatch, MatcherResult::NoMatch) => Description::new()
+                .nested(self.m1.explain_match(actual))
+                .text("and")
+                .nested(self.m2.explain_match(actual)),
         }
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         format!("{}, and {}", self.m1.describe(matcher_result), self.m2.describe(matcher_result))
+            .into()
     }
 }
 
@@ -124,8 +122,9 @@ mod tests {
                 Value of: 1
                 Expected: never matches, and never matches
                 Actual: 1,
-                  which is anything and
-                  which is anything
+                    which is anything
+                  and
+                    which is anything
                 "
             ))))
         )

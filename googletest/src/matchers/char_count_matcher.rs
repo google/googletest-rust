@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a string whose number of Unicode scalars matches `expected`.
@@ -71,36 +74,36 @@ impl<T: Debug + ?Sized + AsRef<str>, E: Matcher<ActualT = usize>> Matcher for Ch
         self.expected.matches(&actual.as_ref().chars().count())
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
-            MatcherResult::Match => {
-                format!(
-                    "has character count, which {}",
-                    self.expected.describe(MatcherResult::Match)
-                )
-            }
-            MatcherResult::NoMatch => {
-                format!(
-                    "has character count, which {}",
-                    self.expected.describe(MatcherResult::NoMatch)
-                )
-            }
+            MatcherResult::Match => format!(
+                "has character count, which {}",
+                self.expected.describe(MatcherResult::Match)
+            )
+            .into(),
+            MatcherResult::NoMatch => format!(
+                "has character count, which {}",
+                self.expected.describe(MatcherResult::NoMatch)
+            )
+            .into(),
         }
     }
 
-    fn explain_match(&self, actual: &T) -> String {
+    fn explain_match(&self, actual: &T) -> Description {
         let actual_size = actual.as_ref().chars().count();
         format!(
             "which has character count {}, {}",
             actual_size,
             self.expected.explain_match(&actual_size)
         )
+        .into()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::char_count;
+    use crate::description::Description;
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
     use indoc::indoc;
@@ -135,11 +138,11 @@ mod tests {
                 false.into()
             }
 
-            fn describe(&self, _: MatcherResult) -> String {
+            fn describe(&self, _: MatcherResult) -> Description {
                 "called described".into()
             }
 
-            fn explain_match(&self, _: &T) -> String {
+            fn explain_match(&self, _: &T) -> Description {
                 "called explain_match".into()
             }
         }

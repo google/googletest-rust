@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::description::Description;
 use crate::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -119,14 +120,14 @@ where
         (*actual == self.expected).into()
     }
 
-    fn explain_match(&self, actual: &ActualContainerT) -> String {
-        build_explanation(self.get_missing_items(actual), self.get_unexpected_items(actual))
+    fn explain_match(&self, actual: &ActualContainerT) -> Description {
+        build_explanation(self.get_missing_items(actual), self.get_unexpected_items(actual)).into()
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
-            MatcherResult::Match => format!("is equal to {:?}", self.expected),
-            MatcherResult::NoMatch => format!("isn't equal to {:?}", self.expected),
+            MatcherResult::Match => format!("is equal to {:?}", self.expected).into(),
+            MatcherResult::NoMatch => format!("isn't equal to {:?}", self.expected).into(),
         }
     }
 }

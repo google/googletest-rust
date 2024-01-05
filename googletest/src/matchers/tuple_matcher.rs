@@ -21,22 +21,11 @@
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
-    use crate::matcher::{Matcher, MatcherResult};
-    use std::fmt::{Debug, Write};
-
-    /// Replaces the first expression with the second at compile time.
-    ///
-    /// This is used below in repetition sequences where the output must only
-    /// include the same expression repeated the same number of times as the
-    /// macro input.
-    ///
-    /// **For internal use only. API stablility is not guaranteed!**
-    #[doc(hidden)]
-    macro_rules! replace_expr {
-        ($_ignored:tt, $replacement:expr) => {
-            $replacement
-        };
-    }
+    use crate::{
+        description::Description,
+        matcher::{Matcher, MatcherResult},
+    };
+    use std::fmt::Debug;
 
     // This implementation is provided for completeness, but is completely trivial.
     // The only actual value which can be supplied is (), which must match.
@@ -47,7 +36,7 @@ pub mod internal {
             MatcherResult::Match
         }
 
-        fn describe(&self, matcher_result: MatcherResult) -> String {
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
             match matcher_result {
                 MatcherResult::Match => "is the empty tuple".into(),
                 MatcherResult::NoMatch => "is not the empty tuple".into(),
@@ -76,41 +65,30 @@ pub mod internal {
                     MatcherResult::Match
                 }
 
-                fn explain_match(&self, actual: &($($field_type,)*)) -> String {
-                    let mut explanation = format!("which {}", self.describe(self.matches(actual)));
+                fn explain_match(&self, actual: &($($field_type,)*)) -> Description {
+                    let mut explanation = Description::new().text("which").nested(self.describe(self.matches(actual)));
                     $(match self.$field_number.matches(&actual.$field_number) {
                         MatcherResult::Match => {},
                         MatcherResult::NoMatch => {
-                            writeln!(
-                                &mut explanation,
-                                concat!("Element #", $field_number, " is {:?}, {}"),
-                                actual.$field_number,
-                                self.$field_number.explain_match(&actual.$field_number)
-                            ).unwrap();
+                            explanation = explanation
+                                .text(format!(concat!("Element #", $field_number, " is {:?},"), actual.$field_number))
+                                .nested(self.$field_number.explain_match(&actual.$field_number));
                         }
                     })*
-                    (explanation)
+                    explanation
                 }
 
-                fn describe(&self, matcher_result: MatcherResult) -> String {
+                fn describe(&self, matcher_result: MatcherResult) -> Description {
                     match matcher_result {
                         MatcherResult::Match => {
-                            format!(
-                                concat!(
-                                    "is a tuple whose values respectively match:\n",
-                                    $(replace_expr!($field_number, "  {},\n")),*
-                                ),
-                                $(self.$field_number.describe(matcher_result)),*
-                            )
+                            let mut description = Description::new().text("is a tuple whose values respectively match:");
+                            $(description = description.nested(self.$field_number.describe(matcher_result));)*
+                            description
                         }
                         MatcherResult::NoMatch => {
-                            format!(
-                                concat!(
-                                    "is a tuple whose values do not respectively match:\n",
-                                    $(replace_expr!($field_number, "  {},\n")),*
-                                ),
-                                $(self.$field_number.describe(MatcherResult::Match)),*
-                            )
+                            let mut description = Description::new().text("is a tuple whose values do not respectively match:");
+                            $(description = description.nested(self.$field_number.describe(MatcherResult::Match));)*
+                            description
                         }
                     }
                 }

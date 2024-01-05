@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches the actual value exactly when the inner matcher does _not_ match.
@@ -51,11 +54,11 @@ impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for NotMatcher<T, In
         }
     }
 
-    fn explain_match(&self, actual: &T) -> String {
+    fn explain_match(&self, actual: &T) -> Description {
         self.inner.explain_match(actual)
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         self.inner.describe(if matcher_result.into() {
             MatcherResult::NoMatch
         } else {

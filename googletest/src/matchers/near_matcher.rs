@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use num_traits::{Float, FloatConst};
 use std::fmt::Debug;
 
@@ -179,13 +182,13 @@ impl<T: Debug + Float> Matcher for NearMatcher<T> {
         }
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => {
-                format!("is within {:?} of {:?}", self.max_abs_error, self.expected)
+                format!("is within {:?} of {:?}", self.max_abs_error, self.expected).into()
             }
             MatcherResult::NoMatch => {
-                format!("isn't within {:?} of {:?}", self.max_abs_error, self.expected)
+                format!("isn't within {:?} of {:?}", self.max_abs_error, self.expected).into()
             }
         }
     }

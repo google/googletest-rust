@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a value greater (in the sense of `>`) than `expected`.
@@ -91,10 +94,12 @@ impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher
         (*actual > self.expected).into()
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
-            MatcherResult::Match => format!("is greater than {:?}", self.expected),
-            MatcherResult::NoMatch => format!("is less than or equal to {:?}", self.expected),
+            MatcherResult::Match => format!("is greater than {:?}", self.expected).into(),
+            MatcherResult::NoMatch => {
+                format!("is less than or equal to {:?}", self.expected).into()
+            }
         }
     }
 }
@@ -175,14 +180,17 @@ mod tests {
 
     #[test]
     fn gt_describe_matches() -> Result<()> {
-        verify_that!(gt::<i32, i32>(232).describe(MatcherResult::Match), eq("is greater than 232"))
+        verify_that!(
+            gt::<i32, i32>(232).describe(MatcherResult::Match),
+            displays_as(eq("is greater than 232"))
+        )
     }
 
     #[test]
     fn gt_describe_does_not_match() -> Result<()> {
         verify_that!(
             gt::<i32, i32>(232).describe(MatcherResult::NoMatch),
-            eq("is less than or equal to 232")
+            displays_as(eq("is less than or equal to 232"))
         )
     }
 

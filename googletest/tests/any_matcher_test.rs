@@ -61,9 +61,7 @@ fn admits_matchers_without_static_lifetime() -> Result<()> {
 fn mismatch_description_two_failed_matchers() -> Result<()> {
     verify_that!(
         any!(starts_with("One"), starts_with("Two")).explain_match("Three"),
-        displays_as(eq(
-            "* which does not start with \"One\"\n  * which does not start with \"Two\""
-        ))
+        displays_as(eq("* which does not start with \"One\"\n* which does not start with \"Two\""))
     )
 }
 
@@ -88,6 +86,70 @@ fn all_multiple_failed_assertions() -> Result<()> {
               * which isn't equal to 1
               * which isn't equal to 2
               * which isn't equal to 3"
+        ))))
+    )
+}
+
+#[test]
+fn formats_error_message_correctly_when_any_is_inside_some() -> Result<()> {
+    let value = Some(4);
+    let result = verify_that!(value, some(any![eq(1), eq(2), eq(3)]));
+    verify_that!(
+        result,
+        err(displays_as(contains_substring(indoc!(
+            "
+            Value of: value
+            Expected: has a value which has at least one of the following properties:
+              * is equal to 1
+              * is equal to 2
+              * is equal to 3
+            Actual: Some(4),
+              which has a value
+                * which isn't equal to 1
+                * which isn't equal to 2
+                * which isn't equal to 3"
+        ))))
+    )
+}
+
+#[test]
+fn formats_error_message_correctly_when_any_is_inside_ok() -> Result<()> {
+    let value: std::result::Result<i32, std::io::Error> = Ok(4);
+    let result = verify_that!(value, ok(any![eq(1), eq(2), eq(3)]));
+    verify_that!(
+        result,
+        err(displays_as(contains_substring(indoc!(
+            "
+            Value of: value
+            Expected: is a success containing a value, which has at least one of the following properties:
+              * is equal to 1
+              * is equal to 2
+              * is equal to 3
+            Actual: Ok(4),
+              which is a success
+                * which isn't equal to 1
+                * which isn't equal to 2
+                * which isn't equal to 3"
+        ))))
+    )
+}
+
+#[test]
+fn formats_error_message_correctly_when_any_is_inside_err() -> Result<()> {
+    let value: std::result::Result<(), &'static str> = Err("An error");
+    let result = verify_that!(value, err(any![starts_with("Not"), ends_with("problem")]));
+    verify_that!(
+        result,
+        err(displays_as(contains_substring(indoc!(
+            r#"
+            Value of: value
+            Expected: is an error which has at least one of the following properties:
+              * starts with prefix "Not"
+              * ends with suffix "problem"
+            Actual: Err("An error"),
+              which is an error
+                * which does not start with "Not"
+                * which does not end with "problem""#
         ))))
     )
 }

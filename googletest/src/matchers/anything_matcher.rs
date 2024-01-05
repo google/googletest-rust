@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches anything. This matcher always succeeds.
@@ -42,10 +45,10 @@ impl<T: Debug + ?Sized> Matcher for Anything<T> {
         MatcherResult::Match
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
-            MatcherResult::Match => "is anything".to_string(),
-            MatcherResult::NoMatch => "never matches".to_string(),
+            MatcherResult::Match => "is anything".into(),
+            MatcherResult::NoMatch => "never matches".into(),
         }
     }
 }

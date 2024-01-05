@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a value greater than or equal to (in the sense of `>=`) `expected`.
@@ -91,10 +94,12 @@ impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher
         (*actual >= self.expected).into()
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
-            MatcherResult::Match => format!("is greater than or equal to {:?}", self.expected),
-            MatcherResult::NoMatch => format!("is less than {:?}", self.expected),
+            MatcherResult::Match => {
+                format!("is greater than or equal to {:?}", self.expected).into()
+            }
+            MatcherResult::NoMatch => format!("is less than {:?}", self.expected).into(),
         }
     }
 }

@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches an `Option` containing a value matched by `inner`.
@@ -51,24 +54,25 @@ impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for SomeMatcher<T, I
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match(&self, actual: &Option<T>) -> String {
+    fn explain_match(&self, actual: &Option<T>) -> Description {
         match (self.matches(actual), actual) {
-            (_, Some(t)) => format!("which has a value {}", self.inner.explain_match(t)),
-            (_, None) => "which is None".to_string(),
+            (_, Some(t)) => {
+                Description::new().text("which has a value").nested(self.inner.explain_match(t))
+            }
+            (_, None) => "which is None".into(),
         }
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => {
-                format!("has a value which {}", self.inner.describe(MatcherResult::Match))
+                format!("has a value which {}", self.inner.describe(MatcherResult::Match)).into()
             }
-            MatcherResult::NoMatch => {
-                format!(
-                    "is None or has a value which {}",
-                    self.inner.describe(MatcherResult::NoMatch)
-                )
-            }
+            MatcherResult::NoMatch => format!(
+                "is None or has a value which {}",
+                self.inner.describe(MatcherResult::NoMatch)
+            )
+            .into(),
         }
     }
 }
@@ -117,7 +121,8 @@ mod tests {
                     Value of: Some(2)
                     Expected: has a value which is equal to 1
                     Actual: Some(2),
-                      which has a value which isn't equal to 1
+                      which has a value
+                        which isn't equal to 1
                 "
             ))))
         )
@@ -127,7 +132,7 @@ mod tests {
     fn some_describe_matches() -> Result<()> {
         verify_that!(
             some(eq(1)).describe(MatcherResult::Match),
-            eq("has a value which is equal to 1")
+            displays_as(eq("has a value which is equal to 1"))
         )
     }
 
@@ -135,7 +140,7 @@ mod tests {
     fn some_describe_does_not_match() -> Result<()> {
         verify_that!(
             some(eq(1)).describe(MatcherResult::NoMatch),
-            eq("is None or has a value which isn't equal to 1")
+            displays_as(eq("is None or has a value which isn't equal to 1"))
         )
     }
 
@@ -148,7 +153,7 @@ mod tests {
     fn some_explain_match_with_some_success() -> Result<()> {
         verify_that!(
             some(eq(1)).explain_match(&Some(1)),
-            displays_as(eq("which has a value which is equal to 1"))
+            displays_as(eq("which has a value\n  which is equal to 1"))
         )
     }
 
@@ -156,7 +161,7 @@ mod tests {
     fn some_explain_match_with_some_fail() -> Result<()> {
         verify_that!(
             some(eq(1)).explain_match(&Some(2)),
-            displays_as(eq("which has a value which isn't equal to 1"))
+            displays_as(eq("which has a value\n  which isn't equal to 1"))
         )
     }
 }

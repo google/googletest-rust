@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Creates a matcher based on the predicate provided.
@@ -92,18 +95,18 @@ pub struct PredicateMatcher<T: ?Sized, P, D1, D2> {
 ///
 /// See [`PredicateMatcher::with_description`]
 pub trait PredicateDescription {
-    fn to_description(&self) -> String;
+    fn to_description(&self) -> Description;
 }
 
 impl PredicateDescription for &str {
-    fn to_description(&self) -> String {
-        self.to_string()
+    fn to_description(&self) -> Description {
+        self.to_string().into()
     }
 }
 
 impl PredicateDescription for String {
-    fn to_description(&self) -> String {
-        self.clone()
+    fn to_description(&self) -> Description {
+        self.to_string().into()
     }
 }
 
@@ -112,8 +115,8 @@ where
     T: Fn() -> S,
     S: Into<String>,
 {
-    fn to_description(&self) -> String {
-        self().into()
+    fn to_description(&self) -> Description {
+        self().into().into()
     }
 }
 
@@ -131,10 +134,10 @@ where
         (self.predicate)(actual).into()
     }
 
-    fn describe(&self, result: MatcherResult) -> String {
+    fn describe(&self, result: MatcherResult) -> Description {
         match result {
-            MatcherResult::Match => "matches".to_string(),
-            MatcherResult::NoMatch => "does not match".to_string(),
+            MatcherResult::Match => "matches".into(),
+            MatcherResult::NoMatch => "does not match".into(),
         }
     }
 }
@@ -150,7 +153,7 @@ where
         (self.predicate)(actual).into()
     }
 
-    fn describe(&self, result: MatcherResult) -> String {
+    fn describe(&self, result: MatcherResult) -> Description {
         match result {
             MatcherResult::Match => self.positive_description.to_description(),
             MatcherResult::NoMatch => self.negative_description.to_description(),
