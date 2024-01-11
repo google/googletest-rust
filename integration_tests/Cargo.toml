@@ -116,6 +116,11 @@ path = "src/non_fatal_failure_in_subroutine.rs"
 test = false
 
 [[bin]]
+name = "passing_test_with_should_panic"
+path = "src/passing_test_with_should_panic.rs"
+test = false
+
+[[bin]]
 name = "simple_assertion_failure"
 path = "src/simple_assertion_failure.rs"
 test = false
