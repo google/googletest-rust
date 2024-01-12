@@ -138,6 +138,7 @@ mod tests {
     use super::eq;
     use crate::prelude::*;
     use indoc::indoc;
+    use serial_test::parallel;
 
     #[test]
     fn eq_matches_string_reference_with_string_reference() -> Result<()> {
@@ -162,6 +163,7 @@ mod tests {
     }
 
     #[test]
+    #[parallel]
     fn eq_struct_debug_diff() -> Result<()> {
         #[derive(Debug, PartialEq)]
         struct Strukt {
@@ -191,6 +193,7 @@ mod tests {
     }
 
     #[test]
+    #[parallel]
     fn eq_vec_debug_diff() -> Result<()> {
         let result = verify_that!(vec![1, 2, 3], eq(vec![1, 3, 4]));
         verify_that!(
@@ -213,6 +216,7 @@ mod tests {
     }
 
     #[test]
+    #[parallel]
     fn eq_vec_debug_diff_length_mismatch() -> Result<()> {
         let result = verify_that!(vec![1, 2, 3, 4, 5], eq(vec![1, 3, 5]));
         verify_that!(
@@ -236,6 +240,7 @@ mod tests {
     }
 
     #[test]
+    #[parallel]
     fn eq_debug_diff_common_lines_omitted() -> Result<()> {
         let result = verify_that!((1..50).collect::<Vec<_>>(), eq((3..52).collect::<Vec<_>>()));
         verify_that!(
@@ -260,6 +265,7 @@ mod tests {
     }
 
     #[test]
+    #[parallel]
     fn eq_debug_diff_5_common_lines_not_omitted() -> Result<()> {
         let result = verify_that!((1..8).collect::<Vec<_>>(), eq((3..10).collect::<Vec<_>>()));
         verify_that!(
@@ -284,6 +290,7 @@ mod tests {
     }
 
     #[test]
+    #[parallel]
     fn eq_debug_diff_start_common_lines_omitted() -> Result<()> {
         let result = verify_that!((1..50).collect::<Vec<_>>(), eq((1..52).collect::<Vec<_>>()));
         verify_that!(
@@ -305,6 +312,7 @@ mod tests {
     }
 
     #[test]
+    #[parallel]
     fn eq_debug_diff_end_common_lines_omitted() -> Result<()> {
         let result = verify_that!((1..52).collect::<Vec<_>>(), eq((3..52).collect::<Vec<_>>()));
         verify_that!(
@@ -343,6 +351,7 @@ mod tests {
     }
 
     #[test]
+    #[parallel]
     fn match_explanation_contains_diff_of_strings_if_more_than_one_line() -> Result<()> {
         let result = verify_that!(
             indoc!(
