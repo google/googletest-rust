@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::description::Description;
 use crate::matcher::{Matcher, MatcherResult};
 use regex::Regex;
 use std::fmt::Debug;
@@ -75,13 +76,13 @@ impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher<ActualT> for ContainsRegexMat
         self.regex.is_match(actual.as_ref()).into()
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => {
-                format!("contains the regular expression {:#?}", self.regex.as_str())
+                format!("contains the regular expression {:#?}", self.regex.as_str()).into()
             }
             MatcherResult::NoMatch => {
-                format!("doesn't contain the regular expression {:#?}", self.regex.as_str())
+                format!("doesn't contain the regular expression {:#?}", self.regex.as_str()).into()
             }
         }
     }
@@ -140,7 +141,7 @@ mod tests {
 
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
-            eq("contains the regular expression \"\\n\"")
+            displays_as(eq("contains the regular expression \"\\n\""))
         )
     }
 }

@@ -14,7 +14,10 @@
 
 #![doc(hidden)]
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches precisely values matched by `inner`.
@@ -42,22 +45,24 @@ impl<'a, ActualT: Debug, InnerMatcherT: Matcher<ActualT>> Matcher<ActualT>
         self.inner.matches(actual)
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => format!(
                 "is {} which {}",
                 self.description,
                 self.inner.describe(MatcherResult::Match)
-            ),
+            )
+            .into(),
             MatcherResult::NoMatch => format!(
                 "is not {} which {}",
                 self.description,
                 self.inner.describe(MatcherResult::Match)
-            ),
+            )
+            .into(),
         }
     }
 
-    fn explain_match(&self, actual: &ActualT) -> String {
+    fn explain_match(&self, actual: &ActualT) -> Description {
         self.inner.explain_match(actual)
     }
 }

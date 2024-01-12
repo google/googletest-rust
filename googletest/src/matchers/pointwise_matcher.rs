@@ -151,8 +151,8 @@ macro_rules! __pointwise {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 pub mod internal {
+    use crate::description::Description;
     use crate::matcher::{Matcher, MatcherResult};
-    use crate::matcher_support::description::Description;
     use crate::matcher_support::zipped_iterator::zip;
     use std::{fmt::Debug, marker::PhantomData};
 
@@ -190,7 +190,7 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> String {
+        fn explain_match(&self, actual: &ContainerT) -> Description {
             // TODO(b/260819741) This code duplicates elements_are_matcher.rs. Consider
             // extract as a separate library. (or implement pointwise! with
             // elements_are)
@@ -204,23 +204,24 @@ pub mod internal {
             }
             if mismatches.is_empty() {
                 if !zipped_iterator.has_size_mismatch() {
-                    "which matches all elements".to_string()
+                    "which matches all elements".into()
                 } else {
                     format!(
                         "which has size {} (expected {})",
                         zipped_iterator.left_size(),
                         self.matchers.len()
                     )
+                    .into()
                 }
             } else if mismatches.len() == 1 {
-                format!("where {}", mismatches[0])
+                format!("where {}", mismatches[0]).into()
             } else {
                 let mismatches = mismatches.into_iter().collect::<Description>();
-                format!("where:\n{}", mismatches.bullet_list().indent())
+                format!("where:\n{}", mismatches.bullet_list().indent()).into()
             }
         }
 
-        fn describe(&self, matcher_result: MatcherResult) -> String {
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
             format!(
                 "{} elements satisfying respectively:\n{}",
                 if matcher_result.into() { "has" } else { "doesn't have" },
@@ -231,6 +232,7 @@ pub mod internal {
                     .enumerate()
                     .indent()
             )
+            .into()
         }
     }
 }

@@ -40,6 +40,32 @@ use syn::{parse_macro_input, Attribute, ItemFn, ReturnType};
 /// }
 /// ```
 ///
+/// This macro can be used with `#[should_panic]` to indicate that the test is
+/// expected to panic. For example:
+///
+/// ```ignore
+/// #[googletest::test]
+/// #[should_panic]
+/// fn passes_due_to_should_panic() {
+///     let value = 2;
+///     expect_that!(value, gt(0));
+///     panic!("This panics");
+/// }
+/// ```
+///
+/// Using `#[should_panic]` modifies the behaviour of `#[googletest::test]` so
+/// that the test panics (and passes) if any non-fatal assertion occurs.
+/// For example, the following test passes:
+///
+/// ```ignore
+/// #[googletest::test]
+/// #[should_panic]
+/// fn passes_due_to_should_panic_and_failing_assertion() {
+///     let value = 2;
+///     expect_that!(value, eq(0));
+/// }
+/// ```
+///
 /// [`googletest::Result`]: type.Result.html
 #[proc_macro_attribute]
 pub fn test(
@@ -49,6 +75,15 @@ pub fn test(
     let mut parsed_fn = parse_macro_input!(input as ItemFn);
     let attrs = parsed_fn.attrs.drain(..).collect::<Vec<_>>();
     let (mut sig, block) = (parsed_fn.sig, parsed_fn.block);
+    let (outer_return_type, trailer) =
+        if attrs.iter().any(|attr| attr.path().is_ident("should_panic")) {
+            (quote! { () }, quote! { .unwrap(); })
+        } else {
+            (
+                quote! { std::result::Result<(), googletest::internal::test_outcome::TestFailure> },
+                quote! {},
+            )
+        };
     let output_type = match sig.output.clone() {
         ReturnType::Type(_, output_type) => Some(output_type),
         ReturnType::Default => None,
@@ -81,23 +116,25 @@ pub fn test(
     let function = if let Some(output_type) = output_type {
         quote! {
             #(#attrs)*
-            #sig -> std::result::Result<(), googletest::internal::test_outcome::TestFailure> {
+            #sig -> #outer_return_type {
                 #maybe_closure
                 use googletest::internal::test_outcome::TestOutcome;
                 TestOutcome::init_current_test_outcome();
                 let result: #output_type = #invocation;
                 TestOutcome::close_current_test_outcome(result)
+                #trailer
             }
         }
     } else {
         quote! {
             #(#attrs)*
-            #sig -> std::result::Result<(), googletest::internal::test_outcome::TestFailure> {
+            #sig -> #outer_return_type {
                 #maybe_closure
                 use googletest::internal::test_outcome::TestOutcome;
                 TestOutcome::init_current_test_outcome();
                 #invocation;
                 TestOutcome::close_current_test_outcome(googletest::Result::Ok(()))
+                #trailer
             }
         }
     };

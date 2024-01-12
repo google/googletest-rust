@@ -352,7 +352,7 @@ fn is_contained_in_matches_hash_map_with_trailing_comma() -> Result<()> {
 
 #[test]
 fn is_contained_in_matches_when_container_is_empty() -> Result<()> {
-    verify_that!(vec![], is_contained_in!(eq(2), eq(3), eq(4)))
+    verify_that!(vec![], is_contained_in!(eq::<i32, _>(2), eq(3), eq(4)))
 }
 
 #[test]

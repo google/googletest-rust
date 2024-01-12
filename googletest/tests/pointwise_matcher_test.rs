@@ -142,8 +142,8 @@ fn pointwise_returns_mismatch_when_actual_value_does_not_match_on_first_and_seco
               2. is equal to 3
             Actual: [1, 2, 3],
               where:
-              * element #0 is 1, which isn't equal to 2
-              * element #1 is 2, which isn't equal to 3"
+                * element #0 is 1, which isn't equal to 2
+                * element #1 is 2, which isn't equal to 3"
         ))))
     )
 }

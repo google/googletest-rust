@@ -15,7 +15,10 @@
 // There are no visible documentation elements in this module.
 #![doc(hidden)]
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::fmt::Debug;
 
 /// Matcher created by [`Matcher::or`].
@@ -41,12 +44,16 @@ impl<T: Debug + ?Sized, M1: Matcher<T>, M2: Matcher<T>> Matcher<T> for Disjuncti
         }
     }
 
-    fn explain_match(&self, actual: &T) -> String {
-        format!("{} and\n  {}", self.m1.explain_match(actual), self.m2.explain_match(actual))
+    fn explain_match(&self, actual: &T) -> Description {
+        Description::new()
+            .nested(self.m1.explain_match(actual))
+            .text("and")
+            .nested(self.m2.explain_match(actual))
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         format!("{}, or {}", self.m1.describe(matcher_result), self.m2.describe(matcher_result))
+            .into()
     }
 }
 
@@ -80,8 +87,9 @@ mod tests {
                 Value of: 1
                 Expected: never matches, or never matches
                 Actual: 1,
-                  which is anything and
-                  which is anything
+                    which is anything
+                  and
+                    which is anything
                 "
             ))))
         )

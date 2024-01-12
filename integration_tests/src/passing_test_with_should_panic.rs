@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Utilities to facilitate writing matchers.
-//!
-//! Tests normally do not need to import anything from this module. Some of
-//! these facilities could be useful to downstream users writing custom
-//! matchers.
+fn main() {}
 
-pub(crate) mod count_elements;
-pub(crate) mod edit_distance;
-pub(crate) mod summarize_diff;
-pub(crate) mod zipped_iterator;
+#[cfg(test)]
+mod tests {
+    use googletest::prelude::*;
+
+    #[googletest::test]
+    #[should_panic]
+    fn passes_but_fails_due_to_should_panic() {
+        expect_that!(2, eq(2));
+    }
+}

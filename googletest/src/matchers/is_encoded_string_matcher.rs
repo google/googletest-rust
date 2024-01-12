@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::matcher::{Matcher, MatcherResult};
+use crate::{
+    description::Description,
+    matcher::{Matcher, MatcherResult},
+};
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a byte sequence which is a UTF-8 encoded string matched by `inner`.
@@ -70,23 +73,27 @@ where
             .unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => format!(
                 "is a UTF-8 encoded string which {}",
                 self.inner.describe(MatcherResult::Match)
-            ),
+            )
+            .into(),
             MatcherResult::NoMatch => format!(
                 "is not a UTF-8 encoded string which {}",
                 self.inner.describe(MatcherResult::Match)
-            ),
+            )
+            .into(),
         }
     }
 
-    fn explain_match(&self, actual: &ActualT) -> String {
+    fn explain_match(&self, actual: &ActualT) -> Description {
         match String::from_utf8(actual.as_ref().to_vec()) {
-            Ok(s) => format!("which is a UTF-8 encoded string {}", self.inner.explain_match(&s)),
-            Err(e) => format!("which is not a UTF-8 encoded string: {e}"),
+            Ok(s) => {
+                format!("which is a UTF-8 encoded string {}", self.inner.explain_match(&s)).into()
+            }
+            Err(e) => format!("which is not a UTF-8 encoded string: {e}").into(),
         }
     }
 }
@@ -127,7 +134,7 @@ mod tests {
 
         verify_that!(
             matcher.describe(MatcherResult::Match),
-            eq("is a UTF-8 encoded string which is equal to \"A string\"")
+            displays_as(eq("is a UTF-8 encoded string which is equal to \"A string\""))
         )
     }
 
@@ -137,7 +144,7 @@ mod tests {
 
         verify_that!(
             matcher.describe(MatcherResult::NoMatch),
-            eq("is not a UTF-8 encoded string which is equal to \"A string\"")
+            displays_as(eq("is not a UTF-8 encoded string which is equal to \"A string\""))
         )
     }
 
@@ -147,7 +154,7 @@ mod tests {
 
         verify_that!(
             explanation,
-            eq("which is a UTF-8 encoded string which is equal to \"A string\"")
+            displays_as(eq("which is a UTF-8 encoded string which is equal to \"A string\""))
         )
     }
 
@@ -155,7 +162,7 @@ mod tests {
     fn has_correct_explanation_when_byte_array_is_not_utf8_encoded() -> Result<()> {
         let explanation = is_utf8_string(eq("A string")).explain_match(&&[192, 128, 0, 64]);
 
-        verify_that!(explanation, starts_with("which is not a UTF-8 encoded string: "))
+        verify_that!(explanation, displays_as(starts_with("which is not a UTF-8 encoded string: ")))
     }
 
     #[test]
@@ -165,7 +172,7 @@ mod tests {
 
         verify_that!(
             explanation,
-            eq("which is a UTF-8 encoded string which isn't equal to \"A string\"")
+            displays_as(eq("which is a UTF-8 encoded string which isn't equal to \"A string\""))
         )
     }
 }

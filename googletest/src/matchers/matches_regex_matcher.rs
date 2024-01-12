@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::description::Description;
 use crate::matcher::{Matcher, MatcherResult};
 use regex::Regex;
 use std::fmt::Debug;
@@ -92,13 +93,13 @@ where
         self.regex.is_match(actual.as_ref()).into()
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> String {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => {
-                format!("matches the regular expression {:#?}", self.pattern.deref())
+                format!("matches the regular expression {:#?}", self.pattern.deref()).into()
             }
             MatcherResult::NoMatch => {
-                format!("doesn't match the regular expression {:#?}", self.pattern.deref())
+                format!("doesn't match the regular expression {:#?}", self.pattern.deref()).into()
             }
         }
     }
@@ -202,7 +203,7 @@ mod tests {
 
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
-            eq("matches the regular expression \"\\n\"")
+            displays_as(eq("matches the regular expression \"\\n\""))
         )
     }
 }

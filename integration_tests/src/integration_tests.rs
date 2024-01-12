@@ -199,7 +199,8 @@ mod tests {
                 Value of: Some(1)
                 Expected: has a value which is equal to 2
                 Actual: Some(1),
-                  which has a value which isn't equal to 2
+                  which has a value
+                    which isn't equal to 2
             "})
         );
         expect_that!(
@@ -208,7 +209,8 @@ mod tests {
                 Value of: value
                 Expected: is a success containing a value, which is equal to 2
                 Actual: Ok(1),
-                  which is a success which isn't equal to 2
+                  which is a success
+                    which isn't equal to 2
             "})
         );
         expect_that!(
@@ -217,7 +219,8 @@ mod tests {
                 Value of: value
                 Expected: is an error which is equal to 2
                 Actual: Err(1),
-                  which is an error which isn't equal to 2
+                  which is an error
+                    which isn't equal to 2
             "})
         );
         Ok(())
@@ -690,6 +693,38 @@ mod tests {
     #[googletest::test]
     fn should_just_pass() -> Result<()> {
         Ok(())
+    }
+
+    #[googletest::test]
+    #[should_panic]
+    fn should_pass_with_should_panic() {
+        expect_that!(2, eq(4));
+    }
+
+    #[googletest::test]
+    #[should_panic(expected = "See failure output above")]
+    fn should_pass_with_should_panic_with_expectation() {
+        expect_that!(2, eq(4));
+    }
+
+    #[should_panic]
+    #[googletest::test]
+    fn should_pass_with_should_panic_in_first_position() {
+        expect_that!(2, eq(4));
+    }
+
+    #[googletest::test]
+    #[should_panic]
+    fn should_pass_with_should_panic_and_verify_that() -> Result<()> {
+        verify_that!(2, eq(4))?;
+        verify_that!(3, eq(3))
+    }
+
+    #[test]
+    fn should_fail_when_should_panic_is_present_and_no_panic_occurs() -> Result<()> {
+        let output = run_external_process_in_tests_directory("passing_test_with_should_panic")?;
+
+        verify_that!(output, contains_substring("should panic"))
     }
 
     #[::core::prelude::v1::test]
