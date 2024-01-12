@@ -14,9 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherExt, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a value less (in the sense of `<`) than `expected`.
 ///
@@ -74,22 +74,18 @@ use std::{fmt::Debug, marker::PhantomData};
 ///
 /// You can find the standard library `PartialOrd` implementation in
 /// <https://doc.rust-lang.org/core/cmp/trait.PartialOrd.html#implementors>
-pub fn lt<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug>(
-    expected: ExpectedT,
-) -> impl Matcher<ActualT = ActualT> {
-    LtMatcher::<ActualT, _> { expected, phantom: Default::default() }
+pub fn lt<ExpectedT>(expected: ExpectedT) -> LtMatcher<ExpectedT> {
+    LtMatcher { expected }
 }
 
-struct LtMatcher<ActualT, ExpectedT> {
+#[derive(MatcherExt)]
+pub struct LtMatcher<ExpectedT> {
     expected: ExpectedT,
-    phantom: PhantomData<ActualT>,
 }
 
-impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher
-    for LtMatcher<ActualT, ExpectedT>
+impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher<ActualT>
+    for LtMatcher<ExpectedT>
 {
-    type ActualT = ActualT;
-
     fn matches(&self, actual: &ActualT) -> MatcherResult {
         (*actual < self.expected).into()
     }

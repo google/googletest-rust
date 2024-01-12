@@ -14,9 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherExt, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a `Result` containing `Ok` with a value matched by `inner`.
 ///
@@ -38,28 +38,23 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # should_fail_1().unwrap_err();
 /// # should_fail_2().unwrap_err();
 /// ```
-pub fn ok<T: Debug, E: Debug>(
-    inner: impl Matcher<ActualT = T>,
-) -> impl Matcher<ActualT = std::result::Result<T, E>> {
-    OkMatcher::<T, E, _> { inner, phantom_t: Default::default(), phantom_e: Default::default() }
+pub fn ok<InnerMatcherT>(inner: InnerMatcherT) -> OkMatcher<InnerMatcherT> {
+    OkMatcher { inner }
 }
 
-struct OkMatcher<T, E, InnerMatcherT> {
+#[derive(MatcherExt)]
+pub struct OkMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
-    phantom_t: PhantomData<T>,
-    phantom_e: PhantomData<E>,
 }
 
-impl<T: Debug, E: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher
-    for OkMatcher<T, E, InnerMatcherT>
+impl<T: Debug, E: Debug, InnerMatcherT: Matcher<T>> Matcher<std::result::Result<T, E>>
+    for OkMatcher<InnerMatcherT>
 {
-    type ActualT = std::result::Result<T, E>;
-
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    fn matches(&self, actual: &std::result::Result<T, E>) -> MatcherResult {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> Description {
+    fn explain_match(&self, actual: &std::result::Result<T, E>) -> Description {
         match actual {
             Ok(o) => {
                 Description::new().text("which is a success").nested(self.inner.explain_match(o))
@@ -141,13 +136,9 @@ mod tests {
 
     #[test]
     fn ok_describe_matches() -> Result<()> {
-        let matcher = super::OkMatcher::<i32, i32, _> {
-            inner: eq(1),
-            phantom_t: Default::default(),
-            phantom_e: Default::default(),
-        };
+        let matcher = ok(eq(1));
         verify_that!(
-            matcher.describe(MatcherResult::Match),
+            Matcher::<std::result::Result<i32, i32>>::describe(&matcher, MatcherResult::Match),
             displays_as(eq("is a success containing a value, which is equal to 1"))
         )
     }

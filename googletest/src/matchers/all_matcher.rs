@@ -38,7 +38,7 @@
 /// ```
 ///
 /// Using this macro is equivalent to using the
-/// [`and`][crate::matcher::Matcher::and] method:
+/// [`and`][crate::matcher::MatcherExt::and] method:
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -78,12 +78,12 @@ mod tests {
 
     #[test]
     fn description_shows_more_than_one_matcher() -> Result<()> {
-        let first_matcher: StrMatcher<String, _> = starts_with("A");
+        let first_matcher = starts_with("A");
         let second_matcher = ends_with("string");
         let matcher = all!(first_matcher, second_matcher);
 
         verify_that!(
-            matcher.describe(MatcherResult::Match),
+            Matcher::<String>::describe(&matcher, MatcherResult::Match),
             displays_as(eq(indoc!(
                 "
                 has all the following properties:
@@ -95,11 +95,11 @@ mod tests {
 
     #[test]
     fn description_shows_one_matcher_directly() -> Result<()> {
-        let first_matcher: StrMatcher<String, _> = starts_with("A");
+        let first_matcher = starts_with("A");
         let matcher = all!(first_matcher);
 
         verify_that!(
-            matcher.describe(MatcherResult::Match),
+            Matcher::<String>::describe(&matcher, MatcherResult::Match),
             displays_as(eq("starts with prefix \"A\""))
         )
     }
@@ -107,7 +107,7 @@ mod tests {
     #[test]
     fn mismatch_description_shows_which_matcher_failed_if_more_than_one_constituent() -> Result<()>
     {
-        let first_matcher: StrMatcher<str, _> = starts_with("Another");
+        let first_matcher = starts_with("Another");
         let second_matcher = ends_with("string");
         let matcher = all!(first_matcher, second_matcher);
 

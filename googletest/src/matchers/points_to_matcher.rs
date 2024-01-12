@@ -13,9 +13,8 @@
 // limitations under the License.
 
 use crate::description::Description;
-use crate::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherExt, MatcherResult};
 use std::fmt::Debug;
-use std::marker::PhantomData;
 use std::ops::Deref;
 
 /// Matches a (smart) pointer pointing to a value matched by the [`Matcher`]
@@ -32,30 +31,21 @@ use std::ops::Deref;
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn points_to<ExpectedT, MatcherT, ActualT>(
-    expected: MatcherT,
-) -> impl Matcher<ActualT = ActualT>
-where
-    ExpectedT: Debug,
-    MatcherT: Matcher<ActualT = ExpectedT>,
-    ActualT: Deref<Target = ExpectedT> + Debug + ?Sized,
-{
-    PointsToMatcher { expected, phantom: Default::default() }
+pub fn points_to<MatcherT>(expected: MatcherT) -> PointsToMatcher<MatcherT> {
+    PointsToMatcher { expected }
 }
 
-struct PointsToMatcher<ActualT: ?Sized, MatcherT> {
+#[derive(MatcherExt)]
+pub struct PointsToMatcher<MatcherT> {
     expected: MatcherT,
-    phantom: PhantomData<ActualT>,
 }
 
-impl<ExpectedT, MatcherT, ActualT> Matcher for PointsToMatcher<ActualT, MatcherT>
+impl<ExpectedT, MatcherT, ActualT> Matcher<ActualT> for PointsToMatcher<MatcherT>
 where
     ExpectedT: Debug,
-    MatcherT: Matcher<ActualT = ExpectedT>,
+    MatcherT: Matcher<ExpectedT>,
     ActualT: Deref<Target = ExpectedT> + Debug + ?Sized,
 {
-    type ActualT = ActualT;
-
     fn matches(&self, actual: &ActualT) -> MatcherResult {
         self.expected.matches(actual.deref())
     }

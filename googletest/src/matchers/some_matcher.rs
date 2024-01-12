@@ -14,9 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherExt, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches an `Option` containing a value matched by `inner`.
 ///
@@ -38,18 +38,16 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # should_fail_1().unwrap_err();
 /// # should_fail_2().unwrap_err();
 /// ```
-pub fn some<T: Debug>(inner: impl Matcher<ActualT = T>) -> impl Matcher<ActualT = Option<T>> {
-    SomeMatcher { inner, phantom: Default::default() }
+pub fn some<Inner>(inner: Inner) -> SomeMatcher<Inner> {
+    SomeMatcher { inner }
 }
 
-struct SomeMatcher<T, InnerMatcherT> {
+#[derive(MatcherExt)]
+pub struct SomeMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
-    phantom: PhantomData<T>,
 }
 
-impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for SomeMatcher<T, InnerMatcherT> {
-    type ActualT = Option<T>;
-
+impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<Option<T>> for SomeMatcher<InnerMatcherT> {
     fn matches(&self, actual: &Option<T>) -> MatcherResult {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
@@ -104,9 +102,9 @@ mod tests {
 
     #[test]
     fn some_does_not_match_option_with_none() -> Result<()> {
-        let matcher = some(eq::<i32, _>(1));
+        let matcher = some(eq(1));
 
-        let result = matcher.matches(&None);
+        let result = matcher.matches(&None::<i32>);
 
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
@@ -131,7 +129,7 @@ mod tests {
     #[test]
     fn some_describe_matches() -> Result<()> {
         verify_that!(
-            some(eq::<i32, _>(1)).describe(MatcherResult::Match),
+            Matcher::<Option<i32>>::describe(&some(eq(1)), MatcherResult::Match),
             displays_as(eq("has a value which is equal to 1"))
         )
     }
@@ -139,14 +137,14 @@ mod tests {
     #[test]
     fn some_describe_does_not_match() -> Result<()> {
         verify_that!(
-            some(eq::<i32, _>(1)).describe(MatcherResult::NoMatch),
+            Matcher::<Option<i32>>::describe(&some(eq(1)), MatcherResult::NoMatch),
             displays_as(eq("is None or has a value which isn't equal to 1"))
         )
     }
 
     #[test]
     fn some_explain_match_with_none() -> Result<()> {
-        verify_that!(some(eq::<i32, _>(1)).explain_match(&None), displays_as(eq("which is None")))
+        verify_that!(some(eq(1)).explain_match(&None::<i32>), displays_as(eq("which is None")))
     }
 
     #[test]

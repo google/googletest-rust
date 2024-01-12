@@ -13,9 +13,8 @@
 // limitations under the License.
 
 use crate::description::Description;
-use crate::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherExt, MatcherResult};
 use std::fmt::Debug;
-use std::marker::PhantomData;
 
 /// Matches an `Option` containing `None`.
 ///
@@ -32,17 +31,14 @@ use std::marker::PhantomData;
 /// # should_pass().unwrap();
 /// # should_fail().unwrap_err();
 /// ```
-pub fn none<T: Debug>() -> impl Matcher<ActualT = Option<T>> {
-    NoneMatcher::<T> { phantom: Default::default() }
+pub fn none() -> NoneMatcher {
+    NoneMatcher
 }
 
-struct NoneMatcher<T> {
-    phantom: PhantomData<T>,
-}
+#[derive(MatcherExt)]
+pub struct NoneMatcher;
 
-impl<T: Debug> Matcher for NoneMatcher<T> {
-    type ActualT = Option<T>;
-
+impl<T: Debug> Matcher<Option<T>> for NoneMatcher {
     fn matches(&self, actual: &Option<T>) -> MatcherResult {
         (actual.is_none()).into()
     }
@@ -63,9 +59,9 @@ mod tests {
 
     #[test]
     fn none_matches_option_with_none() -> Result<()> {
-        let matcher = none::<i32>();
+        let matcher = none();
 
-        let result = matcher.matches(&None);
+        let result = matcher.matches(&None::<i32>);
 
         verify_that!(result, eq(MatcherResult::Match))
     }

@@ -14,9 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherExt, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a container all of whose items are in the given container
 /// `superset`.
@@ -83,29 +83,21 @@ use std::{fmt::Debug, marker::PhantomData};
 /// runtime proportional to the *product* of the sizes of the actual and
 /// expected containers as well as the time to check equality of each pair of
 /// items. It should not be used on especially large containers.
-pub fn subset_of<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug>(
+pub fn subset_of<ExpectedT>(superset: ExpectedT) -> SubsetOfMatcher<ExpectedT> {
+    SubsetOfMatcher { superset }
+}
+
+#[derive(MatcherExt)]
+pub struct SubsetOfMatcher<ExpectedT> {
     superset: ExpectedT,
-) -> impl Matcher<ActualT = ActualT>
+}
+
+impl<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug> Matcher<ActualT>
+    for SubsetOfMatcher<ExpectedT>
 where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
 {
-    SubsetOfMatcher::<ActualT, _> { superset, phantom: Default::default() }
-}
-
-struct SubsetOfMatcher<ActualT: ?Sized, ExpectedT> {
-    superset: ExpectedT,
-    phantom: PhantomData<ActualT>,
-}
-
-impl<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug> Matcher
-    for SubsetOfMatcher<ActualT, ExpectedT>
-where
-    for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
-{
-    type ActualT = ActualT;
-
     fn matches(&self, actual: &ActualT) -> MatcherResult {
         for actual_item in actual {
             if self.expected_is_missing(actual_item) {
@@ -138,7 +130,7 @@ where
     }
 }
 
-impl<ActualT: ?Sized, ElementT: PartialEq, ExpectedT> SubsetOfMatcher<ActualT, ExpectedT>
+impl<ElementT: PartialEq, ExpectedT> SubsetOfMatcher<ExpectedT>
 where
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
 {

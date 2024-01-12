@@ -14,9 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherExt, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches an iterable type whose elements contain a value matched by `inner`.
 ///
@@ -43,19 +43,19 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # should_fail_1().unwrap_err();
 /// # should_fail_2().unwrap_err();
 /// ```
-pub fn contains<T, InnerMatcherT>(inner: InnerMatcherT) -> ContainsMatcher<T, InnerMatcherT> {
-    ContainsMatcher { inner, count: None, phantom: Default::default() }
+pub fn contains<InnerMatcherT>(inner: InnerMatcherT) -> ContainsMatcher<InnerMatcherT> {
+    ContainsMatcher { inner, count: None }
 }
 
 /// A matcher which matches a container containing one or more elements a given
 /// inner [`Matcher`] matches.
-pub struct ContainsMatcher<T, InnerMatcherT> {
+#[derive(MatcherExt)]
+pub struct ContainsMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
-    count: Option<Box<dyn Matcher<ActualT = usize>>>,
-    phantom: PhantomData<T>,
+    count: Option<Box<dyn Matcher<usize>>>,
 }
 
-impl<T, InnerMatcherT> ContainsMatcher<T, InnerMatcherT> {
+impl<InnerMatcherT> ContainsMatcher<InnerMatcherT> {
     /// Configures this instance to match containers which contain a number of
     /// matching items matched by `count`.
     ///
@@ -68,7 +68,7 @@ impl<T, InnerMatcherT> ContainsMatcher<T, InnerMatcherT> {
     ///
     /// One can also use `times(eq(0))` to test for the *absence* of an item
     /// matching the expected value.
-    pub fn times(mut self, count: impl Matcher<ActualT = usize> + 'static) -> Self {
+    pub fn times(mut self, count: impl Matcher<usize> + 'static) -> Self {
         self.count = Some(Box::new(count));
         self
     }
@@ -84,14 +84,12 @@ impl<T, InnerMatcherT> ContainsMatcher<T, InnerMatcherT> {
 //  because val is dropped before matcher but the trait bound requires that
 //  the argument to matches outlive the matcher. It works fine if one defines
 //  val before matcher.
-impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>, ContainerT: Debug> Matcher
-    for ContainsMatcher<ContainerT, InnerMatcherT>
+impl<T: Debug, InnerMatcherT: Matcher<T>, ContainerT: Debug> Matcher<ContainerT>
+    for ContainsMatcher<InnerMatcherT>
 where
     for<'a> &'a ContainerT: IntoIterator<Item = &'a T>,
 {
-    type ActualT = ContainerT;
-
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    fn matches(&self, actual: &ContainerT) -> MatcherResult {
         if let Some(count) = &self.count {
             count.matches(&self.count_matches(actual))
         } else {
@@ -104,7 +102,7 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> Description {
+    fn explain_match(&self, actual: &ContainerT) -> Description {
         let count = self.count_matches(actual);
         match (count, &self.count) {
             (_, Some(_)) => format!("which contains {} matching elements", count).into(),
@@ -140,11 +138,11 @@ where
     }
 }
 
-impl<ActualT, InnerMatcherT> ContainsMatcher<ActualT, InnerMatcherT> {
+impl<InnerMatcherT> ContainsMatcher<InnerMatcherT> {
     fn count_matches<T: Debug, ContainerT>(&self, actual: &ContainerT) -> usize
     where
         for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
-        InnerMatcherT: Matcher<ActualT = T>,
+        InnerMatcherT: Matcher<T>,
     {
         let mut count = 0;
         for v in actual.into_iter() {
@@ -158,7 +156,7 @@ impl<ActualT, InnerMatcherT> ContainsMatcher<ActualT, InnerMatcherT> {
 
 #[cfg(test)]
 mod tests {
-    use super::{contains, ContainsMatcher};
+    use super::contains;
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
 
@@ -200,9 +198,9 @@ mod tests {
 
     #[test]
     fn contains_does_not_match_empty_slice() -> Result<()> {
-        let matcher = contains(eq::<i32, _>(1));
+        let matcher = contains(eq(1));
 
-        let result = matcher.matches(&[]);
+        let result = matcher.matches(&[1; 0]);
 
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
@@ -236,20 +234,20 @@ mod tests {
 
     #[test]
     fn contains_formats_without_multiplicity_by_default() -> Result<()> {
-        let matcher: ContainsMatcher<Vec<i32>, _> = contains(eq(1));
+        let matcher = contains(eq(1));
 
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Match),
+            Matcher::<Vec<i32>>::describe(&matcher, MatcherResult::Match),
             displays_as(eq("contains at least one element which is equal to 1"))
         )
     }
 
     #[test]
     fn contains_formats_with_multiplicity_when_specified() -> Result<()> {
-        let matcher: ContainsMatcher<Vec<i32>, _> = contains(eq(1)).times(eq(2));
+        let matcher = contains(eq(1)).times(eq(2));
 
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Match),
+            Matcher::<Vec<i32>>::describe(&matcher, MatcherResult::Match),
             displays_as(eq("contains n elements which is equal to 1\n  where n is equal to 2"))
         )
     }

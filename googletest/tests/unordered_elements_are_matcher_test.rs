@@ -208,7 +208,7 @@ fn unordered_elements_are_unmatchable_actual_description_mismatch() -> Result<()
     )
 }
 
-fn create_matcher() -> impl Matcher<ActualT = Vec<i32>> {
+fn create_matcher() -> impl Matcher<Vec<i32>> {
     unordered_elements_are![eq(1)]
 }
 
@@ -217,7 +217,7 @@ fn unordered_elements_are_works_when_matcher_is_created_in_subroutine() -> Resul
     verify_that!(vec![1], create_matcher())
 }
 
-fn create_matcher_for_map() -> impl Matcher<ActualT = HashMap<i32, i32>> {
+fn create_matcher_for_map() -> impl Matcher<HashMap<i32, i32>> {
     unordered_elements_are![(eq(1), eq(1))]
 }
 
@@ -352,7 +352,7 @@ fn is_contained_in_matches_hash_map_with_trailing_comma() -> Result<()> {
 
 #[test]
 fn is_contained_in_matches_when_container_is_empty() -> Result<()> {
-    verify_that!(vec![], is_contained_in!(eq::<i32, _>(2), eq(3), eq(4)))
+    verify_that!(vec![1; 0], is_contained_in!(eq(2), eq(3), eq(4)))
 }
 
 #[test]

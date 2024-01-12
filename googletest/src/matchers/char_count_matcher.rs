@@ -14,9 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherExt, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a string whose number of Unicode scalars matches `expected`.
 ///
@@ -56,20 +56,16 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn char_count<T: Debug + ?Sized + AsRef<str>, E: Matcher<ActualT = usize>>(
-    expected: E,
-) -> impl Matcher<ActualT = T> {
-    CharLenMatcher { expected, phantom: Default::default() }
+pub fn char_count<E: Matcher<usize>>(expected: E) -> CharLenMatcher<E> {
+    CharLenMatcher { expected }
 }
 
-struct CharLenMatcher<T: ?Sized, E> {
+#[derive(MatcherExt)]
+pub struct CharLenMatcher<E> {
     expected: E,
-    phantom: PhantomData<T>,
 }
 
-impl<T: Debug + ?Sized + AsRef<str>, E: Matcher<ActualT = usize>> Matcher for CharLenMatcher<T, E> {
-    type ActualT = T;
-
+impl<T: Debug + ?Sized + AsRef<str>, E: Matcher<usize>> Matcher<T> for CharLenMatcher<E> {
     fn matches(&self, actual: &T) -> MatcherResult {
         self.expected.matches(&actual.as_ref().chars().count())
     }
@@ -108,7 +104,6 @@ mod tests {
     use crate::prelude::*;
     use indoc::indoc;
     use std::fmt::Debug;
-    use std::marker::PhantomData;
 
     #[test]
     fn char_count_matches_string_slice() -> Result<()> {
@@ -130,10 +125,10 @@ mod tests {
 
     #[test]
     fn char_count_explains_match() -> Result<()> {
-        struct TestMatcher<T>(PhantomData<T>);
-        impl<T: Debug> Matcher for TestMatcher<T> {
-            type ActualT = T;
+        #[derive(MatcherExt)]
+        struct TestMatcher;
 
+        impl<T: Debug> Matcher<T> for TestMatcher {
             fn matches(&self, _: &T) -> MatcherResult {
                 false.into()
             }
@@ -147,7 +142,7 @@ mod tests {
             }
         }
         verify_that!(
-            char_count(TestMatcher(Default::default())).explain_match(&"A string"),
+            char_count(TestMatcher).explain_match(&"A string"),
             displays_as(eq("which has character count 8, called explain_match"))
         )
     }
