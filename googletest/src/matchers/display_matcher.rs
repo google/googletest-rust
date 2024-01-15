@@ -68,6 +68,7 @@ mod tests {
     use super::displays_as;
     use crate::prelude::*;
     use indoc::indoc;
+    use serial_test::parallel;
     use std::fmt::{Debug, Display, Error, Formatter};
 
     #[test]
@@ -102,6 +103,7 @@ mod tests {
     }
 
     #[test]
+    #[parallel]
     fn display_displays_error_message_with_explanation_from_inner_matcher() -> Result<()> {
         let result = verify_that!("123\n234", displays_as(eq("123\n345")));
 
