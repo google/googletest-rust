@@ -25,25 +25,25 @@ use std::{fmt::Debug, marker::PhantomData};
 /// The returned matcher produces a description prefixed by the string
 /// `description`. This is useful in contexts where the test assertion failure
 /// output must include the additional description.
-pub fn is<'a, ActualT: Debug + 'a, InnerMatcherT: Matcher<ActualT = ActualT> + 'a>(
-    description: &'a str,
+pub fn is<'d, 'a, ActualT: Debug + 'a + 'd, InnerMatcherT: Matcher<'a, ActualT = ActualT> + 'd>(
+    description: &'d str,
     inner: InnerMatcherT,
-) -> impl Matcher<ActualT = ActualT> + 'a {
+) -> impl Matcher<'a, ActualT = ActualT> + 'd {
     IsMatcher { description, inner, phantom: Default::default() }
 }
 
-struct IsMatcher<'a, ActualT, InnerMatcherT> {
-    description: &'a str,
+struct IsMatcher<'d, ActualT, InnerMatcherT> {
+    description: &'d str,
     inner: InnerMatcherT,
     phantom: PhantomData<ActualT>,
 }
 
-impl<'a, ActualT: Debug, InnerMatcherT: Matcher<ActualT = ActualT>> Matcher
-    for IsMatcher<'a, ActualT, InnerMatcherT>
+impl<'d, 'a, ActualT: Debug, InnerMatcherT: Matcher<'a, ActualT = ActualT>> Matcher<'a>
+    for IsMatcher<'d, ActualT, InnerMatcherT>
 {
     type ActualT = ActualT;
 
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    fn matches(&self, actual: &'a Self::ActualT) -> MatcherResult {
         self.inner.matches(actual)
     }
 
@@ -64,7 +64,7 @@ impl<'a, ActualT: Debug, InnerMatcherT: Matcher<ActualT = ActualT>> Matcher
         }
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> Description {
+    fn explain_match(&self, actual: &'a Self::ActualT) -> Description {
         self.inner.explain_match(actual)
     }
 }

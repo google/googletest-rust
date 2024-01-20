@@ -38,9 +38,9 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # should_fail_1().unwrap_err();
 /// # should_fail_2().unwrap_err();
 /// ```
-pub fn err<T: Debug, E: Debug>(
-    inner: impl Matcher<ActualT = E>,
-) -> impl Matcher<ActualT = std::result::Result<T, E>> {
+pub fn err<'a, T: Debug, E: Debug>(
+    inner: impl Matcher<'a, ActualT = E>,
+) -> impl Matcher<'a, ActualT = std::result::Result<T, E>> {
     ErrMatcher::<T, E, _> { inner, phantom_t: Default::default(), phantom_e: Default::default() }
 }
 
@@ -50,16 +50,16 @@ struct ErrMatcher<T, E, InnerMatcherT> {
     phantom_e: PhantomData<E>,
 }
 
-impl<T: Debug, E: Debug, InnerMatcherT: Matcher<ActualT = E>> Matcher
+impl<'a, T: Debug, E: Debug, InnerMatcherT: Matcher<'a, ActualT = E>> Matcher<'a>
     for ErrMatcher<T, E, InnerMatcherT>
 {
     type ActualT = std::result::Result<T, E>;
 
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    fn matches(&self, actual: &'a Self::ActualT) -> MatcherResult {
         actual.as_ref().err().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> Description {
+    fn explain_match(&self, actual: &'a Self::ActualT) -> Description {
         match actual {
             Err(e) => {
                 Description::new().text("which is an error").nested(self.inner.explain_match(e))
@@ -91,8 +91,8 @@ mod tests {
 
     #[test]
     fn err_matches_result_with_err_value() -> Result<()> {
-        let matcher = err(eq(1));
         let value: std::result::Result<i32, i32> = Err(1);
+        let matcher = err(eq(1));
 
         let result = matcher.matches(&value);
 
@@ -101,8 +101,8 @@ mod tests {
 
     #[test]
     fn err_does_not_match_result_with_wrong_err_value() -> Result<()> {
-        let matcher = err(eq(1));
         let value: std::result::Result<i32, i32> = Err(0);
+        let matcher = err(eq(1));
 
         let result = matcher.matches(&value);
 
@@ -111,8 +111,8 @@ mod tests {
 
     #[test]
     fn err_does_not_match_result_with_ok() -> Result<()> {
-        let matcher = err(eq(1));
         let value: std::result::Result<i32, i32> = Ok(1);
+        let matcher = err(eq(1));
 
         let result = matcher.matches(&value);
 

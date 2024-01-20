@@ -71,7 +71,7 @@ pub struct ContainsRegexMatcher<ActualT: ?Sized> {
     phantom: PhantomData<ActualT>,
 }
 
-impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher for ContainsRegexMatcher<ActualT> {
+impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher<'_> for ContainsRegexMatcher<ActualT> {
     type ActualT = ActualT;
 
     fn matches(&self, actual: &ActualT) -> MatcherResult {

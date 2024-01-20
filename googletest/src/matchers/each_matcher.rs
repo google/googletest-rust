@@ -61,12 +61,12 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn each<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT>(
+pub fn each<'a, ElementT: Debug + 'a, ActualT: Debug + ?Sized + 'a, MatcherT>(
     inner: MatcherT,
-) -> impl Matcher<ActualT = ActualT>
+) -> impl Matcher<'a, ActualT = ActualT>
 where
-    for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    MatcherT: Matcher<ActualT = ElementT>,
+     &'a ActualT: IntoIterator<Item = &'a ElementT>,
+    MatcherT: Matcher<'a, ActualT = ElementT>,
 {
     EachMatcher { inner, phantom: Default::default() }
 }
@@ -76,14 +76,14 @@ struct EachMatcher<ActualT: ?Sized, MatcherT> {
     phantom: PhantomData<ActualT>,
 }
 
-impl<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT> Matcher for EachMatcher<ActualT, MatcherT>
+impl<'a, ElementT: Debug + 'a, ActualT: Debug + ?Sized + 'a, MatcherT> Matcher<'a> for EachMatcher<ActualT, MatcherT>
 where
-    for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    MatcherT: Matcher<ActualT = ElementT>,
+     &'a ActualT: IntoIterator<Item = &'a ElementT>,
+    MatcherT: Matcher<'a, ActualT = ElementT>,
 {
     type ActualT = ActualT;
 
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches(&self, actual: &'a ActualT) -> MatcherResult {
         for element in actual {
             if self.inner.matches(element).is_no_match() {
                 return MatcherResult::NoMatch;
@@ -92,7 +92,7 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match(&self, actual: &'a ActualT) -> Description {
         let mut non_matching_elements = Vec::new();
         for (index, element) in actual.into_iter().enumerate() {
             if self.inner.matches(element).is_no_match() {

@@ -59,7 +59,7 @@ use std::ops::Deref;
 /// > and expected values when matching strings while
 /// > [`ignoring_ascii_case`][StrMatcherConfigurator::ignoring_ascii_case] is
 /// > set.
-pub fn contains_substring<A: ?Sized, T>(expected: T) -> StrMatcher<A, T> {
+pub fn contains_substring<A: ?Sized, T>(expected: T) -> StrMatcher<A, T, NoTimesMatcher> {
     StrMatcher {
         configuration: Configuration { mode: MatchMode::Contains, ..Default::default() },
         expected,
@@ -99,7 +99,7 @@ pub fn contains_substring<A: ?Sized, T>(expected: T) -> StrMatcher<A, T> {
 ///
 /// See the [`StrMatcherConfigurator`] extension trait for more options on how
 /// the string is matched.
-pub fn starts_with<A: ?Sized, T>(expected: T) -> StrMatcher<A, T> {
+pub fn starts_with<A: ?Sized, T>(expected: T) -> StrMatcher<A, T, NoTimesMatcher> {
     StrMatcher {
         configuration: Configuration { mode: MatchMode::StartsWith, ..Default::default() },
         expected,
@@ -139,7 +139,7 @@ pub fn starts_with<A: ?Sized, T>(expected: T) -> StrMatcher<A, T> {
 ///
 /// See the [`StrMatcherConfigurator`] extension trait for more options on how
 /// the string is matched.
-pub fn ends_with<A: ?Sized, T>(expected: T) -> StrMatcher<A, T> {
+pub fn ends_with<A: ?Sized, T>(expected: T) -> StrMatcher<A, T, NoTimesMatcher> {
     StrMatcher {
         configuration: Configuration { mode: MatchMode::EndsWith, ..Default::default() },
         expected,
@@ -152,7 +152,7 @@ pub fn ends_with<A: ?Sized, T>(expected: T) -> StrMatcher<A, T> {
 /// Matchers which match against string values and, through configuration,
 /// specialise to [`StrMatcher`] implement this trait. That includes
 /// [`EqMatcher`] and [`StrMatcher`].
-pub trait StrMatcherConfigurator<ActualT: ?Sized, ExpectedT> {
+pub trait StrMatcherConfigurator<ActualT: ?Sized, ExpectedT, TimesMatcher> {
     /// Configures the matcher to ignore any leading whitespace in either the
     /// actual or the expected value.
     ///
@@ -171,7 +171,7 @@ pub trait StrMatcherConfigurator<ActualT: ?Sized, ExpectedT> {
     /// When all other configuration options are left as the defaults, this is
     /// equivalent to invoking [`str::trim_start`] on both the expected and
     /// actual value.
-    fn ignoring_leading_whitespace(self) -> StrMatcher<ActualT, ExpectedT>;
+    fn ignoring_leading_whitespace(self) -> StrMatcher<ActualT, ExpectedT, TimesMatcher>;
 
     /// Configures the matcher to ignore any trailing whitespace in either the
     /// actual or the expected value.
@@ -191,7 +191,7 @@ pub trait StrMatcherConfigurator<ActualT: ?Sized, ExpectedT> {
     /// When all other configuration options are left as the defaults, this is
     /// equivalent to invoking [`str::trim_end`] on both the expected and
     /// actual value.
-    fn ignoring_trailing_whitespace(self) -> StrMatcher<ActualT, ExpectedT>;
+    fn ignoring_trailing_whitespace(self) -> StrMatcher<ActualT, ExpectedT, TimesMatcher>;
 
     /// Configures the matcher to ignore both leading and trailing whitespace in
     /// either the actual or the expected value.
@@ -215,7 +215,7 @@ pub trait StrMatcherConfigurator<ActualT: ?Sized, ExpectedT> {
     /// When all other configuration options are left as the defaults, this is
     /// equivalent to invoking [`str::trim`] on both the expected and actual
     /// value.
-    fn ignoring_outer_whitespace(self) -> StrMatcher<ActualT, ExpectedT>;
+    fn ignoring_outer_whitespace(self) -> StrMatcher<ActualT, ExpectedT, TimesMatcher>;
 
     /// Configures the matcher to ignore ASCII case when comparing values.
     ///
@@ -237,7 +237,7 @@ pub trait StrMatcherConfigurator<ActualT: ?Sized, ExpectedT> {
     ///
     /// This is **not guaranteed** to match strings with differing upper/lower
     /// case characters outside of the codepoints 0-127 covered by ASCII.
-    fn ignoring_ascii_case(self) -> StrMatcher<ActualT, ExpectedT>;
+    fn ignoring_ascii_case(self) -> StrMatcher<ActualT, ExpectedT, TimesMatcher>;
 
     /// Configures the matcher to match only strings which otherwise satisfy the
     /// conditions a number times matched by the matcher `times`.
@@ -272,10 +272,12 @@ pub trait StrMatcherConfigurator<ActualT: ?Sized, ExpectedT> {
     /// This is only meaningful when the matcher was constructed with
     /// [`contains_substring`]. This method will panic when it is used with any
     /// other matcher construction.
-    fn times(
+    fn times<NewTimesMatcher>(
         self,
-        times: impl Matcher<ActualT = usize> + 'static,
-    ) -> StrMatcher<ActualT, ExpectedT>;
+        times: NewTimesMatcher,
+    ) -> StrMatcher<ActualT, ExpectedT, NewTimesMatcher>
+    where
+        NewTimesMatcher: for<'a> Matcher<'a, ActualT = usize>;
 }
 
 /// A matcher which matches equality or containment of a string-like value in a
@@ -287,13 +289,13 @@ pub trait StrMatcherConfigurator<ActualT: ?Sized, ExpectedT> {
 ///  * [`contains_substring`],
 ///  * [`starts_with`],
 ///  * [`ends_with`].
-pub struct StrMatcher<ActualT: ?Sized, ExpectedT> {
+pub struct StrMatcher<ActualT: ?Sized, ExpectedT, TimesMatcher> {
     expected: ExpectedT,
-    configuration: Configuration,
+    configuration: Configuration<TimesMatcher>,
     phantom: PhantomData<ActualT>,
 }
 
-impl<ExpectedT, ActualT> Matcher for StrMatcher<ActualT, ExpectedT>
+impl<ExpectedT, ActualT> Matcher<'_> for StrMatcher<ActualT, ExpectedT, NoTimesMatcher>
 where
     ExpectedT: Deref<Target = str> + Debug,
     ActualT: AsRef<str> + Debug + ?Sized,
@@ -313,10 +315,31 @@ where
     }
 }
 
-impl<ActualT: ?Sized, ExpectedT, MatcherT: Into<StrMatcher<ActualT, ExpectedT>>>
-    StrMatcherConfigurator<ActualT, ExpectedT> for MatcherT
+impl<ExpectedT, ActualT, TimesMatcher> Matcher<'_> for StrMatcher<ActualT, ExpectedT, TimesMatcher>
+where
+    ExpectedT: Deref<Target = str> + Debug,
+    ActualT: AsRef<str> + Debug + ?Sized,
+    TimesMatcher: for<'a> Matcher<'a, ActualT = usize>,
 {
-    fn ignoring_leading_whitespace(self) -> StrMatcher<ActualT, ExpectedT> {
+    type ActualT = ActualT;
+
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
+        self.configuration.do_strings_match(self.expected.deref(), actual.as_ref()).into()
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
+        self.configuration.describe(matcher_result, self.expected.deref())
+    }
+
+    fn explain_match(&self, actual: &ActualT) -> Description {
+        self.configuration.explain_match(self.expected.deref(), actual.as_ref())
+    }
+}
+
+impl<ActualT: ?Sized, ExpectedT, MatcherT: Into<StrMatcher<ActualT, ExpectedT, NoTimesMatcher>>>
+    StrMatcherConfigurator<ActualT, ExpectedT, NoTimesMatcher> for MatcherT
+{
+    fn ignoring_leading_whitespace(self) -> StrMatcher<ActualT, ExpectedT, NoTimesMatcher> {
         let existing = self.into();
         StrMatcher {
             configuration: existing.configuration.ignoring_leading_whitespace(),
@@ -324,7 +347,7 @@ impl<ActualT: ?Sized, ExpectedT, MatcherT: Into<StrMatcher<ActualT, ExpectedT>>>
         }
     }
 
-    fn ignoring_trailing_whitespace(self) -> StrMatcher<ActualT, ExpectedT> {
+    fn ignoring_trailing_whitespace(self) -> StrMatcher<ActualT, ExpectedT, NoTimesMatcher> {
         let existing = self.into();
         StrMatcher {
             configuration: existing.configuration.ignoring_trailing_whitespace(),
@@ -332,41 +355,50 @@ impl<ActualT: ?Sized, ExpectedT, MatcherT: Into<StrMatcher<ActualT, ExpectedT>>>
         }
     }
 
-    fn ignoring_outer_whitespace(self) -> StrMatcher<ActualT, ExpectedT> {
+    fn ignoring_outer_whitespace(self) -> StrMatcher<ActualT, ExpectedT, NoTimesMatcher> {
         let existing = self.into();
         StrMatcher { configuration: existing.configuration.ignoring_outer_whitespace(), ..existing }
     }
 
-    fn ignoring_ascii_case(self) -> StrMatcher<ActualT, ExpectedT> {
+    fn ignoring_ascii_case(self) -> StrMatcher<ActualT, ExpectedT, NoTimesMatcher> {
         let existing = self.into();
         StrMatcher { configuration: existing.configuration.ignoring_ascii_case(), ..existing }
     }
 
-    fn times(
+    fn times<TimesMatcher>(
         self,
-        times: impl Matcher<ActualT = usize> + 'static,
-    ) -> StrMatcher<ActualT, ExpectedT> {
+        times: TimesMatcher,
+    ) -> StrMatcher<ActualT, ExpectedT, TimesMatcher>
+    where
+        TimesMatcher: for<'a> Matcher<'a, ActualT = usize>,
+    {
         let existing = self.into();
         if !matches!(existing.configuration.mode, MatchMode::Contains) {
             panic!("The times() configurator is only meaningful with contains_substring().");
         }
-        StrMatcher { configuration: existing.configuration.times(times), ..existing }
+        StrMatcher {
+            configuration: existing.configuration.times(times),
+            expected: existing.expected,
+            phantom: existing.phantom,
+        }
     }
 }
 
-impl<A: ?Sized, T: Deref<Target = str>> From<EqMatcher<A, T>> for StrMatcher<A, T> {
+impl<A: ?Sized, T: Deref<Target = str>> From<EqMatcher<A, T>> for StrMatcher<A, T, NoTimesMatcher> {
     fn from(value: EqMatcher<A, T>) -> Self {
         Self::with_default_config(value.expected)
     }
 }
 
-impl<A: ?Sized, T: Deref<Target = str>> From<EqDerefOfMatcher<A, T>> for StrMatcher<A, T> {
+impl<A: ?Sized, T: Deref<Target = str>> From<EqDerefOfMatcher<A, T>>
+    for StrMatcher<A, T, NoTimesMatcher>
+{
     fn from(value: EqDerefOfMatcher<A, T>) -> Self {
         Self::with_default_config(value.expected)
     }
 }
 
-impl<A: ?Sized, T> StrMatcher<A, T> {
+impl<A: ?Sized, T> StrMatcher<A, T, NoTimesMatcher> {
     /// Returns a [`StrMatcher`] with a default configuration to match against
     /// the given expected value.
     ///
@@ -382,13 +414,15 @@ impl<A: ?Sized, T> StrMatcher<A, T> {
 // parameterised, saving compilation time and binary size on monomorphisation.
 //
 // The default value represents exact equality of the strings.
-struct Configuration {
+struct Configuration<TimesMatcher> {
     mode: MatchMode,
     ignore_leading_whitespace: bool,
     ignore_trailing_whitespace: bool,
     case_policy: CasePolicy,
-    times: Option<Box<dyn Matcher<ActualT = usize>>>,
+    times: TimesMatcher,
 }
+
+pub struct NoTimesMatcher;
 
 #[derive(Clone)]
 enum MatchMode {
@@ -414,7 +448,7 @@ enum CasePolicy {
     IgnoreAscii,
 }
 
-impl Configuration {
+impl Configuration<NoTimesMatcher> {
     // The entry point for all string matching. StrMatcher::matches redirects
     // immediately to this function.
     fn do_strings_match(&self, expected: &str, actual: &str) -> bool {
@@ -457,14 +491,7 @@ impl Configuration {
     // Returns whether actual contains expected a number of times matched by the
     // matcher self.times. Does not take other configuration into account.
     fn does_containment_match(&self, actual: &str, expected: &str) -> bool {
-        if let Some(times) = self.times.as_ref() {
-            // Split returns an iterator over the "boundaries" left and right of the
-            // substring to be matched, of which there is one more than the number of
-            // substrings.
-            matches!(times.matches(&(actual.split(expected).count() - 1)), MatcherResult::Match)
-        } else {
-            actual.contains(expected)
-        }
+        actual.contains(expected)
     }
 
     // StrMatcher::describe redirects immediately to this function.
@@ -479,9 +506,6 @@ impl Configuration {
         match self.case_policy {
             CasePolicy::Respect => {}
             CasePolicy::IgnoreAscii => addenda.push("ignoring ASCII case".into()),
-        }
-        if let Some(times) = self.times.as_ref() {
-            addenda.push(format!("count {}", times.describe(matcher_result)).into());
         }
         let extra =
             if !addenda.is_empty() { format!(" ({})", addenda.join(", ")) } else { "".into() };
@@ -526,10 +550,6 @@ impl Configuration {
             return default_explanation;
         }
 
-        if self.times.is_some() {
-            // TODO - b/283448414 : Support StrMatcher with times.
-            return default_explanation;
-        }
         if matches!(self.case_policy, CasePolicy::IgnoreAscii) {
             // TODO - b/283448414 : Support StrMatcher with ignore ascii case policy.
             return default_explanation;
@@ -570,19 +590,124 @@ impl Configuration {
         Self { case_policy: CasePolicy::IgnoreAscii, ..self }
     }
 
-    fn times(self, times: impl Matcher<ActualT = usize> + 'static) -> Self {
-        Self { times: Some(Box::new(times)), ..self }
+    fn times<TimesMatcher>(self, times: TimesMatcher) -> Configuration<TimesMatcher>
+    where
+        TimesMatcher: for<'a> Matcher<'a, ActualT = usize>,
+    {
+        Configuration {
+            times,
+            mode: self.mode,
+            ignore_leading_whitespace: self.ignore_leading_whitespace,
+            ignore_trailing_whitespace: self.ignore_trailing_whitespace,
+            case_policy: self.case_policy,
+        }
     }
 }
 
-impl Default for Configuration {
+impl<TimesMatcher> Configuration<TimesMatcher>
+where
+    TimesMatcher: for<'a> Matcher<'a, ActualT = usize>,
+{
+    // The entry point for all string matching. StrMatcher::matches redirects
+    // immediately to this function.
+    fn do_strings_match(&self, expected: &str, actual: &str) -> bool {
+        let (expected, actual) =
+            match (self.ignore_leading_whitespace, self.ignore_trailing_whitespace) {
+                (true, true) => (expected.trim(), actual.trim()),
+                (true, false) => (expected.trim_start(), actual.trim_start()),
+                (false, true) => (expected.trim_end(), actual.trim_end()),
+                (false, false) => (expected, actual),
+            };
+        match self.mode {
+            MatchMode::Equals => match self.case_policy {
+                CasePolicy::Respect => expected == actual,
+                CasePolicy::IgnoreAscii => expected.eq_ignore_ascii_case(actual),
+            },
+            MatchMode::Contains => match self.case_policy {
+                CasePolicy::Respect => self.does_containment_match(actual, expected),
+                CasePolicy::IgnoreAscii => self.does_containment_match(
+                    actual.to_ascii_lowercase().as_str(),
+                    expected.to_ascii_lowercase().as_str(),
+                ),
+            },
+            MatchMode::StartsWith => match self.case_policy {
+                CasePolicy::Respect => actual.starts_with(expected),
+                CasePolicy::IgnoreAscii => {
+                    actual.len() >= expected.len()
+                        && actual[..expected.len()].eq_ignore_ascii_case(expected)
+                }
+            },
+            MatchMode::EndsWith => match self.case_policy {
+                CasePolicy::Respect => actual.ends_with(expected),
+                CasePolicy::IgnoreAscii => {
+                    actual.len() >= expected.len()
+                        && actual[actual.len() - expected.len()..].eq_ignore_ascii_case(expected)
+                }
+            },
+        }
+    }
+
+    // Returns whether actual contains expected a number of times matched by the
+    // matcher self.times. Does not take other configuration into account.
+    fn does_containment_match(&self, actual: &str, expected: &str) -> bool {
+        // Split returns an iterator over the "boundaries" left and right of the
+        // substring to be matched, of which there is one more than the number of
+        // substrings.
+        matches!(self.times.matches(&(actual.split(expected).count() - 1)), MatcherResult::Match)
+    }
+
+    // StrMatcher::describe redirects immediately to this function.
+    fn describe(&self, matcher_result: MatcherResult, expected: &str) -> Description {
+        let mut addenda: Vec<Cow<'static, str>> = Vec::with_capacity(3);
+        match (self.ignore_leading_whitespace, self.ignore_trailing_whitespace) {
+            (true, true) => addenda.push("ignoring leading and trailing whitespace".into()),
+            (true, false) => addenda.push("ignoring leading whitespace".into()),
+            (false, true) => addenda.push("ignoring trailing whitespace".into()),
+            (false, false) => {}
+        }
+        match self.case_policy {
+            CasePolicy::Respect => {}
+            CasePolicy::IgnoreAscii => addenda.push("ignoring ASCII case".into()),
+        }
+        addenda.push(format!("count {}", self.times.describe(matcher_result)).into());
+        let extra =
+            if !addenda.is_empty() { format!(" ({})", addenda.join(", ")) } else { "".into() };
+        let match_mode_description = match self.mode {
+            MatchMode::Equals => match matcher_result {
+                MatcherResult::Match => "is equal to",
+                MatcherResult::NoMatch => "isn't equal to",
+            },
+            MatchMode::Contains => match matcher_result {
+                MatcherResult::Match => "contains a substring",
+                MatcherResult::NoMatch => "does not contain a substring",
+            },
+            MatchMode::StartsWith => match matcher_result {
+                MatcherResult::Match => "starts with prefix",
+                MatcherResult::NoMatch => "does not start with",
+            },
+            MatchMode::EndsWith => match matcher_result {
+                MatcherResult::Match => "ends with suffix",
+                MatcherResult::NoMatch => "does not end with",
+            },
+        };
+        format!("{match_mode_description} {expected:?}{extra}").into()
+    }
+
+    fn explain_match(&self, expected: &str, actual: &str) -> Description {
+        // TODO - b/283448414 : Support StrMatcher with times.
+        format!("which {}", self.describe(self.do_strings_match(expected, actual).into(), expected))
+            .into()
+    }
+}
+
+impl Default for Configuration<NoTimesMatcher> {
     fn default() -> Self {
         Self {
             mode: MatchMode::Equals,
             ignore_leading_whitespace: false,
             ignore_trailing_whitespace: false,
             case_policy: CasePolicy::Respect,
-            times: None,
+            times: NoTimesMatcher,
         }
     }
 }
@@ -811,7 +936,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_matching_result() -> Result<()> {
-        let matcher: StrMatcher<&str, _> = StrMatcher::with_default_config("A string");
+        let matcher: StrMatcher<&str, _, _> = StrMatcher::with_default_config("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
             displays_as(eq("is equal to \"A string\""))
@@ -820,7 +945,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_non_matching_result() -> Result<()> {
-        let matcher: StrMatcher<&str, _> = StrMatcher::with_default_config("A string");
+        let matcher: StrMatcher<&str, _, _> = StrMatcher::with_default_config("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::NoMatch),
             displays_as(eq("isn't equal to \"A string\""))
@@ -829,7 +954,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_matching_result_ignoring_leading_whitespace() -> Result<()> {
-        let matcher: StrMatcher<&str, _> =
+        let matcher: StrMatcher<&str, _, _> =
             StrMatcher::with_default_config("A string").ignoring_leading_whitespace();
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
@@ -839,7 +964,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_non_matching_result_ignoring_leading_whitespace() -> Result<()> {
-        let matcher: StrMatcher<&str, _> =
+        let matcher: StrMatcher<&str, _, _> =
             StrMatcher::with_default_config("A string").ignoring_leading_whitespace();
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::NoMatch),
@@ -849,7 +974,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_matching_result_ignoring_trailing_whitespace() -> Result<()> {
-        let matcher: StrMatcher<&str, _> =
+        let matcher: StrMatcher<&str, _, _> =
             StrMatcher::with_default_config("A string").ignoring_trailing_whitespace();
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
@@ -860,7 +985,7 @@ mod tests {
     #[test]
     fn describes_itself_for_matching_result_ignoring_leading_and_trailing_whitespace() -> Result<()>
     {
-        let matcher: StrMatcher<&str, _> =
+        let matcher: StrMatcher<&str, _, _> =
             StrMatcher::with_default_config("A string").ignoring_outer_whitespace();
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
@@ -870,7 +995,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_matching_result_ignoring_ascii_case() -> Result<()> {
-        let matcher: StrMatcher<&str, _> =
+        let matcher: StrMatcher<&str, _, _> =
             StrMatcher::with_default_config("A string").ignoring_ascii_case();
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
@@ -881,7 +1006,7 @@ mod tests {
     #[test]
     fn describes_itself_for_matching_result_ignoring_ascii_case_and_leading_whitespace()
     -> Result<()> {
-        let matcher: StrMatcher<&str, _> = StrMatcher::with_default_config("A string")
+        let matcher: StrMatcher<&str, _, _> = StrMatcher::with_default_config("A string")
             .ignoring_leading_whitespace()
             .ignoring_ascii_case();
         verify_that!(
@@ -894,7 +1019,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_matching_result_in_contains_mode() -> Result<()> {
-        let matcher: StrMatcher<&str, _> = contains_substring("A string");
+        let matcher: StrMatcher<&str, _, _> = contains_substring("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
             displays_as(eq("contains a substring \"A string\""))
@@ -903,7 +1028,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_non_matching_result_in_contains_mode() -> Result<()> {
-        let matcher: StrMatcher<&str, _> = contains_substring("A string");
+        let matcher: StrMatcher<&str, _, _> = contains_substring("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::NoMatch),
             displays_as(eq("does not contain a substring \"A string\""))
@@ -912,7 +1037,7 @@ mod tests {
 
     #[test]
     fn describes_itself_with_count_number() -> Result<()> {
-        let matcher: StrMatcher<&str, _> = contains_substring("A string").times(gt(2));
+        let matcher: StrMatcher<&str, _, _> = contains_substring("A string").times(gt(2));
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
             displays_as(eq("contains a substring \"A string\" (count is greater than 2)"))
@@ -921,7 +1046,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_matching_result_in_starts_with_mode() -> Result<()> {
-        let matcher: StrMatcher<&str, _> = starts_with("A string");
+        let matcher: StrMatcher<&str, _, _> = starts_with("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
             displays_as(eq("starts with prefix \"A string\""))
@@ -930,7 +1055,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_non_matching_result_in_starts_with_mode() -> Result<()> {
-        let matcher: StrMatcher<&str, _> = starts_with("A string");
+        let matcher: StrMatcher<&str, _, _> = starts_with("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::NoMatch),
             displays_as(eq("does not start with \"A string\""))
@@ -939,7 +1064,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_matching_result_in_ends_with_mode() -> Result<()> {
-        let matcher: StrMatcher<&str, _> = ends_with("A string");
+        let matcher: StrMatcher<&str, _, _> = ends_with("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
             displays_as(eq("ends with suffix \"A string\""))
@@ -948,7 +1073,7 @@ mod tests {
 
     #[test]
     fn describes_itself_for_non_matching_result_in_ends_with_mode() -> Result<()> {
-        let matcher: StrMatcher<&str, _> = ends_with("A string");
+        let matcher: StrMatcher<&str, _, _> = ends_with("A string");
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::NoMatch),
             displays_as(eq("does not end with \"A string\""))

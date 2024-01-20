@@ -84,7 +84,7 @@ pub struct MatchesRegexMatcher<ActualT: ?Sized, PatternT: Deref<Target = str>> {
     phantom: PhantomData<ActualT>,
 }
 
-impl<PatternT, ActualT> Matcher for MatchesRegexMatcher<ActualT, PatternT>
+impl<PatternT, ActualT> Matcher<'_> for MatchesRegexMatcher<ActualT, PatternT>
 where
     PatternT: Deref<Target = str>,
     ActualT: AsRef<str> + Debug + ?Sized,

@@ -18,9 +18,9 @@
 /// unambiguous answer, i.e., the upper bound exists and the lower and upper
 /// bounds agree. Otherwise it iterates through `value` and counts the
 /// elements.
-pub(crate) fn count_elements<ContainerT: ?Sized>(value: &ContainerT) -> usize
+pub(crate) fn count_elements<'b, ContainerT: ?Sized>(value: &'b ContainerT) -> usize
 where
-    for<'b> &'b ContainerT: IntoIterator,
+    &'b ContainerT: IntoIterator,
 {
     let iterator = value.into_iter();
     if let (lower, Some(higher)) = iterator.size_hint() {

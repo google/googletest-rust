@@ -83,12 +83,12 @@ use std::{fmt::Debug, marker::PhantomData};
 /// runtime proportional to the *product* of the sizes of the actual and
 /// expected containers as well as the time to check equality of each pair of
 /// items. It should not be used on especially large containers.
-pub fn subset_of<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug>(
+pub fn subset_of<'a, ElementT: Debug + PartialEq + 'a, ActualT: Debug + ?Sized + 'a, ExpectedT: Debug>(
     superset: ExpectedT,
-) -> impl Matcher<ActualT = ActualT>
+) -> impl Matcher<'a, ActualT = ActualT>
 where
-    for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
+    &'a ActualT: IntoIterator<Item = &'a ElementT>,
+    for<'b> &'b ExpectedT: IntoIterator<Item = &'b ElementT>,
 {
     SubsetOfMatcher::<ActualT, _> { superset, phantom: Default::default() }
 }
@@ -98,15 +98,15 @@ struct SubsetOfMatcher<ActualT: ?Sized, ExpectedT> {
     phantom: PhantomData<ActualT>,
 }
 
-impl<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug> Matcher
+impl<'a, ElementT: Debug + PartialEq + 'a, ActualT: Debug + ?Sized + 'a, ExpectedT: Debug> Matcher<'a>
     for SubsetOfMatcher<ActualT, ExpectedT>
 where
-    for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
+     &'a ActualT: IntoIterator<Item = &'a ElementT>,
+    for<'b> &'b ExpectedT: IntoIterator<Item = &'b ElementT>,
 {
     type ActualT = ActualT;
 
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches(&self, actual: &'a ActualT) -> MatcherResult {
         for actual_item in actual {
             if self.expected_is_missing(actual_item) {
                 return MatcherResult::NoMatch;
@@ -115,7 +115,7 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match(&self, actual: &'a ActualT) -> Description {
         let unexpected_elements = actual
             .into_iter()
             .enumerate()

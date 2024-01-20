@@ -50,26 +50,26 @@ use std::{fmt::Debug, marker::PhantomData};
 /// ```
 pub fn is_utf8_string<'a, ActualT: AsRef<[u8]> + Debug + 'a, InnerMatcherT>(
     inner: InnerMatcherT,
-) -> impl Matcher<ActualT = ActualT>
+) -> IsEncodedStringMatcher<ActualT, InnerMatcherT>
 where
-    InnerMatcherT: Matcher<ActualT = String>,
+    InnerMatcherT: for<'b> Matcher<'b, ActualT = String>,
 {
     IsEncodedStringMatcher { inner, phantom: Default::default() }
 }
 
-struct IsEncodedStringMatcher<ActualT, InnerMatcherT> {
+pub struct IsEncodedStringMatcher<ActualT, InnerMatcherT> {
     inner: InnerMatcherT,
     phantom: PhantomData<ActualT>,
 }
 
-impl<'a, ActualT: AsRef<[u8]> + Debug + 'a, InnerMatcherT> Matcher
+impl<'a, ActualT: AsRef<[u8]> + Debug + 'a, InnerMatcherT> Matcher<'a>
     for IsEncodedStringMatcher<ActualT, InnerMatcherT>
 where
-    InnerMatcherT: Matcher<ActualT = String>,
+    InnerMatcherT: for<'b> Matcher<'b, ActualT = String>,
 {
     type ActualT = ActualT;
 
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    fn matches(&self, actual: &'a Self::ActualT) -> MatcherResult {
         String::from_utf8(actual.as_ref().to_vec())
             .map(|s| self.inner.matches(&s))
             .unwrap_or(MatcherResult::NoMatch)
@@ -90,7 +90,7 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> Description {
+    fn explain_match(&self, actual: &'a Self::ActualT) -> Description {
         match String::from_utf8(actual.as_ref().to_vec()) {
             Ok(s) => {
                 format!("which is a UTF-8 encoded string {}", self.inner.explain_match(&s)).into()
@@ -152,7 +152,8 @@ mod tests {
 
     #[test]
     fn has_correct_explanation_in_matched_case() -> Result<()> {
-        let explanation = is_utf8_string(eq("A string")).explain_match(&"A string".as_bytes());
+        let actual = "A string".as_bytes();
+        let explanation = is_utf8_string(eq("A string")).explain_match(&actual);
 
         verify_that!(
             explanation,
@@ -169,8 +170,8 @@ mod tests {
 
     #[test]
     fn has_correct_explanation_when_inner_matcher_does_not_match() -> Result<()> {
-        let explanation =
-            is_utf8_string(eq("A string")).explain_match(&"Another string".as_bytes());
+        let actual = "Another string".as_bytes();
+        let explanation = is_utf8_string(eq("A string")).explain_match(&actual);
 
         verify_that!(
             explanation,

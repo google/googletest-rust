@@ -171,16 +171,18 @@ fn unordered_elements_are_matches_unordered_with_repetition() -> Result<()> {
 
 #[test]
 fn unordered_elements_are_explains_mismatch_due_to_wrong_size() -> Result<()> {
+    let matcher = unordered_elements_are![eq(2), eq(3), eq(4)];
     verify_that!(
-        unordered_elements_are![eq(2), eq(3), eq(4)].explain_match(&vec![2, 3]),
+        matcher.explain_match(&vec![2, 3]),
         displays_as(eq("which has size 2 (expected 3)"))
     )
 }
 
 #[test]
 fn unordered_elements_are_description_no_full_match() -> Result<()> {
+    let matcher = unordered_elements_are![eq(1), eq(2), eq(2)];
     verify_that!(
-        unordered_elements_are![eq(1), eq(2), eq(2)].explain_match(&vec![1, 1, 2]),
+        matcher.explain_match(&vec![1, 1, 2]),
         displays_as(eq(indoc!(
             "
             which does not have a perfect match with the expected elements. The best match found was:
@@ -194,21 +196,23 @@ fn unordered_elements_are_description_no_full_match() -> Result<()> {
 
 #[test]
 fn unordered_elements_are_unmatchable_expected_description_mismatch() -> Result<()> {
+    let matcher = unordered_elements_are![eq(1), eq(2), eq(3)];
     verify_that!(
-        unordered_elements_are![eq(1), eq(2), eq(3)].explain_match(&vec![1, 1, 3]),
+        matcher.explain_match(&vec![1, 1, 3]),
         displays_as(eq("which has no element matching the expected element #1"))
     )
 }
 
 #[test]
 fn unordered_elements_are_unmatchable_actual_description_mismatch() -> Result<()> {
+    let matcher = unordered_elements_are![eq(1), eq(1), eq(3)];
     verify_that!(
-        unordered_elements_are![eq(1), eq(1), eq(3)].explain_match(&vec![1, 2, 3]),
+        matcher.explain_match(&vec![1, 2, 3]),
         displays_as(eq("whose element #1 does not match any expected elements"))
     )
 }
 
-fn create_matcher() -> impl Matcher<ActualT = Vec<i32>> {
+fn create_matcher<'a>() -> impl Matcher<'a, ActualT = Vec<i32>> {
     unordered_elements_are![eq(1)]
 }
 
@@ -217,7 +221,7 @@ fn unordered_elements_are_works_when_matcher_is_created_in_subroutine() -> Resul
     verify_that!(vec![1], create_matcher())
 }
 
-fn create_matcher_for_map() -> impl Matcher<ActualT = HashMap<i32, i32>> {
+fn create_matcher_for_map<'a>() -> impl Matcher<'a, ActualT = HashMap<i32, i32>> {
     unordered_elements_are![(eq(1), eq(1))]
 }
 
@@ -275,32 +279,36 @@ fn contains_each_does_not_match_when_matchers_are_unmatched() -> Result<()> {
 
 #[test]
 fn contains_each_explains_mismatch_due_to_wrong_size() -> Result<()> {
+    let matcher = contains_each![eq(2), eq(3), eq(4)];
     verify_that!(
-        contains_each![eq(2), eq(3), eq(4)].explain_match(&vec![2, 3]),
+        matcher.explain_match(&vec![2, 3]),
         displays_as(eq("which has size 2 (expected at least 3)"))
     )
 }
 
 #[test]
 fn contains_each_explains_missing_element_in_mismatch() -> Result<()> {
+    let matcher = contains_each![eq(2), eq(3), eq(4)];
     verify_that!(
-        contains_each![eq(2), eq(3), eq(4)].explain_match(&vec![1, 2, 3]),
+        matcher.explain_match(&vec![1, 2, 3]),
         displays_as(eq("which has no element matching the expected element #2"))
     )
 }
 
 #[test]
 fn contains_each_explains_missing_elements_in_mismatch() -> Result<()> {
+    let matcher = contains_each![eq(2), eq(3), eq(4), eq(5)];
     verify_that!(
-        contains_each![eq(2), eq(3), eq(4), eq(5)].explain_match(&vec![0, 1, 2, 3]),
+        matcher.explain_match(&vec![0, 1, 2, 3]),
         displays_as(eq("which has no elements matching the expected elements #2, #3"))
     )
 }
 
 #[test]
 fn contains_each_explains_mismatch_due_to_no_graph_matching_found() -> Result<()> {
+    let matcher = contains_each![ge(2), ge(2)];
     verify_that!(
-        contains_each![ge(2), ge(2)].explain_match(&vec![1, 2]),
+        matcher.explain_match(&vec![1, 2]),
         displays_as(eq(indoc!(
             "
             which does not have a superset match with the expected elements. The best match found was:
@@ -367,32 +375,36 @@ fn is_contained_in_does_not_match_when_elements_are_unmatched() -> Result<()> {
 
 #[test]
 fn is_contained_in_explains_mismatch_due_to_wrong_size() -> Result<()> {
+    let matcher = is_contained_in![eq(2), eq(3)];
     verify_that!(
-        is_contained_in![eq(2), eq(3)].explain_match(&vec![2, 3, 4]),
+        matcher.explain_match(&vec![2, 3, 4]),
         displays_as(eq("which has size 3 (expected at most 2)"))
     )
 }
 
 #[test]
 fn is_contained_in_explains_missing_element_in_mismatch() -> Result<()> {
+    let matcher = is_contained_in![eq(2), eq(3), eq(4)];
     verify_that!(
-        is_contained_in![eq(2), eq(3), eq(4)].explain_match(&vec![1, 2, 3]),
+        matcher.explain_match(&vec![1, 2, 3]),
         displays_as(eq("whose element #0 does not match any expected elements"))
     )
 }
 
 #[test]
 fn is_contained_in_explains_missing_elements_in_mismatch() -> Result<()> {
+    let matcher = is_contained_in![eq(2), eq(3), eq(4), eq(5)];
     verify_that!(
-        is_contained_in![eq(2), eq(3), eq(4), eq(5)].explain_match(&vec![0, 1, 2, 3]),
+        matcher.explain_match(&vec![0, 1, 2, 3]),
         displays_as(eq("whose elements #0, #1 do not match any expected elements"))
     )
 }
 
 #[test]
 fn is_contained_in_explains_mismatch_due_to_no_graph_matching_found() -> Result<()> {
+    let matcher = is_contained_in![ge(1), ge(3)];
     verify_that!(
-        is_contained_in![ge(1), ge(3)].explain_match(&vec![1, 2]),
+        matcher.explain_match(&vec![1, 2]),
         displays_as(eq(indoc!(
             "
             which does not have a subset match with the expected elements. The best match found was:

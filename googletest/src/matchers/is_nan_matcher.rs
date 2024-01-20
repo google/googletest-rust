@@ -20,13 +20,13 @@ use num_traits::float::Float;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a floating point value which is NaN.
-pub fn is_nan<T: Float + Debug>() -> impl Matcher<ActualT = T> {
+pub fn is_nan<'a, T: Float + Debug>() -> impl Matcher<'a, ActualT = T> {
     IsNanMatcher::<T>(Default::default())
 }
 
 struct IsNanMatcher<T>(PhantomData<T>);
 
-impl<T: Float + Debug> Matcher for IsNanMatcher<T> {
+impl<T: Float + Debug> Matcher<'_> for IsNanMatcher<T> {
     type ActualT = T;
 
     fn matches(&self, actual: &T) -> MatcherResult {

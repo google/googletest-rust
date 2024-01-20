@@ -230,7 +230,7 @@
 /// Unfortunately, this matcher does *not* work with methods returning string
 /// slices:
 ///
-/// ```compile_fail
+/// ```
 /// # use googletest::prelude::*;
 /// # #[derive(Debug)]
 /// pub struct MyStruct {

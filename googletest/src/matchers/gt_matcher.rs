@@ -74,18 +74,18 @@ use std::{fmt::Debug, marker::PhantomData};
 ///
 /// You can find the standard library `PartialOrd` implementation in
 /// <https://doc.rust-lang.org/core/cmp/trait.PartialOrd.html#implementors>
-pub fn gt<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug>(
+pub fn gt<'a, ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug>(
     expected: ExpectedT,
-) -> impl Matcher<ActualT = ActualT> {
+) -> GtMatcher<ActualT, ExpectedT> {
     GtMatcher::<ActualT, _> { expected, phantom: Default::default() }
 }
 
-struct GtMatcher<ActualT, ExpectedT> {
+pub struct GtMatcher<ActualT, ExpectedT> {
     expected: ExpectedT,
     phantom: PhantomData<ActualT>,
 }
 
-impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher
+impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher<'_>
     for GtMatcher<ActualT, ExpectedT>
 {
     type ActualT = ActualT;

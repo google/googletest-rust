@@ -49,9 +49,10 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn len<T: Debug + ?Sized, E: Matcher<ActualT = usize>>(expected: E) -> impl Matcher<ActualT = T>
+pub fn len<'a, T: Debug + ?Sized + 'a, E>(expected: E) -> impl Matcher<'a, ActualT = T>
 where
-    for<'a> &'a T: IntoIterator,
+    &'a T: IntoIterator,
+    E: for<'b> Matcher<'b, ActualT = usize>
 {
     LenMatcher { expected, phantom: Default::default() }
 }
@@ -61,13 +62,14 @@ struct LenMatcher<T: ?Sized, E> {
     phantom: PhantomData<T>,
 }
 
-impl<T: Debug + ?Sized, E: Matcher<ActualT = usize>> Matcher for LenMatcher<T, E>
+impl<'a, T: Debug + ?Sized + 'a, E> Matcher<'a> for LenMatcher<T, E>
 where
-    for<'a> &'a T: IntoIterator,
+    &'a T: IntoIterator,
+    E: for<'b> Matcher<'b, ActualT = usize>
 {
     type ActualT = T;
 
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches(&self, actual: &'a T) -> MatcherResult {
         self.expected.matches(&count_elements(actual))
     }
 
@@ -83,7 +85,7 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match(&self, actual: &'a T) -> Description {
         let actual_size = count_elements(actual);
         format!("which has length {}, {}", actual_size, self.expected.explain_match(&actual_size))
             .into()
@@ -179,7 +181,7 @@ mod tests {
     #[test]
     fn len_matcher_explain_match() -> Result<()> {
         struct TestMatcher<T>(PhantomData<T>);
-        impl<T: Debug> Matcher for TestMatcher<T> {
+        impl<T: Debug> Matcher<'_> for TestMatcher<T> {
             type ActualT = T;
 
             fn matches(&self, _: &T) -> MatcherResult {
