@@ -38,7 +38,9 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # should_fail_1().unwrap_err();
 /// # should_fail_2().unwrap_err();
 /// ```
-pub fn some<T: Debug>(inner: impl Matcher<ActualT = T>) -> impl Matcher<ActualT = Option<T>> {
+pub fn some<'a, T: Debug>(
+    inner: impl Matcher<'a, ActualT = T>,
+) -> impl Matcher<'a, ActualT = Option<T>> {
     SomeMatcher { inner, phantom: Default::default() }
 }
 
@@ -47,14 +49,14 @@ struct SomeMatcher<T, InnerMatcherT> {
     phantom: PhantomData<T>,
 }
 
-impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for SomeMatcher<T, InnerMatcherT> {
+impl<'a, T: Debug, InnerMatcherT: Matcher<'a, ActualT = T>> Matcher<'a> for SomeMatcher<T, InnerMatcherT> {
     type ActualT = Option<T>;
 
-    fn matches(&self, actual: &Option<T>) -> MatcherResult {
+    fn matches(&self, actual: &'a Option<T>) -> MatcherResult {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match(&self, actual: &Option<T>) -> Description {
+    fn explain_match(&self, actual: &'a Option<T>) -> Description {
         match (self.matches(actual), actual) {
             (_, Some(t)) => {
                 Description::new().text("which has a value").nested(self.inner.explain_match(t))

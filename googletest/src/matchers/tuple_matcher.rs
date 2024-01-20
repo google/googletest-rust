@@ -29,7 +29,7 @@ pub mod internal {
 
     // This implementation is provided for completeness, but is completely trivial.
     // The only actual value which can be supplied is (), which must match.
-    impl Matcher for () {
+    impl Matcher<'_> for () {
         type ActualT = ();
 
         fn matches(&self, _: &Self::ActualT) -> MatcherResult {
@@ -50,12 +50,12 @@ pub mod internal {
     #[doc(hidden)]
     macro_rules! tuple_matcher_n {
         ($([$field_number:tt, $matcher_type:ident, $field_type:ident]),*) => {
-            impl<$($field_type: Debug, $matcher_type: Matcher<ActualT = $field_type>),*>
-                Matcher for ($($matcher_type,)*)
+            impl<'a, $($field_type: Debug, $matcher_type: Matcher<'a, ActualT = $field_type>),*>
+                Matcher<'a> for ($($matcher_type,)*)
             {
                 type ActualT = ($($field_type,)*);
 
-                fn matches(&self, actual: &($($field_type,)*)) -> MatcherResult {
+                fn matches(&self, actual: &'a ($($field_type,)*)) -> MatcherResult {
                     $(match self.$field_number.matches(&actual.$field_number) {
                         MatcherResult::Match => {},
                         MatcherResult::NoMatch => {
@@ -65,7 +65,7 @@ pub mod internal {
                     MatcherResult::Match
                 }
 
-                fn explain_match(&self, actual: &($($field_type,)*)) -> Description {
+                fn explain_match(&self, actual: &'a ($($field_type,)*)) -> Description {
                     let mut explanation = Description::new().text("which").nested(self.describe(self.matches(actual)));
                     $(match self.$field_number.matches(&actual.$field_number) {
                         MatcherResult::Match => {},

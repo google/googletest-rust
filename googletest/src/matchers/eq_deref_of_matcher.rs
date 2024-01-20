@@ -65,7 +65,7 @@ pub struct EqDerefOfMatcher<ActualT: ?Sized, ExpectedRefT> {
     phantom: PhantomData<ActualT>,
 }
 
-impl<ActualT, ExpectedRefT, ExpectedT> Matcher for EqDerefOfMatcher<ActualT, ExpectedRefT>
+impl<ActualT, ExpectedRefT, ExpectedT> Matcher<'_> for EqDerefOfMatcher<ActualT, ExpectedRefT>
 where
     ActualT: Debug + ?Sized,
     ExpectedRefT: Deref<Target = ExpectedT> + Debug,

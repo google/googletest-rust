@@ -216,7 +216,7 @@ struct MyEqMatcher<T> {
     expected: T,
 }
 
-impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
+impl<T: PartialEq + Debug> Matcher<'_> for MyEqMatcher<T> {
     type ActualT = T;
 
     fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
@@ -250,7 +250,7 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
  #    expected: T,
  # }
  #
- # impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
+ # impl<T: PartialEq + Debug> Matcher<'_> for MyEqMatcher<T> {
  #    type ActualT = T;
  #
  #    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
@@ -273,7 +273,7 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
  #    }
  # }
  #
- pub fn eq_my_way<T: PartialEq + Debug>(expected: T) -> impl Matcher<ActualT = T> {
+ pub fn eq_my_way<T: PartialEq + Debug>(expected: T) -> MyEqMatcher<T> {
     MyEqMatcher { expected }
  }
  ```
@@ -289,7 +289,7 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 #    expected: T,
 # }
 #
-# impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
+# impl<T: PartialEq + Debug> Matcher<'_> for MyEqMatcher<T> {
 #    type ActualT = T;
 #
 #    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
@@ -312,7 +312,7 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 #    }
 # }
 #
-# pub fn eq_my_way<T: PartialEq + Debug>(expected: T) -> impl Matcher<ActualT = T> {
+# pub fn eq_my_way<T: PartialEq + Debug>(expected: T) -> MyEqMatcher<T> {
 #    MyEqMatcher { expected }
 # }
 # /* The attribute macro would prevent the function from being compiled in a doctest.

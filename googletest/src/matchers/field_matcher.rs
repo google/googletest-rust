@@ -152,26 +152,26 @@ pub mod internal {
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub fn field_matcher<OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<ActualT = InnerT>>(
-        field_accessor: fn(&OuterT) -> Option<&InnerT>,
+    pub fn field_matcher<'a, OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<'a, ActualT = InnerT>>(
+        field_accessor: fn(&'a OuterT) -> Option<&'a InnerT>,
         field_path: &'static str,
         inner: InnerMatcher,
-    ) -> impl Matcher<ActualT = OuterT> {
+    ) -> impl Matcher<'a, ActualT = OuterT> {
         FieldMatcher { field_accessor, field_path, inner }
     }
 
-    struct FieldMatcher<OuterT, InnerT, InnerMatcher> {
-        field_accessor: fn(&OuterT) -> Option<&InnerT>,
+    struct FieldMatcher<'a, OuterT, InnerT, InnerMatcher> {
+        field_accessor: fn(&'a OuterT) -> Option<&'a InnerT>,
         field_path: &'static str,
         inner: InnerMatcher,
     }
 
-    impl<OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<ActualT = InnerT>> Matcher
-        for FieldMatcher<OuterT, InnerT, InnerMatcher>
+    impl<'a, OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<'a, ActualT = InnerT>> Matcher<'a>
+        for FieldMatcher<'a, OuterT, InnerT, InnerMatcher>
     {
         type ActualT = OuterT;
 
-        fn matches(&self, actual: &OuterT) -> MatcherResult {
+        fn matches(&self, actual: &'a OuterT) -> MatcherResult {
             if let Some(value) = (self.field_accessor)(actual) {
                 self.inner.matches(value)
             } else {
@@ -179,7 +179,7 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &OuterT) -> Description {
+        fn explain_match(&self, actual: &'a OuterT) -> Description {
             if let Some(actual) = (self.field_accessor)(actual) {
                 format!(
                     "which has field `{}`, {}",

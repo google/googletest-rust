@@ -101,28 +101,28 @@ pub mod internal {
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub struct ElementsAre<'a, ContainerT: ?Sized, T: Debug> {
-        elements: Vec<Box<dyn Matcher<ActualT = T> + 'a>>,
+    pub struct ElementsAre<'m, 'e, ContainerT: ?Sized, T: Debug> {
+        elements: Vec<Box<dyn Matcher<'e, ActualT = T> + 'm>>,
         phantom: PhantomData<ContainerT>,
     }
 
-    impl<'a, ContainerT: ?Sized, T: Debug> ElementsAre<'a, ContainerT, T> {
+    impl<'m, 'e, ContainerT: ?Sized, T: Debug> ElementsAre<'m, 'e, ContainerT, T> {
         /// Factory only intended for use in the macro `elements_are!`.
         ///
         /// **For internal use only. API stablility is not guaranteed!**
         #[doc(hidden)]
-        pub fn new(elements: Vec<Box<dyn Matcher<ActualT = T> + 'a>>) -> Self {
+        pub fn new(elements: Vec<Box<dyn Matcher<'e, ActualT = T> + 'm>>) -> Self {
             Self { elements, phantom: Default::default() }
         }
     }
 
-    impl<'a, T: Debug, ContainerT: Debug + ?Sized> Matcher for ElementsAre<'a, ContainerT, T>
+    impl<'m, 'e, 'c, T: Debug + 'e, ContainerT: Debug + ?Sized + 'c> Matcher<'c> for ElementsAre<'m, 'e, ContainerT, T>
     where
-        for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
+        &'c ContainerT: IntoIterator<Item = &'e T>,
     {
         type ActualT = ContainerT;
 
-        fn matches(&self, actual: &ContainerT) -> MatcherResult {
+        fn matches(&self, actual: &'c ContainerT) -> MatcherResult {
             let mut zipped_iterator = zip(actual.into_iter(), self.elements.iter());
             for (a, e) in zipped_iterator.by_ref() {
                 if e.matches(a).is_no_match() {
@@ -136,7 +136,7 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> Description {
+        fn explain_match(&self, actual: &'c ContainerT) -> Description {
             let actual_iterator = actual.into_iter();
             let mut zipped_iterator = zip(actual_iterator, self.elements.iter());
             let mut mismatches = Vec::new();

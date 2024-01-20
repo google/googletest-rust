@@ -166,7 +166,7 @@ impl<T: Debug> NearMatcher<T> {
     }
 }
 
-impl<T: Debug + Float> Matcher for NearMatcher<T> {
+impl<T: Debug + Float> Matcher<'_> for NearMatcher<T> {
     type ActualT = T;
 
     fn matches(&self, actual: &T) -> MatcherResult {

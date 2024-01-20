@@ -50,9 +50,9 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # should_pass().unwrap();
 /// ```
 
-pub fn empty<T: Debug + ?Sized>() -> impl Matcher<ActualT = T>
+pub fn empty<'a, T: Debug + ?Sized + 'a>() -> impl Matcher<'a, ActualT = T>
 where
-    for<'a> &'a T: IntoIterator,
+    &'a T: IntoIterator,
 {
     EmptyMatcher { phantom: Default::default() }
 }
@@ -61,13 +61,13 @@ struct EmptyMatcher<T: ?Sized> {
     phantom: PhantomData<T>,
 }
 
-impl<T: Debug + ?Sized> Matcher for EmptyMatcher<T>
+impl<'a, T: Debug + ?Sized + 'a> Matcher<'a> for EmptyMatcher<T>
 where
-    for<'a> &'a T: IntoIterator,
+    &'a T: IntoIterator,
 {
     type ActualT = T;
 
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches(&self, actual: &'a T) -> MatcherResult {
         actual.into_iter().next().is_none().into()
     }
 

@@ -103,13 +103,14 @@ fn elements_are_produces_correct_failure_message_nested() -> Result<()> {
 
 #[test]
 fn elements_are_explain_match_wrong_size() -> Result<()> {
+    let matcher = elements_are![eq(1)];
     verify_that!(
-        elements_are![eq(1)].explain_match(&vec![1, 2]),
+        matcher.explain_match(&vec![1, 2]),
         displays_as(eq("whose size is 2"))
     )
 }
 
-fn create_matcher() -> impl Matcher<ActualT = Vec<i32>> {
+fn create_matcher<'a>() -> impl Matcher<'a, ActualT = Vec<i32>> {
     elements_are![eq(1)]
 }
 

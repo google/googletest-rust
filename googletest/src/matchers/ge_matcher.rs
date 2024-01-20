@@ -74,9 +74,9 @@ use std::{fmt::Debug, marker::PhantomData};
 ///
 /// You can find the standard library `PartialOrd` implementation in
 /// <https://doc.rust-lang.org/core/cmp/trait.PartialOrd.html#implementors>
-pub fn ge<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug>(
+pub fn ge<'a, ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug>(
     expected: ExpectedT,
-) -> impl Matcher<ActualT = ActualT> {
+) -> impl Matcher<'a, ActualT = ActualT> {
     GeMatcher::<ActualT, _> { expected, phantom: Default::default() }
 }
 
@@ -85,7 +85,7 @@ struct GeMatcher<ActualT, ExpectedT> {
     phantom: PhantomData<ActualT>,
 }
 
-impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher
+impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher<'_>
     for GeMatcher<ActualT, ExpectedT>
 {
     type ActualT = ActualT;

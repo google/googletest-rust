@@ -36,20 +36,20 @@ impl<M1, M2> ConjunctionMatcher<M1, M2> {
     }
 }
 
-impl<M1: Matcher, M2: Matcher<ActualT = M1::ActualT>> Matcher for ConjunctionMatcher<M1, M2>
+impl<'a, M1: Matcher<'a>, M2: Matcher<'a, ActualT = M1::ActualT>> Matcher<'a> for ConjunctionMatcher<M1, M2>
 where
     M1::ActualT: Debug,
 {
     type ActualT = M1::ActualT;
 
-    fn matches(&self, actual: &M1::ActualT) -> MatcherResult {
+    fn matches(&self, actual: &'a M1::ActualT) -> MatcherResult {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::Match, MatcherResult::Match) => MatcherResult::Match,
             _ => MatcherResult::NoMatch,
         }
     }
 
-    fn explain_match(&self, actual: &M1::ActualT) -> Description {
+    fn explain_match(&self, actual: &'a M1::ActualT) -> Description {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::Match, MatcherResult::Match) => Description::new()
                 .nested(self.m1.explain_match(actual))
