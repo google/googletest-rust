@@ -44,8 +44,12 @@ impl<T: Debug + Display, InnerMatcher: Matcher<ActualT = String>> Matcher
     }
 
     fn explain_match(&self, actual: &T) -> Description {
-        format!("which displays as a string {}", self.inner.explain_match(&format!("{actual}")))
-            .into()
+        format!(
+            "which displays as {:?} {}",
+            actual.to_string(),
+            self.inner.explain_match(&format!("{actual}"))
+        )
+        .into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -112,7 +116,7 @@ mod tests {
             err(displays_as(contains_substring(indoc!(
                 "
                   Actual: \"123\\n234\",
-                    which displays as a string which isn't equal to \"123\\n345\"
+                    which displays as \"123\\n234\" which isn't equal to \"123\\n345\"
                     Difference(-actual / +expected):
                      123
                     -234
