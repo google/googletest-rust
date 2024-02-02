@@ -53,114 +53,34 @@
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __all {
-    ($($matcher:expr),* $(,)?) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::AllMatcher;
-        AllMatcher::new([$(Box::new($matcher)),*])
+    ($(,)?) => {{
+        $crate::matchers::anything()
+    }} ;
+    ($matcher:expr $(,)?) => {{
+        $matcher
+    }};
+    ($head:expr, $head2:expr $(,)?) => {{
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::ConjunctionMatcher::new($head, $head2)
+    }};
+    ($head:expr, $head2:expr, $($tail:expr),+ $(,)?) => {{
+        $crate::__all![
+            $crate::matchers::__internal_unstable_do_not_depend_on_these::ConjunctionMatcher::new($head, $head2),
+            $($tail),+
+        ]
     }}
-}
-
-/// Functionality needed by the [`all`] macro.
-///
-/// For internal use only. API stablility is not guaranteed!
-#[doc(hidden)]
-pub mod internal {
-    use crate::description::Description;
-    use crate::matcher::{Matcher, MatcherResult};
-    use crate::matchers::anything;
-    use std::fmt::Debug;
-
-    /// A matcher which matches an input value matched by all matchers in the
-    /// array `components`.
-    ///
-    /// For internal use only. API stablility is not guaranteed!
-    #[doc(hidden)]
-    pub struct AllMatcher<'a, T: Debug + ?Sized, const N: usize> {
-        components: [Box<dyn Matcher<ActualT = T> + 'a>; N],
-    }
-
-    impl<'a, T: Debug + ?Sized, const N: usize> AllMatcher<'a, T, N> {
-        /// Constructs an [`AllMatcher`] with the given component matchers.
-        ///
-        /// Intended for use only by the [`all`] macro.
-        pub fn new(components: [Box<dyn Matcher<ActualT = T> + 'a>; N]) -> Self {
-            Self { components }
-        }
-    }
-
-    impl<'a, T: Debug + ?Sized, const N: usize> Matcher for AllMatcher<'a, T, N> {
-        type ActualT = T;
-
-        fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
-            for component in &self.components {
-                match component.matches(actual) {
-                    MatcherResult::NoMatch => {
-                        return MatcherResult::NoMatch;
-                    }
-                    MatcherResult::Match => {}
-                }
-            }
-            MatcherResult::Match
-        }
-
-        fn explain_match(&self, actual: &Self::ActualT) -> Description {
-            match N {
-                0 => anything::<T>().explain_match(actual),
-                1 => self.components[0].explain_match(actual),
-                _ => {
-                    let failures = self
-                        .components
-                        .iter()
-                        .filter(|component| component.matches(actual).is_no_match())
-                        .collect::<Vec<_>>();
-
-                    if failures.len() == 1 {
-                        failures[0].explain_match(actual)
-                    } else {
-                        Description::new()
-                            .collect(
-                                failures
-                                    .into_iter()
-                                    .map(|component| component.explain_match(actual)),
-                            )
-                            .bullet_list()
-                    }
-                }
-            }
-        }
-
-        fn describe(&self, matcher_result: MatcherResult) -> Description {
-            match N {
-                0 => anything::<T>().describe(matcher_result),
-                1 => self.components[0].describe(matcher_result),
-                _ => {
-                    let header = if matcher_result.into() {
-                        "has all the following properties:"
-                    } else {
-                        "has at least one of the following properties:"
-                    };
-                    Description::new().text(header).nested(
-                        Description::new()
-                            .bullet_list()
-                            .collect(self.components.iter().map(|m| m.describe(matcher_result))),
-                    )
-                }
-            }
-        }
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::internal;
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
     use indoc::indoc;
 
     #[test]
     fn description_shows_more_than_one_matcher() -> Result<()> {
-        let first_matcher = starts_with("A");
+        let first_matcher: StrMatcher<String, _> = starts_with("A");
         let second_matcher = ends_with("string");
-        let matcher: internal::AllMatcher<String, 2> = all!(first_matcher, second_matcher);
+        let matcher = all!(first_matcher, second_matcher);
 
         verify_that!(
             matcher.describe(MatcherResult::Match),
@@ -175,8 +95,8 @@ mod tests {
 
     #[test]
     fn description_shows_one_matcher_directly() -> Result<()> {
-        let first_matcher = starts_with("A");
-        let matcher: internal::AllMatcher<String, 1> = all!(first_matcher);
+        let first_matcher: StrMatcher<String, _> = starts_with("A");
+        let matcher = all!(first_matcher);
 
         verify_that!(
             matcher.describe(MatcherResult::Match),
@@ -187,9 +107,9 @@ mod tests {
     #[test]
     fn mismatch_description_shows_which_matcher_failed_if_more_than_one_constituent() -> Result<()>
     {
-        let first_matcher = starts_with("Another");
+        let first_matcher: StrMatcher<str, _> = starts_with("Another");
         let second_matcher = ends_with("string");
-        let matcher: internal::AllMatcher<str, 2> = all!(first_matcher, second_matcher);
+        let matcher = all!(first_matcher, second_matcher);
 
         verify_that!(
             matcher.explain_match("A string"),
@@ -200,7 +120,7 @@ mod tests {
     #[test]
     fn mismatch_description_is_simple_when_only_one_consistuent() -> Result<()> {
         let first_matcher = starts_with("Another");
-        let matcher: internal::AllMatcher<str, 1> = all!(first_matcher);
+        let matcher = all!(first_matcher);
 
         verify_that!(
             matcher.explain_match("A string"),

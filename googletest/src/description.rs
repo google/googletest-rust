@@ -89,6 +89,7 @@ use crate::internal::description_renderer::{List, INDENTATION_SIZE};
 pub struct Description {
     elements: List,
     initial_indentation: usize,
+    is_conjunction: bool,
 }
 
 impl Description {
@@ -198,6 +199,19 @@ impl Description {
     /// Returns whether the set of elements is empty.
     pub fn is_empty(&self) -> bool {
         self.elements.is_empty()
+    }
+
+    pub(crate) fn conjunction_description(self) -> Self {
+        Self { is_conjunction: true, ..self }
+    }
+
+    pub(crate) fn is_conjunction_description(&self) -> bool {
+        self.is_conjunction
+    }
+
+    pub(crate) fn push_in_last_nested(mut self, inner: Description) -> Self {
+        self.elements.push_at_end(inner.elements);
+        self
     }
 }
 
