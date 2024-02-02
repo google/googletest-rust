@@ -83,6 +83,17 @@ impl List {
         self.0.is_empty()
     }
 
+    /// Append a new [`List`] in the last element which must be a
+    /// [`Block::Nested`]. Panic if `self` is empty or the last element is
+    /// not [`Block::Nested`].
+    pub(crate) fn push_at_end(&mut self, list: List) {
+        if let Some(Block::Nested(self_list)) = self.0.last_mut() {
+            self_list.push_nested(list);
+        } else {
+            panic!("pushing elements at the end of {self:#?} which last element is not Nested")
+        }
+    }
+
     fn render_with_prefix(
         &self,
         f: &mut dyn Write,
