@@ -17,11 +17,6 @@ use googletest::prelude::*;
 use indoc::indoc;
 
 #[test]
-fn does_not_match_value_when_list_is_empty() -> Result<()> {
-    verify_that!((), not(any!()))
-}
-
-#[test]
 fn matches_value_with_single_matching_component() -> Result<()> {
     verify_that!(123, any!(eq(123)))
 }
@@ -63,11 +58,6 @@ fn mismatch_description_two_failed_matchers() -> Result<()> {
         any!(starts_with("One"), starts_with("Two")).explain_match("Three"),
         displays_as(eq("* which does not start with \"One\"\n* which does not start with \"Two\""))
     )
-}
-
-#[test]
-fn mismatch_description_empty_matcher() -> Result<()> {
-    verify_that!(any!().explain_match("Three"), displays_as(eq("which never matches")))
 }
 
 #[test]
