@@ -159,3 +159,8 @@ test = false
 name = "verify_predicate_with_failure_as_method_in_submodule"
 path = "src/verify_predicate_with_failure_as_method_in_submodule.rs"
 test = false
+
+[[bin]]
+name = "failure_in_fixtures_tear_down"
+path = "src/failure_in_fixtures_tear_down.rs"
+test = false

@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod all_matcher_test;
-mod any_matcher_test;
-mod colorized_diff_test;
-mod composition_test;
-mod elements_are_matcher_test;
-mod field_matcher_test;
-mod fixtures_test;
-mod matches_pattern_test;
-mod pointwise_matcher_test;
-mod property_matcher_test;
-#[cfg(feature = "proptest")]
-mod proptest_integration_test;
-mod tuple_matcher_test;
-mod unordered_elements_are_matcher_test;
+/// An interface for setting up and tearing down data used in multiple tests.
+///
+/// The test fixture passed to [`TEST_F`](googletest_macro::TEST_F) must
+/// implement this interface.
+pub trait TestFixture {
+    /// Create the the test fixture
+    fn create() -> Self;
+
+    /// Set up the data in the test fixture
+    fn set_up(&mut self) {}
+
+    /// Tear down the data in the test fixture. Can fail the test by returning
+    /// an error.
+    fn tear_down(&mut self) -> crate::Result<()> {
+        Ok(())
+    }
+}

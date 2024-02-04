@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use quote::quote;
-use syn::{parse_macro_input, Attribute, ItemFn, ReturnType};
+use quote::{quote, ToTokens};
+use syn::{parse_macro_input, spanned::Spanned, Attribute, ItemFn, ReturnType};
 
 /// Marks a test to be run by the Google Rust test runner.
 ///
@@ -162,4 +162,109 @@ fn is_test_attribute(attr: &Attribute) -> bool {
         || (first_segment.ident == "rstest"
             && last_segment.ident == "rstest"
             && attr.path().segments.len() <= 2)
+}
+
+#[proc_macro]
+#[allow(non_snake_case)]
+pub fn TEST_F(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let TestWithFixtureArgs { fixture, function, block, .. } =
+        parse_macro_input!(input as TestWithFixtureArgs);
+
+    let test_name = match type_path_to_ident(fixture.to_token_stream()) {
+        Ok(ident) => format!("{ident}{function}"),
+        Err(e) => return e.into_compile_error().into(),
+    };
+    let test_name = syn::Ident::new(&test_name, fixture.span());
+
+    quote!(
+        impl #fixture {
+            #[allow(non_snake_case)]
+            fn #function (&mut self) -> googletest::Result<()> #block
+        }
+
+        #[allow(non_snake_case)]
+        #[googletest::test]
+        fn #test_name() -> googletest::Result<()> {
+            let mut fixture = <#fixture as TestFixture>::create();
+            fixture.set_up();
+            fixture.#function()?;
+            fixture.tear_down()
+        }
+
+    )
+    .into()
+}
+
+struct TestWithFixtureArgs {
+    fixture: syn::TypePath,
+    _comma: syn::Token![,],
+    function: syn::Ident,
+    _comma2: syn::Token![,],
+    block: syn::Block,
+}
+
+impl syn::parse::Parse for TestWithFixtureArgs {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        Ok(Self {
+            fixture: input.parse()?,
+            _comma: input.parse()?,
+            function: input.parse()?,
+            _comma2: input.parse()?,
+            block: input.parse()?,
+        })
+    }
+}
+
+fn type_path_to_ident(token_stream: proc_macro2::TokenStream) -> syn::Result<String> {
+    let mut ident = String::new();
+    for token in token_stream.into_iter() {
+        match token {
+            proc_macro2::TokenTree::Group(group) => {
+                ident.push_str(&type_path_to_ident(group.stream())?);
+            }
+            proc_macro2::TokenTree::Ident(i) => ident.push_str(&i.to_string()),
+            proc_macro2::TokenTree::Punct(_) => ident.push('_'),
+            proc_macro2::TokenTree::Literal(literal) => ident.push_str(&literal.to_string()),
+        }
+    }
+    Ok(ident)
+}
+
+#[proc_macro]
+#[allow(non_snake_case)]
+pub fn TEST(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let TestWithSuiteArgs { suite, function, block, .. } =
+        parse_macro_input!(input as TestWithSuiteArgs);
+
+    let test_name = format!("{suite}_{function}");
+
+    let test_name = syn::Ident::new(&test_name, suite.span());
+
+    quote!(
+        #[allow(non_snake_case)]
+        #[googletest::test]
+        fn #test_name() -> googletest::Result<()> #block
+
+    )
+    .into()
+}
+
+struct TestWithSuiteArgs {
+    suite: syn::Ident,
+    _comma: syn::Token![,],
+    function: syn::Ident,
+    _comma2: syn::Token![,],
+    block: syn::Block,
+}
+
+impl syn::parse::Parse for TestWithSuiteArgs {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        Ok(Self {
+            suite: input.parse()?,
+            _comma: input.parse()?,
+            function: input.parse()?,
+            _comma2: input.parse()?,
+            block: input.parse()?,
+        })
+    }
 }

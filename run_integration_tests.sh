@@ -35,6 +35,7 @@ INTEGRATION_TEST_BINARIES=(
   "failure_due_to_fail_macro_with_empty_message"
   "failure_due_to_fail_macro_with_format_arguments"
   "failure_due_to_returned_error"
+  "failure_in_fixtures_tear_down"
   "fatal_and_non_fatal_failure"
   "first_failure_aborts"
   "google_test_with_rstest"
