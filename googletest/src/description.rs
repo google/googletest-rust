@@ -373,4 +373,24 @@ mod tests {
             )))
         )
     }
+
+    #[test]
+    fn new_is_empty() -> Result<()> {
+        verify_that!(Description::new(), predicate(Description::is_empty))
+    }
+
+    #[test]
+    fn text_is_not_empty() -> Result<()> {
+        verify_that!(Description::new().text("something"), not(predicate(Description::is_empty)))
+    }
+
+    #[test]
+    fn new_zero_length() -> Result<()> {
+        verify_that!(Description::new().len(), eq(0))
+    }
+
+    #[test]
+    fn text_one_length() -> Result<()> {
+        verify_that!(Description::new().text("something").len(), eq(1))
+    }
 }
