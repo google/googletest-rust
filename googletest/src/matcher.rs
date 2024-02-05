@@ -22,6 +22,10 @@ use crate::matchers::__internal_unstable_do_not_depend_on_these::DisjunctionMatc
 use std::fmt::Debug;
 
 /// An interface for checking an arbitrary condition on a datum.
+///
+/// This trait is automatically implemented for a reference of any type
+/// implementing `Matcher`. This simplifies reusing a matcher in different
+/// assertions.
 pub trait Matcher {
     /// The type against which this matcher matches.
     type ActualT: Debug + ?Sized;
@@ -266,5 +270,41 @@ impl MatcherResult {
     /// `false`.
     pub fn is_no_match(self) -> bool {
         matches!(self, MatcherResult::NoMatch)
+    }
+}
+
+impl<M: Matcher> Matcher for &M {
+    type ActualT = M::ActualT;
+
+    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+        (*self).matches(actual)
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
+        (*self).describe(matcher_result)
+    }
+
+    fn explain_match(&self, actual: &Self::ActualT) -> Description {
+        (*self).explain_match(actual)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+
+    #[test]
+    fn ref_matchers_can_be_reused() -> Result<()> {
+        let matcher = eq(1);
+
+        verify_that!(1, &matcher)?;
+        verify_that!(1, &matcher)
+    }
+
+    #[test]
+    fn ref_matchers_as_inner_matcher() -> Result<()> {
+        let matcher = gt(1);
+
+        verify_that!([2, 3, 4, 5], [&matcher, &matcher, &matcher, &matcher])
     }
 }
