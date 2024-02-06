@@ -76,7 +76,7 @@ where
                 } else {
                     Description::new()
                         .bullet_list()
-                        .collect([self.m1.explain_match(actual), self.m2.explain_match(actual)])
+                        .collect([m1_description, self.m2.explain_match(actual)])
                         .conjunction_description()
                 }
             }
@@ -96,10 +96,9 @@ where
             Description::new()
                 .text(header)
                 .nested(
-                    Description::new().bullet_list().collect([
-                        self.m1.describe(matcher_result),
-                        self.m2.describe(matcher_result),
-                    ]),
+                    Description::new()
+                        .bullet_list()
+                        .collect([m1_description, self.m2.describe(matcher_result)]),
                 )
                 .conjunction_description()
         }

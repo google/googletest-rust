@@ -90,6 +90,7 @@ pub struct Description {
     elements: List,
     initial_indentation: usize,
     is_conjunction: bool,
+    is_disjunction: bool,
 }
 
 impl Description {
@@ -201,6 +202,11 @@ impl Description {
         self.elements.is_empty()
     }
 
+    pub(crate) fn push_in_last_nested(mut self, inner: Description) -> Self {
+        self.elements.push_at_end(inner.elements);
+        self
+    }
+
     pub(crate) fn conjunction_description(self) -> Self {
         Self { is_conjunction: true, ..self }
     }
@@ -209,9 +215,12 @@ impl Description {
         self.is_conjunction
     }
 
-    pub(crate) fn push_in_last_nested(mut self, inner: Description) -> Self {
-        self.elements.push_at_end(inner.elements);
-        self
+    pub(crate) fn disjunction_description(self) -> Self {
+        Self { is_disjunction: true, ..self }
+    }
+
+    pub(crate) fn is_disjunction_description(&self) -> bool {
+        self.is_disjunction
     }
 }
 
