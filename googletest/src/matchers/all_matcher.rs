@@ -78,7 +78,7 @@ mod tests {
 
     #[test]
     fn description_shows_more_than_one_matcher() -> Result<()> {
-        let first_matcher: StrMatcher<String, _> = starts_with("A");
+        let first_matcher: StrMatcher<String, _, _> = starts_with("A");
         let second_matcher = ends_with("string");
         let matcher = all!(first_matcher, second_matcher);
 
@@ -95,7 +95,7 @@ mod tests {
 
     #[test]
     fn description_shows_one_matcher_directly() -> Result<()> {
-        let first_matcher: StrMatcher<String, _> = starts_with("A");
+        let first_matcher: StrMatcher<String, _, _> = starts_with("A");
         let matcher = all!(first_matcher);
 
         verify_that!(
@@ -107,7 +107,7 @@ mod tests {
     #[test]
     fn mismatch_description_shows_which_matcher_failed_if_more_than_one_constituent() -> Result<()>
     {
-        let first_matcher: StrMatcher<str, _> = starts_with("Another");
+        let first_matcher: StrMatcher<str, _, _> = starts_with("Another");
         let second_matcher = ends_with("string");
         let matcher = all!(first_matcher, second_matcher);
 
