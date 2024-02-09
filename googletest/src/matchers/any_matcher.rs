@@ -56,7 +56,7 @@
 #[doc(hidden)]
 macro_rules! __any {
     ($(,)?) => {{
-        std::compile_error!("any![...] expects at least one argument");
+        $crate::matchers::not($crate::matchers::anything())
     }} ;
     ($matcher:expr $(,)?) => {{
         $matcher
@@ -128,5 +128,10 @@ mod tests {
             matcher.explain_match("A string"),
             displays_as(eq("which does not start with \"Another\""))
         )
+    }
+
+    #[test]
+    fn empty_any_matcher_never_matches() -> Result<()> {
+        verify_that!(123, not(any![]))
     }
 }
