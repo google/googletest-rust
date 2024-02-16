@@ -13,8 +13,8 @@
 // limitations under the License.
 
 use crate::description::Description;
-use crate::matcher::{Matcher, MatcherResult};
-use std::{fmt::Debug, marker::PhantomData};
+use crate::matcher::{Matcher, MatcherExt, MatcherResult};
+use std::fmt::Debug;
 
 /// Matches a container all of whose elements are matched by the matcher
 /// `inner`.
@@ -61,28 +61,20 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn each<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT>(
-    inner: MatcherT,
-) -> impl Matcher<ActualT = ActualT>
-where
-    for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    MatcherT: Matcher<ActualT = ElementT>,
-{
-    EachMatcher { inner, phantom: Default::default() }
+pub fn each<MatcherT>(inner: MatcherT) -> EachMatcher<MatcherT> {
+    EachMatcher { inner }
 }
 
-struct EachMatcher<ActualT: ?Sized, MatcherT> {
+#[derive(MatcherExt)]
+pub struct EachMatcher<MatcherT> {
     inner: MatcherT,
-    phantom: PhantomData<ActualT>,
 }
 
-impl<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT> Matcher for EachMatcher<ActualT, MatcherT>
+impl<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT> Matcher<ActualT> for EachMatcher<MatcherT>
 where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    MatcherT: Matcher<ActualT = ElementT>,
+    MatcherT: Matcher<ElementT>,
 {
-    type ActualT = ActualT;
-
     fn matches(&self, actual: &ActualT) -> MatcherResult {
         for element in actual {
             if self.inner.matches(element).is_no_match() {

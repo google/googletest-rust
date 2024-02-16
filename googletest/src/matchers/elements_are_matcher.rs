@@ -93,35 +93,33 @@ macro_rules! __elements_are {
 #[doc(hidden)]
 pub mod internal {
     use crate::description::Description;
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::{Matcher, MatcherExt, MatcherResult};
     use crate::matcher_support::zipped_iterator::zip;
-    use std::{fmt::Debug, marker::PhantomData};
+    use std::fmt::Debug;
 
     /// This struct is meant to be used only by the macro `elements_are!`.
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub struct ElementsAre<'a, ContainerT: ?Sized, T: Debug> {
-        elements: Vec<Box<dyn Matcher<ActualT = T> + 'a>>,
-        phantom: PhantomData<ContainerT>,
+    #[derive(MatcherExt)]
+    pub struct ElementsAre<'a, T: Debug> {
+        elements: Vec<Box<dyn Matcher<T> + 'a>>,
     }
 
-    impl<'a, ContainerT: ?Sized, T: Debug> ElementsAre<'a, ContainerT, T> {
+    impl<'a, T: Debug> ElementsAre<'a, T> {
         /// Factory only intended for use in the macro `elements_are!`.
         ///
         /// **For internal use only. API stablility is not guaranteed!**
         #[doc(hidden)]
-        pub fn new(elements: Vec<Box<dyn Matcher<ActualT = T> + 'a>>) -> Self {
-            Self { elements, phantom: Default::default() }
+        pub fn new(elements: Vec<Box<dyn Matcher<T> + 'a>>) -> Self {
+            Self { elements }
         }
     }
 
-    impl<'a, T: Debug, ContainerT: Debug + ?Sized> Matcher for ElementsAre<'a, ContainerT, T>
+    impl<'a, T: Debug, ContainerT: Debug + ?Sized> Matcher<ContainerT> for ElementsAre<'a, T>
     where
         for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
     {
-        type ActualT = ContainerT;
-
         fn matches(&self, actual: &ContainerT) -> MatcherResult {
             let mut zipped_iterator = zip(actual.into_iter(), self.elements.iter());
             for (a, e) in zipped_iterator.by_ref() {

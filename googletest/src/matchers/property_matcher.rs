@@ -136,36 +136,39 @@ macro_rules! property_internal {
 pub mod internal {
     use crate::{
         description::Description,
-        matcher::{Matcher, MatcherResult},
+        matcher::{Matcher, MatcherExt, MatcherResult},
     };
-    use std::{fmt::Debug, marker::PhantomData};
+    use std::fmt::Debug;
 
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub fn property_matcher<OuterT: Debug, InnerT: Debug, MatcherT: Matcher<ActualT = InnerT>>(
-        extractor: impl Fn(&OuterT) -> InnerT,
-        property_desc: &'static str,
-        inner: MatcherT,
-    ) -> impl Matcher<ActualT = OuterT> {
-        PropertyMatcher { extractor, property_desc, inner, phantom: Default::default() }
-    }
-
-    struct PropertyMatcher<OuterT, ExtractorT, MatcherT> {
+    pub fn property_matcher<
+        OuterT: Debug,
+        InnerT: Debug,
+        MatcherT: Matcher<InnerT>,
+        ExtractorT: Fn(&OuterT) -> InnerT,
+    >(
         extractor: ExtractorT,
         property_desc: &'static str,
         inner: MatcherT,
-        phantom: PhantomData<OuterT>,
+    ) -> PropertyMatcher<ExtractorT, MatcherT> {
+        PropertyMatcher { extractor, property_desc, inner }
     }
 
-    impl<InnerT, OuterT, ExtractorT, MatcherT> Matcher for PropertyMatcher<OuterT, ExtractorT, MatcherT>
+    #[derive(MatcherExt)]
+    pub struct PropertyMatcher<ExtractorT, MatcherT> {
+        extractor: ExtractorT,
+        property_desc: &'static str,
+        inner: MatcherT,
+    }
+
+    impl<InnerT, OuterT, ExtractorT, MatcherT> Matcher<OuterT> for PropertyMatcher<ExtractorT, MatcherT>
     where
         InnerT: Debug,
         OuterT: Debug,
         ExtractorT: Fn(&OuterT) -> InnerT,
-        MatcherT: Matcher<ActualT = InnerT>,
+        MatcherT: Matcher<InnerT>,
     {
-        type ActualT = OuterT;
-
         fn matches(&self, actual: &OuterT) -> MatcherResult {
             self.inner.matches(&(self.extractor)(actual))
         }
@@ -197,26 +200,25 @@ pub mod internal {
         extractor: fn(&OuterT) -> &InnerT,
         property_desc: &'static str,
         inner: MatcherT,
-    ) -> impl Matcher<ActualT = OuterT>
+    ) -> PropertyRefMatcher<InnerT, OuterT, MatcherT>
     where
         OuterT: Debug,
         InnerT: Debug + ?Sized,
-        MatcherT: Matcher<ActualT = InnerT>,
+        MatcherT: Matcher<InnerT>,
     {
         PropertyRefMatcher { extractor, property_desc, inner }
     }
 
-    struct PropertyRefMatcher<InnerT: ?Sized, OuterT, MatcherT> {
+    #[derive(MatcherExt)]
+    pub struct PropertyRefMatcher<InnerT: ?Sized, OuterT, MatcherT> {
         extractor: fn(&OuterT) -> &InnerT,
         property_desc: &'static str,
         inner: MatcherT,
     }
 
-    impl<InnerT: Debug + ?Sized, OuterT: Debug, MatcherT: Matcher<ActualT = InnerT>> Matcher
+    impl<InnerT: Debug + ?Sized, OuterT: Debug, MatcherT: Matcher<InnerT>> Matcher<OuterT>
         for PropertyRefMatcher<InnerT, OuterT, MatcherT>
     {
-        type ActualT = OuterT;
-
         fn matches(&self, actual: &OuterT) -> MatcherResult {
             self.inner.matches((self.extractor)(actual))
         }

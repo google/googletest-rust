@@ -14,9 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherExt, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a value greater (in the sense of `>`) than `expected`.
 ///
@@ -74,22 +74,18 @@ use std::{fmt::Debug, marker::PhantomData};
 ///
 /// You can find the standard library `PartialOrd` implementation in
 /// <https://doc.rust-lang.org/core/cmp/trait.PartialOrd.html#implementors>
-pub fn gt<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug>(
-    expected: ExpectedT,
-) -> impl Matcher<ActualT = ActualT> {
-    GtMatcher::<ActualT, _> { expected, phantom: Default::default() }
+pub fn gt<ExpectedT: Debug>(expected: ExpectedT) -> GtMatcher<ExpectedT> {
+    GtMatcher { expected }
 }
 
-struct GtMatcher<ActualT, ExpectedT> {
+#[derive(MatcherExt)]
+pub struct GtMatcher<ExpectedT> {
     expected: ExpectedT,
-    phantom: PhantomData<ActualT>,
 }
 
-impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher
-    for GtMatcher<ActualT, ExpectedT>
+impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher<ActualT>
+    for GtMatcher<ExpectedT>
 {
-    type ActualT = ActualT;
-
     fn matches(&self, actual: &ActualT) -> MatcherResult {
         (*actual > self.expected).into()
     }
@@ -181,7 +177,7 @@ mod tests {
     #[test]
     fn gt_describe_matches() -> Result<()> {
         verify_that!(
-            gt::<i32, i32>(232).describe(MatcherResult::Match),
+            Matcher::<i32>::describe(&gt(232), MatcherResult::Match),
             displays_as(eq("is greater than 232"))
         )
     }
@@ -189,7 +185,7 @@ mod tests {
     #[test]
     fn gt_describe_does_not_match() -> Result<()> {
         verify_that!(
-            gt::<i32, i32>(232).describe(MatcherResult::NoMatch),
+            Matcher::<i32>::describe(&gt(232), MatcherResult::NoMatch),
             displays_as(eq("is less than or equal to 232"))
         )
     }

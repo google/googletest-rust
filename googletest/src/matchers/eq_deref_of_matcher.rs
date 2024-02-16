@@ -14,10 +14,10 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherExt, MatcherResult},
     matcher_support::{edit_distance, summarize_diff::create_diff},
 };
-use std::{fmt::Debug, marker::PhantomData, ops::Deref};
+use std::{fmt::Debug, ops::Deref};
 
 /// Matches a value equal (in the sense of `==`) to the dereferenced value of
 /// `expected`.
@@ -51,28 +51,24 @@ use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 /// ```
 ///
 /// Otherwise, this has the same behaviour as [`eq`][crate::matchers::eq].
-pub fn eq_deref_of<ActualT: ?Sized, ExpectedRefT>(
-    expected: ExpectedRefT,
-) -> EqDerefOfMatcher<ActualT, ExpectedRefT> {
-    EqDerefOfMatcher { expected, phantom: Default::default() }
+pub fn eq_deref_of<ExpectedRefT>(expected: ExpectedRefT) -> EqDerefOfMatcher<ExpectedRefT> {
+    EqDerefOfMatcher { expected }
 }
 
 /// A matcher which matches a value equal to the derefenced value of `expected`.
 ///
 /// See [`eq_deref_of`].
-pub struct EqDerefOfMatcher<ActualT: ?Sized, ExpectedRefT> {
+#[derive(MatcherExt)]
+pub struct EqDerefOfMatcher<ExpectedRefT> {
     pub(crate) expected: ExpectedRefT,
-    phantom: PhantomData<ActualT>,
 }
 
-impl<ActualT, ExpectedRefT, ExpectedT> Matcher for EqDerefOfMatcher<ActualT, ExpectedRefT>
+impl<ActualT, ExpectedRefT, ExpectedT> Matcher<ActualT> for EqDerefOfMatcher<ExpectedRefT>
 where
     ActualT: Debug + ?Sized,
     ExpectedRefT: Deref<Target = ExpectedT> + Debug,
     ExpectedT: PartialEq<ActualT> + Debug,
 {
-    type ActualT = ActualT;
-
     fn matches(&self, actual: &ActualT) -> MatcherResult {
         (self.expected.deref() == actual).into()
     }

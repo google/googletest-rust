@@ -13,11 +13,10 @@
 // limitations under the License.
 
 use crate::description::Description;
-use crate::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherExt, MatcherResult};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
-use std::marker::PhantomData;
 
 /// Matches a HashMap containing the given `key` whose value is matched by the
 /// matcher `inner`.
@@ -62,24 +61,19 @@ use std::marker::PhantomData;
 /// However, `has_entry` will offer somewhat better diagnostic messages in the
 /// case of assertion failure. And it avoid the extra allocation hidden in the
 /// code above.
-pub fn has_entry<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ActualT = ValueT>>(
-    key: KeyT,
-    inner: MatcherT,
-) -> impl Matcher<ActualT = HashMap<KeyT, ValueT>> {
-    HasEntryMatcher { key, inner, phantom: Default::default() }
+pub fn has_entry<KeyT, MatcherT>(key: KeyT, inner: MatcherT) -> HasEntryMatcher<KeyT, MatcherT> {
+    HasEntryMatcher { key, inner }
 }
 
-struct HasEntryMatcher<KeyT, ValueT, MatcherT> {
+#[derive(MatcherExt)]
+pub struct HasEntryMatcher<KeyT, MatcherT> {
     key: KeyT,
     inner: MatcherT,
-    phantom: PhantomData<ValueT>,
 }
 
-impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ActualT = ValueT>> Matcher
-    for HasEntryMatcher<KeyT, ValueT, MatcherT>
+impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ValueT>>
+    Matcher<HashMap<KeyT, ValueT>> for HasEntryMatcher<KeyT, MatcherT>
 {
-    type ActualT = HashMap<KeyT, ValueT>;
-
     fn matches(&self, actual: &HashMap<KeyT, ValueT>) -> MatcherResult {
         if let Some(value) = actual.get(&self.key) {
             self.inner.matches(value)
