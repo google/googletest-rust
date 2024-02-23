@@ -47,14 +47,20 @@ pub struct OkMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
 }
 
-impl<T: Debug, E: Debug, InnerMatcherT: Matcher<T>> Matcher<std::result::Result<T, E>>
+impl<'a, T: Debug, E: Debug, InnerMatcherT: Matcher<'a, T>> Matcher<'a, std::result::Result<T, E>>
     for OkMatcher<InnerMatcherT>
 {
-    fn matches(&self, actual: &std::result::Result<T, E>) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b std::result::Result<T, E>) -> MatcherResult
+    where
+        'a: 'b,
+    {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match(&self, actual: &std::result::Result<T, E>) -> Description {
+    fn explain_match<'b>(&self, actual: &'b std::result::Result<T, E>) -> Description
+    where
+        'a: 'b,
+    {
         match actual {
             Ok(o) => {
                 Description::new().text("which is a success").nested(self.inner.explain_match(o))

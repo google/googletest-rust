@@ -39,8 +39,11 @@ pub fn anything() -> Anything {
 #[derive(MatcherExt)]
 pub struct Anything;
 
-impl<T: Debug + ?Sized> Matcher<T> for Anything {
-    fn matches(&self, _: &T) -> MatcherResult {
+impl<'a, T: Debug + ?Sized> Matcher<'a, T> for Anything {
+    fn matches<'b>(&self, _: &'b T) -> MatcherResult
+    where
+        'a: 'b,
+    {
         MatcherResult::Match
     }
 

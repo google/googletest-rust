@@ -118,11 +118,11 @@ where
 #[doc(hidden)]
 pub struct NoDescription;
 
-impl<T: Debug, P> Matcher<T> for PredicateMatcher<P, NoDescription, NoDescription>
+impl<'a, T: Debug, P> Matcher<'a, T> for PredicateMatcher<P, NoDescription, NoDescription>
 where
-    for<'a> P: Fn(&'a T) -> bool,
+    for<'b> P: Fn(&'b T) -> bool,
 {
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b T) -> MatcherResult where 'a: 'b{
         (self.predicate)(actual).into()
     }
 
@@ -134,12 +134,12 @@ where
     }
 }
 
-impl<T: Debug, P, D1: PredicateDescription, D2: PredicateDescription> Matcher<T>
+impl<'a, T: Debug, P, D1: PredicateDescription, D2: PredicateDescription> Matcher<'a, T>
     for PredicateMatcher<P, D1, D2>
 where
-    for<'a> P: Fn(&'a T) -> bool,
+    for<'b> P: Fn(&'b T) -> bool,
 {
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b T) -> MatcherResult where 'a: 'b{
         (self.predicate)(actual).into()
     }
 
@@ -158,7 +158,7 @@ mod tests {
     use crate::prelude::*;
 
     // Simple matcher with a description
-    fn is_odd() -> impl Matcher<i32> {
+    fn is_odd<'a>() -> impl Matcher<'a, i32> {
         predicate(|x| x % 2 == 1).with_description("is odd", "is even")
     }
 
@@ -178,7 +178,7 @@ mod tests {
     }
 
     // Simple Matcher without description
-    fn is_even() -> impl Matcher<i32> {
+    fn is_even<'a>() -> impl Matcher<'a, i32> {
         predicate(|x| x % 2 == 0)
     }
 

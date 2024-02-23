@@ -31,8 +31,11 @@ pub mod internal {
 
     // This implementation is provided for completeness, but is completely trivial.
     // The only actual value which can be supplied is (), which must match.
-    impl Matcher<()> for () {
-        fn matches(&self, _: &()) -> MatcherResult {
+    impl<'a> Matcher<'a, ()> for () {
+        fn matches<'b>(&self, _: &'b ()) -> MatcherResult
+        where
+            'a: 'b,
+        {
             MatcherResult::Match
         }
 
@@ -52,10 +55,10 @@ pub mod internal {
         ($([$field_number:tt, $matcher_type:ident, $field_type:ident]),*) => {
             impl<$($matcher_type),*> MatcherExt for ($($matcher_type,)*){}
 
-            impl<$($field_type: Debug, $matcher_type: Matcher<$field_type>),*>
-                Matcher<($($field_type,)*)> for ($($matcher_type,)*)
+            impl<'a, $($field_type: Debug, $matcher_type: Matcher<'a, $field_type>),*>
+                Matcher<'a, ($($field_type,)*)> for ($($matcher_type,)*)
             {
-                fn matches(&self, actual: & ($($field_type,)*)) -> MatcherResult {
+                fn matches<'b>(&self, actual: &'b  ($($field_type,)*)) -> MatcherResult where 'a: 'b{
                     $(match self.$field_number.matches(&actual.$field_number) {
                         MatcherResult::Match => {},
                         MatcherResult::NoMatch => {
@@ -65,7 +68,7 @@ pub mod internal {
                     MatcherResult::Match
                 }
 
-                fn explain_match(&self, actual: & ($($field_type,)*)) -> Description  {
+                fn explain_match<'b>(&self, actual: &'b ($($field_type,)*)) -> Description  where 'a: 'b{
                     let mut explanation = Description::new().text("which").nested(self.describe(self.matches(actual)));
                     $(match self.$field_number.matches(&actual.$field_number) {
                         MatcherResult::Match => {},

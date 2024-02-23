@@ -83,8 +83,8 @@ pub struct EqMatcher<T> {
     pub(crate) expected: T,
 }
 
-impl<T: Debug, A: Debug + ?Sized + PartialEq<T>> Matcher<A> for EqMatcher<T> {
-    fn matches(&self, actual: &A) -> MatcherResult {
+impl<'a, T: Debug, A: Debug + ?Sized + PartialEq<T>> Matcher<'a, A> for EqMatcher<T> {
+    fn matches<'b>(&self, actual: &'b A) -> MatcherResult where 'a: 'b{
         (*actual == self.expected).into()
     }
 
@@ -95,10 +95,10 @@ impl<T: Debug, A: Debug + ?Sized + PartialEq<T>> Matcher<A> for EqMatcher<T> {
         }
     }
 
-    fn explain_match(&self, actual: &A) -> Description {
+    fn explain_match<'b>(&self, actual: &'b A) -> Description where 'a: 'b {
         let expected_debug = format!("{:#?}", self.expected);
         let actual_debug = format!("{:#?}", actual);
-        let description = Matcher::<A>::describe(self, self.matches(actual));
+        let description = Matcher::<'a, A>::describe(self, Matcher::<'a, A>::matches(self, actual));
 
         let diff = if is_multiline_string_debug(&actual_debug)
             && is_multiline_string_debug(&expected_debug)

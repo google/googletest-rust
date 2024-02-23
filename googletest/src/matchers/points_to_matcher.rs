@@ -40,17 +40,17 @@ pub struct PointsToMatcher<MatcherT> {
     expected: MatcherT,
 }
 
-impl<ExpectedT, MatcherT, ActualT> Matcher<ActualT> for PointsToMatcher<MatcherT>
+impl<'a, ExpectedT, MatcherT, ActualT> Matcher<'a, ActualT> for PointsToMatcher<MatcherT>
 where
     ExpectedT: Debug,
-    MatcherT: Matcher<ExpectedT>,
+    MatcherT: Matcher<'a, ExpectedT>,
     ActualT: Deref<Target = ExpectedT> + Debug + ?Sized,
 {
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b ActualT) -> MatcherResult where 'a: 'b{
         self.expected.matches(actual.deref())
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match<'b>(&self, actual: &'b ActualT) -> Description where 'a: 'b{
         self.expected.explain_match(actual.deref())
     }
 

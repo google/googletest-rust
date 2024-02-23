@@ -171,12 +171,15 @@ pub mod internal {
         }
     }
 
-    impl<T: Debug, MatcherT: Matcher<T>, ContainerT: ?Sized + Debug> Matcher<ContainerT>
+    impl<'a, T: Debug, MatcherT: Matcher<'a, T>, ContainerT: ?Sized + Debug> Matcher<'a, ContainerT>
         for PointwiseMatcher<MatcherT>
     where
         for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
     {
-        fn matches(&self, actual: &ContainerT) -> MatcherResult {
+        fn matches<'b>(&self, actual: &'b ContainerT) -> MatcherResult
+        where
+            'a: 'b,
+        {
             let mut zipped_iterator = zip(actual.into_iter(), self.matchers.iter());
             for (element, matcher) in zipped_iterator.by_ref() {
                 if matcher.matches(element).is_no_match() {
@@ -190,7 +193,10 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> Description {
+        fn explain_match<'b>(&self, actual: &'b ContainerT) -> Description
+        where
+            'a: 'b,
+        {
             // TODO(b/260819741) This code duplicates elements_are_matcher.rs. Consider
             // extract as a separate library. (or implement pointwise! with
             // elements_are)

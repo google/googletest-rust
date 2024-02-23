@@ -58,11 +58,14 @@ pub struct LenMatcher<E> {
     expected: E,
 }
 
-impl<T: Debug + ?Sized, E: Matcher<usize>> Matcher<T> for LenMatcher<E>
+impl<'c, T: Debug + ?Sized, E: for<'b> Matcher<'b, usize>> Matcher<'c, T> for LenMatcher<E>
 where
     for<'a> &'a T: IntoIterator,
 {
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b T) -> MatcherResult
+    where
+        'c: 'b,
+    {
         self.expected.matches(&count_elements(actual))
     }
 
@@ -78,7 +81,10 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match<'b>(&self, actual: &'b T) -> Description
+    where
+        'c: 'b,
+    {
         let actual_size = count_elements(actual);
         format!("which has length {}, {}", actual_size, self.expected.explain_match(&actual_size))
             .into()
@@ -174,8 +180,8 @@ mod tests {
     fn len_matcher_explain_match() -> Result<()> {
         #[derive(MatcherExt)]
         struct TestMatcher;
-        impl<T: Debug> Matcher<T> for TestMatcher {
-            fn matches(&self, _: &T) -> MatcherResult {
+        impl<'a, T: Debug> Matcher<'a, T> for TestMatcher {
+            fn matches<'b>(&self, _: &'b T) -> MatcherResult where 'a: 'b{
                 false.into()
             }
 
@@ -183,7 +189,7 @@ mod tests {
                 "called described".into()
             }
 
-            fn explain_match(&self, _: &T) -> Description {
+            fn explain_match<'b>(&self, _: &'b T) -> Description where 'a: 'b{
                 "called explain_match".into()
             }
         }

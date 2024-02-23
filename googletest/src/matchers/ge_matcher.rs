@@ -83,10 +83,10 @@ pub struct GeMatcher<ExpectedT> {
     expected: ExpectedT,
 }
 
-impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher<ActualT>
+impl<'a, ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher<'a, ActualT>
     for GeMatcher<ExpectedT>
 {
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b ActualT) -> MatcherResult where 'a: 'b{
         (*actual >= self.expected).into()
     }
 

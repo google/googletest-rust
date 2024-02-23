@@ -497,9 +497,9 @@ pub mod internal {
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[must_use = "The assertion result must be evaluated to affect the test result."]
-    pub fn check_matcher<T: Debug + ?Sized>(
-        actual: &T,
-        expected: impl Matcher<T>,
+    pub fn check_matcher<'a, T: Debug + ?Sized>(
+        actual: &'a T,
+        expected: impl Matcher<'a, T>,
         actual_expr: &'static str,
         source_location: SourceLocation,
     ) -> Result<(), TestAssertionFailure> {

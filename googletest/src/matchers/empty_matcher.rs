@@ -57,11 +57,11 @@ pub fn empty() -> EmptyMatcher {
 #[derive(MatcherExt)]
 pub struct EmptyMatcher;
 
-impl<T: Debug + ?Sized> Matcher<T> for EmptyMatcher
+impl<'c, T: Debug + ?Sized> Matcher<'c, T> for EmptyMatcher
 where
     for<'a> &'a T: IntoIterator,
 {
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b T) -> MatcherResult where 'c: 'b {
         actual.into_iter().next().is_none().into()
     }
 

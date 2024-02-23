@@ -47,15 +47,23 @@ impl<M1, M2> DisjunctionMatcher<M1, M2> {
     }
 }
 
-impl<T: Debug + ?Sized, M1: Matcher<T>, M2: Matcher<T>> Matcher<T> for DisjunctionMatcher<M1, M2> {
-    fn matches(&self, actual: &T) -> MatcherResult {
+impl<'a, T: Debug + ?Sized, M1: Matcher<'a, T>, M2: Matcher<'a, T>> Matcher<'a, T>
+    for DisjunctionMatcher<M1, M2>
+{
+    fn matches<'b>(&self, actual: &'b T) -> MatcherResult
+    where
+        'a: 'b,
+    {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::NoMatch, MatcherResult::NoMatch) => MatcherResult::NoMatch,
             _ => MatcherResult::Match,
         }
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match<'b>(&self, actual: &'b T) -> Description
+    where
+        'a: 'b,
+    {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::NoMatch, MatcherResult::Match) => self.m1.explain_match(actual),
             (MatcherResult::Match, MatcherResult::NoMatch) => self.m2.explain_match(actual),

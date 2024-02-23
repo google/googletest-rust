@@ -56,7 +56,7 @@ use std::fmt::Debug;
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn char_count<E: Matcher<usize>>(expected: E) -> CharLenMatcher<E> {
+pub fn char_count<E: for<'a> Matcher<'a, usize>>(expected: E) -> CharLenMatcher<E> {
     CharLenMatcher { expected }
 }
 
@@ -65,8 +65,13 @@ pub struct CharLenMatcher<E> {
     expected: E,
 }
 
-impl<T: Debug + ?Sized + AsRef<str>, E: Matcher<usize>> Matcher<T> for CharLenMatcher<E> {
-    fn matches(&self, actual: &T) -> MatcherResult {
+impl<'s, T: Debug + ?Sized + AsRef<str>, E: for<'a> Matcher<'a, usize>> Matcher<'s, T>
+    for CharLenMatcher<E>
+{
+    fn matches<'b>(&self, actual: &'b T) -> MatcherResult
+    where
+        's: 'b,
+    {
         self.expected.matches(&actual.as_ref().chars().count())
     }
 
@@ -85,7 +90,10 @@ impl<T: Debug + ?Sized + AsRef<str>, E: Matcher<usize>> Matcher<T> for CharLenMa
         }
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match<'b>(&self, actual: &'b T) -> Description
+    where
+        's: 'b,
+    {
         let actual_size = actual.as_ref().chars().count();
         format!(
             "which has character count {}, {}",
@@ -128,8 +136,11 @@ mod tests {
         #[derive(MatcherExt)]
         struct TestMatcher;
 
-        impl<T: Debug> Matcher<T> for TestMatcher {
-            fn matches(&self, _: &T) -> MatcherResult {
+        impl<'a, T: Debug> Matcher<'a, T> for TestMatcher {
+            fn matches<'b>(&self, _: &'b T) -> MatcherResult
+            where
+                'a: 'b,
+            {
                 false.into()
             }
 
@@ -137,7 +148,10 @@ mod tests {
                 "called described".into()
             }
 
-            fn explain_match(&self, _: &T) -> Description {
+            fn explain_match<'b>(&self, _: &'b T) -> Description
+            where
+                'a: 'b,
+            {
                 "called explain_match".into()
             }
         }

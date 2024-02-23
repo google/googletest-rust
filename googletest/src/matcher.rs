@@ -27,14 +27,14 @@ use std::fmt::Debug;
 /// This trait is automatically implemented for a reference of any type
 /// implementing `Matcher`. This simplifies reusing a matcher in different
 /// assertions.
-pub trait Matcher<ActualT: Debug + ?Sized> {
+pub trait Matcher<'a, ActualT: Debug + ?Sized> {
     /// Returns whether the condition matches the datum `actual`.
     ///
     /// The trait implementation defines what it means to "match". Often the
     /// matching condition is based on data stored in the matcher. For example,
     /// `eq` matches when its stored expected value is equal (in the sense of
     /// the `==` operator) to the value `actual`.
-    fn matches(&self, actual: &ActualT) -> MatcherResult;
+    fn matches<'b>(&self, actual: &'b ActualT) -> MatcherResult where 'a: 'b;
 
     /// Returns a description of `self` or a negative description if
     /// `matcher_result` is `DoesNotMatch`.
@@ -135,7 +135,7 @@ pub trait Matcher<ActualT: Debug + ?Sized> {
     ///         .nested(self.expected.explain_match(actual.deref()))
     /// }
     /// ```
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match<'b>(&self, actual: &'b ActualT) -> Description where 'a: 'b{
         format!("which {}", self.describe(self.matches(actual))).into()
     }
 }
@@ -218,9 +218,9 @@ const PRETTY_PRINT_LENGTH_THRESHOLD: usize = 60;
 ///
 /// The parameter `actual_expr` contains the expression which was evaluated to
 /// obtain `actual`.
-pub(crate) fn create_assertion_failure<T: Debug + ?Sized>(
-    matcher: &impl Matcher<T>,
-    actual: &T,
+pub(crate) fn create_assertion_failure<'a, T: Debug + ?Sized>(
+    matcher: &impl Matcher<'a, T>,
+    actual: &'a T,
     actual_expr: &'static str,
     source_location: SourceLocation,
 ) -> TestAssertionFailure {
@@ -279,8 +279,8 @@ impl MatcherResult {
 
 impl<M: ?Sized + MatcherExt> MatcherExt for &M {}
 
-impl<T: Debug + ?Sized, M: Matcher<T>> Matcher<T> for &M {
-    fn matches(&self, actual: &T) -> MatcherResult {
+impl<'a, T: Debug + ?Sized, M: Matcher<'a, T>> Matcher<'a, T> for &M {
+    fn matches<'b>(&self, actual: &'b T) -> MatcherResult where 'a : 'b{
         (*self).matches(actual)
     }
 
@@ -288,7 +288,7 @@ impl<T: Debug + ?Sized, M: Matcher<T>> Matcher<T> for &M {
         (*self).describe(matcher_result)
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match<'b>(&self, actual: &'b T) -> Description where 'a: 'b{
         (*self).explain_match(actual)
     }
 }

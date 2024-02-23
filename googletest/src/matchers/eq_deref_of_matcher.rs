@@ -63,13 +63,13 @@ pub struct EqDerefOfMatcher<ExpectedRefT> {
     pub(crate) expected: ExpectedRefT,
 }
 
-impl<ActualT, ExpectedRefT, ExpectedT> Matcher<ActualT> for EqDerefOfMatcher<ExpectedRefT>
+impl<'a, ActualT, ExpectedRefT, ExpectedT> Matcher<'a, ActualT> for EqDerefOfMatcher<ExpectedRefT>
 where
     ActualT: Debug + ?Sized,
     ExpectedRefT: Deref<Target = ExpectedT> + Debug,
     ExpectedT: PartialEq<ActualT> + Debug,
 {
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b ActualT) -> MatcherResult where 'a: 'b{
         (self.expected.deref() == actual).into()
     }
 
@@ -80,7 +80,7 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match<'b>(&self, actual: &'b ActualT) -> Description where 'a: 'b{
         format!(
             "which {}{}",
             &self.describe(self.matches(actual)),

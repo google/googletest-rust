@@ -22,25 +22,25 @@ use std::fmt::{Debug, Display};
 /// let result: impl Display = ...;
 /// verify_that!(result, displays_as(eq(format!("{}", result))))?;
 /// ```
-pub fn displays_as<InnerMatcher: Matcher<String>>(
+pub fn displays_as<'a, InnerMatcher: Matcher<'a, String>>(
     inner: InnerMatcher,
 ) -> DisplayMatcher<InnerMatcher> {
     DisplayMatcher { inner }
 }
 
 #[derive(MatcherExt)]
-pub struct DisplayMatcher<InnerMatcher: Matcher<String>> {
+pub struct DisplayMatcher<InnerMatcher> {
     inner: InnerMatcher,
 }
 
-impl<T: Debug + Display, InnerMatcher: Matcher<String>> Matcher<T>
+impl<'a, 's, T: Debug + Display, InnerMatcher: Matcher<'s, String>> Matcher<'a, T>
     for DisplayMatcher<InnerMatcher>
 {
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b T) -> MatcherResult where 'a: 'b{
         self.inner.matches(&format!("{actual}"))
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match<'b>(&self, actual: &'b T) -> Description where 'a: 'b{
         format!(
             "which displays as {:?} {}",
             actual.to_string(),

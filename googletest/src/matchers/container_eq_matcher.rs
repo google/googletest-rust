@@ -102,8 +102,8 @@ pub struct ContainerEqMatcher<ExpectedContainerT> {
     expected: ExpectedContainerT,
 }
 
-impl<ActualElementT, ActualContainerT, ExpectedElementT, ExpectedContainerT>
-    Matcher<ActualContainerT> for ContainerEqMatcher<ExpectedContainerT>
+impl<'z, ActualElementT, ActualContainerT, ExpectedElementT, ExpectedContainerT>
+    Matcher<'z, ActualContainerT> for ContainerEqMatcher<ExpectedContainerT>
 where
     ActualElementT: PartialEq<ExpectedElementT> + Debug + ?Sized,
     ActualContainerT: PartialEq<ExpectedContainerT> + Debug + ?Sized,
@@ -112,11 +112,17 @@ where
     for<'a> &'a ActualContainerT: IntoIterator<Item = &'a ActualElementT>,
     for<'a> &'a ExpectedContainerT: IntoIterator<Item = &'a ExpectedElementT>,
 {
-    fn matches(&self, actual: &ActualContainerT) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b ActualContainerT) -> MatcherResult
+    where
+        'z: 'b,
+    {
         (*actual == self.expected).into()
     }
 
-    fn explain_match(&self, actual: &ActualContainerT) -> Description {
+    fn explain_match<'b>(&self, actual: &'b ActualContainerT) -> Description
+    where
+        'z: 'b,
+    {
         build_explanation(self.get_missing_items(actual), self.get_unexpected_items(actual)).into()
     }
 

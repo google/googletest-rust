@@ -38,8 +38,8 @@ pub fn none() -> NoneMatcher {
 #[derive(MatcherExt)]
 pub struct NoneMatcher;
 
-impl<T: Debug> Matcher<Option<T>> for NoneMatcher {
-    fn matches(&self, actual: &Option<T>) -> MatcherResult {
+impl<'a, T: Debug> Matcher<'a, Option<T>> for NoneMatcher {
+    fn matches<'b>(&self, actual: &'b Option<T>) -> MatcherResult where 'a: 'b {
         (actual.is_none()).into()
     }
 

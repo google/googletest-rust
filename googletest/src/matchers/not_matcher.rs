@@ -42,15 +42,21 @@ pub struct NotMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
 }
 
-impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<T> for NotMatcher<InnerMatcherT> {
-    fn matches(&self, actual: &T) -> MatcherResult {
+impl<'a, T: Debug, InnerMatcherT: Matcher<'a, T>> Matcher<'a, T> for NotMatcher<InnerMatcherT> {
+    fn matches<'b>(&self, actual: &'b T) -> MatcherResult
+    where
+        'a: 'b,
+    {
         match self.inner.matches(actual) {
             MatcherResult::Match => MatcherResult::NoMatch,
             MatcherResult::NoMatch => MatcherResult::Match,
         }
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match<'b>(&self, actual: &'b T) -> Description
+    where
+        'a: 'b,
+    {
         self.inner.explain_match(actual)
     }
 

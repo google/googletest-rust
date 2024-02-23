@@ -208,7 +208,7 @@ fn unordered_elements_are_unmatchable_actual_description_mismatch() -> Result<()
     )
 }
 
-fn create_matcher() -> impl Matcher<Vec<i32>> {
+fn create_matcher<'a>() -> impl Matcher<'a, Vec<i32>> {
     unordered_elements_are![eq(1)]
 }
 
@@ -217,7 +217,7 @@ fn unordered_elements_are_works_when_matcher_is_created_in_subroutine() -> Resul
     verify_that!(vec![1], create_matcher())
 }
 
-fn create_matcher_for_map() -> impl Matcher<HashMap<i32, i32>> {
+fn create_matcher_for_map<'a>() -> impl Matcher<'a, HashMap<i32, i32>> {
     unordered_elements_are![(eq(1), eq(1))]
 }
 

@@ -35,10 +35,13 @@ pub struct IsMatcher<'a, InnerMatcherT> {
     inner: InnerMatcherT,
 }
 
-impl<'a, ActualT: Debug, InnerMatcherT: Matcher<ActualT>> Matcher<ActualT>
+impl<'a, 'b, ActualT: Debug, InnerMatcherT: Matcher<'b, ActualT>> Matcher<'b, ActualT>
     for IsMatcher<'a, InnerMatcherT>
 {
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches<'c>(&self, actual: &'c ActualT) -> MatcherResult
+    where
+        'b: 'c,
+    {
         self.inner.matches(actual)
     }
 
@@ -59,7 +62,10 @@ impl<'a, ActualT: Debug, InnerMatcherT: Matcher<ActualT>> Matcher<ActualT>
         }
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match<'c>(&self, actual: &'c ActualT) -> Description
+    where
+        'b: 'c,
+    {
         self.inner.explain_match(actual)
     }
 }

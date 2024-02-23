@@ -268,7 +268,7 @@ pub trait StrMatcherConfigurator<ExpectedT> {
     /// This is only meaningful when the matcher was constructed with
     /// [`contains_substring`]. This method will panic when it is used with any
     /// other matcher construction.
-    fn times(self, times: impl Matcher<usize> + 'static) -> StrMatcher<ExpectedT>;
+    fn times(self, times: impl for<'a> Matcher<'a, usize> + 'static) -> StrMatcher<ExpectedT>;
 }
 
 /// A matcher which matches equality or containment of a string-like value in a
@@ -286,12 +286,12 @@ pub struct StrMatcher<ExpectedT> {
     configuration: Configuration,
 }
 
-impl<ExpectedT, ActualT> Matcher<ActualT> for StrMatcher<ExpectedT>
+impl<'a, ExpectedT, ActualT> Matcher<'a, ActualT> for StrMatcher<ExpectedT>
 where
     ExpectedT: Deref<Target = str> + Debug,
     ActualT: AsRef<str> + Debug + ?Sized,
 {
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b ActualT) -> MatcherResult where 'a: 'b{
         self.configuration.do_strings_match(self.expected.deref(), actual.as_ref()).into()
     }
 
@@ -299,7 +299,7 @@ where
         self.configuration.describe(matcher_result, self.expected.deref())
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match<'b>(&self, actual: &'b ActualT) -> Description where 'a: 'b{
         self.configuration.explain_match(self.expected.deref(), actual.as_ref())
     }
 }
@@ -333,7 +333,7 @@ impl<ExpectedT, MatcherT: Into<StrMatcher<ExpectedT>>> StrMatcherConfigurator<Ex
         StrMatcher { configuration: existing.configuration.ignoring_ascii_case(), ..existing }
     }
 
-    fn times(self, times: impl Matcher<usize> + 'static) -> StrMatcher<ExpectedT> {
+    fn times(self, times: impl for<'a> Matcher<'a, usize> + 'static) -> StrMatcher<ExpectedT> {
         let existing = self.into();
         if !matches!(existing.configuration.mode, MatchMode::Contains) {
             panic!("The times() configurator is only meaningful with contains_substring().");
@@ -375,7 +375,7 @@ struct Configuration {
     ignore_leading_whitespace: bool,
     ignore_trailing_whitespace: bool,
     case_policy: CasePolicy,
-    times: Option<Box<dyn Matcher<usize>>>,
+    times: Option<Box<dyn for<'a> Matcher<'a, usize>>>,
 }
 
 #[derive(Clone)]
@@ -558,7 +558,7 @@ impl Configuration {
         Self { case_policy: CasePolicy::IgnoreAscii, ..self }
     }
 
-    fn times(self, times: impl Matcher<usize> + 'static) -> Self {
+    fn times(self, times: impl for<'a> Matcher<'a, usize> + 'static) -> Self {
         Self { times: Some(Box::new(times)), ..self }
     }
 }

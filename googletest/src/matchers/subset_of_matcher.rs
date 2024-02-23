@@ -92,13 +92,13 @@ pub struct SubsetOfMatcher<ExpectedT> {
     superset: ExpectedT,
 }
 
-impl<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug> Matcher<ActualT>
+impl<'c, ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug> Matcher<'c, ActualT>
     for SubsetOfMatcher<ExpectedT>
 where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
 {
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b  ActualT) -> MatcherResult where 'c: 'b{
         for actual_item in actual {
             if self.expected_is_missing(actual_item) {
                 return MatcherResult::NoMatch;
@@ -107,7 +107,7 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match<'b>(&self, actual: &'b ActualT) -> Description where 'c: 'b{
         let unexpected_elements = actual
             .into_iter()
             .enumerate()

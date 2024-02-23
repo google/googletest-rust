@@ -47,12 +47,12 @@ pub struct SomeMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
 }
 
-impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<Option<T>> for SomeMatcher<InnerMatcherT> {
-    fn matches(&self, actual: &Option<T>) -> MatcherResult {
+impl<'a, T: Debug, InnerMatcherT: Matcher<'a, T>> Matcher<'a, Option<T>> for SomeMatcher<InnerMatcherT> {
+    fn matches<'b>(&self, actual: &'b Option<T>) -> MatcherResult where 'a: 'b{
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match(&self, actual: &Option<T>) -> Description {
+    fn explain_match<'b>(&self, actual: &'b Option<T>) -> Description where 'a: 'b{
         match (self.matches(actual), actual) {
             (_, Some(t)) => {
                 Description::new().text("which has a value").nested(self.inner.explain_match(t))

@@ -102,25 +102,25 @@ pub mod internal {
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
     #[derive(MatcherExt)]
-    pub struct ElementsAre<'a, T: Debug> {
-        elements: Vec<Box<dyn Matcher<T> + 'a>>,
+    pub struct ElementsAre<'a, 'b, T: Debug> {
+        elements: Vec<Box<dyn Matcher<'b, T> + 'a>>,
     }
 
-    impl<'a, T: Debug> ElementsAre<'a, T> {
+    impl<'a, 'b, T: Debug> ElementsAre<'a, 'b, T> {
         /// Factory only intended for use in the macro `elements_are!`.
         ///
         /// **For internal use only. API stablility is not guaranteed!**
         #[doc(hidden)]
-        pub fn new(elements: Vec<Box<dyn Matcher<T> + 'a>>) -> Self {
+        pub fn new(elements: Vec<Box<dyn Matcher<'b, T> + 'a>>) -> Self {
             Self { elements }
         }
     }
 
-    impl<'a, T: Debug, ContainerT: Debug + ?Sized> Matcher<ContainerT> for ElementsAre<'a, T>
+    impl<'a, 'b, T: Debug + 'b, ContainerT: Debug + ?Sized> Matcher<'b, ContainerT> for ElementsAre<'a, 'b, T>
     where
-        for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
+        for<'c> &'c ContainerT: IntoIterator<Item = &'c T>,
     {
-        fn matches(&self, actual: &ContainerT) -> MatcherResult {
+        fn matches<'c>(&self, actual: &'c ContainerT) -> MatcherResult where 'b: 'c {
             let mut zipped_iterator = zip(actual.into_iter(), self.elements.iter());
             for (a, e) in zipped_iterator.by_ref() {
                 if e.matches(a).is_no_match() {
@@ -134,7 +134,7 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> Description {
+        fn explain_match<'c>(&self, actual: &'c ContainerT) -> Description where 'b: 'c{
             let actual_iterator = actual.into_iter();
             let mut zipped_iterator = zip(actual_iterator, self.elements.iter());
             let mut mismatches = Vec::new();

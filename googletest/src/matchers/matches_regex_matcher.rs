@@ -78,12 +78,12 @@ pub struct MatchesRegexMatcher<PatternT: Deref<Target = str>> {
     _adjusted_pattern: String,
 }
 
-impl<PatternT, ActualT> Matcher<ActualT> for MatchesRegexMatcher<PatternT>
+impl<'a, PatternT, ActualT> Matcher<'a, ActualT> for MatchesRegexMatcher<PatternT>
 where
     PatternT: Deref<Target = str>,
     ActualT: AsRef<str> + Debug + ?Sized,
 {
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b ActualT) -> MatcherResult where 'a: 'b{
         self.regex.is_match(actual.as_ref()).into()
     }
 
