@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn description_shows_more_than_one_matcher() -> Result<()> {
-        let first_matcher: StrMatcher<String, &str> = starts_with("A");
+        let first_matcher: StrMatcher<String, &str, _> = starts_with("A");
         let second_matcher = ends_with("string");
         let matcher = any!(first_matcher, second_matcher);
 
@@ -97,7 +97,7 @@ mod tests {
 
     #[test]
     fn description_shows_one_matcher_directly() -> Result<()> {
-        let first_matcher: StrMatcher<String, &str> = starts_with("A");
+        let first_matcher: StrMatcher<String, &str, _> = starts_with("A");
         let matcher = any!(first_matcher);
 
         verify_that!(
