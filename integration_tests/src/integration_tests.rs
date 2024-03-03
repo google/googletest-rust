@@ -751,4 +751,11 @@ mod tests {
         );
         Command::new(command_path)
     }
+
+    #[test]
+    fn fail_in_fixtures_after() -> Result<()> {
+        let output = run_external_process_in_tests_directory("failure_in_fixtures_tear_down")?;
+
+        verify_that!(output, contains_substring("Test failed"))
+    }
 }

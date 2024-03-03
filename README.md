@@ -244,6 +244,39 @@ fn failing_fatal_assertion_after_non_fatal_assertion() -> Result<()> {
 }
 ```
 
+### GoogleTest style `TEST(...)` and `TEST_F(...)`
+
+GoogleTest supports both the common Rust test declaration, i.e.
+
+```
+#[test]
+fn my_test() -> Result<()> { ... }
+```
+
+as well as the style provided by the [original GoogleTest](https://github.com/google/googletest), i.e.
+
+```
+TEST(MyTestSuite, TestCase, {...});
+```
+
+The original GoogleTest style also supports `TEST_F` with a [`googletest::TestFixture`] object for common setup:
+
+```
+struct TestWithFakeDatabase { ... }
+
+impl googletest::TestFixture ofr TestWithFakeDatabase {
+  fn create() -> Self { ... }
+  fn set_up(&mut self) {
+    // Set up database
+    ...
+  }
+}
+
+TEST_F(TestWithFakeDatabase, NotFound, { ... });
+
+TEST_F(TestWithFakeDatabase, Found, { ... });
+```
+
 ### Interoperability
 
 You can use the `#[googletest::test]` macro together with many other libraries

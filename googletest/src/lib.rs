@@ -22,6 +22,7 @@ extern crate quickcheck;
 #[macro_use]
 pub mod assertions;
 pub mod description;
+pub mod fixtures;
 pub mod internal;
 pub mod matcher;
 pub mod matcher_support;
@@ -42,6 +43,7 @@ pub mod matchers;
 /// }
 /// ```
 pub mod prelude {
+    pub use super::fixtures::TestFixture;
     pub use super::matcher::Matcher;
     pub use super::matchers::*;
     pub use super::verify_current_test_outcome;
@@ -50,6 +52,8 @@ pub mod prelude {
     pub use super::Result;
     // Assert macros
     pub use super::{assert_that, expect_pred, expect_that, fail, verify_pred, verify_that};
+    // Fixture macros
+    pub use super::googletest_macro::{TEST, TEST_F};
 }
 
 pub use googletest_macro::test;
