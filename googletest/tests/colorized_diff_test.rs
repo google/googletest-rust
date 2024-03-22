@@ -32,7 +32,7 @@ fn colors_appear_when_no_color_is_no_set_and_force_color_is_set() -> Result<()> 
     std::env::remove_var("NO_COLOR");
     std::env::set_var("FORCE_COLOR", "1");
 
-    let result = verify_that!(build_text(1..50), eq(build_text(1..51)));
+    let result = verify_that!(build_text(1..50), eq(&build_text(1..51)));
 
     verify_that!(
         result,

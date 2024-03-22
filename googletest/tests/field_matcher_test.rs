@@ -22,7 +22,7 @@ struct IntField {
 
 #[test]
 fn field_matches_integer_field() -> Result<()> {
-    verify_that!(IntField { int: 32 }, field!(IntField.int, eq(32)))
+    verify_that!(IntField { int: 32 }, field!(&IntField.int, eq(32)))
 }
 
 #[derive(Debug)]
@@ -32,12 +32,15 @@ struct StringField {
 
 #[test]
 fn field_matches_string_field() -> Result<()> {
-    verify_that!(StringField { strink: "yes".to_string() }, field!(StringField.strink, eq("yes")))
+    verify_that!(
+        StringField { strink: "yes".to_string() },
+        field!(ref &StringField.strink, eq("yes"))
+    )
 }
 
 #[test]
 fn field_error_message_shows_field_name_and_inner_matcher() -> Result<()> {
-    let matcher = field!(IntField.int, eq(31));
+    let matcher = field!(&IntField.int, eq(31));
 
     verify_that!(
         matcher.describe(MatcherResult::Match),
@@ -54,7 +57,7 @@ mod sub {
 
 #[test]
 fn struct_in_other_module_matches() -> Result<()> {
-    verify_that!(sub::SubStruct { field: 32 }, field!(sub::SubStruct.field, eq(32)))
+    verify_that!(sub::SubStruct { field: 32 }, field!(&sub::SubStruct.field, eq(32)))
 }
 
 #[derive(Debug)]
@@ -62,7 +65,7 @@ struct Tuple(i32, String);
 
 #[test]
 fn tuple_matches_with_index() -> Result<()> {
-    verify_that!(Tuple(32, "yes".to_string()), field!(Tuple.0, eq(32)))
+    verify_that!(Tuple(32, "yes".to_string()), field!(&Tuple.0, eq(32)))
 }
 
 #[test]
@@ -73,7 +76,7 @@ fn matches_enum_value() -> Result<()> {
     }
     let value = AnEnum::AValue(123);
 
-    verify_that!(value, field!(AnEnum::AValue.0, eq(123)))
+    verify_that!(value, field!(&AnEnum::AValue.0, eq(123)))
 }
 
 #[test]
@@ -84,7 +87,7 @@ fn shows_correct_failure_message_for_wrong_struct_entry() -> Result<()> {
     }
     let value = AStruct { a: vec![1] };
 
-    let result = verify_that!(value, field!(AStruct.a, container_eq([])));
+    let result = verify_that!(value, field!(ref &AStruct.a, container_eq([])));
 
     verify_that!(
         result,
@@ -104,7 +107,7 @@ fn does_not_match_enum_value_with_wrong_enum_variant() -> Result<()> {
     }
     let value = AnEnum::AnotherValue;
 
-    verify_that!(value, not(field!(AnEnum::AValue.0, eq(123))))
+    verify_that!(&value, not(field!(&AnEnum::AValue.0, eq(123))))
 }
 
 #[test]
@@ -119,7 +122,7 @@ fn shows_correct_failure_message_for_wrong_enum_value() -> Result<()> {
     }
     let value = AnEnum::AnotherValue;
 
-    let result = verify_that!(value, field!(AnEnum::AValue.a, eq(123)));
+    let result = verify_that!(value, field!(&AnEnum::AValue.a, eq(123)));
 
     verify_that!(
         result,
@@ -137,7 +140,7 @@ fn shows_correct_failure_message_for_wrong_enum_value_with_tuple_field() -> Resu
     }
     let value = AnEnum::AnotherValue(123);
 
-    let result = verify_that!(value, field!(AnEnum::AValue.0, eq(123)));
+    let result = verify_that!(value, field!(&AnEnum::AValue.0, eq(123)));
 
     verify_that!(
         result,
@@ -158,7 +161,7 @@ fn shows_correct_failure_message_for_wrong_enum_value_with_named_field() -> Resu
     }
     let value = AnEnum::AnotherValue { a: 123 };
 
-    let result = verify_that!(value, field!(AnEnum::AValue.0, eq(123)));
+    let result = verify_that!(value, field!(&AnEnum::AValue.0, eq(123)));
 
     verify_that!(
         result,
@@ -174,5 +177,42 @@ fn matches_struct_like_enum_value() -> Result<()> {
     }
     let value = AnEnum::AValue { a_field: 123 };
 
-    verify_that!(value, field!(AnEnum::AValue.a_field, eq(123)))
+    verify_that!(value, field!(&AnEnum::AValue.a_field, eq(123)))
+}
+
+#[test]
+fn matches_struct_copy_to_copy() -> Result<()> {
+    #[derive(Debug, Clone, Copy)]
+    struct Strukt {
+        a_field: i32,
+    }
+
+    verify_that!(Strukt { a_field: 32 }, field!(Strukt.a_field, eq(32)))
+}
+
+#[test]
+fn matches_struct_ref_to_copy() -> Result<()> {
+    #[derive(Debug)]
+    struct Strukt {
+        a_field: i32,
+    }
+
+    verify_that!(Strukt { a_field: 32 }, field!(&Strukt.a_field, eq(32)))
+}
+
+#[test]
+fn matches_struct_ref_to_ref() -> Result<()> {
+    #[derive(Debug)]
+    struct Strukt {
+        a_field: String,
+    }
+
+    verify_that!(Strukt { a_field: "32".into() }, field!(ref &Strukt.a_field, eq("32")))
+}
+
+#[test]
+fn matches_struct_copy_to_ref() -> Result<()> {
+    // It is not possible to have a copy struct with non-copy field. Hence, this
+    // test case is not necessary.
+    Ok(())
 }

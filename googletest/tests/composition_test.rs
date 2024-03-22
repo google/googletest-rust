@@ -17,14 +17,14 @@ use googletest::prelude::*;
 #[test]
 fn all_matcher_works_as_inner_matcher() -> Result<()> {
     let value = vec![1];
-    verify_that!(value, contains_each![all!(gt(0), lt(2))])
+    verify_that!(value, contains_each![all!(gt(&0), lt(&2))])
 }
 
 #[test]
 fn matches_pattern_works_as_inner_matcher() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(i32);
-    verify_that!(vec![AStruct(123)], contains_each![matches_pattern!(AStruct(eq(123)))])
+    verify_that!(vec![AStruct(123)], contains_each![matches_pattern!(&AStruct(eq(123)))])
 }
 
 #[test]
@@ -38,7 +38,7 @@ fn matches_pattern_works_with_property_as_inner_matcher() -> Result<()> {
     }
     verify_that!(
         vec![AStruct(123)],
-        contains_each![matches_pattern!(AStruct {
+        contains_each![matches_pattern!(&AStruct {
             get_value(): eq(123)
         })]
     )
@@ -48,24 +48,24 @@ fn matches_pattern_works_with_property_as_inner_matcher() -> Result<()> {
 fn contains_each_works_as_inner_matcher() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(Vec<i32>);
-    verify_that!(AStruct(vec![123]), matches_pattern!(AStruct(contains_each![eq(123)])))
+    verify_that!(AStruct(vec![123]), matches_pattern!(&AStruct(ref contains_each![eq(&123)])))
 }
 
 #[test]
 fn pointwise_works_as_inner_matcher() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(Vec<i32>);
-    verify_that!(AStruct(vec![123]), matches_pattern!(AStruct(pointwise!(eq, [123]))))
+    verify_that!(AStruct(vec![123]), matches_pattern!(&AStruct(ref pointwise!(eq, [&123]))))
 }
 
 #[test]
 fn elements_are_works_as_inner_matcher() -> Result<()> {
     #[derive(Debug)]
     struct AStruct(Vec<i32>);
-    verify_that!(AStruct(vec![123]), matches_pattern!(AStruct(elements_are![eq(123)])))
+    verify_that!(AStruct(vec![123]), matches_pattern!(&AStruct(ref elements_are![eq(&123)])))
 }
 
 #[test]
 fn tuple_works_as_inner_matcher() -> Result<()> {
-    verify_that!(vec![(123,)], elements_are![(eq(123),)])
+    verify_that!(vec![(123,)], elements_are![(eq(&123),)])
 }
