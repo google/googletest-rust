@@ -47,14 +47,46 @@ pub struct OkMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
 }
 
-impl<T: Debug, E: Debug, InnerMatcherT: Matcher<T>> Matcher<std::result::Result<T, E>>
+impl<T: Debug + Copy, E: Debug + Copy, InnerMatcherT: Matcher<T>> Matcher<std::result::Result<T, E>>
     for OkMatcher<InnerMatcherT>
 {
-    fn matches(&self, actual: &std::result::Result<T, E>) -> MatcherResult {
+    fn matches(&self, actual: std::result::Result<T, E>) -> MatcherResult {
+        actual.map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
+    }
+
+    fn explain_match(&self, actual: std::result::Result<T, E>) -> Description {
+        match actual {
+            Ok(o) => {
+                Description::new().text("which is a success").nested(self.inner.explain_match(o))
+            }
+            Err(_) => "which is an error".into(),
+        }
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
+        match matcher_result {
+            MatcherResult::Match => format!(
+                "is a success containing a value, which {}",
+                self.inner.describe(MatcherResult::Match)
+            )
+            .into(),
+            MatcherResult::NoMatch => format!(
+                "is an error or a success containing a value, which {}",
+                self.inner.describe(MatcherResult::NoMatch)
+            )
+            .into(),
+        }
+    }
+}
+
+impl<'a, T: Debug, E: Debug, InnerMatcherT: Matcher<&'a T>> Matcher<&'a std::result::Result<T, E>>
+    for OkMatcher<InnerMatcherT>
+{
+    fn matches(&self, actual: &'a std::result::Result<T, E>) -> MatcherResult {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match(&self, actual: &std::result::Result<T, E>) -> Description {
+    fn explain_match(&self, actual: &'a std::result::Result<T, E>) -> Description {
         match actual {
             Ok(o) => {
                 Description::new().text("which is a success").nested(self.inner.explain_match(o))
@@ -91,7 +123,7 @@ mod tests {
         let matcher = ok(eq(1));
         let value: std::result::Result<i32, i32> = Ok(1);
 
-        let result = matcher.matches(&value);
+        let result = matcher.matches(value);
 
         verify_that!(result, eq(MatcherResult::Match))
     }
@@ -101,7 +133,7 @@ mod tests {
         let matcher = ok(eq(1));
         let value: std::result::Result<i32, i32> = Ok(0);
 
-        let result = matcher.matches(&value);
+        let result = matcher.matches(value);
 
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
@@ -111,7 +143,7 @@ mod tests {
         let matcher = ok(eq(1));
         let value: std::result::Result<i32, i32> = Err(1);
 
-        let result = matcher.matches(&value);
+        let result = matcher.matches(value);
 
         verify_that!(result, eq(MatcherResult::NoMatch))
     }

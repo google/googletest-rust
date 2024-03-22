@@ -50,7 +50,7 @@ use std::fmt::Debug;
 /// ```
 pub fn is_utf8_string<InnerMatcherT>(inner: InnerMatcherT) -> IsEncodedStringMatcher<InnerMatcherT>
 where
-    InnerMatcherT: Matcher<String>,
+    InnerMatcherT: for<'a> Matcher<&'a str>,
 {
     IsEncodedStringMatcher { inner }
 }
@@ -60,12 +60,12 @@ pub struct IsEncodedStringMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
 }
 
-impl<'a, ActualT: AsRef<[u8]> + Debug + 'a, InnerMatcherT> Matcher<ActualT>
+impl<ActualT: AsRef<[u8]> + Debug + Copy, InnerMatcherT> Matcher<ActualT>
     for IsEncodedStringMatcher<InnerMatcherT>
 where
-    InnerMatcherT: Matcher<String>,
+    InnerMatcherT: for<'a> Matcher<&'a str>,
 {
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches(&self, actual: ActualT) -> MatcherResult {
         String::from_utf8(actual.as_ref().to_vec())
             .map(|s| self.inner.matches(&s))
             .unwrap_or(MatcherResult::NoMatch)
@@ -86,7 +86,7 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match(&self, actual: ActualT) -> Description {
         match String::from_utf8(actual.as_ref().to_vec()) {
             Ok(s) => {
                 format!("which is a UTF-8 encoded string {}", self.inner.explain_match(&s)).into()

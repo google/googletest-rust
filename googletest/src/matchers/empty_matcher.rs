@@ -20,9 +20,9 @@ use std::fmt::Debug;
 
 /// Matches an empty container.
 ///
-/// `T` can be any container such that `&T` implements `IntoIterator`. For
-/// instance, `T` can be a common container like `Vec` and
-/// [`HashSet`][std::collections::HashSet].
+/// `T` can be any container that implements `IntoIterator`. For instance, `T`
+/// can be the reference of a common container like `&Vec` and
+/// [`&HashSet`][std::collections::HashSet].
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -32,24 +32,12 @@ use std::fmt::Debug;
 /// verify_that!(value, empty())?;
 /// let value: HashSet<i32> = HashSet::new();
 /// verify_that!(value, empty())?;
-/// #     Ok(())
-/// # }
-/// # should_pass().unwrap();
-/// ```
-///
-/// One can also check whether a slice is empty by dereferencing it:
-///
-/// ```
-/// # use googletest::prelude::*;
-/// # use std::collections::HashSet;
-/// # fn should_pass() -> Result<()> {
 /// let value: &[u32] = &[];
-/// verify_that!(*value, empty())?;
+/// verify_that!(value, empty())?;
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
 /// ```
-
 pub fn empty() -> EmptyMatcher {
     EmptyMatcher
 }
@@ -57,11 +45,11 @@ pub fn empty() -> EmptyMatcher {
 #[derive(MatcherExt)]
 pub struct EmptyMatcher;
 
-impl<T: Debug + ?Sized> Matcher<T> for EmptyMatcher
+impl<T: Debug + Copy> Matcher<T> for EmptyMatcher
 where
-    for<'a> &'a T: IntoIterator,
+    T: IntoIterator,
 {
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches(&self, actual: T) -> MatcherResult {
         actual.into_iter().next().is_none().into()
     }
 
@@ -91,7 +79,7 @@ mod tests {
     #[test]
     fn empty_matcher_matches_empty_slice() -> Result<()> {
         let value: &[i32] = &[];
-        verify_that!(*value, empty())
+        verify_that!(value, empty())
     }
 
     #[test]

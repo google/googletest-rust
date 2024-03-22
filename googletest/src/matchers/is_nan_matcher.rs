@@ -27,8 +27,8 @@ pub fn is_nan() -> IsNanMatcher {
 #[derive(MatcherExt)]
 pub struct IsNanMatcher;
 
-impl<T: Float + Debug> Matcher<T> for IsNanMatcher {
-    fn matches(&self, actual: &T) -> MatcherResult {
+impl<T: Float + Debug + Copy> Matcher<T> for IsNanMatcher {
+    fn matches(&self, actual: T) -> MatcherResult {
         actual.is_nan().into()
     }
 

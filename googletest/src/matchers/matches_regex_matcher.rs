@@ -81,9 +81,9 @@ pub struct MatchesRegexMatcher<PatternT: Deref<Target = str>> {
 impl<PatternT, ActualT> Matcher<ActualT> for MatchesRegexMatcher<PatternT>
 where
     PatternT: Deref<Target = str>,
-    ActualT: AsRef<str> + Debug + ?Sized,
+    ActualT: AsRef<str> + Debug + Copy,
 {
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches(&self, actual: ActualT) -> MatcherResult {
         self.regex.is_match(actual.as_ref()).into()
     }
 
@@ -196,7 +196,7 @@ mod tests {
         let matcher = matches_regex("\n");
 
         verify_that!(
-            Matcher::<str>::describe(&matcher, MatcherResult::Match),
+            Matcher::<&str>::describe(&matcher, MatcherResult::Match),
             displays_as(eq("matches the regular expression \"\\n\""))
         )
     }

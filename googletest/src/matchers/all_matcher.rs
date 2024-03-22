@@ -72,7 +72,7 @@ macro_rules! __all {
 
 #[cfg(test)]
 mod tests {
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::MatcherResult;
     use crate::prelude::*;
     use indoc::indoc;
 
@@ -83,7 +83,7 @@ mod tests {
         let matcher = all!(first_matcher, second_matcher);
 
         verify_that!(
-            Matcher::<String>::describe(&matcher, MatcherResult::Match),
+            Matcher::<&String>::describe(&matcher, MatcherResult::Match),
             displays_as(eq(indoc!(
                 "
                 has all the following properties:
@@ -99,7 +99,7 @@ mod tests {
         let matcher = all!(first_matcher);
 
         verify_that!(
-            Matcher::<String>::describe(&matcher, MatcherResult::Match),
+            Matcher::<&String>::describe(&matcher, MatcherResult::Match),
             displays_as(eq("starts with prefix \"A\""))
         )
     }

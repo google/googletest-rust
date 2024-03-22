@@ -32,7 +32,7 @@ pub mod internal {
     // This implementation is provided for completeness, but is completely trivial.
     // The only actual value which can be supplied is (), which must match.
     impl Matcher<()> for () {
-        fn matches(&self, _: &()) -> MatcherResult {
+        fn matches(&self, _: ()) -> MatcherResult {
             MatcherResult::Match
         }
 
@@ -50,12 +50,53 @@ pub mod internal {
     #[doc(hidden)]
     macro_rules! tuple_matcher_n {
         ($([$field_number:tt, $matcher_type:ident, $field_type:ident]),*) => {
-            impl<$($matcher_type),*> MatcherExt for ($($matcher_type,)*){}
+            impl<$($matcher_type: MatcherExt),*> MatcherExt for ($($matcher_type,)*){}
 
-            impl<$($field_type: Debug, $matcher_type: Matcher<$field_type>),*>
+            impl<$($field_type: Debug + Copy, $matcher_type: Matcher<$field_type>),*>
                 Matcher<($($field_type,)*)> for ($($matcher_type,)*)
             {
-                fn matches(&self, actual: & ($($field_type,)*)) -> MatcherResult {
+                fn matches(&self, actual:  ($($field_type,)*)) -> MatcherResult {
+                    $(match self.$field_number.matches(actual.$field_number) {
+                        MatcherResult::Match => {},
+                        MatcherResult::NoMatch => {
+                            return MatcherResult::NoMatch;
+                        }
+                    })*
+                    MatcherResult::Match
+                }
+
+                fn explain_match(&self, actual:  ($($field_type,)*)) -> Description  {
+                    let mut explanation = Description::new().text("which").nested(self.describe(self.matches(actual)));
+                    $(match self.$field_number.matches(actual.$field_number) {
+                        MatcherResult::Match => {},
+                        MatcherResult::NoMatch => {
+                            explanation = explanation
+                                .text(format!(concat!("Element #", $field_number, " is {:?},"), actual.$field_number))
+                                .nested(self.$field_number.explain_match(actual.$field_number));
+                        }
+                    })*
+                    explanation
+                }
+
+                fn describe(&self, matcher_result: MatcherResult) -> Description {
+                    match matcher_result {
+                        MatcherResult::Match => {
+                            let mut description = Description::new().text("is a tuple whose values respectively match:");
+                            $(description = description.nested(self.$field_number.describe(matcher_result));)*
+                            description
+                        }
+                        MatcherResult::NoMatch => {
+                            let mut description = Description::new().text("is a tuple whose values do not respectively match:");
+                            $(description = description.nested(self.$field_number.describe(MatcherResult::Match));)*
+                            description
+                        }
+                    }
+                }
+            }
+            impl<'a, $($field_type: Debug, $matcher_type: Matcher<&'a $field_type>),*>
+                Matcher<&'a ($($field_type,)*)> for ($($matcher_type,)*)
+            {
+                fn matches(&self, actual:  &'a ($($field_type,)*)) -> MatcherResult {
                     $(match self.$field_number.matches(&actual.$field_number) {
                         MatcherResult::Match => {},
                         MatcherResult::NoMatch => {
@@ -65,8 +106,8 @@ pub mod internal {
                     MatcherResult::Match
                 }
 
-                fn explain_match(&self, actual: & ($($field_type,)*)) -> Description  {
-                    let mut explanation = Description::new().text("which").nested(self.describe(self.matches(actual)));
+                fn explain_match(&self, actual:  &'a ($($field_type,)*)) -> Description  {
+                    let mut explanation = Description::new().text("which").nested(Matcher::<&'a ($($field_type,)*)>::describe(self, self.matches(actual)));
                     $(match self.$field_number.matches(&actual.$field_number) {
                         MatcherResult::Match => {},
                         MatcherResult::NoMatch => {

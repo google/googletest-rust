@@ -42,15 +42,15 @@ pub struct NotMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
 }
 
-impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<T> for NotMatcher<InnerMatcherT> {
-    fn matches(&self, actual: &T) -> MatcherResult {
+impl<T: Debug + Copy, InnerMatcherT: Matcher<T>> Matcher<T> for NotMatcher<InnerMatcherT> {
+    fn matches(&self, actual: T) -> MatcherResult {
         match self.inner.matches(actual) {
             MatcherResult::Match => MatcherResult::NoMatch,
             MatcherResult::NoMatch => MatcherResult::Match,
         }
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match(&self, actual: T) -> Description {
         self.inner.explain_match(actual)
     }
 
@@ -74,7 +74,7 @@ mod tests {
     fn matches_when_inner_matcher_does_not_match() -> Result<()> {
         let matcher = not(eq(1));
 
-        let result = matcher.matches(&0);
+        let result = matcher.matches(0);
 
         verify_that!(result, eq(MatcherResult::Match))
     }
@@ -83,14 +83,14 @@ mod tests {
     fn does_not_match_when_inner_matcher_matches() -> Result<()> {
         let matcher = not(eq(1));
 
-        let result = matcher.matches(&1);
+        let result = matcher.matches(1);
 
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
     fn match_explanation_references_actual_value() -> Result<()> {
-        let result = verify_that!([1], not(container_eq([1])));
+        let result = verify_that!(&[1], not(container_eq([1])));
 
         verify_that!(
             result,

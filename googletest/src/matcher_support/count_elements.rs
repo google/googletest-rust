@@ -18,10 +18,7 @@
 /// unambiguous answer, i.e., the upper bound exists and the lower and upper
 /// bounds agree. Otherwise it iterates through `value` and counts the
 /// elements.
-pub(crate) fn count_elements<ContainerT: ?Sized>(value: &ContainerT) -> usize
-where
-    for<'b> &'b ContainerT: IntoIterator,
-{
+pub(crate) fn count_elements<ContainerT: IntoIterator>(value: ContainerT) -> usize {
     let iterator = value.into_iter();
     if let (lower, Some(higher)) = iterator.size_hint() {
         if lower == higher {
@@ -46,7 +43,7 @@ mod tests {
     fn count_elements_with_unprecised_hint() -> Result<()> {
         struct FakeIterator;
 
-        impl<'a> Iterator for &'a FakeIterator {
+        impl<'a> Iterator for FakeIterator {
             type Item = ();
 
             fn next(&mut self) -> Option<Self::Item> {
@@ -58,14 +55,14 @@ mod tests {
             }
         }
 
-        verify_that!(count_elements(&FakeIterator), eq(0))
+        verify_that!(count_elements(FakeIterator), eq(0))
     }
 
     #[test]
     fn count_elements_with_no_hint() -> Result<()> {
         struct FakeIterator;
 
-        impl<'a> Iterator for &'a FakeIterator {
+        impl<'a> Iterator for FakeIterator {
             type Item = ();
 
             fn next(&mut self) -> Option<Self::Item> {
@@ -77,6 +74,6 @@ mod tests {
             }
         }
 
-        verify_that!(count_elements(&FakeIterator), eq(0))
+        verify_that!(count_elements(FakeIterator), eq(0))
     }
 }

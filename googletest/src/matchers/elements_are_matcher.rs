@@ -24,19 +24,18 @@
 ///
 /// ```
 /// # use googletest::prelude::*;
-/// verify_that!(vec![1, 2, 3], elements_are![eq(1), anything(), gt(0).and(lt(123))])
+/// verify_that!(vec![1, 2, 3], elements_are![eq(&1), anything(), gt(&0).and(lt(&123))])
 /// #    .unwrap();
 /// ```
 ///
-/// The actual value must be a container such as a `Vec`, an array, or a
-/// dereferenced slice. More precisely, a shared borrow of the actual value must
-/// implement [`IntoIterator`].
+/// The actual value must be a container such as a `&Vec`, an array, or a slice.
+/// More precisely, the actual value must implement [`IntoIterator`].
 ///
 /// ```
 /// # use googletest::prelude::*;
 /// let vector = vec![1, 2, 3];
 /// let slice = vector.as_slice();
-/// verify_that!(*slice, elements_are![eq(1), anything(), gt(0).and(lt(123))])
+/// verify_that!(slice, elements_are![eq(&1), anything(), gt(&0).and(lt(&123))])
 /// #    .unwrap();
 /// ```
 ///
@@ -45,7 +44,7 @@
 ///
 /// ```
 /// # use googletest::prelude::*;
-///  verify_that!(vec![1, 2], [eq(1), eq(2)])
+///  verify_that!(vec![1, 2], [eq(&1), eq(&2)])
 /// #     .unwrap();
 /// ```
 ///
@@ -55,19 +54,16 @@
 ///
 /// ```compile_fail
 /// # use googletest::prelude::*;
-/// verify_that!(vec![vec![1,2], vec![3]], [[eq(1), eq(2)], [eq(3)]])
+/// verify_that!(vec![vec![1,2], vec![3]], [[eq(&1), eq(&2)], [eq(&3)]])
 /// # .unwrap();
 /// ```
 ///
 /// Use this instead:
 /// ```
 /// # use googletest::prelude::*;
-/// verify_that!(vec![vec![1,2], vec![3]], [elements_are![eq(1), eq(2)], elements_are![eq(3)]])
+/// verify_that!(vec![vec![1,2], vec![3]], [elements_are![eq(&1), eq(&2)], elements_are![eq(&3)]])
 /// # .unwrap();
 /// ```
-///
-/// This matcher does not support matching directly against an [`Iterator`]. To
-/// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
 ///
 /// Do not use this with unordered containers, since that will lead to flaky
 /// tests. Use
@@ -102,11 +98,11 @@ pub mod internal {
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
     #[derive(MatcherExt)]
-    pub struct ElementsAre<'a, T: Debug> {
+    pub struct ElementsAre<'a, T: Debug + Copy> {
         elements: Vec<Box<dyn Matcher<T> + 'a>>,
     }
 
-    impl<'a, T: Debug> ElementsAre<'a, T> {
+    impl<'a, T: Debug + Copy> ElementsAre<'a, T> {
         /// Factory only intended for use in the macro `elements_are!`.
         ///
         /// **For internal use only. API stablility is not guaranteed!**
@@ -116,11 +112,11 @@ pub mod internal {
         }
     }
 
-    impl<'a, T: Debug, ContainerT: Debug + ?Sized> Matcher<ContainerT> for ElementsAre<'a, T>
+    impl<'a, T: Debug + Copy, ContainerT: Debug + Copy> Matcher<ContainerT> for ElementsAre<'a, T>
     where
-        for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
+        ContainerT: IntoIterator<Item = T>,
     {
-        fn matches(&self, actual: &ContainerT) -> MatcherResult {
+        fn matches(&self, actual: ContainerT) -> MatcherResult {
             let mut zipped_iterator = zip(actual.into_iter(), self.elements.iter());
             for (a, e) in zipped_iterator.by_ref() {
                 if e.matches(a).is_no_match() {
@@ -134,7 +130,7 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> Description {
+        fn explain_match(&self, actual: ContainerT) -> Description {
             let actual_iterator = actual.into_iter();
             let mut zipped_iterator = zip(actual_iterator, self.elements.iter());
             let mut mismatches = Vec::new();

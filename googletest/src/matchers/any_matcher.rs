@@ -85,7 +85,7 @@ mod tests {
         let matcher = any!(first_matcher, second_matcher);
 
         verify_that!(
-            Matcher::<String>::describe(&matcher, MatcherResult::Match),
+            Matcher::<&String>::describe(&matcher, MatcherResult::Match),
             displays_as(eq(indoc!(
                 "
                 has at least one of the following properties:
@@ -101,7 +101,7 @@ mod tests {
         let matcher = any!(first_matcher);
 
         verify_that!(
-            Matcher::<String>::describe(&matcher, MatcherResult::Match),
+            Matcher::<&str>::describe(&matcher, MatcherResult::Match),
             displays_as(eq("starts with prefix \"A\""))
         )
     }

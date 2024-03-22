@@ -18,7 +18,7 @@ use crate::{
 };
 use std::fmt::Debug;
 
-/// Matches an iterable type whose elements contain a value matched by `inner`.
+/// Matches an [`IntoIterator`] type whose elements contain a value matched by `inner`.
 ///
 /// By default, this matches a container with any number of elements matched
 /// by `inner`. Use the method [`ContainsMatcher::times`] to constrain the
@@ -28,11 +28,11 @@ use std::fmt::Debug;
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(["Some value"], contains(eq("Some value")))?;  // Passes
-/// verify_that!(vec!["Some value"], contains(eq("Some value")))?;  // Passes
+/// verify_that!(vec!["Some value"], contains(eq(&"Some value")))?;  // Passes
 /// #     Ok(())
 /// # }
 /// # fn should_fail_1() -> Result<()> {
-/// verify_that!([] as [String; 0], contains(eq("Some value")))?;   // Fails
+/// verify_that!([] as [&String; 0], contains(eq("Some value")))?;   // Fails
 /// #     Ok(())
 /// # }
 /// # fn should_fail_2() -> Result<()> {
@@ -84,14 +84,14 @@ impl<InnerMatcherT> ContainsMatcher<InnerMatcherT> {
 //  because val is dropped before matcher but the trait bound requires that
 //  the argument to matches outlive the matcher. It works fine if one defines
 //  val before matcher.
-impl<T: Debug, InnerMatcherT: Matcher<T>, ContainerT: Debug> Matcher<ContainerT>
+impl<T: Debug + Copy, InnerMatcherT: Matcher<T>, ContainerT: Debug + Copy> Matcher<ContainerT>
     for ContainsMatcher<InnerMatcherT>
 where
-    for<'a> &'a ContainerT: IntoIterator<Item = &'a T>,
+    ContainerT: IntoIterator<Item = T>,
 {
-    fn matches(&self, actual: &ContainerT) -> MatcherResult {
+    fn matches(&self, actual: ContainerT) -> MatcherResult {
         if let Some(count) = &self.count {
-            count.matches(&self.count_matches(actual))
+            count.matches(self.count_matches(actual))
         } else {
             for v in actual.into_iter() {
                 if self.inner.matches(v).into() {
@@ -102,7 +102,7 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &ContainerT) -> Description {
+    fn explain_match(&self, actual: ContainerT) -> Description {
         let count = self.count_matches(actual);
         match (count, &self.count) {
             (_, Some(_)) => format!("which contains {} matching elements", count).into(),
@@ -139,9 +139,9 @@ where
 }
 
 impl<InnerMatcherT> ContainsMatcher<InnerMatcherT> {
-    fn count_matches<T: Debug, ContainerT>(&self, actual: &ContainerT) -> usize
+    fn count_matches<T: Debug + Copy, ContainerT>(&self, actual: ContainerT) -> usize
     where
-        for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
+        ContainerT: IntoIterator<Item = T>,
         InnerMatcherT: Matcher<T>,
     {
         let mut count = 0;
@@ -162,7 +162,7 @@ mod tests {
 
     #[test]
     fn contains_matches_singleton_slice_with_value() -> Result<()> {
-        let matcher = contains(eq(1));
+        let matcher = contains(eq(&1));
 
         let result = matcher.matches(&vec![1]);
 
@@ -171,7 +171,7 @@ mod tests {
 
     #[test]
     fn contains_matches_singleton_vec_with_value() -> Result<()> {
-        let matcher = contains(eq(1));
+        let matcher = contains(eq(&1));
 
         let result = matcher.matches(&vec![1]);
 
@@ -180,7 +180,7 @@ mod tests {
 
     #[test]
     fn contains_matches_two_element_slice_with_value() -> Result<()> {
-        let matcher = contains(eq(1));
+        let matcher = contains(eq(&1));
 
         let result = matcher.matches(&[0, 1]);
 
@@ -189,7 +189,7 @@ mod tests {
 
     #[test]
     fn contains_does_not_match_singleton_slice_with_wrong_value() -> Result<()> {
-        let matcher = contains(eq(1));
+        let matcher = contains(eq(&1));
 
         let result = matcher.matches(&[0]);
 
@@ -198,7 +198,7 @@ mod tests {
 
     #[test]
     fn contains_does_not_match_empty_slice() -> Result<()> {
-        let matcher = contains(eq(1));
+        let matcher = contains(eq(&1));
 
         let result = matcher.matches(&[1; 0]);
 
@@ -207,7 +207,7 @@ mod tests {
 
     #[test]
     fn contains_matches_slice_with_repeated_value() -> Result<()> {
-        let matcher = contains(eq(1)).times(eq(2));
+        let matcher = contains(eq(&1)).times(eq(2));
 
         let result = matcher.matches(&[1, 1]);
 
@@ -216,7 +216,7 @@ mod tests {
 
     #[test]
     fn contains_does_not_match_slice_with_too_few_of_value() -> Result<()> {
-        let matcher = contains(eq(1)).times(eq(2));
+        let matcher = contains(eq(&1)).times(eq(2));
 
         let result = matcher.matches(&[0, 1]);
 
@@ -225,7 +225,7 @@ mod tests {
 
     #[test]
     fn contains_does_not_match_slice_with_too_many_of_value() -> Result<()> {
-        let matcher = contains(eq(1)).times(eq(1));
+        let matcher = contains(eq(&1)).times(eq(1));
 
         let result = matcher.matches(&[1, 1]);
 
@@ -234,20 +234,20 @@ mod tests {
 
     #[test]
     fn contains_formats_without_multiplicity_by_default() -> Result<()> {
-        let matcher = contains(eq(1));
+        let matcher = contains(eq(&1));
 
         verify_that!(
-            Matcher::<Vec<i32>>::describe(&matcher, MatcherResult::Match),
+            Matcher::<&Vec<i32>>::describe(&matcher, MatcherResult::Match),
             displays_as(eq("contains at least one element which is equal to 1"))
         )
     }
 
     #[test]
     fn contains_formats_with_multiplicity_when_specified() -> Result<()> {
-        let matcher = contains(eq(1)).times(eq(2));
+        let matcher = contains(eq(&1)).times(eq(2));
 
         verify_that!(
-            Matcher::<Vec<i32>>::describe(&matcher, MatcherResult::Match),
+            Matcher::<&Vec<i32>>::describe(&matcher, MatcherResult::Match),
             displays_as(eq("contains n elements which is equal to 1\n  where n is equal to 2"))
         )
     }
@@ -255,7 +255,7 @@ mod tests {
     #[test]
     fn contains_mismatch_shows_number_of_times_element_was_found() -> Result<()> {
         verify_that!(
-            contains(eq(3)).times(eq(1)).explain_match(&vec![1, 2, 3, 3]),
+            contains(eq(&3)).times(eq(1)).explain_match(&vec![1, 2, 3, 3]),
             displays_as(eq("which contains 2 matching elements"))
         )
     }
@@ -263,7 +263,7 @@ mod tests {
     #[test]
     fn contains_mismatch_shows_when_matches() -> Result<()> {
         verify_that!(
-            contains(eq(3)).explain_match(&vec![1, 2, 3, 3]),
+            contains(eq(&3)).explain_match(&vec![1, 2, 3, 3]),
             displays_as(eq("which contains a matching element"))
         )
     }
@@ -271,7 +271,7 @@ mod tests {
     #[test]
     fn contains_mismatch_shows_when_no_matches() -> Result<()> {
         verify_that!(
-            contains(eq(3)).explain_match(&vec![1, 2]),
+            contains(eq(&3)).explain_match(&vec![1, 2]),
             displays_as(eq("which does not contain a matching element"))
         )
     }

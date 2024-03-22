@@ -65,9 +65,9 @@ pub struct CharLenMatcher<E> {
     expected: E,
 }
 
-impl<T: Debug + ?Sized + AsRef<str>, E: Matcher<usize>> Matcher<T> for CharLenMatcher<E> {
-    fn matches(&self, actual: &T) -> MatcherResult {
-        self.expected.matches(&actual.as_ref().chars().count())
+impl<T: Debug + Copy + AsRef<str>, E: Matcher<usize>> Matcher<T> for CharLenMatcher<E> {
+    fn matches(&self, actual: T) -> MatcherResult {
+        self.expected.matches(actual.as_ref().chars().count())
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -85,12 +85,12 @@ impl<T: Debug + ?Sized + AsRef<str>, E: Matcher<usize>> Matcher<T> for CharLenMa
         }
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match(&self, actual: T) -> Description {
         let actual_size = actual.as_ref().chars().count();
         format!(
             "which has character count {}, {}",
             actual_size,
-            self.expected.explain_match(&actual_size)
+            self.expected.explain_match(actual_size)
         )
         .into()
     }
@@ -128,8 +128,8 @@ mod tests {
         #[derive(MatcherExt)]
         struct TestMatcher;
 
-        impl<T: Debug> Matcher<T> for TestMatcher {
-            fn matches(&self, _: &T) -> MatcherResult {
+        impl<T: Debug + Copy> Matcher<T> for TestMatcher {
+            fn matches(&self, _: T) -> MatcherResult {
                 false.into()
             }
 
@@ -137,7 +137,7 @@ mod tests {
                 "called described".into()
             }
 
-            fn explain_match(&self, _: &T) -> Description {
+            fn explain_match(&self, _: T) -> Description {
                 "called explain_match".into()
             }
         }

@@ -226,7 +226,7 @@ fn tuple_matcher_2_has_correct_description_for_mismatch() -> Result<()> {
 #[test]
 fn describe_match_shows_which_tuple_element_did_not_match() -> Result<()> {
     verify_that!(
-        (eq(1), eq(2)).explain_match(&(1, 3)),
+        (eq(1), eq(2)).explain_match((1, 3)),
         displays_as(eq(indoc!(
             "
             which
@@ -242,7 +242,7 @@ fn describe_match_shows_which_tuple_element_did_not_match() -> Result<()> {
 #[test]
 fn describe_match_shows_which_two_tuple_elements_did_not_match() -> Result<()> {
     verify_that!(
-        (eq(1), eq(2)).explain_match(&(2, 3)),
+        (eq(1), eq(2)).explain_match((2, 3)),
         displays_as(eq(indoc!(
             "
             which

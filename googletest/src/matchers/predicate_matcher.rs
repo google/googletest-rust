@@ -23,24 +23,24 @@ use std::fmt::Debug;
 /// ```
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
-/// verify_that!(3, predicate(|x: &i32| x % 2 == 1))?;  // Passes
+/// verify_that!(3, predicate(|x: i32| x % 2 == 1))?;  // Passes
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
 /// ```
 ///
-/// The predicate should take the subject type by reference and return a
+/// The predicate should take the subject type and return a
 /// boolean.
 ///
 /// Note: even if the Rust compiler should be able to infer the type of
 /// the closure argument, it is likely that it won't.
 /// See <https://github.com/rust-lang/rust/issues/12679> for update on this issue.
 /// This is easily fixed by explicitly declaring the type of the argument
-pub fn predicate<T: Debug + ?Sized, P>(
+pub fn predicate<T: Debug + Copy, P>(
     predicate: P,
 ) -> PredicateMatcher<P, NoDescription, NoDescription>
 where
-    for<'a> P: Fn(&'a T) -> bool,
+    P: Fn(T) -> bool,
 {
     PredicateMatcher {
         predicate,
@@ -57,7 +57,7 @@ impl<P> PredicateMatcher<P, NoDescription, NoDescription> {
     /// ```
     /// # use googletest::matchers::{predicate, PredicateMatcher};
     /// # let _ =
-    /// predicate(|x: &i32| x % 2 == 1)
+    /// predicate(|x: i32| x % 2 == 1)
     ///     .with_description("is odd", "is even")
     /// # ;
     /// ```
@@ -118,11 +118,11 @@ where
 #[doc(hidden)]
 pub struct NoDescription;
 
-impl<T: Debug, P> Matcher<T> for PredicateMatcher<P, NoDescription, NoDescription>
+impl<T: Debug + Copy, P> Matcher<T> for PredicateMatcher<P, NoDescription, NoDescription>
 where
-    for<'a> P: Fn(&'a T) -> bool,
+    P: Fn(T) -> bool,
 {
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches(&self, actual: T) -> MatcherResult {
         (self.predicate)(actual).into()
     }
 
@@ -134,12 +134,12 @@ where
     }
 }
 
-impl<T: Debug, P, D1: PredicateDescription, D2: PredicateDescription> Matcher<T>
+impl<T: Debug + Copy, P, D1: PredicateDescription, D2: PredicateDescription> Matcher<T>
     for PredicateMatcher<P, D1, D2>
 where
-    for<'a> P: Fn(&'a T) -> bool,
+    P: Fn(T) -> bool,
 {
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches(&self, actual: T) -> MatcherResult {
         (self.predicate)(actual).into()
     }
 
@@ -169,12 +169,12 @@ mod tests {
 
     #[test]
     fn predicate_matcher_odd_explain_match_matches() -> Result<()> {
-        verify_that!(is_odd().explain_match(&1), displays_as(eq("which is odd")))
+        verify_that!(is_odd().explain_match(1), displays_as(eq("which is odd")))
     }
 
     #[test]
     fn predicate_matcher_odd_explain_match_does_not_match() -> Result<()> {
-        verify_that!(is_odd().explain_match(&2), displays_as(eq("which is even")))
+        verify_that!(is_odd().explain_match(2), displays_as(eq("which is even")))
     }
 
     // Simple Matcher without description
@@ -189,18 +189,18 @@ mod tests {
 
     #[test]
     fn predicate_matcher_even_explain_match_matches() -> Result<()> {
-        verify_that!(is_even().explain_match(&2), displays_as(eq("which matches")))
+        verify_that!(is_even().explain_match(2), displays_as(eq("which matches")))
     }
 
     #[test]
     fn predicate_matcher_even_explain_match_does_not_match() -> Result<()> {
-        verify_that!(is_even().explain_match(&1), displays_as(eq("which does not match")))
+        verify_that!(is_even().explain_match(1), displays_as(eq("which does not match")))
     }
 
     #[test]
     fn predicate_matcher_generator_lambda() -> Result<()> {
         let is_divisible_by = |quotient| {
-            predicate(move |x: &i32| x % quotient == 0).with_description(
+            predicate(move |x: i32| x % quotient == 0).with_description(
                 move || format!("is divisible by {quotient}"),
                 move || format!("is not divisible by {quotient}"),
             )
@@ -210,12 +210,12 @@ mod tests {
 
     #[test]
     fn predicate_matcher_inline() -> Result<()> {
-        verify_that!(2048, predicate(|x: &i32| x.count_ones() == 1))
+        verify_that!(2048, predicate(|x: i32| x.count_ones() == 1))
     }
 
     #[test]
     fn predicate_matcher_function_pointer() -> Result<()> {
         use std::time::Duration;
-        verify_that!(Duration::new(0, 0), predicate(Duration::is_zero))
+        verify_that!(&Duration::new(0, 0), predicate(Duration::is_zero))
     }
 }

@@ -83,11 +83,11 @@ pub struct GtMatcher<ExpectedT> {
     expected: ExpectedT,
 }
 
-impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher<ActualT>
+impl<ActualT: Debug + PartialOrd<ExpectedT> + Copy, ExpectedT: Debug> Matcher<ActualT>
     for GtMatcher<ExpectedT>
 {
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
-        (*actual > self.expected).into()
+    fn matches(&self, actual: ActualT) -> MatcherResult {
+        (actual > self.expected).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -118,14 +118,14 @@ mod tests {
     #[test]
     fn gt_does_not_match_equal_i32() -> Result<()> {
         let matcher = gt(10);
-        let result = matcher.matches(&10);
+        let result = matcher.matches(10);
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
     fn gt_does_not_match_lower_i32() -> Result<()> {
         let matcher = gt(-50);
-        let result = matcher.matches(&-51);
+        let result = matcher.matches(-51);
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn gt_does_not_match_lesser_str() -> Result<()> {
         let matcher = gt("B");
-        let result = matcher.matches(&"A");
+        let result = matcher.matches("A");
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
@@ -159,7 +159,7 @@ mod tests {
 
     #[test]
     fn gt_mismatch_combined_with_each() -> Result<()> {
-        let result = verify_that!(vec![19, 23, 11], each(gt(15)));
+        let result = verify_that!(vec![19, 23, 11], each(gt(&15)));
 
         verify_that!(
             result,

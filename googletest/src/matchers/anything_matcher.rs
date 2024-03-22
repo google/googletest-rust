@@ -39,8 +39,8 @@ pub fn anything() -> Anything {
 #[derive(MatcherExt)]
 pub struct Anything;
 
-impl<T: Debug + ?Sized> Matcher<T> for Anything {
-    fn matches(&self, _: &T) -> MatcherResult {
+impl<T: Debug + Copy> Matcher<T> for Anything {
+    fn matches(&self, _: T) -> MatcherResult {
         MatcherResult::Match
     }
 

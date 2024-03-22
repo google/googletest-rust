@@ -27,14 +27,21 @@ use std::fmt::Debug;
 /// This trait is automatically implemented for a reference of any type
 /// implementing `Matcher`. This simplifies reusing a matcher in different
 /// assertions.
-pub trait Matcher<ActualT: Debug + ?Sized> {
+///
+/// It is also implemented for tuple of `Matcher`. If `MatcherT: Matcher<T>` and
+/// `MatcherU: Matcher<U>`, then `(MatcherT, MatcherU): Matcher<(T, U)>`, and so
+/// on, up to 12 elements. Tuples longer than that do not automatically inherit
+/// the `Debug` trait from their members, so are generally not supported;
+/// see [Rust by Example](https://doc.rust-lang.org/rust-by-example/primitives/tuples.html#tuples).
+
+pub trait Matcher<ActualT: Debug + Copy> {
     /// Returns whether the condition matches the datum `actual`.
     ///
     /// The trait implementation defines what it means to "match". Often the
     /// matching condition is based on data stored in the matcher. For example,
     /// `eq` matches when its stored expected value is equal (in the sense of
     /// the `==` operator) to the value `actual`.
-    fn matches(&self, actual: &ActualT) -> MatcherResult;
+    fn matches(&self, actual: ActualT) -> MatcherResult;
 
     /// Returns a description of `self` or a negative description if
     /// `matcher_result` is `DoesNotMatch`.
@@ -119,8 +126,8 @@ pub trait Matcher<ActualT: Debug + ?Sized> {
     /// inner matcher and appears as follows:
     ///
     /// ```ignore
-    /// fn explain_match(&self, actual: &Self::ActualT) -> Description {
-    ///     self.expected.explain_match(actual.deref())
+    /// fn explain_match(&self, actual: ActualT) -> Description {
+    ///     self.expected.explain_match(*actual)
     /// }
     /// ```
     ///
@@ -129,13 +136,13 @@ pub trait Matcher<ActualT: Debug + ?Sized> {
     /// inner matcher at a point where a relative clause would fit. For example:
     ///
     /// ```ignore
-    /// fn explain_match(&self, actual: &Self::ActualT) -> Description {
+    /// fn explain_match(&self, actual: ActualT) -> Description {
     ///     Description::new()
     ///         .text("which points to a value")
-    ///         .nested(self.expected.explain_match(actual.deref()))
+    ///         .nested(self.expected.explain_match(*actual))
     /// }
     /// ```
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match(&self, actual: ActualT) -> Description {
         format!("which {}", self.describe(self.matches(actual))).into()
     }
 }
@@ -218,9 +225,9 @@ const PRETTY_PRINT_LENGTH_THRESHOLD: usize = 60;
 ///
 /// The parameter `actual_expr` contains the expression which was evaluated to
 /// obtain `actual`.
-pub(crate) fn create_assertion_failure<T: Debug + ?Sized>(
+pub(crate) fn create_assertion_failure<T: Debug + Copy>(
     matcher: &impl Matcher<T>,
-    actual: &T,
+    actual: T,
     actual_expr: &'static str,
     source_location: SourceLocation,
 ) -> TestAssertionFailure {
@@ -279,8 +286,8 @@ impl MatcherResult {
 
 impl<M: ?Sized + MatcherExt> MatcherExt for &M {}
 
-impl<T: Debug + ?Sized, M: Matcher<T>> Matcher<T> for &M {
-    fn matches(&self, actual: &T) -> MatcherResult {
+impl<T: Debug + Copy, M: Matcher<T>> Matcher<T> for &M {
+    fn matches(&self, actual: T) -> MatcherResult {
         (*self).matches(actual)
     }
 
@@ -288,7 +295,7 @@ impl<T: Debug + ?Sized, M: Matcher<T>> Matcher<T> for &M {
         (*self).describe(matcher_result)
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match(&self, actual: T) -> Description {
         (*self).explain_match(actual)
     }
 }

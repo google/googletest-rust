@@ -24,24 +24,24 @@ use std::fmt::Debug;
 /// The element type `ElementT` must implement `PartialEq` to allow element
 /// comparison.
 ///
-/// `ActualT` and `ExpectedT` can each be any container a reference to which
-/// implements `IntoIterator`. For instance, `ActualT` and `ExpectedT` can be a
-/// common container like `Vec` or arrays. They need not be the same container
-/// type.
+/// `ActualT` and `ExpectedT` can each be any container which implements
+/// `IntoIterator`. For instance, `ActualT` and `ExpectedT` can be a
+/// common container like `&Vec`, arrays or slices. They need not be the same
+/// container type.
 ///
 /// ```
 /// # use googletest::prelude::*;
 /// # use std::collections::HashSet;
 /// # fn should_pass_1() -> Result<()> {
 /// let value = vec![1, 2, 3];
-/// verify_that!(value, superset_of([1, 2]))?;  // Passes
+/// verify_that!(value, superset_of([&1, &2]))?;  // Passes
 /// let array_value = [1, 2, 3];
 /// verify_that!(array_value, superset_of([1, 2]))?;  // Passes
 /// #     Ok(())
 /// # }
 /// # fn should_fail() -> Result<()> {
 /// # let value = vec![1, 2, 3];
-/// verify_that!(value, superset_of([1, 2, 4]))?;  // Fails: 4 is not in the subset
+/// verify_that!(value, superset_of([&1, &2, &4]))?;  // Fails: 4 is not in the subset
 /// #     Ok(())
 /// # }
 /// # should_pass_1().unwrap();
@@ -49,7 +49,7 @@ use std::fmt::Debug;
 ///
 /// # fn should_pass_2() -> Result<()> {
 /// let value: HashSet<i32> = [1, 2, 3].into();
-/// verify_that!(value, superset_of([1, 2, 3]))?;  // Passes
+/// verify_that!(value, superset_of([&1, &2, &3]))?;  // Passes
 /// #     Ok(())
 /// # }
 /// # should_pass_2().unwrap();
@@ -61,20 +61,8 @@ use std::fmt::Debug;
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let value: Vec<i32> = vec![0, 0, 1];
-/// verify_that!(value, superset_of([0, 1]))?;  // Passes
-/// verify_that!(value, superset_of([0, 1, 1]))?;  // Passes
-/// #     Ok(())
-/// # }
-/// # should_pass().unwrap();
-/// ```
-///
-/// One can also verify the contents of a slice by dereferencing it:
-///
-/// ```
-/// # use googletest::prelude::*;
-/// # fn should_pass() -> Result<()> {
-/// let value = &[1, 2, 3];
-/// verify_that!(*value, superset_of([1, 2, 3]))?;
+/// verify_that!(value, superset_of([&0, &1]))?;  // Passes
+/// verify_that!(value, superset_of([&0, &1, &1]))?;  // Passes
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -93,13 +81,13 @@ pub struct SupersetOfMatcher<ExpectedT> {
     subset: ExpectedT,
 }
 
-impl<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug> Matcher<ActualT>
+impl<ElementT: Debug + Copy + PartialEq, ActualT: Debug + Copy, ExpectedT: Debug> Matcher<ActualT>
     for SupersetOfMatcher<ExpectedT>
 where
-    for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
+    ActualT: IntoIterator<Item = ElementT>,
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
 {
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches(&self, actual: ActualT) -> MatcherResult {
         for expected_item in &self.subset {
             if actual_is_missing(actual, expected_item) {
                 return MatcherResult::NoMatch;
@@ -108,11 +96,11 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match(&self, actual: ActualT) -> Description {
         let missing_items: Vec<_> = self
             .subset
             .into_iter()
-            .filter(|expected_item| actual_is_missing(actual, expected_item))
+            .filter(|expected_item| actual_is_missing(actual, *expected_item))
             .map(|expected_item| format!("{expected_item:#?}"))
             .collect();
         match missing_items.len() {
@@ -130,16 +118,12 @@ where
     }
 }
 
-fn actual_is_missing<ElementT: PartialEq, ActualT: ?Sized>(
-    actual: &ActualT,
-    needle: &ElementT,
-) -> bool
+fn actual_is_missing<ElementT: PartialEq, ActualT>(actual: ActualT, needle: &ElementT) -> bool
 where
-    for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
+    ActualT: IntoIterator<Item = ElementT>,
 {
-    !actual.into_iter().any(|item| *item == *needle)
+    !actual.into_iter().any(|item| &item == needle)
 }
-
 #[cfg(test)]
 mod tests {
     use super::superset_of;
@@ -156,54 +140,54 @@ mod tests {
     #[test]
     fn superset_of_matches_vec_with_one_element() -> Result<()> {
         let value = vec![1];
-        verify_that!(value, superset_of([1]))
+        verify_that!(value, superset_of([&1]))
     }
 
     #[test]
     fn superset_of_matches_vec_with_two_items() -> Result<()> {
         let value = vec![1, 2];
-        verify_that!(value, superset_of([1, 2]))
+        verify_that!(value, superset_of([&1, &2]))
     }
 
     #[test]
     fn superset_of_matches_vec_when_actual_has_excess_element() -> Result<()> {
         let value = vec![1, 2, 3];
-        verify_that!(value, superset_of([1, 2]))
+        verify_that!(value, superset_of([&1, &2]))
     }
 
     #[test]
     fn superset_of_matches_vec_when_actual_has_excess_element_first() -> Result<()> {
         let value = vec![3, 1, 2];
-        verify_that!(value, superset_of([1, 2]))
+        verify_that!(value, superset_of([&1, &2]))
     }
 
     #[test]
     fn superset_of_matches_slice_with_one_element() -> Result<()> {
         let value = &[1];
-        verify_that!(*value, superset_of([1]))
+        verify_that!(value, superset_of([&1]))
     }
 
     #[test]
     fn superset_of_matches_hash_set_with_one_element() -> Result<()> {
         let value: HashSet<i32> = [1].into();
-        verify_that!(value, superset_of([1]))
+        verify_that!(value, superset_of([&1]))
     }
 
     #[test]
     fn superset_of_does_not_match_when_first_element_does_not_match() -> Result<()> {
         let value = vec![0];
-        verify_that!(value, not(superset_of([1])))
+        verify_that!(value, not(superset_of([&1])))
     }
 
     #[test]
     fn superset_of_does_not_match_when_second_element_does_not_match() -> Result<()> {
         let value = vec![2];
-        verify_that!(value, not(superset_of([2, 0])))
+        verify_that!(value, not(superset_of([&2, &0])))
     }
 
     #[test]
     fn superset_of_shows_correct_message_when_first_item_does_not_match() -> Result<()> {
-        let result = verify_that!(vec![0, 2, 3], superset_of([1, 2, 3]));
+        let result = verify_that!(vec![0, 2, 3], superset_of([&1, &2, &3]));
 
         verify_that!(
             result,
@@ -224,7 +208,7 @@ mod tests {
 
     #[test]
     fn superset_of_shows_correct_message_when_second_item_does_not_match() -> Result<()> {
-        let result = verify_that!(vec![1, 0, 3], superset_of([1, 2, 3]));
+        let result = verify_that!(vec![1, 0, 3], superset_of([&1, &2, &3]));
 
         verify_that!(
             result,
@@ -245,7 +229,7 @@ mod tests {
 
     #[test]
     fn superset_of_shows_correct_message_when_first_two_items_do_not_match() -> Result<()> {
-        let result = verify_that!(vec![0, 0, 3], superset_of([1, 2, 3]));
+        let result = verify_that!(vec![0, 0, 3], superset_of([&1, &2, &3]));
 
         verify_that!(
             result,

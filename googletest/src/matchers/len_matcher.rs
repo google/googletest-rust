@@ -21,8 +21,7 @@ use std::fmt::Debug;
 ///
 /// This matches against a container over which one can iterate. This includes
 /// the standard Rust containers, arrays, and (when dereferenced) slices. More
-/// precisely, a shared borrow of the actual type must implement
-/// [`IntoIterator`].
+/// precisely, the actual type must implement [`IntoIterator`].
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -58,12 +57,12 @@ pub struct LenMatcher<E> {
     expected: E,
 }
 
-impl<T: Debug + ?Sized, E: Matcher<usize>> Matcher<T> for LenMatcher<E>
+impl<T: Debug + Copy, E: Matcher<usize>> Matcher<T> for LenMatcher<E>
 where
-    for<'a> &'a T: IntoIterator,
+    T: IntoIterator,
 {
-    fn matches(&self, actual: &T) -> MatcherResult {
-        self.expected.matches(&count_elements(actual))
+    fn matches(&self, actual: T) -> MatcherResult {
+        self.expected.matches(count_elements(actual))
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -78,9 +77,9 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match(&self, actual: T) -> Description {
         let actual_size = count_elements(actual);
-        format!("which has length {}, {}", actual_size, self.expected.explain_match(&actual_size))
+        format!("which has length {}, {}", actual_size, self.expected.explain_match(actual_size))
             .into()
     }
 }
@@ -106,7 +105,7 @@ mod tests {
     #[test]
     fn len_matcher_match_array_reference() -> Result<()> {
         let value = &[1, 2, 3];
-        verify_that!(*value, len(eq(3)))
+        verify_that!(value, len(eq(3)))
     }
 
     #[test]
@@ -119,7 +118,7 @@ mod tests {
     fn len_matcher_match_slice_of_vec() -> Result<()> {
         let value = vec![1, 2, 3];
         let slice = value.as_slice();
-        verify_that!(*slice, len(eq(3)))
+        verify_that!(slice, len(eq(3)))
     }
 
     #[test]
@@ -174,8 +173,8 @@ mod tests {
     fn len_matcher_explain_match() -> Result<()> {
         #[derive(MatcherExt)]
         struct TestMatcher;
-        impl<T: Debug> Matcher<T> for TestMatcher {
-            fn matches(&self, _: &T) -> MatcherResult {
+        impl<T: Debug + Copy> Matcher<T> for TestMatcher {
+            fn matches(&self, _: T) -> MatcherResult {
                 false.into()
             }
 
@@ -183,7 +182,7 @@ mod tests {
                 "called described".into()
             }
 
-            fn explain_match(&self, _: &T) -> Description {
+            fn explain_match(&self, _: T) -> Description {
                 "called explain_match".into()
             }
         }

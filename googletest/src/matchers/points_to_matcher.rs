@@ -15,18 +15,18 @@
 use crate::description::Description;
 use crate::matcher::{Matcher, MatcherExt, MatcherResult};
 use std::fmt::Debug;
-use std::ops::Deref;
 
-/// Matches a (smart) pointer pointing to a value matched by the [`Matcher`]
+/// Matches a reference pointing to a value matched by the [`Matcher`]
 /// `expected`.
 ///
-/// This allows easily matching smart pointers such as `Box`, `Rc`, and `Arc`.
+/// This allows to combine matchers especially when dealing with some iterator.
 /// For example:
 ///
 /// ```
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
-/// verify_that!(Box::new(123), points_to(eq(123)))?;
+/// verify_that!(&123, points_to(eq(123)))?;
+/// verify_that!(vec![1,2,3], each(points_to(gt(0))))?;
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -40,18 +40,17 @@ pub struct PointsToMatcher<MatcherT> {
     expected: MatcherT,
 }
 
-impl<ExpectedT, MatcherT, ActualT> Matcher<ActualT> for PointsToMatcher<MatcherT>
+impl<'a, ExpectedT, MatcherT> Matcher<&'a ExpectedT> for PointsToMatcher<MatcherT>
 where
-    ExpectedT: Debug,
+    ExpectedT: Debug + Copy,
     MatcherT: Matcher<ExpectedT>,
-    ActualT: Deref<Target = ExpectedT> + Debug + ?Sized,
 {
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
-        self.expected.matches(actual.deref())
+    fn matches(&self, actual: &'a ExpectedT) -> MatcherResult {
+        self.expected.matches(*actual)
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
-        self.expected.explain_match(actual.deref())
+    fn explain_match(&self, actual: &'a ExpectedT) -> Description {
+        self.expected.explain_match(*actual)
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -67,30 +66,30 @@ mod tests {
     use std::rc::Rc;
 
     #[test]
+    fn points_to_matches_ref() -> Result<()> {
+        verify_that!(&123, points_to(eq(123)))
+    }
+
+    #[test]
     fn points_to_matches_box_of_int_with_int() -> Result<()> {
-        verify_that!(Box::new(123), points_to(eq(123)))
+        verify_that!(&*Box::new(123), points_to(eq(123)))
     }
 
     #[test]
     fn points_to_matches_rc_of_int_with_int() -> Result<()> {
-        verify_that!(Rc::new(123), points_to(eq(123)))
-    }
-
-    #[test]
-    fn points_to_matches_box_of_owned_string_with_string_reference() -> Result<()> {
-        verify_that!(Rc::new("A string".to_string()), points_to(eq("A string")))
+        verify_that!(&*Rc::new(123), points_to(eq(123)))
     }
 
     #[test]
     fn match_explanation_references_actual_value() -> Result<()> {
-        let result = verify_that!(&vec![1], points_to(container_eq([])));
+        let result = verify_that!(&1, points_to(eq(0)));
 
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc!(
                 "
-                    Actual: [1],
-                      which contains the unexpected element 1
+                    Actual: 1,
+                      which isn't equal to 0
                 "
             ))))
         )

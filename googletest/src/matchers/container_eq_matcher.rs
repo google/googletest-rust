@@ -29,14 +29,11 @@ use std::fmt::Debug;
 ///   Unexpected: [4]
 /// ```
 ///
-/// The actual value must be a container such as a `Vec`, an array, or a
-/// dereferenced slice. More precisely, a shared borrow of the actual value must
+/// The actual value must be a container such as a `&Vec`, an array, or a
+/// dereferenced slice. More precisely, the actual value must
 /// implement [`IntoIterator`] whose `Item` type implements
 /// [`PartialEq<ExpectedT>`], where `ExpectedT` is the element type of the
 /// expected value.
-///
-/// If the container type is a `Vec`, then the expected type may be a slice of
-/// the same element type. For example:
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -48,46 +45,11 @@ use std::fmt::Debug;
 /// # should_pass().unwrap();
 /// ```
 ///
-/// As an exception, if the actual type is a `Vec<String>`, the expected type
-/// may be a slice of `&str`:
-///
-/// ```
-/// # use googletest::prelude::*;
-/// # fn should_pass() -> Result<()> {
-/// let vec: Vec<String> = vec!["A string".into(), "Another string".into()];
-/// verify_that!(vec, container_eq(["A string", "Another string"]))?;
-/// #     Ok(())
-/// # }
-/// # should_pass().unwrap();
-/// ```
-///
-/// These exceptions allow one to avoid unnecessary allocations in test
-/// assertions.
-///
-/// One can also check container equality of a slice with an array. To do so,
-/// dereference the slice:
-///
-/// ```
-/// # use googletest::prelude::*;
-/// # fn should_pass() -> Result<()> {
-/// let value = &[1, 2, 3];
-/// verify_that!(*value, container_eq([1, 2, 3]))?;
-/// #     Ok(())
-/// # }
-/// # should_pass().unwrap();
-/// ```
-///
-/// Otherwise, the actual and expected types must be identical.
-///
 /// *Performance note*: In the event of a mismatch leading to an assertion
 /// failure, the construction of the lists of missing and unexpected values
 /// uses a naive algorithm requiring time proportional to the product of the
 /// sizes of the expected and actual values. This should therefore only be used
 /// when the containers are small enough that this is not a problem.
-// This returns ContainerEqMatcher and not impl Matcher because
-// ContainerEqMatcher has some specialisations for slice types (see
-// documentation above). Returning impl Matcher would hide those from the
-// compiler.
 pub fn container_eq<ExpectedContainerT>(
     expected: ExpectedContainerT,
 ) -> ContainerEqMatcher<ExpectedContainerT>
@@ -105,18 +67,18 @@ pub struct ContainerEqMatcher<ExpectedContainerT> {
 impl<ActualElementT, ActualContainerT, ExpectedElementT, ExpectedContainerT>
     Matcher<ActualContainerT> for ContainerEqMatcher<ExpectedContainerT>
 where
-    ActualElementT: PartialEq<ExpectedElementT> + Debug + ?Sized,
-    ActualContainerT: PartialEq<ExpectedContainerT> + Debug + ?Sized,
+    ActualElementT: for<'a> PartialEq<&'a ExpectedElementT> + Debug + Copy,
+    ActualContainerT: for<'a> PartialEq<&'a ExpectedContainerT> + Debug + Copy,
     ExpectedElementT: Debug,
     ExpectedContainerT: Debug,
-    for<'a> &'a ActualContainerT: IntoIterator<Item = &'a ActualElementT>,
+    ActualContainerT: IntoIterator<Item = ActualElementT>,
     for<'a> &'a ExpectedContainerT: IntoIterator<Item = &'a ExpectedElementT>,
 {
-    fn matches(&self, actual: &ActualContainerT) -> MatcherResult {
-        (*actual == self.expected).into()
+    fn matches(&self, actual: ActualContainerT) -> MatcherResult {
+        (actual == &self.expected).into()
     }
 
-    fn explain_match(&self, actual: &ActualContainerT) -> Description {
+    fn explain_match(&self, actual: ActualContainerT) -> Description {
         build_explanation(self.get_missing_items(actual), self.get_unexpected_items(actual)).into()
     }
 
@@ -134,26 +96,26 @@ where
 {
     fn get_missing_items<ActualElementT, ActualContainerT>(
         &self,
-        actual: &ActualContainerT,
-    ) -> Vec<&ExpectedElementT>
+        actual: ActualContainerT,
+    ) -> Vec<&'_ ExpectedElementT>
     where
-        ActualElementT: PartialEq<ExpectedElementT> + ?Sized,
-        ActualContainerT: PartialEq<ExpectedContainerT> + ?Sized,
-        for<'a> &'a ActualContainerT: IntoIterator<Item = &'a ActualElementT>,
+        ActualElementT: for<'a> PartialEq<&'a ExpectedElementT> + Copy,
+        ActualContainerT: for<'a> PartialEq<&'a ExpectedContainerT> + Copy,
+        ActualContainerT: IntoIterator<Item = ActualElementT>,
     {
-        self.expected.into_iter().filter(|&i| !actual.into_iter().any(|j| j == i)).collect()
+        self.expected.into_iter().filter(|i| !actual.into_iter().any(|j| j == *i)).collect()
     }
 
-    fn get_unexpected_items<'b, ActualElementT, ActualContainerT>(
+    fn get_unexpected_items<ActualElementT, ActualContainerT>(
         &self,
-        actual: &'b ActualContainerT,
-    ) -> Vec<&'b ActualElementT>
+        actual: ActualContainerT,
+    ) -> Vec<ActualElementT>
     where
-        ActualElementT: PartialEq<ExpectedElementT> + ?Sized,
-        ActualContainerT: PartialEq<ExpectedContainerT> + ?Sized,
-        for<'a> &'a ActualContainerT: IntoIterator<Item = &'a ActualElementT>,
+        ActualElementT: for<'a> PartialEq<&'a ExpectedElementT> + Copy,
+        ActualContainerT: for<'a> PartialEq<&'a ExpectedContainerT> + Copy,
+        ActualContainerT: IntoIterator<Item = ActualElementT>,
     {
-        actual.into_iter().filter(|&i| !self.expected.into_iter().any(|j| i == j)).collect()
+        actual.into_iter().filter(|i| !self.expected.into_iter().any(|j| i == &j)).collect()
     }
 }
 
@@ -207,7 +169,7 @@ mod tests {
     #[test]
     fn container_eq_matches_array_with_slice() -> Result<()> {
         let value = &[1, 2, 3];
-        verify_that!(*value, container_eq([1, 2, 3]))
+        verify_that!(value, container_eq([1, 2, 3]))
     }
 
     #[test]

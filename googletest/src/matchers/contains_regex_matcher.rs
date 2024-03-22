@@ -46,11 +46,6 @@ use std::ops::Deref;
 ///
 /// Panics if the given `pattern` is not a syntactically valid regular
 /// expression.
-// N.B. This returns the concrete type rather than an impl Matcher so that it
-// can act simultaneously as a Matcher<str> and a Matcher<String>. Otherwise the
-// compiler treats it as a Matcher<str> only and the code
-//   verify_that!("Some value".to_string(), contains_regex(".*value"))?;
-// doesn't compile.
 pub fn contains_regex<PatternT: Deref<Target = str>>(pattern: PatternT) -> ContainsRegexMatcher {
     ContainsRegexMatcher { regex: Regex::new(pattern.deref()).unwrap() }
 }
@@ -65,8 +60,8 @@ pub struct ContainsRegexMatcher {
     regex: Regex,
 }
 
-impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher<ActualT> for ContainsRegexMatcher {
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+impl<ActualT: AsRef<str> + Debug + Copy> Matcher<ActualT> for ContainsRegexMatcher {
+    fn matches(&self, actual: ActualT) -> MatcherResult {
         self.regex.is_match(actual.as_ref()).into()
     }
 
@@ -134,7 +129,7 @@ mod tests {
         let matcher = contains_regex("\n");
 
         verify_that!(
-            Matcher::<str>::describe(&matcher, MatcherResult::Match),
+            Matcher::<&str>::describe(&matcher, MatcherResult::Match),
             displays_as(eq("contains the regular expression \"\\n\""))
         )
     }

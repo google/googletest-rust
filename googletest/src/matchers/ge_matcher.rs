@@ -83,11 +83,11 @@ pub struct GeMatcher<ExpectedT> {
     expected: ExpectedT,
 }
 
-impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher<ActualT>
+impl<ActualT: Debug + PartialOrd<ExpectedT> + Copy, ExpectedT: Debug> Matcher<ActualT>
     for GeMatcher<ExpectedT>
 {
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
-        (*actual >= self.expected).into()
+    fn matches(&self, actual: ActualT) -> MatcherResult {
+        (actual >= self.expected).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -118,7 +118,7 @@ mod tests {
     #[test]
     fn ge_does_not_match_smaller_i32() -> Result<()> {
         let matcher = ge(10);
-        let result = matcher.matches(&9);
+        let result = matcher.matches(9);
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
@@ -130,7 +130,7 @@ mod tests {
     #[test]
     fn ge_does_not_match_lesser_str() -> Result<()> {
         let matcher = ge("z");
-        let result = matcher.matches(&"a");
+        let result = matcher.matches("a");
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 

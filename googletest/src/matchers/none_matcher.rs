@@ -38,8 +38,21 @@ pub fn none() -> NoneMatcher {
 #[derive(MatcherExt)]
 pub struct NoneMatcher;
 
-impl<T: Debug> Matcher<Option<T>> for NoneMatcher {
-    fn matches(&self, actual: &Option<T>) -> MatcherResult {
+impl<T: Debug + Copy> Matcher<Option<T>> for NoneMatcher {
+    fn matches(&self, actual: Option<T>) -> MatcherResult {
+        (actual.is_none()).into()
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
+        match matcher_result {
+            MatcherResult::Match => "is none".into(),
+            MatcherResult::NoMatch => "is some(_)".into(),
+        }
+    }
+}
+
+impl<'a, T: Debug> Matcher<&'a Option<T>> for NoneMatcher {
+    fn matches(&self, actual: &'a Option<T>) -> MatcherResult {
         (actual.is_none()).into()
     }
 
