@@ -16,7 +16,7 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
 /// Matches a byte sequence which is a UTF-8 encoded string matched by `inner`.
 ///
@@ -75,9 +75,12 @@ where
 {
     type ActualT = ActualT;
 
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         std::str::from_utf8(actual.as_ref())
-            .map(|s| self.inner.matches(&s))
+            .map(|s| self.inner.matches(s))
             .unwrap_or(MatcherResult::NoMatch)
     }
 
@@ -96,10 +99,13 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> Description {
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
         match std::str::from_utf8(actual.as_ref()) {
             Ok(s) => {
-                format!("which is a UTF-8 encoded string {}", self.inner.explain_match(&s)).into()
+                format!("which is a UTF-8 encoded string {}", self.inner.explain_match(s)).into()
             }
             Err(e) => format!("which is not a UTF-8 encoded string: {e}").into(),
         }

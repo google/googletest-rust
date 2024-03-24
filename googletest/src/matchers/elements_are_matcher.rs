@@ -93,8 +93,11 @@ macro_rules! __elements_are {
 #[doc(hidden)]
 pub mod internal {
     use crate::description::Description;
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::{
+        Matcher, MatcherResult, __internal_unstable_do_not_depend_on_these::ObjectSafeMatcher,
+    };
     use crate::matcher_support::zipped_iterator::zip;
+    use std::ops::Deref;
     use std::{fmt::Debug, marker::PhantomData};
 
     /// This struct is meant to be used only by the macro `elements_are!`.
@@ -102,7 +105,7 @@ pub mod internal {
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
     pub struct ElementsAre<'a, ContainerT: ?Sized, T: Debug> {
-        elements: Vec<Box<dyn Matcher<ActualT = T> + 'a>>,
+        elements: Vec<Box<dyn ObjectSafeMatcher<ActualT = T> + 'a>>,
         phantom: PhantomData<ContainerT>,
     }
 
@@ -111,7 +114,7 @@ pub mod internal {
         ///
         /// **For internal use only. API stablility is not guaranteed!**
         #[doc(hidden)]
-        pub fn new(elements: Vec<Box<dyn Matcher<ActualT = T> + 'a>>) -> Self {
+        pub fn new(elements: Vec<Box<dyn ObjectSafeMatcher<ActualT = T> + 'a>>) -> Self {
             Self { elements, phantom: Default::default() }
         }
     }
@@ -122,10 +125,13 @@ pub mod internal {
     {
         type ActualT = ContainerT;
 
-        fn matches(&self, actual: &ContainerT) -> MatcherResult {
+        fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+            &self,
+            actual: ActualRefT,
+        ) -> MatcherResult {
             let mut zipped_iterator = zip(actual.into_iter(), self.elements.iter());
             for (a, e) in zipped_iterator.by_ref() {
-                if e.matches(a).is_no_match() {
+                if e.obj_matches(a).is_no_match() {
                     return MatcherResult::NoMatch;
                 }
             }
@@ -136,13 +142,16 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> Description {
+        fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+            &self,
+            actual: ActualRefT,
+        ) -> Description {
             let actual_iterator = actual.into_iter();
             let mut zipped_iterator = zip(actual_iterator, self.elements.iter());
             let mut mismatches = Vec::new();
             for (idx, (a, e)) in zipped_iterator.by_ref().enumerate() {
-                if e.matches(a).is_no_match() {
-                    mismatches.push(format!("element #{idx} is {a:?}, {}", e.explain_match(a)));
+                if e.obj_matches(a).is_no_match() {
+                    mismatches.push(format!("element #{idx} is {a:?}, {}", e.obj_explain_match(a)));
                 }
             }
             if mismatches.is_empty() {
@@ -167,7 +176,7 @@ pub mod internal {
                 &self
                     .elements
                     .iter()
-                    .map(|matcher| matcher.describe(MatcherResult::Match))
+                    .map(|matcher| matcher.obj_describe(MatcherResult::Match))
                     .collect::<Description>()
                     .enumerate()
                     .indent()

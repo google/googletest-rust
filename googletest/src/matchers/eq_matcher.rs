@@ -17,6 +17,7 @@ use crate::matcher::{Matcher, MatcherResult};
 use crate::matcher_support::edit_distance;
 use crate::matcher_support::summarize_diff::create_diff;
 
+use std::ops::Deref;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a value equal (in the sense of `==`) to `expected`.
@@ -86,7 +87,10 @@ pub struct EqMatcher<A: ?Sized, T> {
 impl<T: Debug, A: Debug + ?Sized + PartialEq<T>> Matcher for EqMatcher<A, T> {
     type ActualT = A;
 
-    fn matches(&self, actual: &A) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         (*actual == self.expected).into()
     }
 
@@ -97,9 +101,12 @@ impl<T: Debug, A: Debug + ?Sized + PartialEq<T>> Matcher for EqMatcher<A, T> {
         }
     }
 
-    fn explain_match(&self, actual: &A) -> Description {
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
         let expected_debug = format!("{:#?}", self.expected);
-        let actual_debug = format!("{:#?}", actual);
+        let actual_debug = format!("{:#?}", actual.deref());
         let description = self.describe(self.matches(actual));
 
         let diff = if is_multiline_string_debug(&actual_debug)

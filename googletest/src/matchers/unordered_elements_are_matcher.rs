@@ -366,11 +366,14 @@ macro_rules! __is_contained_in {
 #[doc(hidden)]
 pub mod internal {
     use crate::description::Description;
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::{
+        Matcher, MatcherResult, __internal_unstable_do_not_depend_on_these::ObjectSafeMatcher,
+    };
     use crate::matcher_support::count_elements::count_elements;
     use std::collections::HashSet;
     use std::fmt::{Debug, Display};
     use std::marker::PhantomData;
+    use std::ops::Deref;
 
     /// This struct is meant to be used only through the
     /// `unordered_elements_are![...]` macro.
@@ -378,7 +381,7 @@ pub mod internal {
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
     pub struct UnorderedElementsAreMatcher<'a, ContainerT: ?Sized, T: Debug, const N: usize> {
-        elements: [Box<dyn Matcher<ActualT = T> + 'a>; N],
+        elements: [Box<dyn ObjectSafeMatcher<ActualT = T> + 'a>; N],
         requirements: Requirements,
         phantom: PhantomData<ContainerT>,
     }
@@ -387,7 +390,7 @@ pub mod internal {
         UnorderedElementsAreMatcher<'a, ContainerT, T, N>
     {
         pub fn new(
-            elements: [Box<dyn Matcher<ActualT = T> + 'a>; N],
+            elements: [Box<dyn ObjectSafeMatcher<ActualT = T> + 'a>; N],
             requirements: Requirements,
         ) -> Self {
             Self { elements, requirements, phantom: Default::default() }
@@ -410,19 +413,25 @@ pub mod internal {
     {
         type ActualT = ContainerT;
 
-        fn matches(&self, actual: &ContainerT) -> MatcherResult {
-            let match_matrix = MatchMatrix::generate(actual, &self.elements);
+        fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+            &self,
+            actual: ActualRefT,
+        ) -> MatcherResult {
+            let match_matrix = MatchMatrix::generate(actual.deref(), &self.elements);
             match_matrix.is_match_for(self.requirements).into()
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> Description {
+        fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+            &self,
+            actual: ActualRefT,
+        ) -> Description {
             if let Some(size_mismatch_explanation) =
-                self.requirements.explain_size_mismatch(actual, N)
+                self.requirements.explain_size_mismatch(actual.deref(), N)
             {
                 return size_mismatch_explanation;
             }
 
-            let match_matrix = MatchMatrix::generate(actual, &self.elements);
+            let match_matrix = MatchMatrix::generate(actual.deref(), &self.elements);
             if let Some(unmatchable_explanation) =
                 match_matrix.explain_unmatchable(self.requirements)
             {
@@ -431,7 +440,7 @@ pub mod internal {
 
             let best_match = match_matrix.find_best_match();
             best_match
-                .get_explanation(actual, &self.elements, self.requirements)
+                .get_explanation(actual.deref(), &self.elements, self.requirements)
                 .unwrap_or("whose elements all match".into())
         }
 
@@ -441,7 +450,7 @@ pub mod internal {
                 if matcher_result.into() { "contains" } else { "doesn't contain" },
                 self.elements
                     .iter()
-                    .map(|matcher| matcher.describe(MatcherResult::Match))
+                    .map(|matcher| matcher.obj_describe(MatcherResult::Match))
                     .collect::<Description>()
                     .enumerate()
                     .indent()
@@ -450,8 +459,10 @@ pub mod internal {
         }
     }
 
-    type KeyValueMatcher<'a, KeyT, ValueT> =
-        (Box<dyn Matcher<ActualT = KeyT> + 'a>, Box<dyn Matcher<ActualT = ValueT> + 'a>);
+    type KeyValueMatcher<'a, KeyT, ValueT> = (
+        Box<dyn ObjectSafeMatcher<ActualT = KeyT> + 'a>,
+        Box<dyn ObjectSafeMatcher<ActualT = ValueT> + 'a>,
+    );
 
     /// This is the analogue to [UnorderedElementsAreMatcher] for maps and
     /// map-like collections.
@@ -487,19 +498,25 @@ pub mod internal {
     {
         type ActualT = ContainerT;
 
-        fn matches(&self, actual: &ContainerT) -> MatcherResult {
-            let match_matrix = MatchMatrix::generate_for_map(actual, &self.elements);
+        fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+            &self,
+            actual: ActualRefT,
+        ) -> MatcherResult {
+            let match_matrix = MatchMatrix::generate_for_map(actual.deref(), &self.elements);
             match_matrix.is_match_for(self.requirements).into()
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> Description {
+        fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+            &self,
+            actual: ActualRefT,
+        ) -> Description {
             if let Some(size_mismatch_explanation) =
-                self.requirements.explain_size_mismatch(actual, N)
+                self.requirements.explain_size_mismatch(actual.deref(), N)
             {
                 return size_mismatch_explanation;
             }
 
-            let match_matrix = MatchMatrix::generate_for_map(actual, &self.elements);
+            let match_matrix = MatchMatrix::generate_for_map(actual.deref(), &self.elements);
             if let Some(unmatchable_explanation) =
                 match_matrix.explain_unmatchable(self.requirements)
             {
@@ -509,7 +526,7 @@ pub mod internal {
             let best_match = match_matrix.find_best_match();
 
             best_match
-                .get_explanation_for_map(actual, &self.elements, self.requirements)
+                .get_explanation_for_map(actual.deref(), &self.elements, self.requirements)
                 .unwrap_or("whose elements all match".into())
         }
 
@@ -521,8 +538,8 @@ pub mod internal {
                     .iter()
                     .map(|(key_matcher, value_matcher)| format!(
                         "{} => {}",
-                        key_matcher.describe(MatcherResult::Match),
-                        value_matcher.describe(MatcherResult::Match)
+                        key_matcher.obj_describe(MatcherResult::Match),
+                        value_matcher.obj_describe(MatcherResult::Match)
                     ))
                     .collect::<Description>()
                     .indent()
@@ -603,7 +620,7 @@ pub mod internal {
     impl<const N: usize> MatchMatrix<N> {
         fn generate<'a, T: Debug + 'a, ContainerT: Debug + ?Sized>(
             actual: &ContainerT,
-            expected: &[Box<dyn Matcher<ActualT = T> + 'a>; N],
+            expected: &[Box<dyn ObjectSafeMatcher<ActualT = T> + 'a>; N],
         ) -> Self
         where
             for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
@@ -611,7 +628,7 @@ pub mod internal {
             let mut matrix = MatchMatrix(vec![[MatcherResult::NoMatch; N]; count_elements(actual)]);
             for (actual_idx, actual) in actual.into_iter().enumerate() {
                 for (expected_idx, expected) in expected.iter().enumerate() {
-                    matrix.0[actual_idx][expected_idx] = expected.matches(actual);
+                    matrix.0[actual_idx][expected_idx] = expected.obj_matches(actual);
                 }
             }
             matrix
@@ -627,9 +644,10 @@ pub mod internal {
             let mut matrix = MatchMatrix(vec![[MatcherResult::NoMatch; N]; count_elements(actual)]);
             for (actual_idx, (actual_key, actual_value)) in actual.into_iter().enumerate() {
                 for (expected_idx, (expected_key, expected_value)) in expected.iter().enumerate() {
-                    matrix.0[actual_idx][expected_idx] = (expected_key.matches(actual_key).into()
-                        && expected_value.matches(actual_value).into())
-                    .into();
+                    matrix.0[actual_idx][expected_idx] =
+                        (expected_key.obj_matches(actual_key).into()
+                            && expected_value.obj_matches(actual_value).into())
+                        .into();
                 }
             }
             matrix
@@ -962,7 +980,7 @@ pub mod internal {
         fn get_explanation<'a, T: Debug, ContainerT: Debug + ?Sized>(
             &self,
             actual: &ContainerT,
-            expected: &[Box<dyn Matcher<ActualT = T> + 'a>; N],
+            expected: &[Box<dyn ObjectSafeMatcher<ActualT = T> + 'a>; N],
             requirements: Requirements,
         ) -> Option<Description>
         where
@@ -981,7 +999,7 @@ pub mod internal {
                 format!(
                     "Actual element {:?} at index {actual_idx} matched expected element `{}` at index {expected_idx}.",
                     actual[actual_idx],
-                    expected[expected_idx].describe(MatcherResult::Match),
+                    expected[expected_idx].obj_describe(MatcherResult::Match),
             )});
 
             let unmatched_actual = self.get_unmatched_actual().map(|actual_idx| {
@@ -993,7 +1011,7 @@ pub mod internal {
 
             let unmatched_expected = self.get_unmatched_expected().into_iter().map(|expected_idx|{format!(
                 "Expected element `{}` at index {expected_idx} did not match any remaining actual element.",
-                expected[expected_idx].describe(MatcherResult::Match)
+                expected[expected_idx].obj_describe(MatcherResult::Match)
             )});
 
             let best_match = matches
@@ -1030,8 +1048,8 @@ pub mod internal {
                         "Actual element {:?} => {:?} at index {actual_idx} matched expected element `{}` => `{}` at index {expected_idx}.",
                         actual[actual_idx].0,
                         actual[actual_idx].1,
-                        expected[expected_idx].0.describe(MatcherResult::Match),
-                        expected[expected_idx].1.describe(MatcherResult::Match),
+                        expected[expected_idx].0.obj_describe(MatcherResult::Match),
+                        expected[expected_idx].1.obj_describe(MatcherResult::Match),
                     )
                 });
 
@@ -1049,8 +1067,8 @@ pub mod internal {
                 .map(|expected_idx| {
                     format!(
                         "Expected element `{}` => `{}` at index {expected_idx} did not match any remaining actual element.",
-                        expected[expected_idx].0.describe(MatcherResult::Match),
-                        expected[expected_idx].1.describe(MatcherResult::Match),
+                        expected[expected_idx].0.obj_describe(MatcherResult::Match),
+                        expected[expected_idx].1.obj_describe(MatcherResult::Match),
                     )
                 });
 
@@ -1083,9 +1101,9 @@ mod tests {
         // aren't dropped too early.
         let matchers = ((eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three")));
         let matcher: UnorderedElementsOfMapAreMatcher<HashMap<i32, &str>, _, _, 3> = unordered_elements_are![
-            (matchers.0.0, matchers.0.1),
-            (matchers.1.0, matchers.1.1),
-            (matchers.2.0, matchers.2.1)
+            (matchers.0 .0, matchers.0 .1),
+            (matchers.1 .0, matchers.1 .1),
+            (matchers.2 .0, matchers.2 .1)
         ];
         verify_that!(
             Matcher::describe(&matcher, MatcherResult::Match),
@@ -1108,9 +1126,9 @@ mod tests {
         // aren't dropped too early.
         let matchers = ((anything(), eq(1)), (anything(), eq(2)), (anything(), eq(2)));
         let matcher: UnorderedElementsOfMapAreMatcher<HashMap<u32, u32>, _, _, 3> = unordered_elements_are![
-            (matchers.0.0, matchers.0.1),
-            (matchers.1.0, matchers.1.1),
-            (matchers.2.0, matchers.2.1),
+            (matchers.0 .0, matchers.0 .1),
+            (matchers.1 .0, matchers.1 .1),
+            (matchers.2 .0, matchers.2 .1),
         ];
         let value: HashMap<u32, u32> = HashMap::from_iter([(0, 1), (1, 1), (2, 2)]);
         verify_that!(

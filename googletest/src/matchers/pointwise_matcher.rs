@@ -154,6 +154,7 @@ pub mod internal {
     use crate::description::Description;
     use crate::matcher::{Matcher, MatcherResult};
     use crate::matcher_support::zipped_iterator::zip;
+    use std::ops::Deref;
     use std::{fmt::Debug, marker::PhantomData};
 
     /// This struct is meant to be used only through the `pointwise` macro.
@@ -178,7 +179,10 @@ pub mod internal {
     {
         type ActualT = ContainerT;
 
-        fn matches(&self, actual: &ContainerT) -> MatcherResult {
+        fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+            &self,
+            actual: ActualRefT,
+        ) -> MatcherResult {
             let mut zipped_iterator = zip(actual.into_iter(), self.matchers.iter());
             for (element, matcher) in zipped_iterator.by_ref() {
                 if matcher.matches(element).is_no_match() {
@@ -192,7 +196,10 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> Description {
+        fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+            &self,
+            actual: ActualRefT,
+        ) -> Description {
             // TODO(b/260819741) This code duplicates elements_are_matcher.rs. Consider
             // extract as a separate library. (or implement pointwise! with
             // elements_are)

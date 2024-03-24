@@ -214,7 +214,7 @@ a struct holding the matcher's data and have it implement the trait
 
 ```no_run
 use googletest::{description::Description, matcher::{Matcher, MatcherResult}};
-use std::fmt::Debug;
+use std::{fmt::Debug, ops::Deref};
 
 struct MyEqMatcher<T> {
     expected: T,
@@ -223,7 +223,10 @@ struct MyEqMatcher<T> {
 impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
     type ActualT = T;
 
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         if self.expected == *actual {
             MatcherResult::Match
         } else {
@@ -248,7 +251,7 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 
  ```no_run
  # use googletest::{description::Description, matcher::{Matcher, MatcherResult}};
- # use std::fmt::Debug;
+ # use std::{fmt::Debug, ops::Deref};
  #
  # struct MyEqMatcher<T> {
  #    expected: T,
@@ -257,7 +260,10 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
  # impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
  #    type ActualT = T;
  #
- #    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+ #    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+ #        &self,
+ #        actual: ActualRefT,
+ #    ) -> MatcherResult {
  #        if self.expected == *actual {
  #            MatcherResult::Match
  #        } else {
@@ -287,7 +293,7 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 ```
 # use googletest::prelude::*;
 # use googletest::{description::Description, matcher::{Matcher, MatcherResult}};
-# use std::fmt::Debug;
+# use std::{fmt::Debug, ops::Deref};
 #
 # struct MyEqMatcher<T> {
 #    expected: T,
@@ -296,7 +302,10 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 # impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 #    type ActualT = T;
 #
-#    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+#    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+#        &self,
+#        actual: ActualRefT,
+#    ) -> MatcherResult {
 #        if self.expected == *actual {
 #            MatcherResult::Match
 #        } else {

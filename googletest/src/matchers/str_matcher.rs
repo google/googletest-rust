@@ -14,7 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{
+        Matcher, MatcherResult, __internal_unstable_do_not_depend_on_these::ObjectSafeMatcher,
+    },
     matcher_support::{
         edit_distance,
         summarize_diff::{create_diff, create_diff_reversed},
@@ -353,7 +355,10 @@ where
 {
     type ActualT = ActualT;
 
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         self.configuration.do_strings_match(self.expected.deref(), actual.as_ref()).into()
     }
 
@@ -361,7 +366,10 @@ where
         self.configuration.describe(matcher_result, self.expected.deref())
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
         self.configuration.explain_match(self.expected.deref(), actual.as_ref())
     }
 }
@@ -440,7 +448,7 @@ struct Configuration {
     ignore_leading_whitespace: bool,
     ignore_trailing_whitespace: bool,
     case_policy: CasePolicy,
-    times: Option<Box<dyn Matcher<ActualT = usize>>>,
+    times: Option<Box<dyn ObjectSafeMatcher<ActualT = usize>>>,
 }
 
 #[derive(Clone)]
@@ -514,7 +522,7 @@ impl Configuration {
             // Split returns an iterator over the "boundaries" left and right of the
             // substring to be matched, of which there is one more than the number of
             // substrings.
-            matches!(times.matches(&(actual.split(expected).count() - 1)), MatcherResult::Match)
+            matches!(times.obj_matches(&(actual.split(expected).count() - 1)), MatcherResult::Match)
         } else {
             actual.contains(expected)
         }
@@ -534,7 +542,7 @@ impl Configuration {
             CasePolicy::IgnoreAscii => addenda.push("ignoring ASCII case".into()),
         }
         if let Some(times) = self.times.as_ref() {
-            addenda.push(format!("count {}", times.describe(matcher_result)).into());
+            addenda.push(format!("count {}", times.obj_describe(matcher_result)).into());
         }
         let extra =
             if !addenda.is_empty() { format!(" ({})", addenda.join(", ")) } else { "".into() };

@@ -16,6 +16,7 @@ use crate::description::Description;
 use crate::matcher::{Matcher, MatcherResult};
 use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
+use std::ops::Deref;
 
 /// Matches the string representation of types that implement `Display`.
 ///
@@ -39,15 +40,21 @@ impl<T: Debug + Display, InnerMatcher: Matcher<ActualT = String>> Matcher
 {
     type ActualT = T;
 
-    fn matches(&self, actual: &T) -> MatcherResult {
-        self.inner.matches(&format!("{actual}"))
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
+        self.inner.matches(&format!("{}", actual.deref()))
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
         format!(
             "which displays as {:?} {}",
             actual.to_string(),
-            self.inner.explain_match(&format!("{actual}"))
+            self.inner.explain_match(&format!("{}", actual.deref()))
         )
         .into()
     }
