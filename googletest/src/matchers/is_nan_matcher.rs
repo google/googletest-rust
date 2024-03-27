@@ -14,22 +14,21 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherExt, MatcherResult},
 };
 use num_traits::float::Float;
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a floating point value which is NaN.
-pub fn is_nan<T: Float + Debug>() -> impl Matcher<ActualT = T> {
-    IsNanMatcher::<T>(Default::default())
+pub fn is_nan() -> IsNanMatcher {
+    IsNanMatcher
 }
 
-struct IsNanMatcher<T>(PhantomData<T>);
+#[derive(MatcherExt)]
+pub struct IsNanMatcher;
 
-impl<T: Float + Debug> Matcher for IsNanMatcher<T> {
-    type ActualT = T;
-
-    fn matches(&self, actual: &T) -> MatcherResult {
+impl<'a, T: Float + Debug> Matcher<'a, T> for IsNanMatcher {
+    fn matches<'b>(&self, actual: &'b T) -> MatcherResult where 'a: 'b{
         actual.is_nan().into()
     }
 

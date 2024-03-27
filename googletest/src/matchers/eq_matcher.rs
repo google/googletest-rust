@@ -13,11 +13,11 @@
 // limitations under the License.
 
 use crate::description::Description;
-use crate::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherExt, MatcherResult};
 use crate::matcher_support::edit_distance;
 use crate::matcher_support::summarize_diff::create_diff;
 
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a value equal (in the sense of `==`) to `expected`.
 ///
@@ -71,22 +71,20 @@ use std::{fmt::Debug, marker::PhantomData};
 /// options on how equality is checked through the
 /// [`StrMatcherConfigurator`][crate::matchers::str_matcher::StrMatcherConfigurator]
 /// extension trait, which is implemented for this matcher.
-pub fn eq<A: ?Sized, T>(expected: T) -> EqMatcher<A, T> {
-    EqMatcher { expected, phantom: Default::default() }
+pub fn eq<T>(expected: T) -> EqMatcher<T> {
+    EqMatcher { expected }
 }
 
 /// A matcher which matches a value equal to `expected`.
 ///
 /// See [`eq`].
-pub struct EqMatcher<A: ?Sized, T> {
+#[derive(MatcherExt)]
+pub struct EqMatcher<T> {
     pub(crate) expected: T,
-    phantom: PhantomData<A>,
 }
 
-impl<T: Debug, A: Debug + ?Sized + PartialEq<T>> Matcher for EqMatcher<A, T> {
-    type ActualT = A;
-
-    fn matches(&self, actual: &A) -> MatcherResult {
+impl<'a, T: Debug, A: Debug + ?Sized + PartialEq<T>> Matcher<'a, A> for EqMatcher<T> {
+    fn matches<'b>(&self, actual: &'b A) -> MatcherResult where 'a: 'b{
         (*actual == self.expected).into()
     }
 
@@ -97,10 +95,10 @@ impl<T: Debug, A: Debug + ?Sized + PartialEq<T>> Matcher for EqMatcher<A, T> {
         }
     }
 
-    fn explain_match(&self, actual: &A) -> Description {
+    fn explain_match<'b>(&self, actual: &'b A) -> Description where 'a: 'b {
         let expected_debug = format!("{:#?}", self.expected);
         let actual_debug = format!("{:#?}", actual);
-        let description = self.describe(self.matches(actual));
+        let description = Matcher::<'a, A>::describe(self, Matcher::<'a, A>::matches(self, actual));
 
         let diff = if is_multiline_string_debug(&actual_debug)
             && is_multiline_string_debug(&expected_debug)

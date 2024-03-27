@@ -17,7 +17,7 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherExt, MatcherResult},
 };
 use std::fmt::Debug;
 
@@ -41,6 +41,7 @@ use std::fmt::Debug;
 ///
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
+#[derive(MatcherExt)]
 pub struct ConjunctionMatcher<M1, M2> {
     m1: M1,
     m2: M2,
@@ -52,20 +53,23 @@ impl<M1, M2> ConjunctionMatcher<M1, M2> {
     }
 }
 
-impl<M1: Matcher, M2: Matcher<ActualT = M1::ActualT>> Matcher for ConjunctionMatcher<M1, M2>
-where
-    M1::ActualT: Debug,
+impl<'a, T: Debug + ?Sized, M1: Matcher<'a, T>, M2: Matcher<'a, T>> Matcher<'a, T>
+    for ConjunctionMatcher<M1, M2>
 {
-    type ActualT = M1::ActualT;
-
-    fn matches(&self, actual: &M1::ActualT) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b T) -> MatcherResult
+    where
+        'a: 'b,
+    {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::Match, MatcherResult::Match) => MatcherResult::Match,
             _ => MatcherResult::NoMatch,
         }
     }
 
-    fn explain_match(&self, actual: &M1::ActualT) -> Description {
+    fn explain_match<'b>(&self, actual: &'b T) -> Description
+    where
+        'a: 'b,
+    {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::NoMatch, MatcherResult::Match) => self.m1.explain_match(actual),
             (MatcherResult::Match, MatcherResult::NoMatch) => self.m2.explain_match(actual),

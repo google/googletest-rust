@@ -16,34 +16,32 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherExt, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches precisely values matched by `inner`.
 ///
 /// The returned matcher produces a description prefixed by the string
 /// `description`. This is useful in contexts where the test assertion failure
 /// output must include the additional description.
-pub fn is<'a, ActualT: Debug + 'a, InnerMatcherT: Matcher<ActualT = ActualT> + 'a>(
-    description: &'a str,
-    inner: InnerMatcherT,
-) -> impl Matcher<ActualT = ActualT> + 'a {
-    IsMatcher { description, inner, phantom: Default::default() }
+pub fn is<InnerMatcherT>(description: &str, inner: InnerMatcherT) -> IsMatcher<'_, InnerMatcherT> {
+    IsMatcher { description, inner }
 }
 
-struct IsMatcher<'a, ActualT, InnerMatcherT> {
+#[derive(MatcherExt)]
+pub struct IsMatcher<'a, InnerMatcherT> {
     description: &'a str,
     inner: InnerMatcherT,
-    phantom: PhantomData<ActualT>,
 }
 
-impl<'a, ActualT: Debug, InnerMatcherT: Matcher<ActualT = ActualT>> Matcher
-    for IsMatcher<'a, ActualT, InnerMatcherT>
+impl<'a, 'b, ActualT: Debug, InnerMatcherT: Matcher<'b, ActualT>> Matcher<'b, ActualT>
+    for IsMatcher<'a, InnerMatcherT>
 {
-    type ActualT = ActualT;
-
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    fn matches<'c>(&self, actual: &'c ActualT) -> MatcherResult
+    where
+        'b: 'c,
+    {
         self.inner.matches(actual)
     }
 
@@ -64,7 +62,10 @@ impl<'a, ActualT: Debug, InnerMatcherT: Matcher<ActualT = ActualT>> Matcher
         }
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> Description {
+    fn explain_match<'c>(&self, actual: &'c ActualT) -> Description
+    where
+        'b: 'c,
+    {
         self.inner.explain_match(actual)
     }
 }

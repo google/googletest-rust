@@ -14,9 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherExt, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a container containing all of the items in the given container
 /// `subset`.
@@ -84,30 +84,22 @@ use std::{fmt::Debug, marker::PhantomData};
 /// runtime proportional to the *product* of the sizes of the actual and
 /// expected containers as well as the time to check equality of each pair of
 /// items. It should not be used on especially large containers.
-pub fn superset_of<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug>(
+pub fn superset_of<ExpectedT>(subset: ExpectedT) -> SupersetOfMatcher<ExpectedT> {
+    SupersetOfMatcher { subset }
+}
+
+#[derive(MatcherExt)]
+pub struct SupersetOfMatcher<ExpectedT> {
     subset: ExpectedT,
-) -> impl Matcher<ActualT = ActualT>
+}
+
+impl<'c, ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug> Matcher<'c, ActualT>
+    for SupersetOfMatcher<ExpectedT>
 where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
 {
-    SupersetOfMatcher::<ActualT, _> { subset, phantom: Default::default() }
-}
-
-struct SupersetOfMatcher<ActualT: ?Sized, ExpectedT> {
-    subset: ExpectedT,
-    phantom: PhantomData<ActualT>,
-}
-
-impl<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug> Matcher
-    for SupersetOfMatcher<ActualT, ExpectedT>
-where
-    for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
-{
-    type ActualT = ActualT;
-
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b ActualT) -> MatcherResult where 'c: 'b {
         for expected_item in &self.subset {
             if actual_is_missing(actual, expected_item) {
                 return MatcherResult::NoMatch;
@@ -116,7 +108,7 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match<'b>(&self, actual: &'b ActualT) -> Description where 'c: 'b{
         let missing_items: Vec<_> = self
             .subset
             .into_iter()

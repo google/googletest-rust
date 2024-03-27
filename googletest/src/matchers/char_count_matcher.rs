@@ -14,9 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherExt, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a string whose number of Unicode scalars matches `expected`.
 ///
@@ -56,21 +56,22 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn char_count<T: Debug + ?Sized + AsRef<str>, E: Matcher<ActualT = usize>>(
-    expected: E,
-) -> impl Matcher<ActualT = T> {
-    CharLenMatcher { expected, phantom: Default::default() }
+pub fn char_count<E: for<'a> Matcher<'a, usize>>(expected: E) -> CharLenMatcher<E> {
+    CharLenMatcher { expected }
 }
 
-struct CharLenMatcher<T: ?Sized, E> {
+#[derive(MatcherExt)]
+pub struct CharLenMatcher<E> {
     expected: E,
-    phantom: PhantomData<T>,
 }
 
-impl<T: Debug + ?Sized + AsRef<str>, E: Matcher<ActualT = usize>> Matcher for CharLenMatcher<T, E> {
-    type ActualT = T;
-
-    fn matches(&self, actual: &T) -> MatcherResult {
+impl<'s, T: Debug + ?Sized + AsRef<str>, E: for<'a> Matcher<'a, usize>> Matcher<'s, T>
+    for CharLenMatcher<E>
+{
+    fn matches<'b>(&self, actual: &'b T) -> MatcherResult
+    where
+        's: 'b,
+    {
         self.expected.matches(&actual.as_ref().chars().count())
     }
 
@@ -89,7 +90,10 @@ impl<T: Debug + ?Sized + AsRef<str>, E: Matcher<ActualT = usize>> Matcher for Ch
         }
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match<'b>(&self, actual: &'b T) -> Description
+    where
+        's: 'b,
+    {
         let actual_size = actual.as_ref().chars().count();
         format!(
             "which has character count {}, {}",
@@ -108,7 +112,6 @@ mod tests {
     use crate::prelude::*;
     use indoc::indoc;
     use std::fmt::Debug;
-    use std::marker::PhantomData;
 
     #[test]
     fn char_count_matches_string_slice() -> Result<()> {
@@ -130,11 +133,14 @@ mod tests {
 
     #[test]
     fn char_count_explains_match() -> Result<()> {
-        struct TestMatcher<T>(PhantomData<T>);
-        impl<T: Debug> Matcher for TestMatcher<T> {
-            type ActualT = T;
+        #[derive(MatcherExt)]
+        struct TestMatcher;
 
-            fn matches(&self, _: &T) -> MatcherResult {
+        impl<'a, T: Debug> Matcher<'a, T> for TestMatcher {
+            fn matches<'b>(&self, _: &'b T) -> MatcherResult
+            where
+                'a: 'b,
+            {
                 false.into()
             }
 
@@ -142,12 +148,15 @@ mod tests {
                 "called described".into()
             }
 
-            fn explain_match(&self, _: &T) -> Description {
+            fn explain_match<'b>(&self, _: &'b T) -> Description
+            where
+                'a: 'b,
+            {
                 "called explain_match".into()
             }
         }
         verify_that!(
-            char_count(TestMatcher(Default::default())).explain_match(&"A string"),
+            char_count(TestMatcher).explain_match(&"A string"),
             displays_as(eq("which has character count 8, called explain_match"))
         )
     }

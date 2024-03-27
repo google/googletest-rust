@@ -14,7 +14,7 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherExt, MatcherResult},
 };
 use num_traits::{Float, FloatConst};
 use std::fmt::Debug;
@@ -139,6 +139,7 @@ pub fn approx_eq<T: Debug + Float + FloatConst + Copy>(expected: T) -> NearMatch
 
 /// A matcher which matches floating-point numbers approximately equal to its
 /// expected value.
+#[derive(MatcherExt)]
 pub struct NearMatcher<T: Debug> {
     expected: T,
     max_abs_error: T,
@@ -166,10 +167,8 @@ impl<T: Debug> NearMatcher<T> {
     }
 }
 
-impl<T: Debug + Float> Matcher for NearMatcher<T> {
-    type ActualT = T;
-
-    fn matches(&self, actual: &T) -> MatcherResult {
+impl<'a, T: Debug + Float> Matcher<'a, T> for NearMatcher<T> {
+    fn matches<'b>(&self, actual: &'b T) -> MatcherResult where 'a: 'b{
         if self.nans_are_equal && self.expected.is_nan() && actual.is_nan() {
             return MatcherResult::Match;
         }

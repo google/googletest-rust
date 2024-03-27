@@ -152,33 +152,34 @@ macro_rules! __pointwise {
 #[doc(hidden)]
 pub mod internal {
     use crate::description::Description;
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::{Matcher, MatcherExt, MatcherResult};
     use crate::matcher_support::zipped_iterator::zip;
-    use std::{fmt::Debug, marker::PhantomData};
+    use std::fmt::Debug;
 
     /// This struct is meant to be used only through the `pointwise` macro.
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub struct PointwiseMatcher<ContainerT: ?Sized, MatcherT> {
+    #[derive(MatcherExt)]
+    pub struct PointwiseMatcher<MatcherT> {
         matchers: Vec<MatcherT>,
-        phantom: PhantomData<ContainerT>,
     }
 
-    impl<ContainerT: ?Sized, MatcherT> PointwiseMatcher<ContainerT, MatcherT> {
+    impl<MatcherT> PointwiseMatcher<MatcherT> {
         pub fn new(matchers: Vec<MatcherT>) -> Self {
-            Self { matchers, phantom: Default::default() }
+            Self { matchers }
         }
     }
 
-    impl<T: Debug, MatcherT: Matcher<ActualT = T>, ContainerT: ?Sized + Debug> Matcher
-        for PointwiseMatcher<ContainerT, MatcherT>
+    impl<'a, T: Debug, MatcherT: Matcher<'a, T>, ContainerT: ?Sized + Debug> Matcher<'a, ContainerT>
+        for PointwiseMatcher<MatcherT>
     where
         for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
     {
-        type ActualT = ContainerT;
-
-        fn matches(&self, actual: &ContainerT) -> MatcherResult {
+        fn matches<'b>(&self, actual: &'b ContainerT) -> MatcherResult
+        where
+            'a: 'b,
+        {
             let mut zipped_iterator = zip(actual.into_iter(), self.matchers.iter());
             for (element, matcher) in zipped_iterator.by_ref() {
                 if matcher.matches(element).is_no_match() {
@@ -192,7 +193,10 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> Description {
+        fn explain_match<'b>(&self, actual: &'b ContainerT) -> Description
+        where
+            'a: 'b,
+        {
             // TODO(b/260819741) This code duplicates elements_are_matcher.rs. Consider
             // extract as a separate library. (or implement pointwise! with
             // elements_are)

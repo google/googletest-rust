@@ -143,7 +143,7 @@ macro_rules! field_internal {
 pub mod internal {
     use crate::{
         description::Description,
-        matcher::{Matcher, MatcherResult},
+        matcher::{Matcher, MatcherExt, MatcherResult},
     };
     use std::fmt::Debug;
 
@@ -152,26 +152,29 @@ pub mod internal {
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub fn field_matcher<OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<ActualT = InnerT>>(
+    pub fn field_matcher<'a, OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<'a, InnerT>>(
         field_accessor: fn(&OuterT) -> Option<&InnerT>,
         field_path: &'static str,
         inner: InnerMatcher,
-    ) -> impl Matcher<ActualT = OuterT> {
+    ) -> FieldMatcher<OuterT, InnerT, InnerMatcher> {
         FieldMatcher { field_accessor, field_path, inner }
     }
 
-    struct FieldMatcher<OuterT, InnerT, InnerMatcher> {
+    pub struct FieldMatcher<OuterT, InnerT, InnerMatcher> {
         field_accessor: fn(&OuterT) -> Option<&InnerT>,
         field_path: &'static str,
         inner: InnerMatcher,
     }
 
-    impl<OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<ActualT = InnerT>> Matcher
+    impl<'a, OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<'a, InnerT>> MatcherExt
         for FieldMatcher<OuterT, InnerT, InnerMatcher>
     {
-        type ActualT = OuterT;
+    }
 
-        fn matches(&self, actual: &OuterT) -> MatcherResult {
+    impl<'a, OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<'a, InnerT>> Matcher<'a, OuterT>
+        for FieldMatcher<OuterT, InnerT, InnerMatcher>
+    {
+        fn matches<'b>(&self, actual: &'b OuterT) -> MatcherResult where 'a: 'b {
             if let Some(value) = (self.field_accessor)(actual) {
                 self.inner.matches(value)
             } else {
@@ -179,7 +182,7 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &OuterT) -> Description {
+        fn explain_match<'b>(&self, actual: &'b OuterT) -> Description where 'a: 'b{
             if let Some(actual) = (self.field_accessor)(actual) {
                 format!(
                     "which has field `{}`, {}",

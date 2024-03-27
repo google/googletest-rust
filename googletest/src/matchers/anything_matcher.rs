@@ -14,9 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherExt, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches anything. This matcher always succeeds.
 ///
@@ -32,16 +32,18 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn anything<T: Debug + ?Sized>() -> impl Matcher<ActualT = T> {
-    Anything::<T>(Default::default())
+pub fn anything() -> Anything {
+    Anything
 }
 
-struct Anything<T: ?Sized>(PhantomData<T>);
+#[derive(MatcherExt)]
+pub struct Anything;
 
-impl<T: Debug + ?Sized> Matcher for Anything<T> {
-    type ActualT = T;
-
-    fn matches(&self, _: &T) -> MatcherResult {
+impl<'a, T: Debug + ?Sized> Matcher<'a, T> for Anything {
+    fn matches<'b>(&self, _: &'b T) -> MatcherResult
+    where
+        'a: 'b,
+    {
         MatcherResult::Match
     }
 

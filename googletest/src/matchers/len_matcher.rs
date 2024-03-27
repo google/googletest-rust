@@ -13,9 +13,9 @@
 // limitations under the License.
 
 use crate::description::Description;
-use crate::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherExt, MatcherResult};
 use crate::matcher_support::count_elements::count_elements;
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a container whose number of elements matches `expected`.
 ///
@@ -49,25 +49,23 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn len<T: Debug + ?Sized, E: Matcher<ActualT = usize>>(expected: E) -> impl Matcher<ActualT = T>
-where
-    for<'a> &'a T: IntoIterator,
-{
-    LenMatcher { expected, phantom: Default::default() }
+pub fn len<E>(expected: E) -> LenMatcher<E> {
+    LenMatcher { expected }
 }
 
-struct LenMatcher<T: ?Sized, E> {
+#[derive(MatcherExt)]
+pub struct LenMatcher<E> {
     expected: E,
-    phantom: PhantomData<T>,
 }
 
-impl<T: Debug + ?Sized, E: Matcher<ActualT = usize>> Matcher for LenMatcher<T, E>
+impl<'c, T: Debug + ?Sized, E: for<'b> Matcher<'b, usize>> Matcher<'c, T> for LenMatcher<E>
 where
     for<'a> &'a T: IntoIterator,
 {
-    type ActualT = T;
-
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b T) -> MatcherResult
+    where
+        'c: 'b,
+    {
         self.expected.matches(&count_elements(actual))
     }
 
@@ -83,7 +81,10 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match<'b>(&self, actual: &'b T) -> Description
+    where
+        'c: 'b,
+    {
         let actual_size = count_elements(actual);
         format!("which has length {}, {}", actual_size, self.expected.explain_match(&actual_size))
             .into()
@@ -101,7 +102,6 @@ mod tests {
         BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque,
     };
     use std::fmt::Debug;
-    use std::marker::PhantomData;
 
     #[test]
     fn len_matcher_match_vec() -> Result<()> {
@@ -178,11 +178,10 @@ mod tests {
 
     #[test]
     fn len_matcher_explain_match() -> Result<()> {
-        struct TestMatcher<T>(PhantomData<T>);
-        impl<T: Debug> Matcher for TestMatcher<T> {
-            type ActualT = T;
-
-            fn matches(&self, _: &T) -> MatcherResult {
+        #[derive(MatcherExt)]
+        struct TestMatcher;
+        impl<'a, T: Debug> Matcher<'a, T> for TestMatcher {
+            fn matches<'b>(&self, _: &'b T) -> MatcherResult where 'a: 'b{
                 false.into()
             }
 
@@ -190,12 +189,12 @@ mod tests {
                 "called described".into()
             }
 
-            fn explain_match(&self, _: &T) -> Description {
+            fn explain_match<'b>(&self, _: &'b T) -> Description where 'a: 'b{
                 "called explain_match".into()
             }
         }
         verify_that!(
-            len(TestMatcher(Default::default())).explain_match(&[1, 2, 3]),
+            len(TestMatcher).explain_match(&[1, 2, 3]),
             displays_as(eq("which has length 3, called explain_match"))
         )
     }

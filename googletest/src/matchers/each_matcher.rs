@@ -13,8 +13,8 @@
 // limitations under the License.
 
 use crate::description::Description;
-use crate::matcher::{Matcher, MatcherResult};
-use std::{fmt::Debug, marker::PhantomData};
+use crate::matcher::{Matcher, MatcherExt, MatcherResult};
+use std::fmt::Debug;
 
 /// Matches a container all of whose elements are matched by the matcher
 /// `inner`.
@@ -61,29 +61,25 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn each<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT>(
-    inner: MatcherT,
-) -> impl Matcher<ActualT = ActualT>
-where
-    for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    MatcherT: Matcher<ActualT = ElementT>,
-{
-    EachMatcher { inner, phantom: Default::default() }
+pub fn each<MatcherT>(inner: MatcherT) -> EachMatcher<MatcherT> {
+    EachMatcher { inner }
 }
 
-struct EachMatcher<ActualT: ?Sized, MatcherT> {
+#[derive(MatcherExt)]
+pub struct EachMatcher<MatcherT> {
     inner: MatcherT,
-    phantom: PhantomData<ActualT>,
 }
 
-impl<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT> Matcher for EachMatcher<ActualT, MatcherT>
+impl<'c, ElementT: Debug, ActualT: Debug + ?Sized, MatcherT> Matcher<'c, ActualT>
+    for EachMatcher<MatcherT>
 where
     for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    MatcherT: Matcher<ActualT = ElementT>,
+    MatcherT: Matcher<'c, ElementT>,
 {
-    type ActualT = ActualT;
-
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches<'b>(&self, actual: &'b ActualT) -> MatcherResult
+    where
+        'c: 'b,
+    {
         for element in actual {
             if self.inner.matches(element).is_no_match() {
                 return MatcherResult::NoMatch;
@@ -92,7 +88,10 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match<'b>(&self, actual: &'b ActualT) -> Description
+    where
+        'c: 'b,
+    {
         let mut non_matching_elements = Vec::new();
         for (index, element) in actual.into_iter().enumerate() {
             if self.inner.matches(element).is_no_match() {
