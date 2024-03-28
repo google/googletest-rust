@@ -203,7 +203,7 @@ pub trait GoogleTestSupport {
 
 impl<T> GoogleTestSupport for std::result::Result<T, TestAssertionFailure> {
     fn and_log_failure(self) {
-        TestOutcome::ensure_text_context_present();
+        TestOutcome::ensure_test_context_present();
         if let Err(failure) = self {
             failure.log();
         }
