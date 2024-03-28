@@ -16,7 +16,7 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
 /// Matches a string whose number of Unicode scalars matches `expected`.
 ///
@@ -70,7 +70,10 @@ struct CharLenMatcher<T: ?Sized, E> {
 impl<T: Debug + ?Sized + AsRef<str>, E: Matcher<ActualT = usize>> Matcher for CharLenMatcher<T, E> {
     type ActualT = T;
 
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         self.expected.matches(&actual.as_ref().chars().count())
     }
 
@@ -89,7 +92,10 @@ impl<T: Debug + ?Sized + AsRef<str>, E: Matcher<ActualT = usize>> Matcher for Ch
         }
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
         let actual_size = actual.as_ref().chars().count();
         format!(
             "which has character count {}, {}",
@@ -109,6 +115,7 @@ mod tests {
     use indoc::indoc;
     use std::fmt::Debug;
     use std::marker::PhantomData;
+    use std::ops::Deref;
 
     #[test]
     fn char_count_matches_string_slice() -> Result<()> {
@@ -134,7 +141,10 @@ mod tests {
         impl<T: Debug> Matcher for TestMatcher<T> {
             type ActualT = T;
 
-            fn matches(&self, _: &T) -> MatcherResult {
+            fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+                &self,
+                _: ActualRefT,
+            ) -> MatcherResult {
                 false.into()
             }
 
@@ -142,7 +152,10 @@ mod tests {
                 "called described".into()
             }
 
-            fn explain_match(&self, _: &T) -> Description {
+            fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+                &self,
+                _: ActualRefT,
+            ) -> Description {
                 "called explain_match".into()
             }
         }

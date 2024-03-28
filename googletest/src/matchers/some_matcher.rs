@@ -16,7 +16,7 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
 /// Matches an `Option` containing a value matched by `inner`.
 ///
@@ -50,12 +50,18 @@ struct SomeMatcher<T, InnerMatcherT> {
 impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for SomeMatcher<T, InnerMatcherT> {
     type ActualT = Option<T>;
 
-    fn matches(&self, actual: &Option<T>) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match(&self, actual: &Option<T>) -> Description {
-        match (self.matches(actual), actual) {
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
+        match (self.matches(actual.clone()), actual.deref()) {
             (_, Some(t)) => {
                 Description::new().text("which has a value").nested(self.inner.explain_match(t))
             }

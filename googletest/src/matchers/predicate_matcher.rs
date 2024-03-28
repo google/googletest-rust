@@ -16,7 +16,7 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
 /// Creates a matcher based on the predicate provided.
 ///
@@ -130,8 +130,11 @@ where
 {
     type ActualT = T;
 
-    fn matches(&self, actual: &T) -> MatcherResult {
-        (self.predicate)(actual).into()
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
+        (self.predicate)(actual.deref()).into()
     }
 
     fn describe(&self, result: MatcherResult) -> Description {
@@ -149,8 +152,11 @@ where
 {
     type ActualT = T;
 
-    fn matches(&self, actual: &T) -> MatcherResult {
-        (self.predicate)(actual).into()
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
+        (self.predicate)(actual.deref()).into()
     }
 
     fn describe(&self, result: MatcherResult) -> Description {

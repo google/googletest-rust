@@ -16,7 +16,7 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
 /// Matches a container containing all of the items in the given container
 /// `subset`.
@@ -107,20 +107,26 @@ where
 {
     type ActualT = ActualT;
 
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         for expected_item in &self.subset {
-            if actual_is_missing(actual, expected_item) {
+            if actual_is_missing(actual.deref(), expected_item) {
                 return MatcherResult::NoMatch;
             }
         }
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
         let missing_items: Vec<_> = self
             .subset
             .into_iter()
-            .filter(|expected_item| actual_is_missing(actual, expected_item))
+            .filter(|expected_item| actual_is_missing(actual.deref(), expected_item))
             .map(|expected_item| format!("{expected_item:#?}"))
             .collect();
         match missing_items.len() {

@@ -16,6 +16,7 @@ use crate::description::Description;
 use crate::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use std::ops::Deref;
 
 /// Matches a container equal (in the sense of `==`) to `expected`.
 ///
@@ -116,12 +117,22 @@ where
 {
     type ActualT = ActualContainerT;
 
-    fn matches(&self, actual: &ActualContainerT) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         (*actual == self.expected).into()
     }
 
-    fn explain_match(&self, actual: &ActualContainerT) -> Description {
-        build_explanation(self.get_missing_items(actual), self.get_unexpected_items(actual)).into()
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
+        build_explanation(
+            self.get_missing_items(actual.deref()),
+            self.get_unexpected_items(actual.deref()),
+        )
+        .into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -271,15 +282,15 @@ mod tests {
     }
 
     #[test]
-    fn container_eq_matches_owned_vec_of_owned_strings_with_slice_of_string_references()
-    -> Result<()> {
+    fn container_eq_matches_owned_vec_of_owned_strings_with_slice_of_string_references(
+    ) -> Result<()> {
         let vector = vec!["A string".to_string(), "Another string".to_string()];
         verify_that!(vector, container_eq(["A string", "Another string"]))
     }
 
     #[test]
-    fn container_eq_matches_owned_vec_of_owned_strings_with_shorter_slice_of_string_references()
-    -> Result<()> {
+    fn container_eq_matches_owned_vec_of_owned_strings_with_shorter_slice_of_string_references(
+    ) -> Result<()> {
         let actual = vec!["A string".to_string(), "Another string".to_string()];
         let matcher = container_eq(["A string"]);
 

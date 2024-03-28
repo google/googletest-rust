@@ -85,7 +85,7 @@ pub use points_to_matcher::points_to;
 pub use predicate_matcher::{predicate, PredicateMatcher};
 pub use some_matcher::some;
 pub use str_matcher::{
-    contains_substring, ends_with, starts_with, StrMatcher, StrMatcherConfigurator,
+    contains_substring, ends_with, eq_str, starts_with, StrMatcher, StrMatcherConfigurator,
 };
 pub use subset_of_matcher::subset_of;
 pub use superset_of_matcher::superset_of;

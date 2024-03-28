@@ -14,9 +14,11 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{
+        Matcher, MatcherResult, __internal_unstable_do_not_depend_on_these::ObjectSafeMatcher,
+    },
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
 /// Matches an iterable type whose elements contain a value matched by `inner`.
 ///
@@ -51,7 +53,7 @@ pub fn contains<T, InnerMatcherT>(inner: InnerMatcherT) -> ContainsMatcher<T, In
 /// inner [`Matcher`] matches.
 pub struct ContainsMatcher<T, InnerMatcherT> {
     inner: InnerMatcherT,
-    count: Option<Box<dyn Matcher<ActualT = usize>>>,
+    count: Option<Box<dyn ObjectSafeMatcher<ActualT = usize>>>,
     phantom: PhantomData<T>,
 }
 
@@ -91,9 +93,12 @@ where
 {
     type ActualT = ContainerT;
 
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         if let Some(count) = &self.count {
-            count.matches(&self.count_matches(actual))
+            count.obj_matches(&self.count_matches(actual.deref()))
         } else {
             for v in actual.into_iter() {
                 if self.inner.matches(v).into() {
@@ -104,8 +109,11 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> Description {
-        let count = self.count_matches(actual);
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
+        let count = self.count_matches(actual.deref());
         match (count, &self.count) {
             (_, Some(_)) => format!("which contains {} matching elements", count).into(),
             (0, None) => "which does not contain a matching element".into(),
@@ -118,13 +126,13 @@ where
             (MatcherResult::Match, Some(count)) => format!(
                 "contains n elements which {}\n  where n {}",
                 self.inner.describe(MatcherResult::Match),
-                count.describe(MatcherResult::Match)
+                count.obj_describe(MatcherResult::Match)
             )
             .into(),
             (MatcherResult::NoMatch, Some(count)) => format!(
                 "doesn't contain n elements which {}\n  where n {}",
                 self.inner.describe(MatcherResult::Match),
-                count.describe(MatcherResult::Match)
+                count.obj_describe(MatcherResult::Match)
             )
             .into(),
             (MatcherResult::Match, None) => format!(

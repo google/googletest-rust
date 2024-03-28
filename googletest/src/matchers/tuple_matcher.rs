@@ -25,14 +25,17 @@ pub mod internal {
         description::Description,
         matcher::{Matcher, MatcherResult},
     };
-    use std::fmt::Debug;
+    use std::{fmt::Debug, ops::Deref};
 
     // This implementation is provided for completeness, but is completely trivial.
     // The only actual value which can be supplied is (), which must match.
     impl Matcher for () {
         type ActualT = ();
 
-        fn matches(&self, _: &Self::ActualT) -> MatcherResult {
+        fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+            &self,
+            _: ActualRefT,
+        ) -> MatcherResult {
             MatcherResult::Match
         }
 
@@ -55,7 +58,10 @@ pub mod internal {
             {
                 type ActualT = ($($field_type,)*);
 
-                fn matches(&self, actual: &($($field_type,)*)) -> MatcherResult {
+                fn matches<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+                    &self,
+                    actual: ActualRefT,
+                ) -> MatcherResult {
                     $(match self.$field_number.matches(&actual.$field_number) {
                         MatcherResult::Match => {},
                         MatcherResult::NoMatch => {
@@ -65,9 +71,12 @@ pub mod internal {
                     MatcherResult::Match
                 }
 
-                fn explain_match(&self, actual: &($($field_type,)*)) -> Description {
-                    let mut explanation = Description::new().text("which").nested(self.describe(self.matches(actual)));
-                    $(match self.$field_number.matches(&actual.$field_number) {
+                fn explain_match<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+                    &self,
+                    actual: ActualRefT,
+                ) -> Description {
+                    let mut explanation = Description::new().text("which").nested(self.describe(self.matches(actual.clone())));
+                    $(match self.$field_number.matches(&actual.clone().$field_number) {
                         MatcherResult::Match => {},
                         MatcherResult::NoMatch => {
                             explanation = explanation

@@ -17,7 +17,7 @@ use crate::{
     matcher::{Matcher, MatcherResult},
 };
 use num_traits::float::Float;
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
 /// Matches a floating point value which is NaN.
 pub fn is_nan<T: Float + Debug>() -> impl Matcher<ActualT = T> {
@@ -29,7 +29,10 @@ struct IsNanMatcher<T>(PhantomData<T>);
 impl<T: Float + Debug> Matcher for IsNanMatcher<T> {
     type ActualT = T;
 
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         actual.is_nan().into()
     }
 

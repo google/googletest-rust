@@ -73,8 +73,11 @@ where
 {
     type ActualT = ActualT;
 
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
-        (self.expected.deref() == actual).into()
+    fn matches<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
+        (self.expected.deref() == actual.deref()).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -84,12 +87,15 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
         format!(
             "which {}{}",
-            &self.describe(self.matches(actual)),
+            &self.describe(self.matches(actual.clone())),
             create_diff(
-                &format!("{:#?}", actual),
+                &format!("{:#?}", actual.deref()),
                 &format!("{:#?}", self.expected.deref()),
                 edit_distance::Mode::Exact,
             )

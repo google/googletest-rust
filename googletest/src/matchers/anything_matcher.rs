@@ -16,7 +16,7 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
 /// Matches anything. This matcher always succeeds.
 ///
@@ -41,7 +41,7 @@ struct Anything<T: ?Sized>(PhantomData<T>);
 impl<T: Debug + ?Sized> Matcher for Anything<T> {
     type ActualT = T;
 
-    fn matches(&self, _: &T) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(&self, _: ActualRefT) -> MatcherResult {
         MatcherResult::Match
     }
 

@@ -36,7 +36,7 @@ pub fn points_to<ExpectedT, MatcherT, ActualT>(
     expected: MatcherT,
 ) -> impl Matcher<ActualT = ActualT>
 where
-    ExpectedT: Debug,
+    ExpectedT: Debug + ?Sized,
     MatcherT: Matcher<ActualT = ExpectedT>,
     ActualT: Deref<Target = ExpectedT> + Debug + ?Sized,
 {
@@ -48,20 +48,26 @@ struct PointsToMatcher<ActualT: ?Sized, MatcherT> {
     phantom: PhantomData<ActualT>,
 }
 
-impl<ExpectedT, MatcherT, ActualT> Matcher for PointsToMatcher<ActualT, MatcherT>
+impl<ActualDerefT, MatcherT, ActualT> Matcher for PointsToMatcher<ActualT, MatcherT>
 where
-    ExpectedT: Debug,
-    MatcherT: Matcher<ActualT = ExpectedT>,
-    ActualT: Deref<Target = ExpectedT> + Debug + ?Sized,
+    ActualDerefT: Debug + ?Sized,
+    MatcherT: Matcher<ActualT = ActualDerefT>,
+    ActualT: Deref<Target = ActualDerefT> + Debug + ?Sized,
 {
     type ActualT = ActualT;
 
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
-        self.expected.matches(actual.deref())
+    fn matches<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
+        self.expected.matches(actual.deref().deref())
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
-        self.expected.explain_match(actual.deref())
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
+        self.expected.explain_match(actual.deref().deref())
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {

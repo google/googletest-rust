@@ -127,6 +127,7 @@ The following matchers are provided in GoogleTest Rust:
 | [`ends_with`]        | A string ending with the given suffix.                                   |
 | [`eq`]               | A value equal to the argument, in the sense of the [`PartialEq`] trait.  |
 | [`eq_deref_of`]      | A value equal to the dereferenced value of the argument.                 |
+| [`eq_str`]           | A string equal to the argument.                                          |
 | [`err`]              | A [`Result`][std::result::Result] containing an `Err` variant the argument matches. |
 | [`field!`]           | A struct or enum with a given field whose value the argument matches.    |
 | [`ge`]               | A [`PartialOrd`] value greater than or equal to the given value.         |
@@ -134,6 +135,7 @@ The following matchers are provided in GoogleTest Rust:
 | [`has_entry`]        | A [`HashMap`] containing a given key whose value the argument matches.   |
 | [`is_contained_in!`] | A container each of whose elements is matched by some given matcher.     |
 | [`is_nan`]           | A floating point number which is NaN.                                    |
+| [`is_utf8_string`]   | A byte sequence representing a UTF-8 encoded string which the argument matches. |
 | [`le`]               | A [`PartialOrd`] value less than or equal to the given value.            |
 | [`len`]              | A container whose number of elements the argument matches.               |
 | [`lt`]               | A [`PartialOrd`] value strictly less than the given value.               |
@@ -169,6 +171,7 @@ The following matchers are provided in GoogleTest Rust:
 [`empty`]: matchers::empty
 [`ends_with`]: matchers::ends_with
 [`eq`]: matchers::eq
+[`eq_str`]: matchers::eq_str
 [`eq_deref_of`]: matchers::eq_deref_of
 [`err`]: matchers::err
 [`field!`]: matchers::field
@@ -177,6 +180,7 @@ The following matchers are provided in GoogleTest Rust:
 [`has_entry`]: matchers::has_entry
 [`is_contained_in!`]: matchers::is_contained_in
 [`is_nan`]: matchers::is_nan
+[`is_utf8_string`]: matchers::is_utf8_string
 [`le`]: matchers::le
 [`len`]: matchers::len
 [`lt`]: matchers::lt
@@ -210,7 +214,7 @@ a struct holding the matcher's data and have it implement the trait
 
 ```no_run
 use googletest::{description::Description, matcher::{Matcher, MatcherResult}};
-use std::fmt::Debug;
+use std::{fmt::Debug, ops::Deref};
 
 struct MyEqMatcher<T> {
     expected: T,
@@ -219,7 +223,10 @@ struct MyEqMatcher<T> {
 impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
     type ActualT = T;
 
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         if self.expected == *actual {
             MatcherResult::Match
         } else {
@@ -244,7 +251,7 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 
  ```no_run
  # use googletest::{description::Description, matcher::{Matcher, MatcherResult}};
- # use std::fmt::Debug;
+ # use std::{fmt::Debug, ops::Deref};
  #
  # struct MyEqMatcher<T> {
  #    expected: T,
@@ -253,7 +260,10 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
  # impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
  #    type ActualT = T;
  #
- #    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+ #    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+ #        &self,
+ #        actual: ActualRefT,
+ #    ) -> MatcherResult {
  #        if self.expected == *actual {
  #            MatcherResult::Match
  #        } else {
@@ -283,7 +293,7 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 ```
 # use googletest::prelude::*;
 # use googletest::{description::Description, matcher::{Matcher, MatcherResult}};
-# use std::fmt::Debug;
+# use std::{fmt::Debug, ops::Deref};
 #
 # struct MyEqMatcher<T> {
 #    expected: T,
@@ -292,7 +302,10 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 # impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 #    type ActualT = T;
 #
-#    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+#    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+#        &self,
+#        actual: ActualRefT,
+#    ) -> MatcherResult {
 #        if self.expected == *actual {
 #            MatcherResult::Match
 #        } else {

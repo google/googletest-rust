@@ -16,7 +16,7 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
 /// Matches the actual value exactly when the inner matcher does _not_ match.
 ///
@@ -47,14 +47,20 @@ struct NotMatcher<T, InnerMatcherT> {
 impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for NotMatcher<T, InnerMatcherT> {
     type ActualT = T;
 
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         match self.inner.matches(actual) {
             MatcherResult::Match => MatcherResult::NoMatch,
             MatcherResult::NoMatch => MatcherResult::Match,
         }
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
         self.inner.explain_match(actual)
     }
 

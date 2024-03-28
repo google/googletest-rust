@@ -20,6 +20,7 @@ use crate::internal::test_outcome::TestAssertionFailure;
 use crate::matchers::__internal_unstable_do_not_depend_on_these::ConjunctionMatcher;
 use crate::matchers::__internal_unstable_do_not_depend_on_these::DisjunctionMatcher;
 use std::fmt::Debug;
+use std::ops::Deref;
 
 /// An interface for checking an arbitrary condition on a datum.
 ///
@@ -36,7 +37,10 @@ pub trait Matcher {
     /// matching condition is based on data stored in the matcher. For example,
     /// `eq` matches when its stored expected value is equal (in the sense of
     /// the `==` operator) to the value `actual`.
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult;
+    fn matches<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult;
 
     /// Returns a description of `self` or a negative description if
     /// `matcher_result` is `DoesNotMatch`.
@@ -137,7 +141,10 @@ pub trait Matcher {
     ///         .nested(self.expected.explain_match(actual.deref()))
     /// }
     /// ```
-    fn explain_match(&self, actual: &Self::ActualT) -> Description {
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
         format!("which {}", self.describe(self.matches(actual))).into()
     }
 
@@ -205,6 +212,46 @@ pub trait Matcher {
     }
 }
 
+/// Functionality used by macros within this crate.
+///
+/// For internal use only. API stablility is not guaranteed!
+#[doc(hidden)]
+pub mod __internal_unstable_do_not_depend_on_these {
+    use super::{Matcher, MatcherResult};
+    use crate::description::Description;
+    use std::fmt::Debug;
+
+    /// A variant of [`Matcher`] which is object-safe.
+    ///
+    /// This is used in contexts where a `dyn Matcher` is required. It supplies all methods of
+    /// [`Matcher`] but without any generics on the methods.
+    pub trait ObjectSafeMatcher {
+        type ActualT: Debug + ?Sized;
+
+        fn obj_matches(&self, actual: &Self::ActualT) -> MatcherResult;
+
+        fn obj_describe(&self, matcher_result: MatcherResult) -> Description;
+
+        fn obj_explain_match(&self, actual: &Self::ActualT) -> Description;
+    }
+
+    impl<MatcherT: Matcher> ObjectSafeMatcher for MatcherT {
+        type ActualT = <Self as Matcher>::ActualT;
+
+        fn obj_matches(&self, actual: &Self::ActualT) -> MatcherResult {
+            Matcher::matches(self, actual)
+        }
+
+        fn obj_describe(&self, matcher_result: MatcherResult) -> Description {
+            Matcher::describe(self, matcher_result)
+        }
+
+        fn obj_explain_match(&self, actual: &Self::ActualT) -> Description {
+            Matcher::explain_match(self, actual)
+        }
+    }
+}
+
 /// Any actual value whose debug length is greater than this value will be
 /// pretty-printed. Otherwise, it will have normal debug output formatting.
 const PRETTY_PRINT_LENGTH_THRESHOLD: usize = 60;
@@ -249,7 +296,11 @@ pub enum MatcherResult {
 
 impl From<bool> for MatcherResult {
     fn from(b: bool) -> Self {
-        if b { MatcherResult::Match } else { MatcherResult::NoMatch }
+        if b {
+            MatcherResult::Match
+        } else {
+            MatcherResult::NoMatch
+        }
     }
 }
 
@@ -276,16 +327,22 @@ impl MatcherResult {
 impl<M: Matcher> Matcher for &M {
     type ActualT = M::ActualT;
 
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
-        (*self).matches(actual)
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
+        (*self).matches(actual.deref())
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
         (*self).describe(matcher_result)
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> Description {
-        (*self).explain_match(actual)
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
+        (*self).explain_match(actual.deref())
     }
 }
 

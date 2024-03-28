@@ -15,6 +15,7 @@
 use crate::description::Description;
 use crate::matcher::{Matcher, MatcherResult};
 use crate::matcher_support::count_elements::count_elements;
+use std::ops::Deref;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a container whose number of elements matches `expected`.
@@ -67,8 +68,11 @@ where
 {
     type ActualT = T;
 
-    fn matches(&self, actual: &T) -> MatcherResult {
-        self.expected.matches(&count_elements(actual))
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
+        self.expected.matches(&count_elements(actual.deref()))
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -83,8 +87,11 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
-        let actual_size = count_elements(actual);
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
+        let actual_size = count_elements(actual.deref());
         format!("which has length {}, {}", actual_size, self.expected.explain_match(&actual_size))
             .into()
     }
@@ -102,6 +109,7 @@ mod tests {
     };
     use std::fmt::Debug;
     use std::marker::PhantomData;
+    use std::ops::Deref;
 
     #[test]
     fn len_matcher_match_vec() -> Result<()> {
@@ -182,7 +190,10 @@ mod tests {
         impl<T: Debug> Matcher for TestMatcher<T> {
             type ActualT = T;
 
-            fn matches(&self, _: &T) -> MatcherResult {
+            fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+                &self,
+                _: ActualRefT,
+            ) -> MatcherResult {
                 false.into()
             }
 
@@ -190,7 +201,10 @@ mod tests {
                 "called described".into()
             }
 
-            fn explain_match(&self, _: &T) -> Description {
+            fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+                &self,
+                _: ActualRefT,
+            ) -> Description {
                 "called explain_match".into()
             }
         }

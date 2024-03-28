@@ -18,6 +18,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::marker::PhantomData;
+use std::ops::Deref;
 
 /// Matches a HashMap containing the given `key` whose value is matched by the
 /// matcher `inner`.
@@ -80,7 +81,10 @@ impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ActualT = ValueT>
 {
     type ActualT = HashMap<KeyT, ValueT>;
 
-    fn matches(&self, actual: &HashMap<KeyT, ValueT>) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         if let Some(value) = actual.get(&self.key) {
             self.inner.matches(value)
         } else {
@@ -88,7 +92,10 @@ impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ActualT = ValueT>
         }
     }
 
-    fn explain_match(&self, actual: &HashMap<KeyT, ValueT>) -> Description {
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
         if let Some(value) = actual.get(&self.key) {
             format!(
                 "which contains key {:?}, but is mapped to value {:#?}, {}",

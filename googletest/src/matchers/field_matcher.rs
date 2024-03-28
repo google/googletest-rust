@@ -145,7 +145,7 @@ pub mod internal {
         description::Description,
         matcher::{Matcher, MatcherResult},
     };
-    use std::fmt::Debug;
+    use std::{fmt::Debug, ops::Deref};
 
     /// Creates a matcher to verify a specific field of the actual struct using
     /// the provided inner matcher.
@@ -171,16 +171,22 @@ pub mod internal {
     {
         type ActualT = OuterT;
 
-        fn matches(&self, actual: &OuterT) -> MatcherResult {
-            if let Some(value) = (self.field_accessor)(actual) {
+        fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+            &self,
+            actual: ActualRefT,
+        ) -> MatcherResult {
+            if let Some(value) = (self.field_accessor)(actual.deref()) {
                 self.inner.matches(value)
             } else {
                 MatcherResult::NoMatch
             }
         }
 
-        fn explain_match(&self, actual: &OuterT) -> Description {
-            if let Some(actual) = (self.field_accessor)(actual) {
+        fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+            &self,
+            actual: ActualRefT,
+        ) -> Description {
+            if let Some(actual) = (self.field_accessor)(actual.deref()) {
                 format!(
                     "which has field `{}`, {}",
                     self.field_path,
@@ -188,7 +194,7 @@ pub mod internal {
                 )
                 .into()
             } else {
-                let formatted_actual_value = format!("{actual:?}");
+                let formatted_actual_value = format!("{:?}", actual.deref());
                 let without_fields = formatted_actual_value.split('(').next().unwrap_or("");
                 let without_fields = without_fields.split('{').next().unwrap_or("").trim_end();
                 format!("which has the wrong enum variant `{without_fields}`").into()
