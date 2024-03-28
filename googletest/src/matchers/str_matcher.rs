@@ -26,6 +26,59 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::ops::Deref;
 
+/// Matches a string equal to the given string.
+///
+/// This has the same effect as [`eq`]. Unlike [`eq`], [`eq_str`] can be used
+/// in cases where the actual type being matched is `str`. In paticular, one
+/// can use [`eq_str`] together with:
+///
+///  * [`property!`] where the property returns a string slice, and
+///  * [`is_utf8_string`].
+///
+/// ```
+/// # use googletest::prelude::*;
+/// # fn should_pass_1() -> Result<()> {
+/// verify_that!("Some value", eq_str("Some value"))?;  // Passes
+/// verify_that!("Some value".to_string(), eq_str("Some value"))?;  // Passes
+/// #     Ok(())
+/// # }
+/// # fn should_fail() -> Result<()> {
+/// verify_that!("Another value", eq_str("Some value"))?;   // Fails
+/// #     Ok(())
+/// # }
+/// # fn should_pass_2() -> Result<()> {
+/// let value_as_bytes = "Some value".as_bytes();
+/// verify_that!(value_as_bytes, is_utf8_string(eq_str("Some value")))?;   // Passes
+/// #     Ok(())
+/// # }
+/// # should_pass_1().unwrap();
+/// # should_fail().unwrap_err();
+/// # should_pass_2().unwrap();
+///
+/// #[derive(Debug)]
+/// pub struct MyStruct {
+///     a_string: String,
+/// }
+/// impl MyStruct {
+///     pub fn get_a_string(&self) -> &str { &self.a_string }
+/// }
+///
+/// let value = MyStruct { a_string: "A string".into() };
+/// verify_that!(value, property!(*MyStruct.get_a_string(), eq_str("A string"))) // Passes
+/// #    .unwrap();
+/// ```
+///
+/// [`eq`]: crate::matchers::eq
+/// [`is_utf8_string`]: crate::matchers::is_utf8_string
+/// [`property!`]: crate::matchers::property
+pub fn eq_str<A: ?Sized, T>(expected: T) -> StrMatcher<A, T> {
+    StrMatcher {
+        configuration: Configuration { mode: MatchMode::Equals, ..Default::default() },
+        expected,
+        phantom: Default::default(),
+    }
+}
+
 /// Matches a string containing a given substring.
 ///
 /// Both the actual value and the expected substring may be either a `String` or
@@ -729,8 +782,8 @@ mod tests {
     }
 
     #[test]
-    fn matches_string_containing_expected_value_in_contains_mode_while_ignoring_ascii_case()
-    -> Result<()> {
+    fn matches_string_containing_expected_value_in_contains_mode_while_ignoring_ascii_case(
+    ) -> Result<()> {
         verify_that!("Some string", contains_substring("STR").ignoring_ascii_case())
     }
 
@@ -879,8 +932,8 @@ mod tests {
     }
 
     #[test]
-    fn describes_itself_for_matching_result_ignoring_ascii_case_and_leading_whitespace()
-    -> Result<()> {
+    fn describes_itself_for_matching_result_ignoring_ascii_case_and_leading_whitespace(
+    ) -> Result<()> {
         let matcher: StrMatcher<&str, _> = StrMatcher::with_default_config("A string")
             .ignoring_leading_whitespace()
             .ignoring_ascii_case();
@@ -1021,8 +1074,8 @@ mod tests {
     }
 
     #[test]
-    fn match_explanation_for_starts_with_includes_both_versions_of_differing_last_line()
-    -> Result<()> {
+    fn match_explanation_for_starts_with_includes_both_versions_of_differing_last_line(
+    ) -> Result<()> {
         let result = verify_that!(
             indoc!(
                 "
@@ -1123,8 +1176,8 @@ mod tests {
     }
 
     #[test]
-    fn match_explanation_for_contains_substring_shows_diff_when_first_and_last_line_are_incomplete()
-    -> Result<()> {
+    fn match_explanation_for_contains_substring_shows_diff_when_first_and_last_line_are_incomplete(
+    ) -> Result<()> {
         let result = verify_that!(
             indoc!(
                 "

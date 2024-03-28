@@ -78,10 +78,10 @@
 /// #    .unwrap();
 /// ```
 ///
-/// Unfortunately, this matcher does *not* work with methods returning string
-/// slices:
+/// When the property returns a string slice and you wish to assert its
+/// equality, use [`eq_str`] instead of [`eq`]:
 ///
-/// ```compile_fail
+/// ```
 /// # use googletest::prelude::*;
 /// #[derive(Debug)]
 /// pub struct MyStruct {
@@ -92,7 +92,7 @@
 /// }
 ///
 /// let value = MyStruct { a_string: "A string".into() };
-/// verify_that!(value, property!(*MyStruct.get_a_string(), eq("A string"))) // Does not compile
+/// verify_that!(value, property!(*MyStruct.get_a_string(), eq_str("A string")))
 /// #    .unwrap();
 /// ```
 ///
@@ -101,6 +101,9 @@
 /// rather than accessing a field.
 ///
 /// The list of arguments may optionally have a trailing comma.
+///
+/// [`eq`]: crate::matchers::eq
+/// [`eq_str`]: crate::matchers::eq_str
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __property {
