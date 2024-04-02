@@ -117,7 +117,7 @@ impl TestOutcome {
     }
 
     /// Ensure that there is a test context present and panic if there is not.
-    pub(crate) fn ensure_text_context_present() {
+    pub(crate) fn ensure_test_context_present() {
         TestOutcome::with_current_test_outcome(|outcome| {
             outcome.as_ref().expect(
                 "
