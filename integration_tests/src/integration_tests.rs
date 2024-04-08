@@ -580,6 +580,36 @@ mod tests {
     }
 
     #[test]
+    fn succeed_macro_test_completes() -> Result<()> {
+        let output = run_external_process_in_tests_directory_with_args(
+            "success_with_succeed_macro",
+            &["--nocapture"],
+        )?;
+
+        verify_that!(output, contains_regex("Should do nothing"))
+    }
+
+    #[test]
+    fn succeed_macro_allows_empty_message() -> Result<()> {
+        let output = run_external_process_in_tests_directory_with_args(
+            "success_with_succeed_macro_with_empty_message",
+            &["--nocapture"],
+        )?;
+
+        verify_that!(output, contains_regex("Success"))
+    }
+
+    #[test]
+    fn succeed_macro_with_format_arguments() -> Result<()> {
+        let output = run_external_process_in_tests_directory_with_args(
+            "success_with_succeed_macro_with_format_arguments",
+            &["--nocapture"],
+        )?;
+
+        verify_that!(output, contains_regex("Success message with argument: An argument"))
+    }
+
+    #[test]
     fn test_using_normal_test_attribute_macro_formats_failure_message_correctly() -> Result<()> {
         let result = should_display_error_correctly_without_google_test_macro();
 
@@ -736,6 +766,15 @@ mod tests {
         // to fail.
         let _ = should_just_pass();
         expect_that!(123, eq(123));
+    }
+
+    fn run_external_process_in_tests_directory_with_args(
+        name: &'static str,
+        args: &[&'static str],
+    ) -> Result<String> {
+        let mut command = run_external_process(name);
+        let std::process::Output { stdout, .. } = command.args(args).output()?;
+        Ok(String::from_utf8(stdout)?)
     }
 
     fn run_external_process_in_tests_directory(name: &'static str) -> Result<String> {

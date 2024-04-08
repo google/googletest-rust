@@ -91,6 +91,21 @@ path = "src/failure_due_to_fail_macro_with_format_arguments.rs"
 test = false
 
 [[bin]]
+name = "success_with_succeed_macro"
+path = "src/success_with_succeed_macro.rs"
+test = false
+
+[[bin]]
+name = "success_with_succeed_macro_with_empty_message"
+path = "src/success_with_succeed_macro_with_empty_message.rs"
+test = false
+
+[[bin]]
+name = "success_with_succeed_macro_with_format_arguments"
+path = "src/success_with_succeed_macro_with_format_arguments.rs"
+test = false
+
+[[bin]]
 name = "failure_due_to_returned_error"
 path = "src/failure_due_to_returned_error.rs"
 test = false

@@ -49,7 +49,9 @@ pub mod prelude {
     pub use super::IntoTestResult;
     pub use super::Result;
     // Assert macros
-    pub use super::{assert_that, expect_pred, expect_that, fail, verify_pred, verify_that};
+    pub use super::{
+        assert_that, expect_pred, expect_that, fail, succeed, verify_pred, verify_that,
+    };
 }
 
 pub use googletest_macro::test;

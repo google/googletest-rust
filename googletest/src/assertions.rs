@@ -306,6 +306,41 @@ macro_rules! fail {
     () => { fail!("Test failed") };
 }
 
+/// Generates a success. This **does not** make the overall test succeed. A test
+/// is only considered successful if none of its assertions fail during its
+/// execution.
+///
+/// The succeed!() assertion is purely documentary. The only user visible output
+/// is a stdout with information on where the success was generated from.
+///
+/// ```ignore
+/// fn test_to_be_implemented() {
+///     succeed!();
+/// }
+/// ```
+///
+/// One may include formatted arguments in the success message:
+///
+/// ```ignore
+/// fn test_to_be_implemented() {
+///     succeed!("I am just a fake test: {}", "a fake test indeed");
+/// }
+/// ```
+#[macro_export]
+macro_rules! succeed {
+    ($($message:expr),+) => {{
+        println!(
+            "{}\n{}",
+            format!($($message),*),
+            $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!())
+        );
+    }};
+
+    () => {
+        succeed!("Success")
+    };
+}
+
 /// Matches the given value against the given matcher, panicking if it does not
 /// match.
 ///
