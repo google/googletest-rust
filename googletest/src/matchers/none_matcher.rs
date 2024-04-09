@@ -16,6 +16,7 @@ use crate::description::Description;
 use crate::matcher::{Matcher, MatcherResult};
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use std::ops::Deref;
 
 /// Matches an `Option` containing `None`.
 ///
@@ -43,7 +44,10 @@ struct NoneMatcher<T> {
 impl<T: Debug> Matcher for NoneMatcher<T> {
     type ActualT = Option<T>;
 
-    fn matches(&self, actual: &Option<T>) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         (actual.is_none()).into()
     }
 

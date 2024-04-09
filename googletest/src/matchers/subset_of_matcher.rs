@@ -16,7 +16,7 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
 /// Matches a container all of whose items are in the given container
 /// `superset`.
@@ -106,8 +106,11 @@ where
 {
     type ActualT = ActualT;
 
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
-        for actual_item in actual {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
+        for actual_item in actual.deref() {
             if self.expected_is_missing(actual_item) {
                 return MatcherResult::NoMatch;
             }
@@ -115,7 +118,10 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
         let unexpected_elements = actual
             .into_iter()
             .enumerate()

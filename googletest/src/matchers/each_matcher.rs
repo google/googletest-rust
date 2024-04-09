@@ -14,6 +14,7 @@
 
 use crate::description::Description;
 use crate::matcher::{Matcher, MatcherResult};
+use std::ops::Deref;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// Matches a container all of whose elements are matched by the matcher
@@ -83,8 +84,11 @@ where
 {
     type ActualT = ActualT;
 
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
-        for element in actual {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
+        for element in actual.deref() {
             if self.inner.matches(element).is_no_match() {
                 return MatcherResult::NoMatch;
             }
@@ -92,7 +96,10 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
         let mut non_matching_elements = Vec::new();
         for (index, element) in actual.into_iter().enumerate() {
             if self.inner.matches(element).is_no_match() {

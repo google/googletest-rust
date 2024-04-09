@@ -78,10 +78,10 @@
 /// #    .unwrap();
 /// ```
 ///
-/// Unfortunately, this matcher does *not* work with methods returning string
-/// slices:
+/// When the property returns a string slice and you wish to assert its
+/// equality, use [`eq_str`] instead of [`eq`]:
 ///
-/// ```compile_fail
+/// ```
 /// # use googletest::prelude::*;
 /// #[derive(Debug)]
 /// pub struct MyStruct {
@@ -92,7 +92,7 @@
 /// }
 ///
 /// let value = MyStruct { a_string: "A string".into() };
-/// verify_that!(value, property!(*MyStruct.get_a_string(), eq("A string"))) // Does not compile
+/// verify_that!(value, property!(*MyStruct.get_a_string(), eq_str("A string")))
 /// #    .unwrap();
 /// ```
 ///
@@ -101,6 +101,9 @@
 /// rather than accessing a field.
 ///
 /// The list of arguments may optionally have a trailing comma.
+///
+/// [`eq`]: crate::matchers::eq
+/// [`eq_str`]: crate::matchers::eq_str
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __property {
@@ -138,7 +141,7 @@ pub mod internal {
         description::Description,
         matcher::{Matcher, MatcherResult},
     };
-    use std::{fmt::Debug, marker::PhantomData};
+    use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
@@ -166,8 +169,11 @@ pub mod internal {
     {
         type ActualT = OuterT;
 
-        fn matches(&self, actual: &OuterT) -> MatcherResult {
-            self.inner.matches(&(self.extractor)(actual))
+        fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+            &self,
+            actual: ActualRefT,
+        ) -> MatcherResult {
+            self.inner.matches(&(self.extractor)(actual.deref()))
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -179,8 +185,11 @@ pub mod internal {
             .into()
         }
 
-        fn explain_match(&self, actual: &OuterT) -> Description {
-            let actual_inner = (self.extractor)(actual);
+        fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+            &self,
+            actual: ActualRefT,
+        ) -> Description {
+            let actual_inner = (self.extractor)(actual.deref());
             format!(
                 "whose property `{}` is `{:#?}`, {}",
                 self.property_desc,
@@ -217,8 +226,11 @@ pub mod internal {
     {
         type ActualT = OuterT;
 
-        fn matches(&self, actual: &OuterT) -> MatcherResult {
-            self.inner.matches((self.extractor)(actual))
+        fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+            &self,
+            actual: ActualRefT,
+        ) -> MatcherResult {
+            self.inner.matches((self.extractor)(actual.deref()))
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -230,8 +242,11 @@ pub mod internal {
             .into()
         }
 
-        fn explain_match(&self, actual: &OuterT) -> Description {
-            let actual_inner = (self.extractor)(actual);
+        fn explain_match<ActualRefT: Deref<Target = Self::ActualT>>(
+            &self,
+            actual: ActualRefT,
+        ) -> Description {
+            let actual_inner = (self.extractor)(actual.deref());
             format!(
                 "whose property `{}` is `{:#?}`, {}",
                 self.property_desc,

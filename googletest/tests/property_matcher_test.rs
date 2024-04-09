@@ -86,6 +86,21 @@ fn matches_struct_with_matching_string_reference_property() -> Result<()> {
 }
 
 #[test]
+fn matches_struct_with_matching_string_slice_property() -> Result<()> {
+    #[derive(Debug)]
+    struct StructWithString {
+        property: String,
+    }
+    impl StructWithString {
+        fn get_property_ref(&self) -> &str {
+            &self.property
+        }
+    }
+    let value = StructWithString { property: "Something".into() };
+    verify_that!(value, property!(*StructWithString.get_property_ref(), eq_str("Something")))
+}
+
+#[test]
 fn matches_struct_with_matching_slice_property() -> Result<()> {
     #[derive(Debug)]
     struct StructWithVec {

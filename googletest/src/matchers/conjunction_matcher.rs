@@ -19,7 +19,7 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherResult},
 };
-use std::fmt::Debug;
+use std::{fmt::Debug, ops::Deref};
 
 /// Matcher created by [`Matcher::and`] and [`all!`].
 ///
@@ -58,25 +58,31 @@ where
 {
     type ActualT = M1::ActualT;
 
-    fn matches(&self, actual: &M1::ActualT) -> MatcherResult {
-        match (self.m1.matches(actual), self.m2.matches(actual)) {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
+        match (self.m1.matches(actual.clone()), self.m2.matches(actual.clone())) {
             (MatcherResult::Match, MatcherResult::Match) => MatcherResult::Match,
             _ => MatcherResult::NoMatch,
         }
     }
 
-    fn explain_match(&self, actual: &M1::ActualT) -> Description {
-        match (self.m1.matches(actual), self.m2.matches(actual)) {
-            (MatcherResult::NoMatch, MatcherResult::Match) => self.m1.explain_match(actual),
-            (MatcherResult::Match, MatcherResult::NoMatch) => self.m2.explain_match(actual),
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
+        match (self.m1.matches(actual.clone()), self.m2.matches(actual.clone())) {
+            (MatcherResult::NoMatch, MatcherResult::Match) => self.m1.explain_match(actual.clone()),
+            (MatcherResult::Match, MatcherResult::NoMatch) => self.m2.explain_match(actual.clone()),
             (_, _) => {
-                let m1_description = self.m1.explain_match(actual);
+                let m1_description = self.m1.explain_match(actual.clone());
                 if m1_description.is_conjunction_description() {
-                    m1_description.nested(self.m2.explain_match(actual))
+                    m1_description.nested(self.m2.explain_match(actual.clone()))
                 } else {
                     Description::new()
                         .bullet_list()
-                        .collect([m1_description, self.m2.explain_match(actual)])
+                        .collect([m1_description, self.m2.explain_match(actual.clone())])
                         .conjunction_description()
                 }
             }

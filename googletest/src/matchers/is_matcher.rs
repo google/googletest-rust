@@ -18,7 +18,7 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
 /// Matches precisely values matched by `inner`.
 ///
@@ -43,7 +43,10 @@ impl<'a, ActualT: Debug, InnerMatcherT: Matcher<ActualT = ActualT>> Matcher
 {
     type ActualT = ActualT;
 
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         self.inner.matches(actual)
     }
 
@@ -64,7 +67,10 @@ impl<'a, ActualT: Debug, InnerMatcherT: Matcher<ActualT = ActualT>> Matcher
         }
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> Description {
+    fn explain_match<ActualRefT: Deref<Target = Self::ActualT> + Clone>(
+        &self,
+        actual: ActualRefT,
+    ) -> Description {
         self.inner.explain_match(actual)
     }
 }

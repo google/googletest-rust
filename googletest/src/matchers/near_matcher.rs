@@ -17,7 +17,7 @@ use crate::{
     matcher::{Matcher, MatcherResult},
 };
 use num_traits::{Float, FloatConst};
-use std::fmt::Debug;
+use std::{fmt::Debug, ops::Deref};
 
 /// Matches a value equal within `max_abs_error` of `expected`.
 ///
@@ -169,7 +169,10 @@ impl<T: Debug> NearMatcher<T> {
 impl<T: Debug + Float> Matcher for NearMatcher<T> {
     type ActualT = T;
 
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches<ActualRefT: Deref<Target = Self::ActualT>>(
+        &self,
+        actual: ActualRefT,
+    ) -> MatcherResult {
         if self.nans_are_equal && self.expected.is_nan() && actual.is_nan() {
             return MatcherResult::Match;
         }
