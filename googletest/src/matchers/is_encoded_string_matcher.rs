@@ -25,18 +25,21 @@ use std::{fmt::Debug, marker::PhantomData};
 ///
 /// The input may be a slice `&[u8]` or a `Vec` of bytes.
 ///
+/// When asserting the equality of the actual value with a given string, use
+/// [`eq_str`] rather than [`eq`].
+///
 /// ```
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let bytes: &[u8] = "A string".as_bytes();
-/// verify_that!(bytes, is_utf8_string(eq("A string")))?; // Passes
+/// verify_that!(bytes, is_utf8_string(eq_str("A string")))?; // Passes
 /// let bytes: Vec<u8> = "A string".as_bytes().to_vec();
-/// verify_that!(bytes, is_utf8_string(eq("A string")))?; // Passes
+/// verify_that!(bytes, is_utf8_string(eq_str("A string")))?; // Passes
 /// #     Ok(())
 /// # }
 /// # fn should_fail_1() -> Result<()> {
 /// # let bytes: &[u8] = "A string".as_bytes();
-/// verify_that!(bytes, is_utf8_string(eq("Another string")))?; // Fails (inner matcher does not match)
+/// verify_that!(bytes, is_utf8_string(eq_str("Another string")))?; // Fails (inner matcher does not match)
 /// #     Ok(())
 /// # }
 /// # fn should_fail_2() -> Result<()> {
@@ -48,11 +51,14 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # should_fail_1().unwrap_err();
 /// # should_fail_2().unwrap_err();
 /// ```
-pub fn is_utf8_string<'a, ActualT: AsRef<[u8]> + Debug + 'a, InnerMatcherT>(
+///
+/// [`eq`]: crate::matchers::eq
+/// [`eq_str`]: crate::matchers::eq_str
+pub fn is_utf8_string<ActualT: AsRef<[u8]> + Debug, InnerMatcherT>(
     inner: InnerMatcherT,
 ) -> impl Matcher<ActualT = ActualT>
 where
-    InnerMatcherT: Matcher<ActualT = String>,
+    InnerMatcherT: Matcher<ActualT = str>,
 {
     IsEncodedStringMatcher { inner, phantom: Default::default() }
 }
@@ -62,15 +68,15 @@ struct IsEncodedStringMatcher<ActualT, InnerMatcherT> {
     phantom: PhantomData<ActualT>,
 }
 
-impl<'a, ActualT: AsRef<[u8]> + Debug + 'a, InnerMatcherT> Matcher
+impl<ActualT: AsRef<[u8]> + Debug, InnerMatcherT> Matcher
     for IsEncodedStringMatcher<ActualT, InnerMatcherT>
 where
-    InnerMatcherT: Matcher<ActualT = String>,
+    InnerMatcherT: Matcher<ActualT = str>,
 {
     type ActualT = ActualT;
 
     fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
-        String::from_utf8(actual.as_ref().to_vec())
+        std::str::from_utf8(actual.as_ref())
             .map(|s| self.inner.matches(&s))
             .unwrap_or(MatcherResult::NoMatch)
     }
@@ -91,7 +97,7 @@ where
     }
 
     fn explain_match(&self, actual: &Self::ActualT) -> Description {
-        match String::from_utf8(actual.as_ref().to_vec()) {
+        match std::str::from_utf8(actual.as_ref()) {
             Ok(s) => {
                 format!("which is a UTF-8 encoded string {}", self.inner.explain_match(&s)).into()
             }
@@ -107,62 +113,62 @@ mod tests {
 
     #[test]
     fn matches_string_as_byte_slice() -> Result<()> {
-        verify_that!("A string".as_bytes(), is_utf8_string(eq("A string")))
+        verify_that!("A string".as_bytes(), is_utf8_string(eq_str("A string")))
     }
 
     #[test]
     fn matches_string_as_byte_vec() -> Result<()> {
-        verify_that!("A string".as_bytes().to_vec(), is_utf8_string(eq("A string")))
+        verify_that!("A string".as_bytes().to_vec(), is_utf8_string(eq_str("A string")))
     }
 
     #[test]
     fn matches_string_with_utf_8_encoded_sequences() -> Result<()> {
-        verify_that!("äöüÄÖÜ".as_bytes().to_vec(), is_utf8_string(eq("äöüÄÖÜ")))
+        verify_that!("äöüÄÖÜ".as_bytes().to_vec(), is_utf8_string(eq_str("äöüÄÖÜ")))
     }
 
     #[test]
     fn does_not_match_non_equal_string() -> Result<()> {
-        verify_that!("äöüÄÖÜ".as_bytes().to_vec(), not(is_utf8_string(eq("A string"))))
+        verify_that!("äöüÄÖÜ".as_bytes().to_vec(), not(is_utf8_string(eq_str("A string"))))
     }
 
     #[test]
     fn does_not_match_non_utf_8_encoded_byte_sequence() -> Result<()> {
-        verify_that!(&[192, 64, 255, 32], not(is_utf8_string(eq("A string"))))
+        verify_that!(&[192, 64, 255, 32], not(is_utf8_string(eq_str("A string"))))
     }
 
     #[test]
     fn has_correct_description_in_matched_case() -> Result<()> {
-        let matcher = is_utf8_string::<&[u8], _>(eq("A string"));
+        let matcher = is_utf8_string::<&[u8], _>(eq_str("A string"));
 
         verify_that!(
             matcher.describe(MatcherResult::Match),
-            displays_as(eq("is a UTF-8 encoded string which is equal to \"A string\""))
+            displays_as(eq_str("is a UTF-8 encoded string which is equal to \"A string\""))
         )
     }
 
     #[test]
     fn has_correct_description_in_not_matched_case() -> Result<()> {
-        let matcher = is_utf8_string::<&[u8], _>(eq("A string"));
+        let matcher = is_utf8_string::<&[u8], _>(eq_str("A string"));
 
         verify_that!(
             matcher.describe(MatcherResult::NoMatch),
-            displays_as(eq("is not a UTF-8 encoded string which is equal to \"A string\""))
+            displays_as(eq_str("is not a UTF-8 encoded string which is equal to \"A string\""))
         )
     }
 
     #[test]
     fn has_correct_explanation_in_matched_case() -> Result<()> {
-        let explanation = is_utf8_string(eq("A string")).explain_match(&"A string".as_bytes());
+        let explanation = is_utf8_string(eq_str("A string")).explain_match(&"A string".as_bytes());
 
         verify_that!(
             explanation,
-            displays_as(eq("which is a UTF-8 encoded string which is equal to \"A string\""))
+            displays_as(eq_str("which is a UTF-8 encoded string which is equal to \"A string\""))
         )
     }
 
     #[test]
     fn has_correct_explanation_when_byte_array_is_not_utf8_encoded() -> Result<()> {
-        let explanation = is_utf8_string(eq("A string")).explain_match(&&[192, 128, 0, 64]);
+        let explanation = is_utf8_string(eq_str("A string")).explain_match(&&[192, 128, 0, 64]);
 
         verify_that!(explanation, displays_as(starts_with("which is not a UTF-8 encoded string: ")))
     }
@@ -170,7 +176,7 @@ mod tests {
     #[test]
     fn has_correct_explanation_when_inner_matcher_does_not_match() -> Result<()> {
         let explanation =
-            is_utf8_string(eq("A string")).explain_match(&"Another string".as_bytes());
+            is_utf8_string(eq_str("A string")).explain_match(&"Another string".as_bytes());
 
         verify_that!(
             explanation,
