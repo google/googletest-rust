@@ -13,31 +13,30 @@
 // limitations under the License.
 
 use crate::description::Description;
-use crate::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherBase, MatcherResult};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::hash::Hash;
-use std::marker::PhantomData;
 
-/// Matches a HashMap containing the given `key` whose value is matched by the
-/// matcher `inner`.
+/// Matches a `&HashMap` containing the given `key` whose value is matched by
+/// the matcher `inner`.
 ///
 /// ```
 /// # use googletest::prelude::*;
 /// # use std::collections::HashMap;
 /// # fn should_pass() -> Result<()> {
 /// let value = HashMap::from([(0, 1), (1, -1)]);
-/// verify_that!(value, has_entry(0, eq(1)))?;  // Passes
+/// verify_that!(value, has_entry(0, eq(&1)))?;  // Passes
 /// #     Ok(())
 /// # }
 /// # fn should_fail_1() -> Result<()> {
 /// # let value = HashMap::from([(0, 1), (1, -1)]);
-/// verify_that!(value, has_entry(1, gt(0)))?;  // Fails: value not matched
+/// verify_that!(value, has_entry(1, gt(&0)))?;  // Fails: value not matched
 /// #     Ok(())
 /// # }
 /// # fn should_fail_2() -> Result<()> {
 /// # let value = HashMap::from([(0, 1), (1, -1)]);
-/// verify_that!(value, has_entry(2, eq(0)))?;  // Fails: key not present
+/// verify_that!(value, has_entry(2, eq(&0)))?;  // Fails: key not present
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -45,42 +44,33 @@ use std::marker::PhantomData;
 /// # should_fail_2().unwrap_err();
 /// ```
 ///
-/// Note: One could obtain the same effect by collecting entries into a `Vec`
-/// and using `contains`:
+/// Note: One could obtain the same effect by using `contains` and a
+/// `Matcher<(&Key, &Value)>`:
 ///
 /// ```
 /// # use googletest::prelude::*;
 /// # use std::collections::HashMap;
 /// # fn should_pass() -> Result<()> {
 /// let value = HashMap::from([(0, 1), (1, -1)]);
-/// verify_that!(value.into_iter().collect::<Vec<_>>(), contains(eq((0, 1))))?;
+/// verify_that!(value, contains(eq((&0, &1))))?;
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
 /// ```
-///
-/// However, `has_entry` will offer somewhat better diagnostic messages in the
-/// case of assertion failure. And it avoid the extra allocation hidden in the
-/// code above.
-pub fn has_entry<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ActualT = ValueT>>(
-    key: KeyT,
-    inner: MatcherT,
-) -> impl Matcher<ActualT = HashMap<KeyT, ValueT>> {
-    HasEntryMatcher { key, inner, phantom: Default::default() }
+pub fn has_entry<KeyT, MatcherT>(key: KeyT, inner: MatcherT) -> HasEntryMatcher<KeyT, MatcherT> {
+    HasEntryMatcher { key, inner }
 }
 
-struct HasEntryMatcher<KeyT, ValueT, MatcherT> {
+#[derive(MatcherBase)]
+pub struct HasEntryMatcher<KeyT, MatcherT> {
     key: KeyT,
     inner: MatcherT,
-    phantom: PhantomData<ValueT>,
 }
 
-impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ActualT = ValueT>> Matcher
-    for HasEntryMatcher<KeyT, ValueT, MatcherT>
+impl<'a, KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<&'a ValueT>>
+    Matcher<&'a HashMap<KeyT, ValueT>> for HasEntryMatcher<KeyT, MatcherT>
 {
-    type ActualT = HashMap<KeyT, ValueT>;
-
-    fn matches(&self, actual: &HashMap<KeyT, ValueT>) -> MatcherResult {
+    fn matches(&self, actual: &'a HashMap<KeyT, ValueT>) -> MatcherResult {
         if let Some(value) = actual.get(&self.key) {
             self.inner.matches(value)
         } else {
@@ -88,7 +78,7 @@ impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ActualT = ValueT>
         }
     }
 
-    fn explain_match(&self, actual: &HashMap<KeyT, ValueT>) -> Description {
+    fn explain_match(&self, actual: &'a HashMap<KeyT, ValueT>) -> Description {
         if let Some(value) = actual.get(&self.key) {
             format!(
                 "which contains key {:?}, but is mapped to value {:#?}, {}",
@@ -131,30 +121,30 @@ mod tests {
     #[test]
     fn has_entry_does_not_match_empty_hash_map() -> Result<()> {
         let value: HashMap<i32, i32> = HashMap::new();
-        verify_that!(value, not(has_entry(0, eq(0))))
+        verify_that!(&value, not(has_entry(0, eq(&0))))
     }
 
     #[test]
     fn has_entry_matches_hash_map_with_value() -> Result<()> {
         let value: HashMap<i32, i32> = HashMap::from([(0, 0)]);
-        verify_that!(value, has_entry(0, eq(0)))
+        verify_that!(&value, has_entry(0, eq(&0)))
     }
 
     #[test]
     fn has_entry_does_not_match_hash_map_with_wrong_value() -> Result<()> {
         let value: HashMap<i32, i32> = HashMap::from([(0, 1)]);
-        verify_that!(value, not(has_entry(0, eq(0))))
+        verify_that!(&value, not(has_entry(0, eq(&0))))
     }
 
     #[test]
     fn has_entry_does_not_match_hash_map_with_wrong_key() -> Result<()> {
         let value: HashMap<i32, i32> = HashMap::from([(1, 0)]);
-        verify_that!(value, not(has_entry(0, eq(0))))
+        verify_that!(&value, not(has_entry(0, eq(&0))))
     }
 
     #[test]
     fn has_entry_shows_correct_message_when_key_is_not_present() -> Result<()> {
-        let result = verify_that!(HashMap::from([(0, 0)]), has_entry(1, eq(0)));
+        let result = verify_that!(HashMap::from([(0, 0)]), has_entry(1, eq(&0)));
 
         verify_that!(
             result,
@@ -171,7 +161,7 @@ mod tests {
 
     #[test]
     fn has_entry_shows_correct_message_when_key_has_non_matching_value() -> Result<()> {
-        let result = verify_that!(HashMap::from([(0, 0)]), has_entry(0, eq(1)));
+        let result = verify_that!(HashMap::from([(0, 0)]), has_entry(0, eq(&1)));
 
         verify_that!(
             result,

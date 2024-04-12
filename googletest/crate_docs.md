@@ -79,14 +79,14 @@ use googletest::prelude::*;
 fn contains_at_least_one_item_at_least_3() {
 # googletest::internal::test_outcome::TestOutcome::init_current_test_outcome();
     let value = vec![1, 2, 3];
-    expect_that!(value, contains(ge(3)));
+    expect_that!(value, contains(ge(&3)));
 # googletest::internal::test_outcome::TestOutcome::close_current_test_outcome::<&str>(Ok(()))
 #     .unwrap();
 }
 # contains_at_least_one_item_at_least_3();
 ```
 
-They can also be logically combined:
+They can also be logically combined, with methods from [`MatcherBase`]:
 
 ```
 use googletest::prelude::*;
@@ -120,13 +120,13 @@ The following matchers are provided in GoogleTest Rust:
 | [`contains_each!`]   | A container containing distinct elements each of the arguments match.    |
 | [`contains_regex`]   | A string containing a substring matching the given regular expression.   |
 | [`contains_substring`] | A string containing the given substring.                               |
+| [`derefs_to`]        | A [`Deref`] which `deref()`s to a value that the argument matches.       |
 | [`displays_as`]      | A [`Display`] value whose formatted string is matched by the argument.   |
 | [`each`]             | A container all of whose elements the given argument matches.            |
 | [`elements_are!`]    | A container whose elements the arguments match, in order.                |
 | [`empty`]            | An empty collection.                                                     |
 | [`ends_with`]        | A string ending with the given suffix.                                   |
 | [`eq`]               | A value equal to the argument, in the sense of the [`PartialEq`] trait.  |
-| [`eq_deref_of`]      | A value equal to the dereferenced value of the argument.                 |
 | [`err`]              | A [`Result`][std::result::Result] containing an `Err` variant the argument matches. |
 | [`field!`]           | A struct or enum with a given field whose value the argument matches.    |
 | [`ge`]               | A [`PartialOrd`] value greater than or equal to the given value.         |
@@ -144,7 +144,7 @@ The following matchers are provided in GoogleTest Rust:
 | [`not`]              | Any value the argument does not match.                                   |
 | [`ok`]               | A [`Result`][std::result::Result] containing an `Ok` variant the argument matches. |
 | [`pat!`]             | Alias for [`matches_pattern!`].                                          |
-| [`points_to`]        | Any [`Deref`] such as `&`, `Rc`, etc. whose value the argument matches.  |
+| [`points_to`]        | A reference `&` which points to a value that the argument matches.       |
 | [`pointwise!`]       | A container whose contents the arguments match in a pointwise fashion.   |
 | [`predicate`]        | A value on which the given predicate returns true.                       |
 | [`some`]             | An [`Option`] containing `Some` whose value the argument matches.        |
@@ -164,12 +164,12 @@ The following matchers are provided in GoogleTest Rust:
 [`contains_regex`]: matchers::contains_regex
 [`contains_substring`]: matchers::contains_substring
 [`displays_as`]: matchers::displays_as
+[`derefs_to`]: matchers::derefs_to
 [`each`]: matchers::each
 [`elements_are!`]: matchers::elements_are
 [`empty`]: matchers::empty
 [`ends_with`]: matchers::ends_with
 [`eq`]: matchers::eq
-[`eq_deref_of`]: matchers::eq_deref_of
 [`err`]: matchers::err
 [`field!`]: matchers::field
 [`ge`]: matchers::ge
@@ -205,22 +205,21 @@ The following matchers are provided in GoogleTest Rust:
 ## Writing matchers
 
 One can extend the library by writing additional matchers. To do so, create
-a struct holding the matcher's data and have it implement the trait
-[`Matcher`]:
+a struct holding the matcher's data and have it implement the traits
+[`Matcher`] and  [`MatcherBase`]:
 
 ```no_run
-use googletest::{description::Description, matcher::{Matcher, MatcherResult}};
+use googletest::{description::Description, matcher::{Matcher, MatcherBase, MatcherResult}};
 use std::fmt::Debug;
 
+#[derive(MatcherBase)]
 struct MyEqMatcher<T> {
     expected: T,
 }
 
-impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
-    type ActualT = T;
-
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
-        if self.expected == *actual {
+impl<T: PartialEq + Debug + Copy> Matcher<T> for MyEqMatcher<T> {
+    fn matches(&self, actual: T) -> MatcherResult {
+        if self.expected == actual {
             MatcherResult::Match
         } else {
             MatcherResult::NoMatch
@@ -243,18 +242,16 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
  It is recommended to expose a function which constructs the matcher:
 
  ```no_run
- # use googletest::{description::Description, matcher::{Matcher, MatcherResult}};
+ # use googletest::{description::Description, matcher::{Matcher, MatcherBase, MatcherResult}};
  # use std::fmt::Debug;
- #
+ # #[derive(MatcherBase)]
  # struct MyEqMatcher<T> {
  #    expected: T,
  # }
  #
- # impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
- #    type ActualT = T;
- #
- #    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
- #        if self.expected == *actual {
+ # impl<T: PartialEq + Debug + Copy> Matcher<T> for MyEqMatcher<T> {
+ #    fn matches(&self, actual: T) -> MatcherResult {
+ #        if self.expected == actual {
  #            MatcherResult::Match
  #        } else {
  #            MatcherResult::NoMatch
@@ -273,7 +270,7 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
  #    }
  # }
  #
- pub fn eq_my_way<T: PartialEq + Debug>(expected: T) -> impl Matcher<ActualT = T> {
+ pub fn eq_my_way<T: PartialEq + Debug + Copy>(expected: T) -> impl Matcher<T> {
     MyEqMatcher { expected }
  }
  ```
@@ -282,18 +279,16 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 
 ```
 # use googletest::prelude::*;
-# use googletest::{description::Description, matcher::{Matcher, MatcherResult}};
+# use googletest::{description::Description, matcher::{Matcher, MatcherBase, MatcherResult}};
 # use std::fmt::Debug;
-#
+# #[derive(MatcherBase)]
 # struct MyEqMatcher<T> {
 #    expected: T,
 # }
 #
-# impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
-#    type ActualT = T;
-#
-#    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
-#        if self.expected == *actual {
+# impl<T: PartialEq + Debug + Copy> Matcher<T> for MyEqMatcher<T> {
+#    fn matches(&self, actual: T) -> MatcherResult {
+#        if self.expected == actual {
 #            MatcherResult::Match
 #        } else {
 #            MatcherResult::NoMatch
@@ -312,7 +307,7 @@ impl<T: PartialEq + Debug> Matcher for MyEqMatcher<T> {
 #    }
 # }
 #
-# pub fn eq_my_way<T: PartialEq + Debug>(expected: T) -> impl Matcher<ActualT = T> {
+# pub fn eq_my_way<T: PartialEq + Debug + Copy>(expected: T) -> impl Matcher<T> {
 #    MyEqMatcher { expected }
 # }
 # /* The attribute macro would prevent the function from being compiled in a doctest.
@@ -493,3 +488,4 @@ through the `?` operator as the example above shows.
 [`and_log_failure()`]: GoogleTestSupport::and_log_failure
 [`into_test_result()`]: IntoTestResult::into_test_result
 [`Matcher`]: matcher::Matcher
+[`MatcherBase`]: matcher::MatcherBase

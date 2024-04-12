@@ -14,9 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherBase, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches the actual value exactly when the inner matcher does _not_ match.
 ///
@@ -33,28 +33,24 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # should_pass().unwrap();
 /// # should_fail().unwrap_err();
 /// ```
-pub fn not<T: Debug, InnerMatcherT: Matcher<ActualT = T>>(
-    inner: InnerMatcherT,
-) -> impl Matcher<ActualT = T> {
-    NotMatcher::<T, _> { inner, phantom: Default::default() }
+pub fn not<InnerMatcherT>(inner: InnerMatcherT) -> NotMatcher<InnerMatcherT> {
+    NotMatcher { inner }
 }
 
-struct NotMatcher<T, InnerMatcherT> {
+#[derive(MatcherBase)]
+pub struct NotMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
-    phantom: PhantomData<T>,
 }
 
-impl<T: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher for NotMatcher<T, InnerMatcherT> {
-    type ActualT = T;
-
-    fn matches(&self, actual: &T) -> MatcherResult {
+impl<T: Debug + Copy, InnerMatcherT: Matcher<T>> Matcher<T> for NotMatcher<InnerMatcherT> {
+    fn matches(&self, actual: T) -> MatcherResult {
         match self.inner.matches(actual) {
             MatcherResult::Match => MatcherResult::NoMatch,
             MatcherResult::NoMatch => MatcherResult::Match,
         }
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match(&self, actual: T) -> Description {
         self.inner.explain_match(actual)
     }
 
@@ -78,7 +74,7 @@ mod tests {
     fn matches_when_inner_matcher_does_not_match() -> Result<()> {
         let matcher = not(eq(1));
 
-        let result = matcher.matches(&0);
+        let result = matcher.matches(0);
 
         verify_that!(result, eq(MatcherResult::Match))
     }
@@ -87,14 +83,14 @@ mod tests {
     fn does_not_match_when_inner_matcher_matches() -> Result<()> {
         let matcher = not(eq(1));
 
-        let result = matcher.matches(&1);
+        let result = matcher.matches(1);
 
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
     fn match_explanation_references_actual_value() -> Result<()> {
-        let result = verify_that!([1], not(container_eq([1])));
+        let result = verify_that!(&[1], not(container_eq([1])));
 
         verify_that!(
             result,

@@ -13,11 +13,11 @@
 // limitations under the License.
 
 use crate::description::Description;
-use crate::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherBase, MatcherResult};
 use crate::matcher_support::edit_distance;
 use crate::matcher_support::summarize_diff::create_diff;
 
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a value equal (in the sense of `==`) to `expected`.
 ///
@@ -71,23 +71,21 @@ use std::{fmt::Debug, marker::PhantomData};
 /// options on how equality is checked through the
 /// [`StrMatcherConfigurator`][crate::matchers::str_matcher::StrMatcherConfigurator]
 /// extension trait, which is implemented for this matcher.
-pub fn eq<A: ?Sized, T>(expected: T) -> EqMatcher<A, T> {
-    EqMatcher { expected, phantom: Default::default() }
+pub fn eq<T>(expected: T) -> EqMatcher<T> {
+    EqMatcher { expected }
 }
 
 /// A matcher which matches a value equal to `expected`.
 ///
 /// See [`eq`].
-pub struct EqMatcher<A: ?Sized, T> {
+#[derive(MatcherBase)]
+pub struct EqMatcher<T> {
     pub(crate) expected: T,
-    phantom: PhantomData<A>,
 }
 
-impl<T: Debug, A: Debug + ?Sized + PartialEq<T>> Matcher for EqMatcher<A, T> {
-    type ActualT = A;
-
-    fn matches(&self, actual: &A) -> MatcherResult {
-        (*actual == self.expected).into()
+impl<T: Debug, A: Debug + Copy + PartialEq<T>> Matcher<A> for EqMatcher<T> {
+    fn matches(&self, actual: A) -> MatcherResult {
+        (actual == self.expected).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -97,10 +95,10 @@ impl<T: Debug, A: Debug + ?Sized + PartialEq<T>> Matcher for EqMatcher<A, T> {
         }
     }
 
-    fn explain_match(&self, actual: &A) -> Description {
+    fn explain_match(&self, actual: A) -> Description {
         let expected_debug = format!("{:#?}", self.expected);
         let actual_debug = format!("{:#?}", actual);
-        let description = self.describe(self.matches(actual));
+        let description = Matcher::<A>::describe(self, self.matches(actual));
 
         let diff = if is_multiline_string_debug(&actual_debug)
             && is_multiline_string_debug(&expected_debug)
@@ -173,7 +171,7 @@ mod tests {
 
         let result = verify_that!(
             Strukt { int: 123, string: "something".into() },
-            eq(Strukt { int: 321, string: "someone".into() })
+            eq(&Strukt { int: 321, string: "someone".into() })
         );
         verify_that!(
             result,
@@ -195,7 +193,7 @@ mod tests {
     #[test]
     #[parallel]
     fn eq_vec_debug_diff() -> Result<()> {
-        let result = verify_that!(vec![1, 2, 3], eq(vec![1, 3, 4]));
+        let result = verify_that!(vec![1, 2, 3], eq(&vec![1, 3, 4]));
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc! {
@@ -218,7 +216,7 @@ mod tests {
     #[test]
     #[parallel]
     fn eq_vec_debug_diff_length_mismatch() -> Result<()> {
-        let result = verify_that!(vec![1, 2, 3, 4, 5], eq(vec![1, 3, 5]));
+        let result = verify_that!(vec![1, 2, 3, 4, 5], eq(&vec![1, 3, 5]));
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc! {
@@ -242,7 +240,7 @@ mod tests {
     #[test]
     #[parallel]
     fn eq_debug_diff_common_lines_omitted() -> Result<()> {
-        let result = verify_that!((1..50).collect::<Vec<_>>(), eq((3..52).collect::<Vec<_>>()));
+        let result = verify_that!((1..50).collect::<Vec<_>>(), eq(&(3..52).collect::<Vec<_>>()));
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc! {
@@ -267,7 +265,7 @@ mod tests {
     #[test]
     #[parallel]
     fn eq_debug_diff_5_common_lines_not_omitted() -> Result<()> {
-        let result = verify_that!((1..8).collect::<Vec<_>>(), eq((3..10).collect::<Vec<_>>()));
+        let result = verify_that!((1..8).collect::<Vec<_>>(), eq(&(3..10).collect::<Vec<_>>()));
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc! {
@@ -292,7 +290,7 @@ mod tests {
     #[test]
     #[parallel]
     fn eq_debug_diff_start_common_lines_omitted() -> Result<()> {
-        let result = verify_that!((1..50).collect::<Vec<_>>(), eq((1..52).collect::<Vec<_>>()));
+        let result = verify_that!((1..50).collect::<Vec<_>>(), eq(&(1..52).collect::<Vec<_>>()));
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc! {
@@ -314,7 +312,7 @@ mod tests {
     #[test]
     #[parallel]
     fn eq_debug_diff_end_common_lines_omitted() -> Result<()> {
-        let result = verify_that!((1..52).collect::<Vec<_>>(), eq((3..52).collect::<Vec<_>>()));
+        let result = verify_that!((1..52).collect::<Vec<_>>(), eq(&(3..52).collect::<Vec<_>>()));
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc! {

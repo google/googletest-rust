@@ -17,7 +17,7 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherBase, MatcherResult},
 };
 use std::fmt::Debug;
 
@@ -41,6 +41,7 @@ use std::fmt::Debug;
 ///
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
+#[derive(MatcherBase)]
 pub struct ConjunctionMatcher<M1, M2> {
     m1: M1,
     m2: M2,
@@ -52,20 +53,15 @@ impl<M1, M2> ConjunctionMatcher<M1, M2> {
     }
 }
 
-impl<M1: Matcher, M2: Matcher<ActualT = M1::ActualT>> Matcher for ConjunctionMatcher<M1, M2>
-where
-    M1::ActualT: Debug,
-{
-    type ActualT = M1::ActualT;
-
-    fn matches(&self, actual: &M1::ActualT) -> MatcherResult {
+impl<T: Debug + Copy, M1: Matcher<T>, M2: Matcher<T>> Matcher<T> for ConjunctionMatcher<M1, M2> {
+    fn matches(&self, actual: T) -> MatcherResult {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::Match, MatcherResult::Match) => MatcherResult::Match,
             _ => MatcherResult::NoMatch,
         }
     }
 
-    fn explain_match(&self, actual: &M1::ActualT) -> Description {
+    fn explain_match(&self, actual: T) -> Description {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::NoMatch, MatcherResult::Match) => self.m1.explain_match(actual),
             (MatcherResult::Match, MatcherResult::NoMatch) => self.m2.explain_match(actual),
@@ -197,7 +193,7 @@ mod tests {
 
     #[test]
     fn chained_and_matches() -> Result<()> {
-        #[derive(Debug)]
+        #[derive(Debug, Clone, Copy)]
         struct Struct {
             a: i32,
             b: i32,

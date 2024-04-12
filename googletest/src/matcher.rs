@@ -19,6 +19,7 @@ use crate::internal::source_location::SourceLocation;
 use crate::internal::test_outcome::TestAssertionFailure;
 use crate::matchers::__internal_unstable_do_not_depend_on_these::ConjunctionMatcher;
 use crate::matchers::__internal_unstable_do_not_depend_on_these::DisjunctionMatcher;
+pub use googletest_macro::MatcherBase;
 use std::fmt::Debug;
 
 /// An interface for checking an arbitrary condition on a datum.
@@ -26,17 +27,24 @@ use std::fmt::Debug;
 /// This trait is automatically implemented for a reference of any type
 /// implementing `Matcher`. This simplifies reusing a matcher in different
 /// assertions.
-pub trait Matcher {
-    /// The type against which this matcher matches.
-    type ActualT: Debug + ?Sized;
+///
+/// It is also implemented for tuple of `Matcher`. If `MatcherT: Matcher<T>` and
+/// `MatcherU: Matcher<U>`, then `(MatcherT, MatcherU): Matcher<(T, U)>`, and so
+/// on, up to 12 elements. Tuples longer than that do not automatically inherit
+/// the `Debug` trait from their members, so are generally not well-supported;
+/// see [Rust by Example](https://doc.rust-lang.org/rust-by-example/primitives/tuples.html#tuples).
 
+// `ActualT` requires `Copy` so that `actual` could be passed to `matches` and
+// if it fails passed to `explain_match`. We can relax this constraint later by
+// requiring only `Clone`.
+pub trait Matcher<ActualT: Debug + Copy>: MatcherBase {
     /// Returns whether the condition matches the datum `actual`.
     ///
     /// The trait implementation defines what it means to "match". Often the
     /// matching condition is based on data stored in the matcher. For example,
     /// `eq` matches when its stored expected value is equal (in the sense of
     /// the `==` operator) to the value `actual`.
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult;
+    fn matches(&self, actual: ActualT) -> MatcherResult;
 
     /// Returns a description of `self` or a negative description if
     /// `matcher_result` is `DoesNotMatch`.
@@ -121,8 +129,8 @@ pub trait Matcher {
     /// inner matcher and appears as follows:
     ///
     /// ```ignore
-    /// fn explain_match(&self, actual: &Self::ActualT) -> Description {
-    ///     self.expected.explain_match(actual.deref())
+    /// fn explain_match(&self, actual: &ActualT) -> Description {
+    ///     self.expected.explain_match(*actual)
     /// }
     /// ```
     ///
@@ -131,16 +139,30 @@ pub trait Matcher {
     /// inner matcher at a point where a relative clause would fit. For example:
     ///
     /// ```ignore
-    /// fn explain_match(&self, actual: &Self::ActualT) -> Description {
+    /// fn explain_match(&self, actual: ActualT) -> Description {
     ///     Description::new()
     ///         .text("which points to a value")
-    ///         .nested(self.expected.explain_match(actual.deref()))
+    ///         .nested(self.expected.explain_match(*actual))
     /// }
     /// ```
-    fn explain_match(&self, actual: &Self::ActualT) -> Description {
+    fn explain_match(&self, actual: ActualT) -> Description {
         format!("which {}", self.describe(self.matches(actual))).into()
     }
+}
 
+/// Base trait for matchers. Any type implementing `Matcher` must implement
+/// `MatcherBase`, but that should be done through the `#[derive(MatcherBase)]`
+/// macro.
+// The `and` and `or` functions cannot be part of the `Matcher` trait since it
+// can be implemented multiple times for a given matcher type. Consider that
+// `and` and `or` are part of the `Matcher` trait and `MyMatcher` implements
+// both `Matcher<A>` and `Matcher<B>`. Then `MyMatcher{...}.and(...)` can be
+// either:
+//   * `Matcher::<A>::and(MyMatcher{...}, ...)` or
+//   * `Matcher::<B>::and(MyMatcher{...}, ...)`.
+// Moving the `and` and `or` functions in a non-generic trait removes this
+// confusion by making `and` and `or` unique for a given type.
+pub trait MatcherBase {
     /// Constructs a matcher that matches both `self` and `right`.
     ///
     /// ```
@@ -164,10 +186,7 @@ pub trait Matcher {
     // TODO(b/264518763): Replace the return type with impl Matcher and reduce
     // visibility of ConjunctionMatcher once impl in return position in trait
     // methods is stable.
-    fn and<Right: Matcher<ActualT = Self::ActualT>>(
-        self,
-        right: Right,
-    ) -> ConjunctionMatcher<Self, Right>
+    fn and<Right>(self, right: Right) -> ConjunctionMatcher<Self, Right>
     where
         Self: Sized,
     {
@@ -194,10 +213,7 @@ pub trait Matcher {
     // TODO(b/264518763): Replace the return type with impl Matcher and reduce
     // visibility of DisjunctionMatcher once impl in return position in trait
     // methods is stable.
-    fn or<Right: Matcher<ActualT = Self::ActualT>>(
-        self,
-        right: Right,
-    ) -> DisjunctionMatcher<Self, Right>
+    fn or<Right>(self, right: Right) -> DisjunctionMatcher<Self, Right>
     where
         Self: Sized,
     {
@@ -214,9 +230,9 @@ const PRETTY_PRINT_LENGTH_THRESHOLD: usize = 60;
 ///
 /// The parameter `actual_expr` contains the expression which was evaluated to
 /// obtain `actual`.
-pub(crate) fn create_assertion_failure<T: Debug + ?Sized>(
-    matcher: &impl Matcher<ActualT = T>,
-    actual: &T,
+pub(crate) fn create_assertion_failure<T: Debug + Copy>(
+    matcher: &impl Matcher<T>,
+    actual: T,
     actual_expr: &'static str,
     source_location: SourceLocation,
 ) -> TestAssertionFailure {
@@ -273,10 +289,10 @@ impl MatcherResult {
     }
 }
 
-impl<M: Matcher> Matcher for &M {
-    type ActualT = M::ActualT;
+impl<M: ?Sized + MatcherBase> MatcherBase for &M {}
 
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+impl<T: Debug + Copy, M: Matcher<T>> Matcher<T> for &M {
+    fn matches(&self, actual: T) -> MatcherResult {
         (*self).matches(actual)
     }
 
@@ -284,7 +300,7 @@ impl<M: Matcher> Matcher for &M {
         (*self).describe(matcher_result)
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> Description {
+    fn explain_match(&self, actual: T) -> Description {
         (*self).explain_match(actual)
     }
 }

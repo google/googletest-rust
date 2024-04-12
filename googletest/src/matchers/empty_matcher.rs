@@ -14,15 +14,15 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherBase, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches an empty container.
 ///
-/// `T` can be any container such that `&T` implements `IntoIterator`. For
-/// instance, `T` can be a common container like `Vec` and
-/// [`HashSet`][std::collections::HashSet].
+/// `T` can be any container that implements `IntoIterator`. For instance, `T`
+/// can be the reference of a common container like `&Vec` and
+/// [`&HashSet`][std::collections::HashSet].
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -32,42 +32,24 @@ use std::{fmt::Debug, marker::PhantomData};
 /// verify_that!(value, empty())?;
 /// let value: HashSet<i32> = HashSet::new();
 /// verify_that!(value, empty())?;
-/// #     Ok(())
-/// # }
-/// # should_pass().unwrap();
-/// ```
-///
-/// One can also check whether a slice is empty by dereferencing it:
-///
-/// ```
-/// # use googletest::prelude::*;
-/// # use std::collections::HashSet;
-/// # fn should_pass() -> Result<()> {
 /// let value: &[u32] = &[];
-/// verify_that!(*value, empty())?;
+/// verify_that!(value, empty())?;
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
 /// ```
-
-pub fn empty<T: Debug + ?Sized>() -> impl Matcher<ActualT = T>
-where
-    for<'a> &'a T: IntoIterator,
-{
-    EmptyMatcher { phantom: Default::default() }
+pub fn empty() -> EmptyMatcher {
+    EmptyMatcher
 }
 
-struct EmptyMatcher<T: ?Sized> {
-    phantom: PhantomData<T>,
-}
+#[derive(MatcherBase)]
+pub struct EmptyMatcher;
 
-impl<T: Debug + ?Sized> Matcher for EmptyMatcher<T>
+impl<T: Debug + Copy> Matcher<T> for EmptyMatcher
 where
-    for<'a> &'a T: IntoIterator,
+    T: IntoIterator,
 {
-    type ActualT = T;
-
-    fn matches(&self, actual: &T) -> MatcherResult {
+    fn matches(&self, actual: T) -> MatcherResult {
         actual.into_iter().next().is_none().into()
     }
 
@@ -97,7 +79,7 @@ mod tests {
     #[test]
     fn empty_matcher_matches_empty_slice() -> Result<()> {
         let value: &[i32] = &[];
-        verify_that!(*value, empty())
+        verify_that!(value, empty())
     }
 
     #[test]

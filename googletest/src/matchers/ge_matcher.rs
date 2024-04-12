@@ -14,9 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherBase, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a value greater than or equal to (in the sense of `>=`) `expected`.
 ///
@@ -74,24 +74,20 @@ use std::{fmt::Debug, marker::PhantomData};
 ///
 /// You can find the standard library `PartialOrd` implementation in
 /// <https://doc.rust-lang.org/core/cmp/trait.PartialOrd.html#implementors>
-pub fn ge<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug>(
-    expected: ExpectedT,
-) -> impl Matcher<ActualT = ActualT> {
-    GeMatcher::<ActualT, _> { expected, phantom: Default::default() }
+pub fn ge<ExpectedT>(expected: ExpectedT) -> GeMatcher<ExpectedT> {
+    GeMatcher { expected }
 }
 
-struct GeMatcher<ActualT, ExpectedT> {
+#[derive(MatcherBase)]
+pub struct GeMatcher<ExpectedT> {
     expected: ExpectedT,
-    phantom: PhantomData<ActualT>,
 }
 
-impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher
-    for GeMatcher<ActualT, ExpectedT>
+impl<ActualT: Debug + PartialOrd<ExpectedT> + Copy, ExpectedT: Debug> Matcher<ActualT>
+    for GeMatcher<ExpectedT>
 {
-    type ActualT = ActualT;
-
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
-        (*actual >= self.expected).into()
+    fn matches(&self, actual: ActualT) -> MatcherResult {
+        (actual >= self.expected).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -122,7 +118,7 @@ mod tests {
     #[test]
     fn ge_does_not_match_smaller_i32() -> Result<()> {
         let matcher = ge(10);
-        let result = matcher.matches(&9);
+        let result = matcher.matches(9);
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
@@ -134,7 +130,7 @@ mod tests {
     #[test]
     fn ge_does_not_match_lesser_str() -> Result<()> {
         let matcher = ge("z");
-        let result = matcher.matches(&"a");
+        let result = matcher.matches("a");
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 

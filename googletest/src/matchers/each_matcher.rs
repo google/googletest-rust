@@ -13,77 +13,58 @@
 // limitations under the License.
 
 use crate::description::Description;
-use crate::matcher::{Matcher, MatcherResult};
-use std::{fmt::Debug, marker::PhantomData};
+use crate::matcher::{Matcher, MatcherBase, MatcherResult};
+use std::fmt::Debug;
 
 /// Matches a container all of whose elements are matched by the matcher
 /// `inner`.
 ///
-/// `T` can be any container such that `&T` implements `IntoIterator`. This
-/// includes `Vec`, arrays, and (dereferenced) slices.
+/// `T` must implement [`IntoIterator`]. This
+/// includes `&Vec`, arrays, and slices.
 ///
 /// ```
 /// # use googletest::prelude::*;
 /// # use std::collections::HashSet;
 /// # fn should_pass_1() -> Result<()> {
 /// let value = vec![1, 2, 3];
-/// verify_that!(value, each(gt(0)))?;  // Passes
+/// verify_that!(value, each(gt(&0)))?;  // Passes
 /// let array_value = [1, 2, 3];
 /// verify_that!(array_value, each(gt(0)))?;  // Passes
 /// let slice_value = &[1, 2, 3];
-/// verify_that!(*slice_value, each(gt(0)))?;  // Passes
+/// verify_that!(slice_value, each(gt(&0)))?;  // Passes
 /// #     Ok(())
 /// # }
 /// # fn should_fail() -> Result<()> {
 /// #     let value = vec![1, 2, 3];
-/// verify_that!(value, each(lt(2)))?;  // Fails: 2 and 3 are not less than 2
+/// verify_that!(value, each(lt(&2)))?;  // Fails: 2 and 3 are not less than 2
 /// #     Ok(())
 /// # }
 ///
 /// # fn should_pass_2() -> Result<()> {
 /// let value: HashSet<i32> = [1, 2, 3].into();
-/// verify_that!(value, each(gt(0)))?;  // Passes
+/// verify_that!(value, each(gt(&0)))?;  // Passes
 /// #     Ok(())
 /// # }
 /// # should_pass_1().unwrap();
 /// # should_fail().unwrap_err();
 /// # should_pass_2().unwrap();
 /// ```
-///
-/// One can also verify the contents of a slice by dereferencing it:
-///
-/// ```
-/// # use googletest::prelude::*;
-/// # fn should_pass() -> Result<()> {
-/// let value = &[1, 2, 3];
-/// verify_that!(*value, each(gt(0)))?;
-/// #     Ok(())
-/// # }
-/// # should_pass().unwrap();
-/// ```
-pub fn each<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT>(
-    inner: MatcherT,
-) -> impl Matcher<ActualT = ActualT>
-where
-    for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    MatcherT: Matcher<ActualT = ElementT>,
-{
-    EachMatcher { inner, phantom: Default::default() }
+pub fn each<MatcherT>(inner: MatcherT) -> EachMatcher<MatcherT> {
+    EachMatcher { inner }
 }
 
-struct EachMatcher<ActualT: ?Sized, MatcherT> {
+#[derive(MatcherBase)]
+pub struct EachMatcher<MatcherT> {
     inner: MatcherT,
-    phantom: PhantomData<ActualT>,
 }
 
-impl<ElementT: Debug, ActualT: Debug + ?Sized, MatcherT> Matcher for EachMatcher<ActualT, MatcherT>
+impl<ElementT: Debug + Copy, ActualT: Debug + Copy, MatcherT> Matcher<ActualT>
+    for EachMatcher<MatcherT>
 where
-    for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    MatcherT: Matcher<ActualT = ElementT>,
+    ActualT: IntoIterator<Item = ElementT>,
+    MatcherT: Matcher<ElementT>,
 {
-    type ActualT = ActualT;
-
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches(&self, actual: ActualT) -> MatcherResult {
         for element in actual {
             if self.inner.matches(element).is_no_match() {
                 return MatcherResult::NoMatch;
@@ -92,7 +73,7 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match(&self, actual: ActualT) -> Description {
         let mut non_matching_elements = Vec::new();
         for (index, element) in actual.into_iter().enumerate() {
             if self.inner.matches(element).is_no_match() {
@@ -145,19 +126,19 @@ mod tests {
     #[test]
     fn each_matches_empty_vec() -> Result<()> {
         let value: Vec<i32> = vec![];
-        verify_that!(value, each(gt(0)))
+        verify_that!(value, each(gt(&0)))
     }
 
     #[test]
     fn each_matches_vec_with_one_element() -> Result<()> {
         let value = vec![1];
-        verify_that!(value, each(gt(0)))
+        verify_that!(value, each(gt(&0)))
     }
 
     #[test]
     fn each_matches_vec_with_two_elements() -> Result<()> {
         let value = vec![1, 2];
-        verify_that!(value, each(gt(0)))
+        verify_that!(value, each(gt(&0)))
     }
 
     #[test]
@@ -169,24 +150,24 @@ mod tests {
     #[test]
     fn each_matches_hash_set_with_one_element() -> Result<()> {
         let value: HashSet<i32> = [1].into();
-        verify_that!(value, each(gt(0)))
+        verify_that!(value, each(gt(&0)))
     }
 
     #[test]
     fn each_does_not_match_when_first_element_does_not_match() -> Result<()> {
         let value = vec![0];
-        verify_that!(value, not(each(gt(1))))
+        verify_that!(value, not(each(gt(&1))))
     }
 
     #[test]
     fn each_does_not_match_when_second_element_does_not_match() -> Result<()> {
         let value = vec![2, 0];
-        verify_that!(value, not(each(gt(1))))
+        verify_that!(value, not(each(gt(&1))))
     }
 
     #[test]
     fn each_shows_correct_message_when_first_item_does_not_match() -> Result<()> {
-        let result = verify_that!(vec![0, 2, 3], each(gt(0)));
+        let result = verify_that!(vec![0, 2, 3], each(gt(&0)));
 
         verify_that!(
             result,
@@ -202,7 +183,7 @@ mod tests {
 
     #[test]
     fn each_shows_correct_message_when_second_item_does_not_match() -> Result<()> {
-        let result = verify_that!(vec![1, 0, 3], each(gt(0)));
+        let result = verify_that!(vec![1, 0, 3], each(gt(&0)));
 
         verify_that!(
             result,
@@ -218,7 +199,7 @@ mod tests {
 
     #[test]
     fn each_shows_correct_message_when_first_two_items_do_not_match() -> Result<()> {
-        let result = verify_that!(vec![0, 1, 3], each(gt(1)));
+        let result = verify_that!(vec![0, 1, 3], each(gt(&1)));
 
         verify_that!(
             result,
@@ -235,7 +216,7 @@ mod tests {
     }
     #[test]
     fn each_shows_inner_explanation() -> Result<()> {
-        let result = verify_that!(vec![vec![1, 2], vec![1]], each(each(eq(1))));
+        let result = verify_that!(vec![vec![1, 2], vec![1]], each(each(eq(&1))));
 
         verify_that!(
             result,

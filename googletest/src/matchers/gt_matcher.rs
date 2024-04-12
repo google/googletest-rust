@@ -14,9 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherBase, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a value greater (in the sense of `>`) than `expected`.
 ///
@@ -74,24 +74,20 @@ use std::{fmt::Debug, marker::PhantomData};
 ///
 /// You can find the standard library `PartialOrd` implementation in
 /// <https://doc.rust-lang.org/core/cmp/trait.PartialOrd.html#implementors>
-pub fn gt<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug>(
-    expected: ExpectedT,
-) -> impl Matcher<ActualT = ActualT> {
-    GtMatcher::<ActualT, _> { expected, phantom: Default::default() }
+pub fn gt<ExpectedT: Debug>(expected: ExpectedT) -> GtMatcher<ExpectedT> {
+    GtMatcher { expected }
 }
 
-struct GtMatcher<ActualT, ExpectedT> {
+#[derive(MatcherBase)]
+pub struct GtMatcher<ExpectedT> {
     expected: ExpectedT,
-    phantom: PhantomData<ActualT>,
 }
 
-impl<ActualT: Debug + PartialOrd<ExpectedT>, ExpectedT: Debug> Matcher
-    for GtMatcher<ActualT, ExpectedT>
+impl<ActualT: Debug + PartialOrd<ExpectedT> + Copy, ExpectedT: Debug> Matcher<ActualT>
+    for GtMatcher<ExpectedT>
 {
-    type ActualT = ActualT;
-
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
-        (*actual > self.expected).into()
+    fn matches(&self, actual: ActualT) -> MatcherResult {
+        (actual > self.expected).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -122,14 +118,14 @@ mod tests {
     #[test]
     fn gt_does_not_match_equal_i32() -> Result<()> {
         let matcher = gt(10);
-        let result = matcher.matches(&10);
+        let result = matcher.matches(10);
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
     fn gt_does_not_match_lower_i32() -> Result<()> {
         let matcher = gt(-50);
-        let result = matcher.matches(&-51);
+        let result = matcher.matches(-51);
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
@@ -141,7 +137,7 @@ mod tests {
     #[test]
     fn gt_does_not_match_lesser_str() -> Result<()> {
         let matcher = gt("B");
-        let result = matcher.matches(&"A");
+        let result = matcher.matches("A");
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
@@ -163,7 +159,7 @@ mod tests {
 
     #[test]
     fn gt_mismatch_combined_with_each() -> Result<()> {
-        let result = verify_that!(vec![19, 23, 11], each(gt(15)));
+        let result = verify_that!(vec![19, 23, 11], each(gt(&15)));
 
         verify_that!(
             result,
@@ -181,7 +177,7 @@ mod tests {
     #[test]
     fn gt_describe_matches() -> Result<()> {
         verify_that!(
-            gt::<i32, i32>(232).describe(MatcherResult::Match),
+            Matcher::<i32>::describe(&gt(232), MatcherResult::Match),
             displays_as(eq("is greater than 232"))
         )
     }
@@ -189,7 +185,7 @@ mod tests {
     #[test]
     fn gt_describe_does_not_match() -> Result<()> {
         verify_that!(
-            gt::<i32, i32>(232).describe(MatcherResult::NoMatch),
+            Matcher::<i32>::describe(&gt(232), MatcherResult::NoMatch),
             displays_as(eq("is less than or equal to 232"))
         )
     }

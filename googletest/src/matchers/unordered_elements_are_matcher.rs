@@ -22,19 +22,19 @@
 /// ```
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
-/// verify_that!(vec![3, 2, 1], unordered_elements_are![eq(1), ge(2), anything()])?;   // Passes
+/// verify_that!(vec![3, 2, 1], unordered_elements_are![eq(&1), ge(&2), anything()])?;   // Passes
 /// #     Ok(())
 /// # }
 /// # fn should_fail_1() -> Result<()> {
-/// verify_that!(vec![1], unordered_elements_are![eq(1), ge(2)])?;              // Fails: container has wrong size
+/// verify_that!(vec![1], unordered_elements_are![eq(&1), ge(&2)])?;              // Fails: container has wrong size
 /// #     Ok(())
 /// # }
 /// # fn should_fail_2() -> Result<()> {
-/// verify_that!(vec![3, 2, 1], unordered_elements_are![eq(1), ge(4), eq(2)])?; // Fails: second matcher not matched
+/// verify_that!(vec![3, 2, 1], unordered_elements_are![eq(&1), ge(&4), eq(&2)])?; // Fails: second matcher not matched
 /// #     Ok(())
 /// # }
 /// # fn should_fail_3() -> Result<()> {
-/// verify_that!(vec![3, 2, 1], unordered_elements_are![ge(3), ge(3), ge(3)])?; // Fails: no 1:1 correspondence
+/// verify_that!(vec![3, 2, 1], unordered_elements_are![ge(&3), ge(&3), ge(&3)])?; // Fails: no 1:1 correspondence
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -43,32 +43,15 @@
 /// # should_fail_3().unwrap_err();
 /// ```
 ///
-/// The actual value must be a container such as a `Vec`, an array, or a
-/// dereferenced slice. More precisely, a shared borrow of the actual value must
-/// implement [`IntoIterator`].
-///
-/// This can also match against [`HashMap`][std::collections::HashMap] and
-/// similar collections. The arguments are a sequence of pairs of matchers
-/// corresponding to the keys and their respective values.
-///
-/// ```
-/// # use googletest::prelude::*;
-/// # use std::collections::HashMap;
-/// let value: HashMap<u32, &'static str> =
-///     HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
-/// verify_that!(
-///     value,
-///     unordered_elements_are![(eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three"))]
-/// )
-/// #     .unwrap();
-/// ```
+/// The actual value must be a container such as a `&Vec`, an array, or a
+/// slice. More precisely, the actual value must implement [`IntoIterator`].
 ///
 /// This can also be omitted in [`verify_that!`] macros and replaced with curly
 /// brackets.
 ///
 /// ```
 /// # use googletest::prelude::*;
-///  verify_that!(vec![1, 2], {eq(2), eq(1)})
+///  verify_that!(vec![1, 2], {eq(&2), eq(&1)})
 /// #     .unwrap();
 /// ```
 ///
@@ -86,12 +69,9 @@
 /// ```
 /// # use googletest::prelude::*;
 /// verify_that!(vec![vec![1,2], vec![3]],
-///   {unordered_elements_are![eq(2), eq(1)], unordered_elements_are![eq(3)]})
+///   {unordered_elements_are![eq(&2), eq(&1)], unordered_elements_are![eq(&3)]})
 /// # .unwrap();
 /// ```
-///
-/// This matcher does not support matching directly against an [`Iterator`]. To
-/// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
 ///
 /// The matcher proceeds in three stages:
 ///
@@ -125,18 +105,6 @@ macro_rules! __unordered_elements_are {
         UnorderedElementsAreMatcher::new([], Requirements::PerfectMatch)
     }};
 
-    // TODO: Consider an alternative map-like syntax here similar to that used in
-    // https://crates.io/crates/maplit.
-    ($(($key_matcher:expr, $value_matcher:expr)),* $(,)?) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
-            UnorderedElementsOfMapAreMatcher, Requirements
-        };
-        UnorderedElementsOfMapAreMatcher::new(
-            [$((Box::new($key_matcher), Box::new($value_matcher))),*],
-            Requirements::PerfectMatch
-        )
-    }};
-
     ($($matcher:expr),* $(,)?) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsAreMatcher, Requirements
@@ -160,20 +128,20 @@ macro_rules! __unordered_elements_are {
 /// ```
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
-/// verify_that!(vec![3, 2, 1], contains_each![eq(2), ge(3)])?;   // Passes
-/// verify_that!(vec![3, 2, 1], contains_each![ge(2), ge(2)])?;   // Passes
+/// verify_that!(vec![3, 2, 1], contains_each![eq(&2), ge(&3)])?;   // Passes
+/// verify_that!(vec![3, 2, 1], contains_each![ge(&2), ge(&2)])?;   // Passes
 /// #     Ok(())
 /// # }
 /// # fn should_fail_1() -> Result<()> {
-/// verify_that!(vec![1], contains_each![eq(1), ge(2)])?;         // Fails: container too small
+/// verify_that!(vec![1], contains_each![eq(&1), ge(&2)])?;         // Fails: container too small
 /// #     Ok(())
 /// # }
 /// # fn should_fail_2() -> Result<()> {
-/// verify_that!(vec![3, 2, 1], contains_each![eq(1), ge(4)])?;   // Fails: second matcher unmatched
+/// verify_that!(vec![3, 2, 1], contains_each![eq(&1), ge(&4)])?;   // Fails: second matcher unmatched
 /// #     Ok(())
 /// # }
 /// # fn should_fail_3() -> Result<()> {
-/// verify_that!(vec![3, 2, 1], contains_each![ge(3), ge(3), ge(3)])?; // Fails: no matching
+/// verify_that!(vec![3, 2, 1], contains_each![ge(&3), ge(&3), ge(&3)])?; // Fails: no matching
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -182,25 +150,8 @@ macro_rules! __unordered_elements_are {
 /// # should_fail_3().unwrap_err();
 /// ```
 ///
-/// The actual value must be a container such as a `Vec`, an array, or a
-/// dereferenced slice. More precisely, a shared borrow of the actual value must
-/// implement [`IntoIterator`].
-///
-/// This can also match against [`HashMap`][std::collections::HashMap] and
-/// similar collections. The arguments are a sequence of pairs of matchers
-/// corresponding to the keys and their respective values.
-///
-/// ```
-/// # use googletest::prelude::*;
-/// # use std::collections::HashMap;
-/// let value: HashMap<u32, &'static str> =
-///     HashMap::from_iter([(1, "One"), (2, "Two"), (3, "Three")]);
-/// verify_that!(value, contains_each![(eq(2), eq("Two")), (eq(1), eq("One"))])
-/// #     .unwrap();
-/// ```
-///
-/// This matcher does not support matching directly against an [`Iterator`]. To
-/// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
+/// The actual value must be a container such as a `&Vec`, an array, or a
+/// slice. More precisely, the actual value must implement [`IntoIterator`].
 ///
 /// The matcher proceeds in three stages:
 ///
@@ -231,18 +182,6 @@ macro_rules! __contains_each {
         UnorderedElementsAreMatcher::new([], Requirements::Superset)
     }};
 
-    // TODO: Consider an alternative map-like syntax here similar to that used in
-    // https://crates.io/crates/maplit.
-    ($(($key_matcher:expr, $value_matcher:expr)),* $(,)?) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
-            UnorderedElementsOfMapAreMatcher, Requirements
-        };
-        UnorderedElementsOfMapAreMatcher::new(
-            [$((Box::new($key_matcher), Box::new($value_matcher))),*],
-            Requirements::Superset
-        )
-    }};
-
     ($($matcher:expr),* $(,)?) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsAreMatcher, Requirements
@@ -267,20 +206,20 @@ macro_rules! __contains_each {
 /// ```
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
-/// verify_that!(vec![2, 1], is_contained_in![eq(1), ge(2)])?;   // Passes
-/// verify_that!(vec![2, 1], is_contained_in![ge(1), ge(1)])?;   // Passes
+/// verify_that!(vec![2, 1], is_contained_in![eq(&1), ge(&2)])?;   // Passes
+/// verify_that!(vec![2, 1], is_contained_in![ge(&1), ge(&1)])?;   // Passes
 /// #     Ok(())
 /// # }
 /// # fn should_fail_1() -> Result<()> {
-/// verify_that!(vec![1, 2, 3], is_contained_in![eq(1), ge(2)])?; // Fails: container too large
+/// verify_that!(vec![1, 2, 3], is_contained_in![eq(&1), ge(&2)])?; // Fails: container too large
 /// #     Ok(())
 /// # }
 /// # fn should_fail_2() -> Result<()> {
-/// verify_that!(vec![2, 1], is_contained_in![eq(1), ge(4)])?;    // Fails: second matcher unmatched
+/// verify_that!(vec![2, 1], is_contained_in![eq(&1), ge(&4)])?;    // Fails: second matcher unmatched
 /// #     Ok(())
 /// # }
 /// # fn should_fail_3() -> Result<()> {
-/// verify_that!(vec![3, 1], is_contained_in![ge(3), ge(3), ge(3)])?; // Fails: no matching
+/// verify_that!(vec![3, 1], is_contained_in![ge(&3), ge(&3), ge(&3)])?; // Fails: no matching
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -289,27 +228,8 @@ macro_rules! __contains_each {
 /// # should_fail_3().unwrap_err();
 /// ```
 ///
-/// The actual value must be a container such as a `Vec`, an array, or a
-/// dereferenced slice. More precisely, a shared borrow of the actual value must
-/// implement [`IntoIterator`].
-///
-/// This can also match against [`HashMap`][std::collections::HashMap] and
-/// similar collections. The arguments are a sequence of pairs of matchers
-/// corresponding to the keys and their respective values.
-///
-/// ```
-/// # use googletest::prelude::*;
-/// # use std::collections::HashMap;
-/// let value: HashMap<u32, &'static str> = HashMap::from_iter([(1, "One"), (2, "Two")]);
-/// verify_that!(
-///     value,
-///     is_contained_in![(eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three"))]
-/// )
-/// #     .unwrap();
-/// ```
-///
-/// This matcher does not support matching directly against an [`Iterator`]. To
-/// match against an iterator, use [`Iterator::collect`] to build a [`Vec`].
+/// The actual value must be a container such as a `&Vec`, an array, or a slice.
+/// More precisely, the actual value must implement [`IntoIterator`].
 ///
 /// The matcher proceeds in three stages:
 ///
@@ -340,18 +260,6 @@ macro_rules! __is_contained_in {
         UnorderedElementsAreMatcher::new([], Requirements::Subset)
     }};
 
-    // TODO: Consider an alternative map-like syntax here similar to that used in
-    // https://crates.io/crates/maplit.
-    ($(($key_matcher:expr, $value_matcher:expr)),* $(,)?) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
-            UnorderedElementsOfMapAreMatcher, Requirements
-        };
-        UnorderedElementsOfMapAreMatcher::new(
-            [$((Box::new($key_matcher), Box::new($value_matcher))),*],
-            Requirements::Subset
-        )
-    }};
-
     ($($matcher:expr),* $(,)?) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsAreMatcher, Requirements
@@ -366,31 +274,25 @@ macro_rules! __is_contained_in {
 #[doc(hidden)]
 pub mod internal {
     use crate::description::Description;
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::{Matcher, MatcherBase, MatcherResult};
     use crate::matcher_support::count_elements::count_elements;
     use std::collections::HashSet;
     use std::fmt::{Debug, Display};
-    use std::marker::PhantomData;
 
     /// This struct is meant to be used only through the
     /// `unordered_elements_are![...]` macro.
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub struct UnorderedElementsAreMatcher<'a, ContainerT: ?Sized, T: Debug, const N: usize> {
-        elements: [Box<dyn Matcher<ActualT = T> + 'a>; N],
+    #[derive(MatcherBase)]
+    pub struct UnorderedElementsAreMatcher<'a, T: Debug + Copy, const N: usize> {
+        elements: [Box<dyn Matcher<T> + 'a>; N],
         requirements: Requirements,
-        phantom: PhantomData<ContainerT>,
     }
 
-    impl<'a, ContainerT: ?Sized, T: Debug, const N: usize>
-        UnorderedElementsAreMatcher<'a, ContainerT, T, N>
-    {
-        pub fn new(
-            elements: [Box<dyn Matcher<ActualT = T> + 'a>; N],
-            requirements: Requirements,
-        ) -> Self {
-            Self { elements, requirements, phantom: Default::default() }
+    impl<'a, T: Debug + Copy, const N: usize> UnorderedElementsAreMatcher<'a, T, N> {
+        pub fn new(elements: [Box<dyn Matcher<T> + 'a>; N], requirements: Requirements) -> Self {
+            Self { elements, requirements }
         }
     }
 
@@ -403,19 +305,17 @@ pub mod internal {
     // least one expected element and vice versa.
     // 3. `UnorderedElementsAreMatcher` verifies that a perfect matching exists
     // using Ford-Fulkerson.
-    impl<'a, T: Debug, ContainerT: Debug + ?Sized, const N: usize> Matcher
-        for UnorderedElementsAreMatcher<'a, ContainerT, T, N>
+    impl<'a, T: Debug + Copy, ContainerT: Debug + Copy, const N: usize> Matcher<ContainerT>
+        for UnorderedElementsAreMatcher<'a, T, N>
     where
-        for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
+        ContainerT: IntoIterator<Item = T>,
     {
-        type ActualT = ContainerT;
-
-        fn matches(&self, actual: &ContainerT) -> MatcherResult {
+        fn matches(&self, actual: ContainerT) -> MatcherResult {
             let match_matrix = MatchMatrix::generate(actual, &self.elements);
             match_matrix.is_match_for(self.requirements).into()
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> Description {
+        fn explain_match(&self, actual: ContainerT) -> Description {
             if let Some(size_mismatch_explanation) =
                 self.requirements.explain_size_mismatch(actual, N)
             {
@@ -450,89 +350,8 @@ pub mod internal {
         }
     }
 
-    type KeyValueMatcher<'a, KeyT, ValueT> =
-        (Box<dyn Matcher<ActualT = KeyT> + 'a>, Box<dyn Matcher<ActualT = ValueT> + 'a>);
-
-    /// This is the analogue to [UnorderedElementsAreMatcher] for maps and
-    /// map-like collections.
-    ///
-    /// **For internal use only. API stablility is not guaranteed!**
-    #[doc(hidden)]
-    pub struct UnorderedElementsOfMapAreMatcher<'a, ContainerT, KeyT, ValueT, const N: usize>
-    where
-        ContainerT: ?Sized,
-        KeyT: Debug,
-        ValueT: Debug,
-    {
-        elements: [KeyValueMatcher<'a, KeyT, ValueT>; N],
-        requirements: Requirements,
-        phantom: PhantomData<ContainerT>,
-    }
-
-    impl<'a, ContainerT, KeyT: Debug, ValueT: Debug, const N: usize>
-        UnorderedElementsOfMapAreMatcher<'a, ContainerT, KeyT, ValueT, N>
-    {
-        pub fn new(
-            elements: [KeyValueMatcher<'a, KeyT, ValueT>; N],
-            requirements: Requirements,
-        ) -> Self {
-            Self { elements, requirements, phantom: Default::default() }
-        }
-    }
-
-    impl<'a, KeyT: Debug, ValueT: Debug, ContainerT: Debug + ?Sized, const N: usize> Matcher
-        for UnorderedElementsOfMapAreMatcher<'a, ContainerT, KeyT, ValueT, N>
-    where
-        for<'b> &'b ContainerT: IntoIterator<Item = (&'b KeyT, &'b ValueT)>,
-    {
-        type ActualT = ContainerT;
-
-        fn matches(&self, actual: &ContainerT) -> MatcherResult {
-            let match_matrix = MatchMatrix::generate_for_map(actual, &self.elements);
-            match_matrix.is_match_for(self.requirements).into()
-        }
-
-        fn explain_match(&self, actual: &ContainerT) -> Description {
-            if let Some(size_mismatch_explanation) =
-                self.requirements.explain_size_mismatch(actual, N)
-            {
-                return size_mismatch_explanation;
-            }
-
-            let match_matrix = MatchMatrix::generate_for_map(actual, &self.elements);
-            if let Some(unmatchable_explanation) =
-                match_matrix.explain_unmatchable(self.requirements)
-            {
-                return unmatchable_explanation;
-            }
-
-            let best_match = match_matrix.find_best_match();
-
-            best_match
-                .get_explanation_for_map(actual, &self.elements, self.requirements)
-                .unwrap_or("whose elements all match".into())
-        }
-
-        fn describe(&self, matcher_result: MatcherResult) -> Description {
-            format!(
-                "{} elements matching in any order:\n{}",
-                if matcher_result.into() { "contains" } else { "doesn't contain" },
-                self.elements
-                    .iter()
-                    .map(|(key_matcher, value_matcher)| format!(
-                        "{} => {}",
-                        key_matcher.describe(MatcherResult::Match),
-                        value_matcher.describe(MatcherResult::Match)
-                    ))
-                    .collect::<Description>()
-                    .indent()
-            )
-            .into()
-        }
-    }
-
     /// The requirements of the mapping between matchers and actual values by
-    /// which [`UnorderedElemetnsAre`] is deemed to match its input.
+    /// which [`UnorderedElementsAre`] is deemed to match its input.
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
@@ -552,14 +371,11 @@ pub mod internal {
     }
 
     impl Requirements {
-        fn explain_size_mismatch<ContainerT: ?Sized>(
+        fn explain_size_mismatch<ContainerT: ?Sized + IntoIterator + Copy>(
             &self,
-            actual: &ContainerT,
+            actual: ContainerT,
             expected_size: usize,
-        ) -> Option<Description>
-        where
-            for<'b> &'b ContainerT: IntoIterator,
-        {
+        ) -> Option<Description> {
             let actual_size = count_elements(actual);
             match self {
                 Requirements::PerfectMatch if actual_size != expected_size => Some(
@@ -601,35 +417,14 @@ pub mod internal {
     struct MatchMatrix<const N: usize>(Vec<[MatcherResult; N]>);
 
     impl<const N: usize> MatchMatrix<N> {
-        fn generate<'a, T: Debug + 'a, ContainerT: Debug + ?Sized>(
-            actual: &ContainerT,
-            expected: &[Box<dyn Matcher<ActualT = T> + 'a>; N],
-        ) -> Self
-        where
-            for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
-        {
+        fn generate<'a, T: Debug + Copy + 'a, ContainerT: Debug + Copy + IntoIterator<Item = T>>(
+            actual: ContainerT,
+            expected: &[Box<dyn Matcher<T> + 'a>; N],
+        ) -> Self {
             let mut matrix = MatchMatrix(vec![[MatcherResult::NoMatch; N]; count_elements(actual)]);
             for (actual_idx, actual) in actual.into_iter().enumerate() {
                 for (expected_idx, expected) in expected.iter().enumerate() {
                     matrix.0[actual_idx][expected_idx] = expected.matches(actual);
-                }
-            }
-            matrix
-        }
-
-        fn generate_for_map<'a, KeyT: Debug, ValueT: Debug, ContainerT: Debug + ?Sized>(
-            actual: &ContainerT,
-            expected: &[KeyValueMatcher<'a, KeyT, ValueT>; N],
-        ) -> Self
-        where
-            for<'b> &'b ContainerT: IntoIterator<Item = (&'b KeyT, &'b ValueT)>,
-        {
-            let mut matrix = MatchMatrix(vec![[MatcherResult::NoMatch; N]; count_elements(actual)]);
-            for (actual_idx, (actual_key, actual_value)) in actual.into_iter().enumerate() {
-                for (expected_idx, (expected_key, expected_value)) in expected.iter().enumerate() {
-                    matrix.0[actual_idx][expected_idx] = (expected_key.matches(actual_key).into()
-                        && expected_value.matches(actual_value).into())
-                    .into();
                 }
             }
             matrix
@@ -959,15 +754,16 @@ pub mod internal {
             (0..N).filter(|expected_idx| !matched_expected.contains(expected_idx)).collect()
         }
 
-        fn get_explanation<'a, T: Debug, ContainerT: Debug + ?Sized>(
+        fn get_explanation<
+            'a,
+            T: Debug + Copy,
+            ContainerT: Debug + Copy + IntoIterator<Item = T>,
+        >(
             &self,
-            actual: &ContainerT,
-            expected: &[Box<dyn Matcher<ActualT = T> + 'a>; N],
+            actual: ContainerT,
+            expected: &[Box<dyn Matcher<T> + 'a>; N],
             requirements: Requirements,
-        ) -> Option<Description>
-        where
-            for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
-        {
+        ) -> Option<Description> {
             let actual: Vec<_> = actual.into_iter().collect();
             if self.is_full_match() {
                 return None;
@@ -1005,70 +801,11 @@ pub mod internal {
                 "which does not have a {requirements} match with the expected elements. The best match found was:\n{best_match}"
             ).into())
         }
-
-        fn get_explanation_for_map<'a, KeyT: Debug, ValueT: Debug, ContainerT: Debug + ?Sized>(
-            &self,
-            actual: &ContainerT,
-            expected: &[KeyValueMatcher<'a, KeyT, ValueT>; N],
-            requirements: Requirements,
-        ) -> Option<Description>
-        where
-            for<'b> &'b ContainerT: IntoIterator<Item = (&'b KeyT, &'b ValueT)>,
-        {
-            let actual: Vec<_> = actual.into_iter().collect();
-            if self.is_full_match() {
-                return None;
-            }
-            let mut error_message =
-                format!("which does not have a {requirements} match with the expected elements.");
-
-            error_message.push_str("\n  The best match found was: ");
-
-            let matches = self.get_matches()
-                .map(|(actual_idx, expected_idx)| {
-                    format!(
-                        "Actual element {:?} => {:?} at index {actual_idx} matched expected element `{}` => `{}` at index {expected_idx}.",
-                        actual[actual_idx].0,
-                        actual[actual_idx].1,
-                        expected[expected_idx].0.describe(MatcherResult::Match),
-                        expected[expected_idx].1.describe(MatcherResult::Match),
-                    )
-                });
-
-            let unmatched_actual = self.get_unmatched_actual()
-                .map(|actual_idx| {
-                    format!(
-                        "Actual element {:#?} => {:#?} at index {actual_idx} did not match any remaining expected element.",
-                        actual[actual_idx].0,
-                        actual[actual_idx].1,
-                    )
-                });
-
-            let unmatched_expected = self.get_unmatched_expected()
-                .into_iter()
-                .map(|expected_idx| {
-                    format!(
-                        "Expected element `{}` => `{}` at index {expected_idx} did not match any remaining actual element.",
-                        expected[expected_idx].0.describe(MatcherResult::Match),
-                        expected[expected_idx].1.describe(MatcherResult::Match),
-                    )
-                });
-
-            let best_match = matches
-                .chain(unmatched_actual)
-                .chain(unmatched_expected)
-                .collect::<Description>()
-                .indent();
-            Some(format!(
-                "which does not have a {requirements} match with the expected elements. The best match found was:\n{best_match}"
-            ).into())
-        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::internal::UnorderedElementsOfMapAreMatcher;
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
     use indoc::indoc;
@@ -1081,20 +818,26 @@ mod tests {
         // compiler takes care of that, but when the matcher is created separately,
         // we must create the constitute matchers separately so that they
         // aren't dropped too early.
-        let matchers = ((eq(2), eq("Two")), (eq(1), eq("One")), (eq(3), eq("Three")));
-        let matcher: UnorderedElementsOfMapAreMatcher<HashMap<i32, &str>, _, _, 3> = unordered_elements_are![
+        let matchers = ((eq(&2), eq(&"Two")), (eq(&1), eq(&"One")), (eq(&3), eq(&"Three")));
+        let matcher = unordered_elements_are![
             (matchers.0.0, matchers.0.1),
             (matchers.1.0, matchers.1.1),
             (matchers.2.0, matchers.2.1)
         ];
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Match),
+            Matcher::<&HashMap<i32, String>>::describe(&matcher, MatcherResult::Match),
             displays_as(eq(indoc!(
                 "
                 contains elements matching in any order:
-                  is equal to 2 => is equal to \"Two\"
-                  is equal to 1 => is equal to \"One\"
-                  is equal to 3 => is equal to \"Three\""
+                  0. is a tuple whose values respectively match:
+                       is equal to 2
+                       is equal to \"Two\"
+                  1. is a tuple whose values respectively match:
+                       is equal to 1
+                       is equal to \"One\"
+                  2. is a tuple whose values respectively match:
+                       is equal to 3
+                       is equal to \"Three\""
             )))
         )
     }
@@ -1106,22 +849,26 @@ mod tests {
         // compiler takes care of that, but when the matcher is created separately,
         // we must create the constitute matchers separately so that they
         // aren't dropped too early.
-        let matchers = ((anything(), eq(1)), (anything(), eq(2)), (anything(), eq(2)));
-        let matcher: UnorderedElementsOfMapAreMatcher<HashMap<u32, u32>, _, _, 3> = unordered_elements_are![
+        let value: HashMap<u32, u32> = HashMap::from_iter([(0, 1), (1, 1), (2, 2)]);
+        let matchers = ((anything(), eq(&1)), (anything(), eq(&2)), (anything(), eq(&2)));
+        let matcher = unordered_elements_are![
             (matchers.0.0, matchers.0.1),
             (matchers.1.0, matchers.1.1),
             (matchers.2.0, matchers.2.1),
         ];
-        let value: HashMap<u32, u32> = HashMap::from_iter([(0, 1), (1, 1), (2, 2)]);
         verify_that!(
             matcher.explain_match(&value),
-            displays_as(contains_regex(
-                "Actual element 2 => 2 at index [0-2] matched expected element `is anything` => `is equal to 2` at index [0-2]."
-            )).and(displays_as(contains_regex(
-                "Actual element [0-1] => [0-1] at index [0-2] did not match any remaining expected element."
-            ))).and(displays_as(contains_substring(
-                "Expected element `is anything` => `is equal to 2` at index 2 did not match any remaining actual element."
-            )))
+            all![
+                displays_as(contains_regex(
+                    "Actual element \\(2, 2\\) at index [0-2] matched expected element `is a tuple whose values respectively match:\n    is anything\n    is equal to 2` at index [0-2]."
+                )),
+                displays_as(contains_regex(
+                    "Actual element \\(\n      [0-1],\n      [0-1],\n  \\) at index [0-2] did not match any remaining expected element."
+                )),
+                displays_as(contains_substring(
+                    "Expected element `is a tuple whose values respectively match:\n    is anything\n    is equal to 2` at index 2 did not match any remaining actual element."
+                ))
+            ]
         )
     }
 }

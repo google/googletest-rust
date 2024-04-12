@@ -27,13 +27,14 @@
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let value = vec![1, 2, 3];
-/// verify_that!(value, pointwise!(le, [1, 3, 3]))?; // Passes
-/// verify_that!(value, pointwise!(le, vec![1, 3, 3]))?; // Passes
+/// verify_that!(value, pointwise!(le, [&1, &2, &3]))?; // Passes
+/// verify_that!(value, pointwise!(|e| points_to(le(e)), [1, 2, 3]))?; // Passes
+/// verify_that!(value, pointwise!(|e| points_to(le(e)), vec![1, 3, 3]))?; // Passes
 /// #     Ok(())
 /// # }
 /// # fn should_fail() -> Result<()> {
 /// #     let value = vec![1, 2, 3];
-/// verify_that!(value, pointwise!(le, [1, 1, 3]))?; // Fails
+/// verify_that!(value, pointwise!(|e| points_to(le(e)), [1, 1, 3]))?; // Fails
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -46,7 +47,7 @@
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let value = vec![1.00001, 2.000001, 3.00001];
-/// verify_that!(value, pointwise!(|v| near(v, 0.001), [1.0, 2.0, 3.0]))?;
+/// verify_that!(value, pointwise!(|v| points_to(near(v, 0.001)), [1.0, 2.0, 3.0]))?;
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -59,12 +60,11 @@
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let value = vec![1.00001, 2.000001, 3.00001];
-/// verify_that!(value, pointwise!(|v, t| near(v, t), [1.0, 2.0, 3.0], [0.001, 0.0001, 0.01]))?;
-/// verify_that!(value, pointwise!(near, [1.0, 2.0, 3.0], [0.001, 0.0001, 0.01]))?; // Same as above
+/// verify_that!(value, pointwise!(|v, t| points_to(near(v, t)), [1.0, 2.0, 3.0], [0.001, 0.0001, 0.01]))?;
 /// verify_that!(
 ///     value,
 ///     pointwise!(
-///         |v, t, u| near(v, t * u),
+///         |v, t, u| points_to(near(v, t * u)),
 ///         [1.0, 2.0, 3.0],
 ///         [0.001, 0.0001, 0.01],
 ///         [0.5, 0.5, 1.0]
@@ -79,24 +79,19 @@
 /// that all of the containers have the same size. This matcher does not check
 /// whether the sizes match.
 ///
-/// The actual value must be a container such as a `Vec`, an array, or a
-/// dereferenced slice. More precisely, a shared borrow of the actual value must
-/// implement [`IntoIterator`].
+/// The actual value must be a container such as a `&Vec`, an array, or a
+/// slice. More precisely, the actual value must implement [`IntoIterator`].
 ///
 /// ```
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let value = vec![1, 2, 3];
-/// verify_that!(*value.as_slice(), pointwise!(le, [1, 3, 3]))?; // Passes
+/// verify_that!(value, pointwise!(|i| points_to(le(i)), [1, 3, 3]))?; // Passes
 /// verify_that!([1, 2, 3], pointwise!(le, [1, 3, 3]))?; // Passes
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
 /// ```
-///
-/// This matcher does not support matching directly against an [`Iterator`]. To
-/// match against an iterator, use [`Iterator::collect`] to build a [`Vec`]
-/// first.
 ///
 /// The second argument can be any value implementing `IntoIterator`, such as a
 /// `Vec` or an array. The container does not have to have the same type as the
@@ -152,33 +147,31 @@ macro_rules! __pointwise {
 #[doc(hidden)]
 pub mod internal {
     use crate::description::Description;
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::{Matcher, MatcherBase, MatcherResult};
     use crate::matcher_support::zipped_iterator::zip;
-    use std::{fmt::Debug, marker::PhantomData};
+    use std::fmt::Debug;
 
     /// This struct is meant to be used only through the `pointwise` macro.
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub struct PointwiseMatcher<ContainerT: ?Sized, MatcherT> {
+    #[derive(MatcherBase)]
+    pub struct PointwiseMatcher<MatcherT> {
         matchers: Vec<MatcherT>,
-        phantom: PhantomData<ContainerT>,
     }
 
-    impl<ContainerT: ?Sized, MatcherT> PointwiseMatcher<ContainerT, MatcherT> {
+    impl<MatcherT> PointwiseMatcher<MatcherT> {
         pub fn new(matchers: Vec<MatcherT>) -> Self {
-            Self { matchers, phantom: Default::default() }
+            Self { matchers }
         }
     }
 
-    impl<T: Debug, MatcherT: Matcher<ActualT = T>, ContainerT: ?Sized + Debug> Matcher
-        for PointwiseMatcher<ContainerT, MatcherT>
+    impl<T: Debug + Copy, MatcherT: Matcher<T>, ContainerT: Copy + Debug> Matcher<ContainerT>
+        for PointwiseMatcher<MatcherT>
     where
-        for<'b> &'b ContainerT: IntoIterator<Item = &'b T>,
+        ContainerT: IntoIterator<Item = T>,
     {
-        type ActualT = ContainerT;
-
-        fn matches(&self, actual: &ContainerT) -> MatcherResult {
+        fn matches(&self, actual: ContainerT) -> MatcherResult {
             let mut zipped_iterator = zip(actual.into_iter(), self.matchers.iter());
             for (element, matcher) in zipped_iterator.by_ref() {
                 if matcher.matches(element).is_no_match() {
@@ -192,7 +185,7 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &ContainerT) -> Description {
+        fn explain_match(&self, actual: ContainerT) -> Description {
             // TODO(b/260819741) This code duplicates elements_are_matcher.rs. Consider
             // extract as a separate library. (or implement pointwise! with
             // elements_are)

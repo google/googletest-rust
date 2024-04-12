@@ -13,10 +13,9 @@
 // limitations under the License.
 
 use crate::description::Description;
-use crate::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherBase, MatcherResult};
 use regex::Regex;
 use std::fmt::Debug;
-use std::marker::PhantomData;
 use std::ops::Deref;
 
 /// Matches a string the entirety of which which matches the given regular
@@ -60,38 +59,31 @@ use std::ops::Deref;
 // compiler treats it as a Matcher<str> only and the code
 //   verify_that!("Some value".to_string(), matches_regex(".*value"))?;
 // doesn't compile.
-pub fn matches_regex<ActualT: ?Sized, PatternT: Deref<Target = str>>(
+pub fn matches_regex<PatternT: Deref<Target = str>>(
     pattern: PatternT,
-) -> MatchesRegexMatcher<ActualT, PatternT> {
+) -> MatchesRegexMatcher<PatternT> {
     let adjusted_pattern = format!("^{}$", pattern.deref());
     let regex = Regex::new(adjusted_pattern.as_str()).unwrap();
-    MatchesRegexMatcher {
-        regex,
-        pattern,
-        _adjusted_pattern: adjusted_pattern,
-        phantom: Default::default(),
-    }
+    MatchesRegexMatcher { regex, pattern, _adjusted_pattern: adjusted_pattern }
 }
 
 /// A matcher matching a string-like type matching a given regular expression.
 ///
 /// Intended only to be used from the function [`matches_regex`] only.
 /// Should not be referenced by code outside this library.
-pub struct MatchesRegexMatcher<ActualT: ?Sized, PatternT: Deref<Target = str>> {
+#[derive(MatcherBase)]
+pub struct MatchesRegexMatcher<PatternT: Deref<Target = str>> {
     regex: Regex,
     pattern: PatternT,
     _adjusted_pattern: String,
-    phantom: PhantomData<ActualT>,
 }
 
-impl<PatternT, ActualT> Matcher for MatchesRegexMatcher<ActualT, PatternT>
+impl<PatternT, ActualT> Matcher<ActualT> for MatchesRegexMatcher<PatternT>
 where
     PatternT: Deref<Target = str>,
-    ActualT: AsRef<str> + Debug + ?Sized,
+    ActualT: AsRef<str> + Debug + Copy,
 {
-    type ActualT = ActualT;
-
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    fn matches(&self, actual: ActualT) -> MatcherResult {
         self.regex.is_match(actual.as_ref()).into()
     }
 
@@ -109,7 +101,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{matches_regex, MatchesRegexMatcher};
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
 
@@ -201,10 +192,10 @@ mod tests {
 
     #[test]
     fn matches_regex_displays_quoted_debug_of_pattern() -> Result<()> {
-        let matcher: MatchesRegexMatcher<&str, _> = matches_regex("\n");
+        let matcher = matches_regex("\n");
 
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Match),
+            Matcher::<&str>::describe(&matcher, MatcherResult::Match),
             displays_as(eq("matches the regular expression \"\\n\""))
         )
     }

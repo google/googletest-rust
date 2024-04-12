@@ -19,14 +19,14 @@ use indoc::indoc;
 #[test]
 fn elements_are_matches_vector() -> Result<()> {
     let value = vec![1, 2, 3];
-    verify_that!(value, elements_are![eq(1), eq(2), eq(3)])
+    verify_that!(value, elements_are![eq(&1), eq(&2), eq(&3)])
 }
 
 #[test]
 fn elements_are_matches_slice() -> Result<()> {
     let value = vec![1, 2, 3];
     let slice = value.as_slice();
-    verify_that!(*slice, elements_are![eq(1), eq(2), eq(3)])
+    verify_that!(slice, elements_are![eq(&1), eq(&2), eq(&3)])
 }
 
 #[test]
@@ -37,13 +37,13 @@ fn elements_are_matches_array() -> Result<()> {
 #[test]
 fn elements_are_supports_trailing_comma() -> Result<()> {
     let value = vec![1, 2, 3];
-    verify_that!(value, elements_are![eq(1), eq(2), eq(3),])
+    verify_that!(value, elements_are![eq(&1), eq(&2), eq(&3),])
 }
 
 #[test]
 fn elements_are_returns_no_match_when_expected_and_actual_sizes_differ() -> Result<()> {
     let value = vec![1, 2];
-    verify_that!(value, not(elements_are![eq(1), eq(2), eq(3)]))
+    verify_that!(value, not(elements_are![eq(&1), eq(&2), eq(&3)]))
 }
 
 #[test]
@@ -51,12 +51,32 @@ fn elements_are_admits_matchers_without_static_lifetime() -> Result<()> {
     #[derive(Debug, PartialEq)]
     struct AStruct(i32);
     let expected_value = AStruct(123);
-    verify_that!(vec![AStruct(123)], elements_are![eq_deref_of(&expected_value)])
+    verify_that!(vec![AStruct(123)], elements_are![eq(&expected_value)])
+}
+
+#[test]
+fn elements_are_matches_iterator_returning_by_value() -> Result<()> {
+    #[derive(Debug, Copy, Clone)]
+    struct Countdown(i32);
+    impl Iterator for Countdown {
+        type Item = i32;
+
+        fn next(&mut self) -> Option<Self::Item> {
+            match self.0 {
+                0 => None,
+                x => {
+                    self.0 -= 1;
+                    Some(x)
+                }
+            }
+        }
+    }
+    verify_that!(Countdown(3), elements_are![eq(3), eq(2), eq(1)])
 }
 
 #[test]
 fn elements_are_produces_correct_failure_message() -> Result<()> {
-    let result = verify_that!(vec![1, 4, 3], elements_are![eq(1), eq(2), eq(3)]);
+    let result = verify_that!(vec![1, 4, 3], elements_are![eq(&1), eq(&2), eq(&3)]);
     verify_that!(
         result,
         err(displays_as(contains_substring(indoc!(
@@ -76,7 +96,7 @@ fn elements_are_produces_correct_failure_message() -> Result<()> {
 fn elements_are_produces_correct_failure_message_nested() -> Result<()> {
     let result = verify_that!(
         vec![vec![0, 1], vec![1, 2]],
-        elements_are![elements_are![eq(1), eq(2)], elements_are![eq(2), eq(3)]]
+        elements_are![elements_are![eq(&1), eq(&2)], elements_are![eq(&2), eq(&3)]]
     );
     verify_that!(
         result,
@@ -103,14 +123,12 @@ fn elements_are_produces_correct_failure_message_nested() -> Result<()> {
 
 #[test]
 fn elements_are_explain_match_wrong_size() -> Result<()> {
-    verify_that!(
-        elements_are![eq(1)].explain_match(&vec![1, 2]),
-        displays_as(eq("whose size is 2"))
-    )
+    let matcher = elements_are![eq(&1)];
+    verify_that!(matcher.explain_match(&vec![1, 2]), displays_as(eq("whose size is 2")))
 }
 
-fn create_matcher() -> impl Matcher<ActualT = Vec<i32>> {
-    elements_are![eq(1)]
+fn create_matcher<'a>() -> impl Matcher<&'a Vec<i32>> {
+    elements_are![eq(&1)]
 }
 
 #[test]
@@ -120,5 +138,5 @@ fn elements_are_works_when_matcher_is_created_in_subroutine() -> Result<()> {
 
 #[test]
 fn elements_are_implicitly_called() -> Result<()> {
-    verify_that!(vec![1, 2, 3], [eq(1), eq(2), eq(3)])
+    verify_that!(vec![1, 2, 3], [eq(&1), eq(&2), eq(&3)])
 }

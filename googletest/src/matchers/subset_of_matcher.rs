@@ -14,9 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherBase, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a container all of whose items are in the given container
 /// `superset`.
@@ -24,23 +24,23 @@ use std::{fmt::Debug, marker::PhantomData};
 /// The element type `ElementT` must implement `PartialEq` to allow element
 /// comparison.
 ///
-/// `ActualT` and `ExpectedT` can each be any container a reference to which
+/// `ActualT` and `ExpectedT` can each be any container which
 /// implements `IntoIterator`. For instance, `T` can be a common container like
-/// `Vec` or arrays. They need not be the same container type.
+/// `&Vec` or arrays. They need not be the same container type.
 ///
 /// ```
 /// # use googletest::prelude::*;
 /// # use std::collections::HashSet;
 /// # fn should_pass_1() -> Result<()> {
 /// let value = vec![1, 2, 3];
-/// verify_that!(value, subset_of([1, 2, 3, 4]))?;  // Passes
+/// verify_that!(value, subset_of([&1, &2, &3, &4]))?;  // Passes
 /// let array_value = [1, 2, 3];
 /// verify_that!(array_value, subset_of([1, 2, 3, 4]))?;  // Passes
 /// #     Ok(())
 /// # }
 /// # fn should_fail() -> Result<()> {
 /// # let value = vec![1, 2, 3];
-/// verify_that!(value, subset_of([1, 2]))?;  // Fails: 3 is not in the superset
+/// verify_that!(value, subset_of([&1, &2]))?;  // Fails: 3 is not in the superset
 /// #     Ok(())
 /// # }
 /// # should_pass_1().unwrap();
@@ -48,7 +48,7 @@ use std::{fmt::Debug, marker::PhantomData};
 ///
 /// # fn should_pass_2() -> Result<()> {
 /// let value: HashSet<i32> = [1, 2, 3].into();
-/// verify_that!(value, subset_of([1, 2, 3]))?;  // Passes
+/// verify_that!(value, subset_of([&1, &2, &3]))?;  // Passes
 /// #     Ok(())
 /// # }
 /// # should_pass_2().unwrap();
@@ -60,20 +60,8 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let value: Vec<i32> = vec![0, 0, 1];
-/// verify_that!(value, subset_of([0, 1]))?;  // Passes
-/// verify_that!(value, subset_of([0, 1, 1]))?;  // Passes
-/// #     Ok(())
-/// # }
-/// # should_pass().unwrap();
-/// ```
-///
-/// One can also verify the contents of a slice by dereferencing it:
-///
-/// ```
-/// # use googletest::prelude::*;
-/// # fn should_pass() -> Result<()> {
-/// let value = &[1, 2, 3];
-/// verify_that!(*value, subset_of([1, 2, 3]))?;
+/// verify_that!(value, subset_of([&0, &1]))?;  // Passes
+/// verify_that!(value, subset_of([&0, &1, &1]))?;  // Passes
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -83,43 +71,35 @@ use std::{fmt::Debug, marker::PhantomData};
 /// runtime proportional to the *product* of the sizes of the actual and
 /// expected containers as well as the time to check equality of each pair of
 /// items. It should not be used on especially large containers.
-pub fn subset_of<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug>(
-    superset: ExpectedT,
-) -> impl Matcher<ActualT = ActualT>
-where
-    for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
-    for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
-{
-    SubsetOfMatcher::<ActualT, _> { superset, phantom: Default::default() }
+pub fn subset_of<ExpectedT>(superset: ExpectedT) -> SubsetOfMatcher<ExpectedT> {
+    SubsetOfMatcher { superset }
 }
 
-struct SubsetOfMatcher<ActualT: ?Sized, ExpectedT> {
+#[derive(MatcherBase)]
+pub struct SubsetOfMatcher<ExpectedT> {
     superset: ExpectedT,
-    phantom: PhantomData<ActualT>,
 }
 
-impl<ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug> Matcher
-    for SubsetOfMatcher<ActualT, ExpectedT>
+impl<ElementT: Debug + PartialEq + Copy, ActualT: Debug + Copy, ExpectedT: Debug> Matcher<ActualT>
+    for SubsetOfMatcher<ExpectedT>
 where
-    for<'a> &'a ActualT: IntoIterator<Item = &'a ElementT>,
+    ActualT: IntoIterator<Item = ElementT>,
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
 {
-    type ActualT = ActualT;
-
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+    fn matches(&self, actual: ActualT) -> MatcherResult {
         for actual_item in actual {
-            if self.expected_is_missing(actual_item) {
+            if self.expected_is_missing(&actual_item) {
                 return MatcherResult::NoMatch;
             }
         }
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: &ActualT) -> Description {
+    fn explain_match(&self, actual: ActualT) -> Description {
         let unexpected_elements = actual
             .into_iter()
             .enumerate()
-            .filter(|&(_, actual_item)| self.expected_is_missing(actual_item))
+            .filter(|item| self.expected_is_missing(&item.1))
             .map(|(idx, actual_item)| format!("{actual_item:#?} at #{idx}"))
             .collect::<Vec<_>>();
 
@@ -138,12 +118,12 @@ where
     }
 }
 
-impl<ActualT: ?Sized, ElementT: PartialEq, ExpectedT> SubsetOfMatcher<ActualT, ExpectedT>
+impl<ElementT: PartialEq, ExpectedT> SubsetOfMatcher<ExpectedT>
 where
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
 {
     fn expected_is_missing(&self, needle: &ElementT) -> bool {
-        !self.superset.into_iter().any(|item| *item == *needle)
+        !self.superset.into_iter().any(|item| item == needle)
     }
 }
 
@@ -163,54 +143,54 @@ mod tests {
     #[test]
     fn subset_of_matches_vec_with_one_element() -> Result<()> {
         let value = vec![1];
-        verify_that!(value, subset_of([1]))
+        verify_that!(value, subset_of([&1]))
     }
 
     #[test]
     fn subset_of_matches_vec_with_two_elements() -> Result<()> {
         let value = vec![1, 2];
-        verify_that!(value, subset_of([1, 2]))
+        verify_that!(value, subset_of([&1, &2]))
     }
 
     #[test]
     fn subset_of_matches_vec_when_expected_has_excess_element() -> Result<()> {
         let value = vec![1, 2];
-        verify_that!(value, subset_of([1, 2, 3]))
+        verify_that!(value, subset_of([&1, &2, &3]))
     }
 
     #[test]
     fn subset_of_matches_vec_when_expected_has_excess_element_first() -> Result<()> {
         let value = vec![1, 2];
-        verify_that!(value, subset_of([3, 1, 2]))
+        verify_that!(value, subset_of([&3, &1, &2]))
     }
 
     #[test]
     fn subset_of_matches_slice_with_one_element() -> Result<()> {
         let value = &[1];
-        verify_that!(*value, subset_of([1]))
+        verify_that!(value, subset_of([&1]))
     }
 
     #[test]
     fn subset_of_matches_hash_set_with_one_element() -> Result<()> {
         let value: HashSet<i32> = [1].into();
-        verify_that!(value, subset_of([1]))
+        verify_that!(value, subset_of([&1]))
     }
 
     #[test]
     fn subset_of_does_not_match_when_first_element_does_not_match() -> Result<()> {
         let value = vec![0];
-        verify_that!(value, not(subset_of([1])))
+        verify_that!(value, not(subset_of([&1])))
     }
 
     #[test]
     fn subset_of_does_not_match_when_second_element_does_not_match() -> Result<()> {
         let value = vec![2, 0];
-        verify_that!(value, not(subset_of([2])))
+        verify_that!(value, not(subset_of([&2])))
     }
 
     #[test]
     fn subset_of_shows_correct_message_when_first_item_does_not_match() -> Result<()> {
-        let result = verify_that!(vec![0, 2, 3], subset_of([1, 2, 3]));
+        let result = verify_that!(vec![0, 2, 3], subset_of([&1, &2, &3]));
 
         verify_that!(
             result,
@@ -231,7 +211,7 @@ mod tests {
 
     #[test]
     fn subset_of_shows_correct_message_when_second_item_does_not_match() -> Result<()> {
-        let result = verify_that!(vec![1, 0, 3], subset_of([1, 2, 3]));
+        let result = verify_that!(vec![1, 0, 3], subset_of([&1, &2, &3]));
 
         verify_that!(
             result,
@@ -252,7 +232,7 @@ mod tests {
 
     #[test]
     fn subset_of_shows_correct_message_when_first_two_items_do_not_match() -> Result<()> {
-        let result = verify_that!(vec![0, 0, 3], subset_of([1, 2, 3]));
+        let result = verify_that!(vec![0, 0, 3], subset_of([&1, &2, &3]));
 
         verify_that!(
             result,

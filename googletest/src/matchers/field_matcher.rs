@@ -33,7 +33,7 @@
 ///   int: i32
 /// }
 /// # fn should_pass() -> Result<()> {
-/// verify_that!(IntField{int: 32}, field!(IntField.int, eq(32)))?;
+/// verify_that!(IntField{int: 32}, field!(&IntField.int, eq(32)))?;
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -46,7 +46,7 @@
 /// #[derive(Debug)]
 /// struct IntField(i32);
 /// # fn should_pass() -> Result<()> {
-/// verify_that!(IntField(32), field!(IntField.0, eq(32)))?;
+/// verify_that!(IntField(32), field!(&IntField.0, eq(32)))?;
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -63,11 +63,11 @@
 ///     B,
 /// }
 /// # fn should_pass() -> Result<()> {
-/// verify_that!(MyEnum::A(32), field!(MyEnum::A.0, eq(32)))?; // Passes
+/// verify_that!(MyEnum::A(32), field!(&MyEnum::A.0, eq(32)))?; // Passes
 /// #     Ok(())
 /// # }
 /// # fn should_fail() -> Result<()> {
-/// verify_that!(MyEnum::B, field!(MyEnum::A.0, eq(32)))?; // Fails: wrong enum variant
+/// verify_that!(MyEnum::B, field!(&MyEnum::A.0, eq(32)))?; // Fails: wrong enum variant
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -83,7 +83,7 @@
 ///     pub struct AStruct(pub i32);
 /// }
 /// # fn should_pass() -> Result<()> {
-/// verify_that!(a_module::AStruct(32), field!(a_module::AStruct.0, eq(32)))?;
+/// verify_that!(a_module::AStruct(32), field!(&a_module::AStruct.0, eq(32)))?;
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -105,6 +105,64 @@
 /// # }
 /// ```
 ///
+/// # Specification of the field pattern
+///
+/// The specification of the field follow the syntax: `(ref)? (&)?
+/// $TYPE.$FIELD`.
+/// The `&` allows to specify whether this matcher matches against an actual of
+/// type `$TYPE` (`$TYPE`` must implement `Copy`) or a `&$TYPE`.
+///
+/// For instance:
+///
+/// ```
+/// # use googletest::prelude::*;
+/// #[derive(Debug)]
+/// pub struct AStruct{a_field: i32};
+/// # fn should_pass() -> Result<()> {
+/// verify_that!(AStruct{a_field: 32}, field!(&AStruct.a_field, eq(32)))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// ```
+///
+/// ```
+/// # use googletest::prelude::*;
+/// #[derive(Debug, Clone, Copy)]
+/// pub struct AStruct{a_field: i32};
+/// # fn should_pass() -> Result<()> {
+/// verify_that!(AStruct{a_field: 32}, field!(AStruct.a_field, eq(32)))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// ```
+///
+/// The `ref` allows to bind the field value by reference, which is required if
+/// the field type does not implement `Copy`.
+///
+/// For instance:
+///
+/// ```
+/// # use googletest::prelude::*;
+/// #[derive(Debug)]
+/// pub struct AStruct{a_field: i32};
+/// # fn should_pass() -> Result<()> {
+/// verify_that!(AStruct{a_field: 32}, field!(&AStruct.a_field, eq(32)))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// ```
+///
+/// ```
+/// # use googletest::prelude::*;
+/// #[derive(Debug)]
+/// pub struct AStruct{a_field: String};
+/// # fn should_pass() -> Result<()> {
+/// verify_that!(AStruct{a_field: "32".into()}, field!(&AStruct.a_field, ref eq("32")))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// ```
+///
 /// See also the macro [`property`][crate::matchers::property] for an analogous
 /// mechanism to extract a datum by invoking a method.
 #[macro_export]
@@ -118,12 +176,44 @@ macro_rules! __field {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! field_internal {
+    (&$($t:ident)::+.$field:tt, ref $m:expr) => {{
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::field_ref_matcher;
+        field_ref_matcher(
+            |o: &_| {
+                match o {
+                    &$($t)::* {$field: ref value, .. } => Some(value),
+                    // The pattern below is unreachable if the type is a struct (as opposed to an
+                    // enum). Since the macro can't know which it is, we always include it and just
+                    // tell the compiler not to complain.
+                    #[allow(unreachable_patterns)]
+                    _ => None,
+                }
+            },
+            &stringify!($field),
+            $m)
+    }};
+    (&$($t:ident)::+.$field:tt, $m:expr) => {{
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher;
+        field_matcher(
+            |o: &_| {
+                match o {
+                    &$($t)::* {$field: value, .. } => Some(value),
+                    // The pattern below is unreachable if the type is a struct (as opposed to an
+                    // enum). Since the macro can't know which it is, we always include it and just
+                    // tell the compiler not to complain.
+                    #[allow(unreachable_patterns)]
+                    _ => None,
+                }
+            },
+            &stringify!($field),
+            $m)
+    }};
     ($($t:ident)::+.$field:tt, $m:expr) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher;
         field_matcher(
             |o| {
                 match o {
-                    $($t)::* { $field: value, .. } => Some(value),
+                    $($t)::* {$field: value, .. } => Some(value),
                     // The pattern below is unreachable if the type is a struct (as opposed to an
                     // enum). Since the macro can't know which it is, we always include it and just
                     // tell the compiler not to complain.
@@ -143,7 +233,7 @@ macro_rules! field_internal {
 pub mod internal {
     use crate::{
         description::Description,
-        matcher::{Matcher, MatcherResult},
+        matcher::{Matcher, MatcherBase, MatcherResult},
     };
     use std::fmt::Debug;
 
@@ -152,26 +242,28 @@ pub mod internal {
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub fn field_matcher<OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<ActualT = InnerT>>(
-        field_accessor: fn(&OuterT) -> Option<&InnerT>,
+    pub fn field_matcher<ExtractorT, InnerMatcher>(
+        field_accessor: ExtractorT,
         field_path: &'static str,
         inner: InnerMatcher,
-    ) -> impl Matcher<ActualT = OuterT> {
+    ) -> FieldMatcher<ExtractorT, InnerMatcher> {
         FieldMatcher { field_accessor, field_path, inner }
     }
 
-    struct FieldMatcher<OuterT, InnerT, InnerMatcher> {
-        field_accessor: fn(&OuterT) -> Option<&InnerT>,
+    #[derive(MatcherBase)]
+    pub struct FieldMatcher<ExtractorT, InnerMatcher> {
+        field_accessor: ExtractorT,
         field_path: &'static str,
         inner: InnerMatcher,
     }
-
-    impl<OuterT: Debug, InnerT: Debug, InnerMatcher: Matcher<ActualT = InnerT>> Matcher
-        for FieldMatcher<OuterT, InnerT, InnerMatcher>
+    impl<
+        OuterT: Debug + Copy,
+        InnerT: Debug + Copy,
+        ExtractorT: Fn(OuterT) -> Option<InnerT>,
+        InnerMatcher: Matcher<InnerT>,
+    > Matcher<OuterT> for FieldMatcher<ExtractorT, InnerMatcher>
     {
-        type ActualT = OuterT;
-
-        fn matches(&self, actual: &OuterT) -> MatcherResult {
+        fn matches(&self, actual: OuterT) -> MatcherResult {
             if let Some(value) = (self.field_accessor)(actual) {
                 self.inner.matches(value)
             } else {
@@ -179,7 +271,70 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: &OuterT) -> Description {
+        fn explain_match(&self, actual: OuterT) -> Description {
+            if let Some(actual) = (self.field_accessor)(actual) {
+                format!(
+                    "which has field `{}`, {}",
+                    self.field_path,
+                    self.inner.explain_match(actual)
+                )
+                .into()
+            } else {
+                let formatted_actual_value = format!("{actual:?}");
+                let without_fields = formatted_actual_value.split('(').next().unwrap_or("");
+                let without_fields = without_fields.split('{').next().unwrap_or("").trim_end();
+                format!("which has the wrong enum variant `{without_fields}`").into()
+            }
+        }
+
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
+            format!(
+                "has field `{}`, which {}",
+                self.field_path,
+                self.inner.describe(matcher_result)
+            )
+            .into()
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn field_ref_matcher<
+        InnerT,
+        OuterT,
+        ExtractorT: for<'a> Fn(&'a OuterT) -> Option<&'a InnerT>,
+        InnerMatcher,
+    >(
+        field_accessor: ExtractorT,
+        field_path: &'static str,
+        inner: InnerMatcher,
+    ) -> FieldMatcher<ExtractorT, InnerMatcher> {
+        FieldMatcher { field_accessor, field_path, inner }
+    }
+
+    #[derive(MatcherBase)]
+    pub struct FieldRefMatcher<ExtractorT, InnerMatcher> {
+        field_accessor: ExtractorT,
+        field_path: &'static str,
+        inner: InnerMatcher,
+    }
+
+    impl<
+        'a,
+        OuterT: Debug + 'a,
+        InnerT: Debug + 'a,
+        ExtractorT: Fn(&'a OuterT) -> Option<&'a InnerT>,
+        InnerMatcher: Matcher<&'a InnerT>,
+    > Matcher<&'a OuterT> for FieldRefMatcher<ExtractorT, InnerMatcher>
+    {
+        fn matches(&self, actual: &'a OuterT) -> MatcherResult {
+            if let Some(value) = (self.field_accessor)(actual) {
+                self.inner.matches(value)
+            } else {
+                MatcherResult::NoMatch
+            }
+        }
+
+        fn explain_match(&self, actual: &'a OuterT) -> Description {
             if let Some(actual) = (self.field_accessor)(actual) {
                 format!(
                     "which has field `{}`, {}",

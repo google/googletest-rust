@@ -13,10 +13,9 @@
 // limitations under the License.
 
 use crate::description::Description;
-use crate::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherBase, MatcherResult};
 use regex::Regex;
 use std::fmt::Debug;
-use std::marker::PhantomData;
 use std::ops::Deref;
 
 /// Matches a string containing a substring which matches the given regular
@@ -47,18 +46,9 @@ use std::ops::Deref;
 ///
 /// Panics if the given `pattern` is not a syntactically valid regular
 /// expression.
-// N.B. This returns the concrete type rather than an impl Matcher so that it
-// can act simultaneously as a Matcher<str> and a Matcher<String>. Otherwise the
-// compiler treats it as a Matcher<str> only and the code
-//   verify_that!("Some value".to_string(), contains_regex(".*value"))?;
-// doesn't compile.
-pub fn contains_regex<ActualT: ?Sized, PatternT: Deref<Target = str>>(
-    pattern: PatternT,
-) -> ContainsRegexMatcher<ActualT> {
-    ContainsRegexMatcher {
-        regex: Regex::new(pattern.deref()).unwrap(),
-        phantom: Default::default(),
-    }
+#[track_caller]
+pub fn contains_regex<PatternT: Deref<Target = str>>(pattern: PatternT) -> ContainsRegexMatcher {
+    ContainsRegexMatcher { regex: Regex::new(pattern.deref()).unwrap() }
 }
 
 /// A matcher matching a string-like type containing a substring matching a
@@ -66,15 +56,13 @@ pub fn contains_regex<ActualT: ?Sized, PatternT: Deref<Target = str>>(
 ///
 /// Intended only to be used from the function [`contains_regex`] only.
 /// Should not be referenced by code outside this library.
-pub struct ContainsRegexMatcher<ActualT: ?Sized> {
+#[derive(MatcherBase)]
+pub struct ContainsRegexMatcher {
     regex: Regex,
-    phantom: PhantomData<ActualT>,
 }
 
-impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher for ContainsRegexMatcher<ActualT> {
-    type ActualT = ActualT;
-
-    fn matches(&self, actual: &ActualT) -> MatcherResult {
+impl<ActualT: AsRef<str> + Debug + Copy> Matcher<ActualT> for ContainsRegexMatcher {
+    fn matches(&self, actual: ActualT) -> MatcherResult {
         self.regex.is_match(actual.as_ref()).into()
     }
 
@@ -92,7 +80,6 @@ impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher for ContainsRegexMatcher<Actu
 
 #[cfg(test)]
 mod tests {
-    use super::{contains_regex, ContainsRegexMatcher};
     use crate::matcher::{Matcher, MatcherResult};
     use crate::prelude::*;
 
@@ -139,10 +126,10 @@ mod tests {
 
     #[test]
     fn contains_regex_displays_quoted_debug_of_pattern() -> Result<()> {
-        let matcher: ContainsRegexMatcher<&str> = contains_regex("\n");
+        let matcher = contains_regex("\n");
 
         verify_that!(
-            Matcher::describe(&matcher, MatcherResult::Match),
+            Matcher::<&str>::describe(&matcher, MatcherResult::Match),
             displays_as(eq("contains the regular expression \"\\n\""))
         )
     }

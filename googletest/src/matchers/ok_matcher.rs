@@ -14,9 +14,9 @@
 
 use crate::{
     description::Description,
-    matcher::{Matcher, MatcherResult},
+    matcher::{Matcher, MatcherBase, MatcherResult},
 };
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a `Result` containing `Ok` with a value matched by `inner`.
 ///
@@ -38,28 +38,55 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # should_fail_1().unwrap_err();
 /// # should_fail_2().unwrap_err();
 /// ```
-pub fn ok<T: Debug, E: Debug>(
-    inner: impl Matcher<ActualT = T>,
-) -> impl Matcher<ActualT = std::result::Result<T, E>> {
-    OkMatcher::<T, E, _> { inner, phantom_t: Default::default(), phantom_e: Default::default() }
+pub fn ok<InnerMatcherT>(inner: InnerMatcherT) -> OkMatcher<InnerMatcherT> {
+    OkMatcher { inner }
 }
 
-struct OkMatcher<T, E, InnerMatcherT> {
+#[derive(MatcherBase)]
+pub struct OkMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
-    phantom_t: PhantomData<T>,
-    phantom_e: PhantomData<E>,
 }
 
-impl<T: Debug, E: Debug, InnerMatcherT: Matcher<ActualT = T>> Matcher
-    for OkMatcher<T, E, InnerMatcherT>
+impl<T: Debug + Copy, E: Debug + Copy, InnerMatcherT: Matcher<T>> Matcher<std::result::Result<T, E>>
+    for OkMatcher<InnerMatcherT>
 {
-    type ActualT = std::result::Result<T, E>;
+    fn matches(&self, actual: std::result::Result<T, E>) -> MatcherResult {
+        actual.map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
+    }
 
-    fn matches(&self, actual: &Self::ActualT) -> MatcherResult {
+    fn explain_match(&self, actual: std::result::Result<T, E>) -> Description {
+        match actual {
+            Ok(o) => {
+                Description::new().text("which is a success").nested(self.inner.explain_match(o))
+            }
+            Err(_) => "which is an error".into(),
+        }
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
+        match matcher_result {
+            MatcherResult::Match => format!(
+                "is a success containing a value, which {}",
+                self.inner.describe(MatcherResult::Match)
+            )
+            .into(),
+            MatcherResult::NoMatch => format!(
+                "is an error or a success containing a value, which {}",
+                self.inner.describe(MatcherResult::NoMatch)
+            )
+            .into(),
+        }
+    }
+}
+
+impl<'a, T: Debug, E: Debug, InnerMatcherT: Matcher<&'a T>> Matcher<&'a std::result::Result<T, E>>
+    for OkMatcher<InnerMatcherT>
+{
+    fn matches(&self, actual: &'a std::result::Result<T, E>) -> MatcherResult {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match(&self, actual: &Self::ActualT) -> Description {
+    fn explain_match(&self, actual: &'a std::result::Result<T, E>) -> Description {
         match actual {
             Ok(o) => {
                 Description::new().text("which is a success").nested(self.inner.explain_match(o))
@@ -96,7 +123,7 @@ mod tests {
         let matcher = ok(eq(1));
         let value: std::result::Result<i32, i32> = Ok(1);
 
-        let result = matcher.matches(&value);
+        let result = matcher.matches(value);
 
         verify_that!(result, eq(MatcherResult::Match))
     }
@@ -106,7 +133,7 @@ mod tests {
         let matcher = ok(eq(1));
         let value: std::result::Result<i32, i32> = Ok(0);
 
-        let result = matcher.matches(&value);
+        let result = matcher.matches(value);
 
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
@@ -116,9 +143,27 @@ mod tests {
         let matcher = ok(eq(1));
         let value: std::result::Result<i32, i32> = Err(1);
 
-        let result = matcher.matches(&value);
+        let result = matcher.matches(value);
 
         verify_that!(result, eq(MatcherResult::NoMatch))
+    }
+
+    #[test]
+    fn ok_matches_result_with_value_by_ref() -> Result<()> {
+        let result: std::result::Result<String, String> = Ok("123".into());
+        verify_that!(result, ok(eq("123")))
+    }
+
+    #[test]
+    fn ok_does_not_match_result_with_wrong_value_by_ref() -> Result<()> {
+        let result: std::result::Result<String, String> = Ok("321".into());
+        verify_that!(result, not(ok(eq("123"))))
+    }
+
+    #[test]
+    fn ok_does_not_match_result_with_err_by_ref() -> Result<()> {
+        let result: std::result::Result<String, String> = Err("123".into());
+        verify_that!(result, not(ok(eq("123"))))
     }
 
     #[test]
@@ -140,15 +185,107 @@ mod tests {
     }
 
     #[test]
-    fn ok_describe_matches() -> Result<()> {
-        let matcher = super::OkMatcher::<i32, i32, _> {
-            inner: eq(1),
-            phantom_t: Default::default(),
-            phantom_e: Default::default(),
-        };
+    fn ok_describe_match() -> Result<()> {
+        let matcher = ok(eq(1));
         verify_that!(
-            matcher.describe(MatcherResult::Match),
+            Matcher::<std::result::Result<i32, i32>>::describe(&matcher, MatcherResult::Match),
             displays_as(eq("is a success containing a value, which is equal to 1"))
+        )
+    }
+
+    #[test]
+    fn ok_describe_no_match() -> Result<()> {
+        let matcher = ok(eq(1));
+        verify_that!(
+            Matcher::<std::result::Result<i32, i32>>::describe(&matcher, MatcherResult::NoMatch),
+            displays_as(eq("is an error or a success containing a value, which isn't equal to 1"))
+        )
+    }
+
+    #[test]
+    fn ok_describe_match_by_ref() -> Result<()> {
+        let matcher = ok(eq(&1));
+        verify_that!(
+            Matcher::<&std::result::Result<i32, String>>::describe(&matcher, MatcherResult::Match),
+            displays_as(eq("is a success containing a value, which is equal to 1"))
+        )
+    }
+
+    #[test]
+    fn ok_describe_no_match_by_ref() -> Result<()> {
+        let matcher = ok(eq(&1));
+        verify_that!(
+            Matcher::<&std::result::Result<i32, String>>::describe(
+                &matcher,
+                MatcherResult::NoMatch
+            ),
+            displays_as(eq("is an error or a success containing a value, which isn't equal to 1"))
+        )
+    }
+
+    #[test]
+    fn ok_explain_match_ok_success() -> Result<()> {
+        let actual = Ok(1);
+        let matcher = ok(eq(1));
+
+        verify_that!(
+            Matcher::<std::result::Result<i32, i32>>::explain_match(&matcher, actual),
+            displays_as(eq("which is a success\n  which is equal to 1"))
+        )
+    }
+
+    #[test]
+    fn ok_explain_match_ok_fail() -> Result<()> {
+        let actual = Ok(1);
+        let matcher = ok(eq(2));
+
+        verify_that!(
+            Matcher::<std::result::Result<i32, i32>>::explain_match(&matcher, actual),
+            displays_as(eq("which is a success\n  which isn't equal to 2"))
+        )
+    }
+
+    #[test]
+    fn ok_explain_match_ok_err() -> Result<()> {
+        let actual = Err(1);
+        let matcher = ok(eq(2));
+
+        verify_that!(
+            Matcher::<std::result::Result<i32, i32>>::explain_match(&matcher, actual),
+            displays_as(eq("which is an error"))
+        )
+    }
+
+    #[test]
+    fn ok_explain_match_ok_success_by_ref() -> Result<()> {
+        let actual = Ok("123".to_string());
+        let matcher = ok(eq("123"));
+
+        verify_that!(
+            Matcher::<&std::result::Result<String, String>>::explain_match(&matcher, &actual),
+            displays_as(eq("which is a success\n  which is equal to \"123\""))
+        )
+    }
+
+    #[test]
+    fn ok_explain_match_ok_fail_by_ref() -> Result<()> {
+        let actual = Ok("321".to_string());
+        let matcher = ok(eq("123"));
+
+        verify_that!(
+            Matcher::<&std::result::Result<String, String>>::explain_match(&matcher, &actual),
+            displays_as(eq("which is a success\n  which isn't equal to \"123\""))
+        )
+    }
+
+    #[test]
+    fn ok_explain_match_ok_err_by_ref() -> Result<()> {
+        let actual = Err("123".to_string());
+        let matcher = ok(eq("123"));
+
+        verify_that!(
+            Matcher::<&std::result::Result<String, String>>::explain_match(&matcher, &actual),
+            displays_as(eq("which is an error"))
         )
     }
 }

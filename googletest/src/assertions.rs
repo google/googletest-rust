@@ -121,28 +121,34 @@
 #[macro_export]
 macro_rules! verify_that {
     ($actual:expr, [$($expecteds:expr),+ $(,)?]) => {
-        $crate::assertions::internal::check_matcher(
-            &$actual,
-            $crate::matchers::elements_are![$($expecteds),+],
-            stringify!($actual),
-            $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!()),
-        )
+        {
+            use $crate::assertions::internal::Subject;
+            $actual.check(
+                $crate::matchers::elements_are![$($expecteds),+],
+                stringify!($actual),
+                $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!()),
+            )
+        }
     };
     ($actual:expr, {$($expecteds:expr),+ $(,)?}) => {
-        $crate::assertions::internal::check_matcher(
-            &$actual,
-            $crate::matchers::unordered_elements_are![$($expecteds),+],
-            stringify!($actual),
-            $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!()),
-        )
+        {
+            use $crate::assertions::internal::Subject;
+            $actual.check(
+                $crate::matchers::unordered_elements_are![$($expecteds),+],
+                stringify!($actual),
+                $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!()),
+            )
+        }
     };
     ($actual:expr, $expected:expr $(,)?) => {
-        $crate::assertions::internal::check_matcher(
-            &$actual,
-            $expected,
-            stringify!($actual),
-            $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!()),
-        )
+        {
+            use $crate::assertions::internal::Subject;
+            $actual.check(
+                $expected,
+                stringify!($actual),
+                $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!()),
+            )
+        }
     };
 }
 
@@ -524,27 +530,44 @@ pub mod internal {
     };
     use std::fmt::Debug;
 
-    /// Checks whether the matcher `expected` matches the value `actual`, adding
-    /// a test failure report if it does not match.
-    ///
-    /// Returns `Ok(())` if the value matches and `Err(())` if it does not
-    /// match.
-    ///
-    /// **For internal use only. API stablility is not guaranteed!**
-    #[must_use = "The assertion result must be evaluated to affect the test result."]
-    pub fn check_matcher<T: Debug + ?Sized>(
-        actual: &T,
-        expected: impl Matcher<ActualT = T>,
-        actual_expr: &'static str,
-        source_location: SourceLocation,
-    ) -> Result<(), TestAssertionFailure> {
-        match expected.matches(actual) {
-            MatcherResult::Match => Ok(()),
-            MatcherResult::NoMatch => {
-                Err(create_assertion_failure(&expected, actual, actual_expr, source_location))
+    /// Extension trait to perform autoref through method lookup in the
+    /// assertion macros. With this trait, the subject can be either a value
+    /// or a reference. For example, this trait makes the following code
+    /// compile and work:
+    /// ```
+    /// # use googletest::prelude::*;
+    /// # fn would_not_compile_without_autoref() -> Result<()> {
+    /// let not_copyable = vec![1,2,3];
+    /// verify_that!(not_copyable, empty())?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// See [Method Lookup](https://rustc-dev-guide.rust-lang.org/method-lookup.html)
+    pub trait Subject: Copy + Debug {
+        /// Checks whether the matcher `expected` matches the `Subject `self`,
+        /// adding a test failure report if it does not match.
+        ///
+        /// Returns `Ok(())` if the value matches and `Err(_)` if it does not
+        /// match.
+        ///
+        /// **For internal use only. API stablility is not guaranteed!**
+        #[must_use = "The assertion result must be evaluated to affect the test result."]
+        fn check(
+            self,
+            expected: impl Matcher<Self>,
+            actual_expr: &'static str,
+            source_location: SourceLocation,
+        ) -> Result<(), TestAssertionFailure> {
+            match expected.matches(self) {
+                MatcherResult::Match => Ok(()),
+                MatcherResult::NoMatch => {
+                    Err(create_assertion_failure(&expected, self, actual_expr, source_location))
+                }
             }
         }
     }
+
+    impl<T: Copy + Debug> Subject for T {}
 
     /// Constructs a `Result::Err(TestAssertionFailure)` for a predicate failure
     /// as produced by the macro [`crate::verify_pred`].

@@ -13,16 +13,15 @@
 // limitations under the License.
 
 use crate::description::Description;
-use crate::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherBase, MatcherResult};
 use crate::matcher_support::count_elements::count_elements;
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 /// Matches a container whose number of elements matches `expected`.
 ///
 /// This matches against a container over which one can iterate. This includes
-/// the standard Rust containers, arrays, and (when dereferenced) slices. More
-/// precisely, a shared borrow of the actual type must implement
-/// [`IntoIterator`].
+/// the standard Rust containers, arrays, and slices. More
+/// precisely, the actual type must implement [`IntoIterator`].
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -49,26 +48,21 @@ use std::{fmt::Debug, marker::PhantomData};
 /// # }
 /// # should_pass().unwrap();
 /// ```
-pub fn len<T: Debug + ?Sized, E: Matcher<ActualT = usize>>(expected: E) -> impl Matcher<ActualT = T>
-where
-    for<'a> &'a T: IntoIterator,
-{
-    LenMatcher { expected, phantom: Default::default() }
+pub fn len<E>(expected: E) -> LenMatcher<E> {
+    LenMatcher { expected }
 }
 
-struct LenMatcher<T: ?Sized, E> {
+#[derive(MatcherBase)]
+pub struct LenMatcher<E> {
     expected: E,
-    phantom: PhantomData<T>,
 }
 
-impl<T: Debug + ?Sized, E: Matcher<ActualT = usize>> Matcher for LenMatcher<T, E>
+impl<T: Debug + Copy, E: Matcher<usize>> Matcher<T> for LenMatcher<E>
 where
-    for<'a> &'a T: IntoIterator,
+    T: IntoIterator,
 {
-    type ActualT = T;
-
-    fn matches(&self, actual: &T) -> MatcherResult {
-        self.expected.matches(&count_elements(actual))
+    fn matches(&self, actual: T) -> MatcherResult {
+        self.expected.matches(count_elements(actual))
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -83,9 +77,9 @@ where
         }
     }
 
-    fn explain_match(&self, actual: &T) -> Description {
+    fn explain_match(&self, actual: T) -> Description {
         let actual_size = count_elements(actual);
-        format!("which has length {}, {}", actual_size, self.expected.explain_match(&actual_size))
+        format!("which has length {}, {}", actual_size, self.expected.explain_match(actual_size))
             .into()
     }
 }
@@ -101,7 +95,6 @@ mod tests {
         BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque,
     };
     use std::fmt::Debug;
-    use std::marker::PhantomData;
 
     #[test]
     fn len_matcher_match_vec() -> Result<()> {
@@ -112,7 +105,7 @@ mod tests {
     #[test]
     fn len_matcher_match_array_reference() -> Result<()> {
         let value = &[1, 2, 3];
-        verify_that!(*value, len(eq(3)))
+        verify_that!(value, len(eq(3)))
     }
 
     #[test]
@@ -125,7 +118,7 @@ mod tests {
     fn len_matcher_match_slice_of_vec() -> Result<()> {
         let value = vec![1, 2, 3];
         let slice = value.as_slice();
-        verify_that!(*slice, len(eq(3)))
+        verify_that!(slice, len(eq(3)))
     }
 
     #[test]
@@ -178,11 +171,10 @@ mod tests {
 
     #[test]
     fn len_matcher_explain_match() -> Result<()> {
-        struct TestMatcher<T>(PhantomData<T>);
-        impl<T: Debug> Matcher for TestMatcher<T> {
-            type ActualT = T;
-
-            fn matches(&self, _: &T) -> MatcherResult {
+        #[derive(MatcherBase)]
+        struct TestMatcher;
+        impl<T: Debug + Copy> Matcher<T> for TestMatcher {
+            fn matches(&self, _: T) -> MatcherResult {
                 false.into()
             }
 
@@ -190,12 +182,12 @@ mod tests {
                 "called described".into()
             }
 
-            fn explain_match(&self, _: &T) -> Description {
+            fn explain_match(&self, _: T) -> Description {
                 "called explain_match".into()
             }
         }
         verify_that!(
-            len(TestMatcher(Default::default())).explain_match(&[1, 2, 3]),
+            len(TestMatcher).explain_match([1, 2, 3]),
             displays_as(eq("which has length 3, called explain_match"))
         )
     }

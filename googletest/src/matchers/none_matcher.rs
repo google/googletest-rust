@@ -13,9 +13,8 @@
 // limitations under the License.
 
 use crate::description::Description;
-use crate::matcher::{Matcher, MatcherResult};
+use crate::matcher::{Matcher, MatcherBase, MatcherResult};
 use std::fmt::Debug;
-use std::marker::PhantomData;
 
 /// Matches an `Option` containing `None`.
 ///
@@ -32,19 +31,29 @@ use std::marker::PhantomData;
 /// # should_pass().unwrap();
 /// # should_fail().unwrap_err();
 /// ```
-pub fn none<T: Debug>() -> impl Matcher<ActualT = Option<T>> {
-    NoneMatcher::<T> { phantom: Default::default() }
+pub fn none() -> NoneMatcher {
+    NoneMatcher
 }
 
-struct NoneMatcher<T> {
-    phantom: PhantomData<T>,
+#[derive(MatcherBase)]
+pub struct NoneMatcher;
+
+impl<T: Debug + Copy> Matcher<Option<T>> for NoneMatcher {
+    fn matches(&self, actual: Option<T>) -> MatcherResult {
+        actual.is_none().into()
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
+        match matcher_result {
+            MatcherResult::Match => "is none".into(),
+            MatcherResult::NoMatch => "is some(_)".into(),
+        }
+    }
 }
 
-impl<T: Debug> Matcher for NoneMatcher<T> {
-    type ActualT = Option<T>;
-
-    fn matches(&self, actual: &Option<T>) -> MatcherResult {
-        (actual.is_none()).into()
+impl<'a, T: Debug> Matcher<&'a Option<T>> for NoneMatcher {
+    fn matches(&self, actual: &'a Option<T>) -> MatcherResult {
+        actual.is_none().into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -63,9 +72,9 @@ mod tests {
 
     #[test]
     fn none_matches_option_with_none() -> Result<()> {
-        let matcher = none::<i32>();
+        let matcher = none();
 
-        let result = matcher.matches(&None);
+        let result = matcher.matches(None::<i32>);
 
         verify_that!(result, eq(MatcherResult::Match))
     }
@@ -74,8 +83,47 @@ mod tests {
     fn none_does_not_match_option_with_value() -> Result<()> {
         let matcher = none();
 
-        let result = matcher.matches(&Some(0));
+        let result = matcher.matches(Some(0));
 
         verify_that!(result, eq(MatcherResult::NoMatch))
+    }
+
+    #[test]
+    fn none_matches_option_by_ref() -> Result<()> {
+        verify_that!(None::<String>, none())
+    }
+    #[test]
+    fn none_does_not_match_option_with_value_by_ref() -> Result<()> {
+        verify_that!(Some("123".to_string()), not(none()))
+    }
+
+    #[test]
+    fn none_describe_match_option_by_ref() -> Result<()> {
+        verify_that!(
+            Matcher::<&Option<String>>::describe(&none(), MatcherResult::Match),
+            displays_as(eq("is none"))
+        )
+    }
+    #[test]
+    fn none_describe_no_match_option_by_ref() -> Result<()> {
+        verify_that!(
+            Matcher::<&Option<String>>::describe(&none(), MatcherResult::NoMatch),
+            displays_as(eq("is some(_)"))
+        )
+    }
+
+    #[test]
+    fn none_describe_match_option() -> Result<()> {
+        verify_that!(
+            Matcher::<Option<i32>>::describe(&none(), MatcherResult::Match),
+            displays_as(eq("is none"))
+        )
+    }
+    #[test]
+    fn none_describe_no_match_option() -> Result<()> {
+        verify_that!(
+            Matcher::<Option<i32>>::describe(&none(), MatcherResult::NoMatch),
+            displays_as(eq("is some(_)"))
+        )
     }
 }

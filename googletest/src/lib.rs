@@ -42,7 +42,7 @@ pub mod matchers;
 /// }
 /// ```
 pub mod prelude {
-    pub use super::matcher::Matcher;
+    pub use super::matcher::{Matcher, MatcherBase};
     pub use super::matchers::*;
     pub use super::verify_current_test_outcome;
     pub use super::GoogleTestSupport;
