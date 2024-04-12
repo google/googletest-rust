@@ -216,3 +216,13 @@ fn matches_struct_copy_to_ref() -> Result<()> {
     // test case is not necessary.
     Ok(())
 }
+
+#[test]
+fn matches_struct_ref_to_ref_binding_mode() -> Result<()> {
+    #[derive(Debug)]
+    struct Strukt {
+        a_field: String,
+    }
+
+    verify_that!(Strukt { a_field: "32".into() }, field!(Strukt.a_field, eq("32")))
+}

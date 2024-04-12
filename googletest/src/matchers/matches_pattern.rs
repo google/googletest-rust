@@ -37,9 +37,9 @@
 ///     a_field: "Something to believe in".into(),
 ///     another_field: "Something else".into()
 /// };
-/// verify_that!(my_struct, matches_pattern!(&MyStruct {
-///     a_field: ref starts_with("Something"),
-///     another_field: ref ends_with("else"),
+/// verify_that!(my_struct, matches_pattern!(MyStruct {
+///     a_field: starts_with("Something"),
+///     another_field: ends_with("else"),
 /// }))
 /// #     .unwrap();
 /// ```
@@ -59,8 +59,8 @@
 /// #     a_field: "Something to believe in".into(),
 /// #     another_field: "Something else".into()
 /// # };
-/// verify_that!(my_struct, matches_pattern!(&MyStruct {
-///     a_field: ref starts_with("Something"),
+/// verify_that!(my_struct, matches_pattern!(MyStruct {
+///     a_field: starts_with("Something"),
 ///     // another_field is missing, so it may be anything.
 /// }))
 /// #     .unwrap();
@@ -83,9 +83,9 @@
 /// let my_struct = MyStruct {
 ///     a_nested_struct: MyInnerStruct { a_field: "Something to believe in".into() },
 /// };
-/// verify_that!(my_struct, matches_pattern!(&MyStruct {
-///      a_nested_struct: ref matches_pattern!(&MyInnerStruct {
-///         a_field: ref starts_with("Something"),
+/// verify_that!(my_struct, matches_pattern!(MyStruct {
+///      a_nested_struct: matches_pattern!(MyInnerStruct {
+///         a_field: starts_with("Something"),
 ///     }),
 /// }))
 /// #     .unwrap();
@@ -109,9 +109,9 @@
 /// # let my_struct = MyStruct {
 /// #     a_nested_struct: MyInnerStruct { a_field: "Something to believe in".into() },
 /// # };
-/// verify_that!(my_struct, matches_pattern!(&MyStruct {
-///     a_nested_struct: ref pat!(&MyInnerStruct {
-///         a_field: ref starts_with("Something"),
+/// verify_that!(my_struct, matches_pattern!(MyStruct {
+///     a_nested_struct: pat!(MyInnerStruct {
+///         a_field: starts_with("Something"),
 ///     }),
 /// }))
 /// #     .unwrap();
@@ -132,8 +132,8 @@
 /// }
 ///
 /// let my_struct = MyStruct { a_field: "Something to believe in".into() };
-/// verify_that!(my_struct, matches_pattern!(&MyStruct {
-///     get_a_field(): ref starts_with("Something"),
+/// verify_that!(my_struct, matches_pattern!(MyStruct {
+///     get_a_field(): starts_with("Something"),
 /// }))
 /// #     .unwrap();
 /// ```
@@ -143,7 +143,7 @@
 /// failure, it will be invoked a second time, with the assertion failure output
 /// reflecting the *second* invocation.
 ///
-/// These may also include extra parameters you pass in:
+/// These may also include extra litteral parameters you pass in:
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -163,7 +163,7 @@
 /// #     .unwrap();
 /// ```
 ///
-/// If the method returns a non-`Copy` type, precede it with a `ref` to bind the
+/// You can precede both field and property matchers with a `ref` to match the
 /// result by reference:
 ///
 /// ```
@@ -180,6 +180,28 @@
 /// # let my_struct = MyStruct { a_field: "Something to believe in".into() };
 /// verify_that!(my_struct, matches_pattern!(&MyStruct {
 ///     get_a_field_ref(): ref starts_with("Something"),
+/// }))
+/// #    .unwrap();
+/// ```
+///
+/// Note that if the `actual` is of type `&ActualT` and the pattern type is
+/// `ActualT`, this is automatically performed. This behavior is similar to the
+/// reference binding mode in pattern matching.
+///
+/// ```
+/// # use googletest::prelude::*;
+/// # #[derive(Debug)]
+/// # struct MyStruct {
+/// #     a_field: String,
+/// # }
+/// #
+/// impl MyStruct {
+///     fn get_a_field_ref(&self) -> String { self.a_field.clone() }
+/// }
+///
+/// # let my_struct = MyStruct { a_field: "Something to believe in".into() };
+/// verify_that!(my_struct, matches_pattern!(MyStruct {
+///     get_a_field_ref(): starts_with("Something"),
 /// }))
 /// #    .unwrap();
 /// ```

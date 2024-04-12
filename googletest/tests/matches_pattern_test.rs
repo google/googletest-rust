@@ -109,6 +109,35 @@ fn matches_struct_containing_nested_struct_with_field() -> Result<()> {
 }
 
 #[test]
+fn matches_struct_containing_nested_struct_with_field_with_binding_mode() -> Result<()> {
+    #[derive(Debug)]
+    struct AStruct {
+        a_nested_struct: ANestedStruct,
+    }
+    #[derive(Debug)]
+    struct ANestedStruct {
+        a_field: u32,
+    }
+    let actual = AStruct { a_nested_struct: ANestedStruct { a_field: 123 } };
+
+    verify_that!(
+        actual,
+        matches_pattern!(AStruct { a_nested_struct: pat!(ANestedStruct { a_field: eq(&123) }) })
+    )
+}
+
+#[test]
+fn matches_struct_containing_non_copy_field_binding_mode() -> Result<()> {
+    #[derive(Debug)]
+    struct AStruct {
+        a_string: String,
+    }
+    let actual = AStruct { a_string: "123".into() };
+
+    verify_that!(actual, matches_pattern!(AStruct { a_string: eq("123") }))
+}
+
+#[test]
 fn has_correct_assertion_failure_message_for_single_field() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {

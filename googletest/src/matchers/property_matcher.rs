@@ -44,7 +44,7 @@
 /// failure, it will be invoked a second time, with the assertion failure output
 /// reflecting the *second* invocation.
 ///
-/// The method may also take additional arguments:
+/// The method may also take additional litteral arguments:
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -60,6 +60,8 @@
 /// verify_that!(value, contains(property!(&MyStruct.add_to_a_field(50), eq(150))))
 /// #    .unwrap();
 /// ```
+///
+/// The arguments must be litteral as `property!` is not able to capture them.
 ///
 /// # Specification of the property pattern
 ///
@@ -121,6 +123,8 @@
 /// # should_pass().unwrap();
 /// ```
 ///
+/// If `property!` is qualified by both `&` and `ref`, they can both be omitted.
+///
 /// ```
 /// # use googletest::prelude::*;
 /// #[derive(Debug)]
@@ -131,6 +135,7 @@
 /// }
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(AStruct, property!(&AStruct.a_property(), ref eq("32")))?;
+/// verify_that!(AStruct, property!(AStruct.a_property(), eq("32")))?;
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -170,14 +175,14 @@ macro_rules! property_internal {
     (& $($t:ident)::+.$method:tt($($argument:tt),* $(,)?), $m:expr) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::property_matcher;
         property_matcher(
-            |o: &$($t)::+| $($t)::+::$method(o, $($argument),*),
+            |o: &&$($t)::+| o.$method($($argument),*),
             &stringify!($method($($argument),*)),
             $m)
     }};
     ($($t:ident)::+.$method:tt($($argument:tt),* $(,)?), $m:expr) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::property_matcher;
         property_matcher(
-            |o: $($t)::+| $($t)::+::$method(o, $($argument),*),
+            |o: &$($t)::+| o.$method($($argument),*),
             &stringify!($method($($argument),*)),
             $m)
     }};
@@ -196,35 +201,29 @@ pub mod internal {
 
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub fn property_matcher<
-        OuterT: Debug,
-        InnerT: Debug + Copy,
-        MatcherT: Matcher<InnerT>,
-        ExtractorT: Fn(OuterT) -> InnerT,
-    >(
-        extractor: ExtractorT,
+    pub fn property_matcher<OuterT: Debug, InnerT: Debug, MatcherT>(
+        extractor: fn(&OuterT) -> InnerT,
         property_desc: &'static str,
         inner: MatcherT,
-    ) -> PropertyMatcher<ExtractorT, MatcherT> {
+    ) -> PropertyMatcher<OuterT, InnerT, MatcherT> {
         PropertyMatcher { extractor, property_desc, inner }
     }
 
     #[derive(MatcherBase)]
-    pub struct PropertyMatcher<ExtractorT, MatcherT> {
-        extractor: ExtractorT,
+    pub struct PropertyMatcher<OuterT, InnerT, MatcherT> {
+        extractor: fn(&OuterT) -> InnerT,
         property_desc: &'static str,
         inner: MatcherT,
     }
 
-    impl<InnerT, OuterT, ExtractorT, MatcherT> Matcher<OuterT> for PropertyMatcher<ExtractorT, MatcherT>
+    impl<InnerT, OuterT, MatcherT> Matcher<OuterT> for PropertyMatcher<OuterT, InnerT, MatcherT>
     where
         InnerT: Debug + Copy,
         OuterT: Debug + Copy,
-        ExtractorT: Fn(OuterT) -> InnerT,
         MatcherT: Matcher<InnerT>,
     {
         fn matches(&self, actual: OuterT) -> MatcherResult {
-            self.inner.matches((self.extractor)(actual))
+            self.inner.matches((self.extractor)(&actual))
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -237,12 +236,43 @@ pub mod internal {
         }
 
         fn explain_match(&self, actual: OuterT) -> Description {
-            let actual_inner = (self.extractor)(actual);
+            let actual_inner = (self.extractor)(&actual);
             format!(
                 "whose property `{}` is `{:#?}`, {}",
                 self.property_desc,
                 actual_inner,
                 self.inner.explain_match(actual_inner)
+            )
+            .into()
+        }
+    }
+
+    impl<'a, InnerT, OuterT, MatcherT> Matcher<&'a OuterT> for PropertyMatcher<OuterT, InnerT, MatcherT>
+    where
+        InnerT: Debug,
+        OuterT: Debug,
+        MatcherT: for<'b> Matcher<&'b InnerT>,
+    {
+        fn matches(&self, actual: &'a OuterT) -> MatcherResult {
+            self.inner.matches(&(self.extractor)(actual))
+        }
+
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
+            format!(
+                "has property `{}`, which {}",
+                self.property_desc,
+                self.inner.describe(matcher_result)
+            )
+            .into()
+        }
+
+        fn explain_match(&self, actual: &'a OuterT) -> Description {
+            let actual_inner = (self.extractor)(&actual);
+            format!(
+                "whose property `{}` is `{:#?}`, {}",
+                self.property_desc,
+                actual_inner,
+                self.inner.explain_match(&actual_inner)
             )
             .into()
         }
