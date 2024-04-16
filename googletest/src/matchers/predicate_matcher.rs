@@ -36,12 +36,7 @@ use std::fmt::Debug;
 /// the closure argument, it is likely that it won't.
 /// See <https://github.com/rust-lang/rust/issues/12679> for update on this issue.
 /// This is easily fixed by explicitly declaring the type of the argument
-pub fn predicate<T: Debug + Copy, P>(
-    predicate: P,
-) -> PredicateMatcher<P, NoDescription, NoDescription>
-where
-    P: Fn(T) -> bool,
-{
+pub fn predicate<P>(predicate: P) -> PredicateMatcher<P, NoDescription, NoDescription> {
     PredicateMatcher {
         predicate,
         positive_description: NoDescription,

@@ -69,3 +69,118 @@ fn elements_are_works_as_inner_matcher() -> Result<()> {
 fn tuple_works_as_inner_matcher() -> Result<()> {
     verify_that!(vec![(123,)], elements_are![(eq(&123),)])
 }
+
+#[test]
+fn matches_struct_with_method_returning_option_of_non_copy_value() -> Result<()> {
+    #[derive(Debug)]
+    struct AnInnerStruct;
+
+    #[derive(Debug)]
+    struct AStruct;
+
+    impl AStruct {
+        fn get_value(&self) -> Option<AnInnerStruct> {
+            Some(AnInnerStruct)
+        }
+    }
+
+    verify_that!(
+        AStruct,
+        matches_pattern!(&AStruct {
+            get_value(): ref some(matches_pattern!(&AnInnerStruct))
+        })
+    )
+}
+
+#[test]
+fn matches_struct_with_method_returning_option_of_non_copy_enum() -> Result<()> {
+    #[derive(Debug)]
+    enum AnInnerStruct {
+        ThisCase,
+        #[allow(unused)]
+        ThatCase,
+    }
+    #[derive(Debug)]
+    struct AStruct;
+    impl AStruct {
+        fn get_value(&self) -> Option<AnInnerStruct> {
+            Some(AnInnerStruct::ThisCase)
+        }
+    }
+
+    verify_that!(
+        AStruct,
+        matches_pattern!(&AStruct {
+            get_value(): ref some(matches_pattern!(&AnInnerStruct::ThisCase))
+        })
+    )
+}
+
+#[test]
+fn matches_struct_with_method_returning_option_ref_binding_mode() -> Result<()> {
+    #[derive(Debug)]
+    struct AnInnerStruct;
+    #[derive(Debug)]
+    struct AStruct;
+    impl AStruct {
+        fn get_value(&self) -> Option<AnInnerStruct> {
+            Some(AnInnerStruct)
+        }
+    }
+
+    verify_that!(
+        AStruct,
+        matches_pattern!(AStruct {
+            get_value(): some(matches_pattern!(AnInnerStruct))
+        })
+    )
+}
+
+#[test]
+fn matches_struct_with_method_returning_option_enum_ref_binding_mode() -> Result<()> {
+    #[derive(Debug)]
+    enum AnInnerStruct {
+        ThisCase,
+        #[allow(unused)]
+        ThatCase,
+    }
+    #[derive(Debug)]
+    struct AStruct;
+    impl AStruct {
+        fn get_value(&self) -> Option<AnInnerStruct> {
+            Some(AnInnerStruct::ThisCase)
+        }
+    }
+
+    verify_that!(
+        AStruct,
+        matches_pattern!(AStruct {
+            get_value(): some(matches_pattern!(AnInnerStruct::ThisCase))
+        })
+    )
+}
+
+#[test]
+fn matches_struct_with_property_against_predicate() -> Result<()> {
+    #[derive(Debug)]
+    enum AnInnerStruct {
+        ThisCase,
+        #[allow(unused)]
+        ThatCase,
+    }
+
+    #[derive(Debug)]
+    struct AStruct;
+    impl AStruct {
+        fn get_value(&self) -> AnInnerStruct {
+            AnInnerStruct::ThisCase
+        }
+    }
+
+    verify_that!(
+        AStruct,
+        matches_pattern!(AStruct {
+            get_value(): predicate(|_: &_| true)
+        })
+    )
+}

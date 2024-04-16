@@ -453,11 +453,10 @@ macro_rules! matches_pattern_internal {
     (
         [$($struct_name:tt)*],
     ) => {
-        $crate::matchers::predicate(|v| matches!(v, $($struct_name)*))
-            .with_description(
-                concat!("is ", stringify!($($struct_name)*)),
-                concat!("is not ", stringify!($($struct_name)*)),
-            )
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::pattern_only(
+            |v| matches!(v, $($struct_name)*),
+            concat!("is ", stringify!($($struct_name)*)),
+            concat!("is not ", stringify!($($struct_name)*)))
     };
 
     (
@@ -823,4 +822,60 @@ macro_rules! matches_pattern_internal {
 #[doc(hidden)]
 macro_rules! __pat {
     ($($t:tt)*) => { $crate::matches_pattern_internal!($($t)*) }
+}
+
+#[doc(hidden)]
+pub mod internal {
+    use crate::matcher::{Matcher, MatcherBase};
+    use std::fmt::Debug;
+
+    // Specialized implementation of the `predicate` matcher to support ref binding
+    // mode for `matches_pattern`.
+    pub fn pattern_only<T>(
+        matcher_function: fn(&T) -> bool,
+        match_description: &'static str,
+        no_match_description: &'static str,
+    ) -> PatternOnlyMatcher<T> {
+        PatternOnlyMatcher { matcher_function, match_description, no_match_description }
+    }
+
+    #[derive(MatcherBase)]
+    #[doc(hidden)]
+    pub struct PatternOnlyMatcher<T> {
+        matcher_function: fn(&T) -> bool,
+        match_description: &'static str,
+        no_match_description: &'static str,
+    }
+
+    impl<'a, T: Debug> Matcher<&'a T> for PatternOnlyMatcher<T> {
+        fn matches(&self, actual: &'a T) -> crate::matcher::MatcherResult {
+            (self.matcher_function)(actual).into()
+        }
+
+        fn describe(
+            &self,
+            matcher_result: crate::matcher::MatcherResult,
+        ) -> crate::description::Description {
+            match matcher_result {
+                crate::matcher::MatcherResult::Match => self.match_description.into(),
+                crate::matcher::MatcherResult::NoMatch => self.no_match_description.into(),
+            }
+        }
+    }
+
+    impl<T: Debug + Copy> Matcher<T> for PatternOnlyMatcher<T> {
+        fn matches(&self, actual: T) -> crate::matcher::MatcherResult {
+            (self.matcher_function)(&actual).into()
+        }
+
+        fn describe(
+            &self,
+            matcher_result: crate::matcher::MatcherResult,
+        ) -> crate::description::Description {
+            match matcher_result {
+                crate::matcher::MatcherResult::Match => self.match_description.into(),
+                crate::matcher::MatcherResult::NoMatch => self.no_match_description.into(),
+            }
+        }
+    }
 }

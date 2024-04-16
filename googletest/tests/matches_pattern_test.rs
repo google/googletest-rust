@@ -488,6 +488,28 @@ fn matches_enum_without_field() -> Result<()> {
 }
 
 #[test]
+fn matches_enum_without_field_ref_binding_mode() -> Result<()> {
+    #[derive(Debug)]
+    enum AnEnum {
+        A,
+    }
+    let actual = AnEnum::A;
+
+    verify_that!(actual, matches_pattern!(AnEnum::A))
+}
+
+#[test]
+fn matches_enum_without_field_copy() -> Result<()> {
+    #[derive(Debug, Clone, Copy)]
+    enum AnEnum {
+        A,
+    }
+    let actual = AnEnum::A;
+
+    verify_that!(actual, matches_pattern!(AnEnum::A))
+}
+
+#[test]
 fn generates_correct_failure_output_when_enum_variant_without_field_is_not_matched() -> Result<()> {
     #[derive(Debug)]
     enum AnEnum {
