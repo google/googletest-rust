@@ -126,6 +126,26 @@ path = "src/add_failure_macro_needs_googletest_attribute.rs"
 test = false
 
 [[bin]]
+name = "add_failure_at_macro_causes_failure_but_continues_execution"
+path = "src/add_failure_at_macro_causes_failure_but_continues_execution.rs"
+test = false
+
+[[bin]]
+name = "add_failure_at_macro_allows_empty_message"
+path = "src/add_failure_at_macro_allows_empty_message.rs"
+test = false
+
+[[bin]]
+name = "add_failure_at_macro_allows_formatted_arguments"
+path = "src/add_failure_at_macro_allows_formatted_arguments.rs"
+test = false
+
+[[bin]]
+name = "add_failure_at_macro_needs_googletest_attribute"
+path = "src/add_failure_at_macro_needs_googletest_attribute.rs"
+test = false
+
+[[bin]]
 name = "failure_due_to_returned_error"
 path = "src/failure_due_to_returned_error.rs"
 test = false

@@ -658,6 +658,55 @@ mod tests {
         verify_that!(output, contains_regex("Did you annotate the test with googletest::test?"))
     }
 
+    #[googletest::test]
+    fn add_failure_at_macro_causes_failure_but_continues_execution() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "add_failure_at_macro_causes_failure_but_continues_execution",
+        )?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {"
+                First failure
+                  at .*first_file.rs:32:12
+                "})
+        );
+        expect_that!(
+            output,
+            contains_regex(indoc! {"
+                Second failure
+                  at .*second_file.rs:32:12
+                "})
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn add_failure_at_macro_allows_empty_message() -> Result<()> {
+        let output =
+            run_external_process_in_tests_directory("add_failure_at_macro_allows_empty_message")?;
+
+        verify_that!(output, contains_regex("Failed"))
+    }
+
+    #[test]
+    fn add_failure_at_macro_allows_formatted_arguments() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "add_failure_at_macro_allows_formatted_arguments",
+        )?;
+
+        verify_that!(output, contains_regex("Failure message with argument: An argument"))
+    }
+
+    #[test]
+    fn add_failure_at_macro_needs_googletest_attribute() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "add_failure_at_macro_needs_googletest_attribute",
+        )?;
+
+        verify_that!(output, contains_regex("Did you annotate the test with googletest::test?"))
+    }
+
     #[test]
     fn test_using_normal_test_attribute_macro_formats_failure_message_correctly() -> Result<()> {
         let result = should_display_error_correctly_without_google_test_macro();

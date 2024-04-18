@@ -291,7 +291,7 @@ macro_rules! verify_pred {
 /// [`and_log_failure`](crate::GoogleTestSupport::and_log_failure).
 #[macro_export]
 macro_rules! fail {
-    ($($message:expr),+) => {{
+    ($($message:expr),+ $(,)?) => {{
         $crate::assertions::internal::create_fail_result(
             format!($($message),*),
             file!(),
@@ -325,7 +325,7 @@ macro_rules! fail {
 /// ```
 #[macro_export]
 macro_rules! succeed {
-    ($($message:expr),+) => {{
+    ($($message:expr),+ $(,)?) => {{
         println!(
             "{}\n{}",
             format!($($message),*),
@@ -368,7 +368,7 @@ macro_rules! succeed {
 /// ```
 #[macro_export]
 macro_rules! add_failure {
-    ($($message:expr),+) => {{
+    ($($message:expr),+ $(,)?) => {{
         use $crate::GoogleTestSupport;
         $crate::assertions::internal::create_fail_result(
             format!($($message),*),
@@ -380,6 +380,57 @@ macro_rules! add_failure {
 
     () => {
         add_failure!("Failed")
+    };
+}
+
+/// Generates a failure at specified location marking the test as failed but
+/// continue execution.
+///
+/// This is a **not-fatal** failure. The test continues execution even after the
+/// macro execution.
+///
+/// This can only be invoked inside tests with the
+/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// in the same thread as that running the thread itself.
+///
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[googletest::test]
+/// fn should_fail_but_not_abort() {
+///     add_failure_at!("src/my_file.rs", 32, 12);
+/// }
+/// ```
+///
+/// One may include formatted arguments in the failure message:
+///
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[googletest::test]
+/// fn should_fail_but_not_abort() {
+///     add_failure_at!(
+///         "src/my_file.rs",
+///         32,
+///         12,
+///         "I am just a fake test: {}", "a fake test indeed",
+///     );
+/// }
+/// ```
+#[macro_export]
+macro_rules! add_failure_at {
+    ($file:expr, $line:expr, $column:expr, $($message:expr),+ $(,)?) => {{
+        use $crate::GoogleTestSupport;
+        $crate::assertions::internal::create_fail_result(
+            format!($($message),*),
+            $file,
+            $line,
+            $column,
+        ).and_log_failure();
+    }};
+
+    ($file:expr, $line:expr, $column:expr $(,)?) => {
+        add_failure_at!($file, $line, $column, "Failed")
     };
 }
 
