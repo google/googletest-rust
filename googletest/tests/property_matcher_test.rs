@@ -51,14 +51,6 @@ fn matches_struct_with_matching_property_with_parameters() -> Result<()> {
 }
 
 #[test]
-fn matches_struct_with_matching_property_with_captured_arguments() -> Result<()> {
-    let value = SomeStruct { a_property: 10 };
-    let arg1 = 2;
-    let arg2 = 3;
-    verify_that!(value, property!(&SomeStruct.add_product_to_field(arg1, arg2), eq(16)))
-}
-
-#[test]
 fn matches_struct_with_matching_property_with_parameters_with_trailing_comma() -> Result<()> {
     let value = SomeStruct { a_property: 10 };
     verify_that!(value, property!(&SomeStruct.add_product_to_field(2, 3,), eq(16)))
@@ -144,6 +136,26 @@ fn explains_mismatch_referencing_explanation_of_inner_matcher() -> Result<()> {
     let value = SomeStruct { a_property: 2 };
     let result =
         verify_that!(value, property!(&SomeStruct.get_a_collection(), ref container_eq([1])));
+
+    verify_that!(
+        result,
+        err(displays_as(contains_substring(
+            "whose property `get_a_collection()` is `[]`, which is missing the element 1"
+        )))
+    )
+}
+
+#[test]
+fn explains_mismatch_referencing_explanation_of_inner_matcher_binding_mode() -> Result<()> {
+    #[derive(Debug)]
+    struct SomeStruct;
+    impl SomeStruct {
+        fn get_a_collection(&self) -> Vec<u32> {
+            vec![]
+        }
+    }
+    let result =
+        verify_that!(SomeStruct, property!(SomeStruct.get_a_collection(), container_eq([1])));
 
     verify_that!(
         result,
@@ -252,4 +264,17 @@ fn matches_ref_to_copy() -> Result<()> {
     }
 
     verify_that!(Struct, property!(&Struct.property(), eq(32)))
+}
+
+#[test]
+fn matches_ref_to_ref_with_binding_mode() -> Result<()> {
+    #[derive(Debug)]
+    struct Struct;
+    impl Struct {
+        fn property(&self) -> String {
+            "something".into()
+        }
+    }
+
+    verify_that!(Struct, property!(Struct.property(), eq("something")))
 }

@@ -152,12 +152,15 @@
 /// # should_pass().unwrap();
 /// ```
 ///
+/// If `field!` is qualified by both `&` and `ref`, they can both be omitted.
+///
 /// ```
 /// # use googletest::prelude::*;
 /// #[derive(Debug)]
 /// pub struct AStruct{a_field: String};
 /// # fn should_pass() -> Result<()> {
 /// verify_that!(AStruct{a_field: "32".into()}, field!(&AStruct.a_field, ref eq("32")))?;
+/// verify_that!(AStruct{a_field: "32".into()}, field!(AStruct.a_field, eq("32")))?;
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
@@ -173,12 +176,14 @@ macro_rules! __field {
 
 // Internal-only macro created so that the macro definition does not appear in
 // generated documentation.
+// We cannot use `path` or `ty` to capture the type as we are terminating the
+// type with a . (dot).
 #[doc(hidden)]
 #[macro_export]
 macro_rules! field_internal {
     (&$($t:ident)::+.$field:tt, ref $m:expr) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::field_ref_matcher;
-        field_ref_matcher(
+        use $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher;
+        field_matcher(
             |o: &_| {
                 match o {
                     &$($t)::* {$field: ref value, .. } => Some(value),
@@ -195,7 +200,7 @@ macro_rules! field_internal {
     (&$($t:ident)::+.$field:tt, $m:expr) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher;
         field_matcher(
-            |o: &_| {
+            |o: &&_| {
                 match o {
                     &$($t)::* {$field: value, .. } => Some(value),
                     // The pattern below is unreachable if the type is a struct (as opposed to an
@@ -211,7 +216,7 @@ macro_rules! field_internal {
     ($($t:ident)::+.$field:tt, $m:expr) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher;
         field_matcher(
-            |o| {
+            |o: &_| {
                 match o {
                     $($t)::* {$field: value, .. } => Some(value),
                     // The pattern below is unreachable if the type is a struct (as opposed to an
@@ -242,28 +247,25 @@ pub mod internal {
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
-    pub fn field_matcher<ExtractorT, InnerMatcher>(
-        field_accessor: ExtractorT,
+    pub fn field_matcher<OuterT, InnerT, InnerMatcher>(
+        field_accessor: fn(&OuterT) -> Option<&InnerT>,
         field_path: &'static str,
         inner: InnerMatcher,
-    ) -> FieldMatcher<ExtractorT, InnerMatcher> {
+    ) -> FieldMatcher<OuterT, InnerT, InnerMatcher> {
         FieldMatcher { field_accessor, field_path, inner }
     }
 
     #[derive(MatcherBase)]
-    pub struct FieldMatcher<ExtractorT, InnerMatcher> {
-        field_accessor: ExtractorT,
+    pub struct FieldMatcher<OuterT, InnerT, InnerMatcher> {
+        field_accessor: fn(&OuterT) -> Option<&InnerT>,
         field_path: &'static str,
         inner: InnerMatcher,
     }
-    impl<
-        OuterT: Debug + Copy,
-        InnerT: Debug + Copy,
-        ExtractorT: Fn(OuterT) -> Option<InnerT>,
-        InnerMatcher: Matcher<InnerT>,
-    > Matcher<OuterT> for FieldMatcher<ExtractorT, InnerMatcher>
+
+    impl<'a, OuterT: Debug + 'a, InnerT: Debug + 'a, InnerMatcher: Matcher<&'a InnerT>>
+        Matcher<&'a OuterT> for FieldMatcher<OuterT, InnerT, InnerMatcher>
     {
-        fn matches(&self, actual: OuterT) -> MatcherResult {
+        fn matches(&self, actual: &'a OuterT) -> MatcherResult {
             if let Some(value) = (self.field_accessor)(actual) {
                 self.inner.matches(value)
             } else {
@@ -271,7 +273,7 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: OuterT) -> Description {
+        fn explain_match(&self, actual: &'a OuterT) -> Description {
             if let Some(actual) = (self.field_accessor)(actual) {
                 format!(
                     "which has field `{}`, {}",
@@ -297,49 +299,23 @@ pub mod internal {
         }
     }
 
-    #[doc(hidden)]
-    pub fn field_ref_matcher<
-        InnerT,
-        OuterT,
-        ExtractorT: for<'a> Fn(&'a OuterT) -> Option<&'a InnerT>,
-        InnerMatcher,
-    >(
-        field_accessor: ExtractorT,
-        field_path: &'static str,
-        inner: InnerMatcher,
-    ) -> FieldMatcher<ExtractorT, InnerMatcher> {
-        FieldMatcher { field_accessor, field_path, inner }
-    }
-
-    #[derive(MatcherBase)]
-    pub struct FieldRefMatcher<ExtractorT, InnerMatcher> {
-        field_accessor: ExtractorT,
-        field_path: &'static str,
-        inner: InnerMatcher,
-    }
-
-    impl<
-        'a,
-        OuterT: Debug + 'a,
-        InnerT: Debug + 'a,
-        ExtractorT: Fn(&'a OuterT) -> Option<&'a InnerT>,
-        InnerMatcher: Matcher<&'a InnerT>,
-    > Matcher<&'a OuterT> for FieldRefMatcher<ExtractorT, InnerMatcher>
+    impl<OuterT: Debug + Copy, InnerT: Debug + Copy, InnerMatcher: Matcher<InnerT>> Matcher<OuterT>
+        for FieldMatcher<OuterT, InnerT, InnerMatcher>
     {
-        fn matches(&self, actual: &'a OuterT) -> MatcherResult {
-            if let Some(value) = (self.field_accessor)(actual) {
-                self.inner.matches(value)
+        fn matches(&self, actual: OuterT) -> MatcherResult {
+            if let Some(value) = (self.field_accessor)(&actual) {
+                self.inner.matches(*value)
             } else {
                 MatcherResult::NoMatch
             }
         }
 
-        fn explain_match(&self, actual: &'a OuterT) -> Description {
-            if let Some(actual) = (self.field_accessor)(actual) {
+        fn explain_match(&self, actual: OuterT) -> Description {
+            if let Some(actual) = (self.field_accessor)(&actual) {
                 format!(
                     "which has field `{}`, {}",
                     self.field_path,
-                    self.inner.explain_match(actual)
+                    self.inner.explain_match(*actual)
                 )
                 .into()
             } else {
