@@ -6,13 +6,12 @@ This library provides:
    range of assertions on data,
  * A rich set of matchers, and
  * A new set of test assertion macros.
-   
 ## Learning resources
 
 If you're just getting started with `googletest`, consider going through
-the first chapter of 
+the first chapter of
 ["Advanced testing for Rust applications"](https://github.com/mainmatter/rust-advanced-testing-workshop),
-a self-guided Rust course: it provides a guided introduction to the library, 
+a self-guided Rust course: it provides a guided introduction to the library,
 with exercises to help you get comfortable with `googletest` macros,
 its matchers and its overall philosophy.
 
