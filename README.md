@@ -34,6 +34,15 @@ This library brings the rich assertion types of Google's C++ testing library
 > not be used directly. Those items or modules are only for internal uses and
 > their API may change without a major version update.
 
+## Learning resources
+
+If you're just getting started with `googletest`, consider going through
+the first chapter of
+["Advanced testing for Rust applications"](https://github.com/mainmatter/rust-advanced-testing-workshop),
+a self-guided Rust course: it provides a guided introduction to the library,
+with exercises to help you get comfortable with `googletest` macros,
+its matchers and its overall philosophy.
+
 ## Assertions and matchers
 
 The core of GoogleTest is its *matchers*. Matchers indicate what aspect of an
