@@ -98,9 +98,8 @@ impl<T: Debug + Copy + AsRef<str>, E: Matcher<usize>> Matcher<T> for CharLenMatc
 
 #[cfg(test)]
 mod tests {
-    use super::char_count;
     use crate::description::Description;
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::MatcherResult;
     use crate::prelude::*;
     use indoc::indoc;
     use std::fmt::Debug;

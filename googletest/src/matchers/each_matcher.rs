@@ -118,7 +118,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::each;
     use crate::prelude::*;
     use indoc::indoc;
     use std::collections::HashSet;

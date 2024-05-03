@@ -571,8 +571,7 @@ impl Default for Configuration {
 
 #[cfg(test)]
 mod tests {
-    use super::{contains_substring, ends_with, starts_with, StrMatcher, StrMatcherConfigurator};
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::MatcherResult;
     use crate::prelude::*;
     use indoc::indoc;
     use serial_test::parallel;

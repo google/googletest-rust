@@ -806,7 +806,7 @@ pub mod internal {
 
 #[cfg(test)]
 mod tests {
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::MatcherResult;
     use crate::prelude::*;
     use indoc::indoc;
     use std::collections::HashMap;

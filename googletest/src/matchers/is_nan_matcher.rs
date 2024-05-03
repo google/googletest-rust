@@ -39,7 +39,6 @@ impl<T: Float + Debug + Copy> Matcher<T> for IsNanMatcher {
 
 #[cfg(test)]
 mod tests {
-    use super::is_nan;
     use crate::prelude::*;
 
     #[test]

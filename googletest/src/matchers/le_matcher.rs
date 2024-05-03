@@ -100,8 +100,7 @@ impl<ActualT: Debug + PartialOrd<ExpectedT> + Copy, ExpectedT: Debug> Matcher<Ac
 
 #[cfg(test)]
 mod tests {
-    use super::le;
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::MatcherResult;
     use crate::prelude::*;
     use indoc::indoc;
     use std::ffi::OsString;

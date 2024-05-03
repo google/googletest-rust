@@ -129,7 +129,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::subset_of;
     use crate::prelude::*;
     use indoc::indoc;
     use std::collections::HashSet;

@@ -133,7 +133,6 @@ fn to_display_output(string: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::eq;
     use crate::prelude::*;
     use indoc::indoc;
     use serial_test::parallel;

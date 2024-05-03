@@ -107,8 +107,7 @@ impl<'a, T: Debug, InnerMatcherT: Matcher<&'a T>> Matcher<&'a Option<T>>
 
 #[cfg(test)]
 mod tests {
-    use super::some;
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::MatcherResult;
     use crate::prelude::*;
     use indoc::indoc;
 

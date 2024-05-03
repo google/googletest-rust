@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::matcher::Matcher;
 use googletest::prelude::*;
 use indoc::indoc;
 

@@ -195,8 +195,7 @@ impl<T: Debug + Float + Copy> Matcher<T> for NearMatcher<T> {
 
 #[cfg(test)]
 mod tests {
-    use super::{approx_eq, near};
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::MatcherResult;
     use crate::prelude::*;
 
     #[test]

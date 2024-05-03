@@ -62,10 +62,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::points_to;
     use crate::prelude::*;
     use indoc::indoc;
-    use std::rc::Rc;
 
     #[test]
     fn points_to_matches_ref() -> Result<()> {
