@@ -86,9 +86,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::len;
     use crate::description::Description;
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::MatcherResult;
     use crate::prelude::*;
     use indoc::indoc;
     use std::collections::{

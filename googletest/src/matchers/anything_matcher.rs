@@ -54,7 +54,6 @@ impl<T: Debug + Copy> Matcher<T> for Anything {
 
 #[cfg(test)]
 mod tests {
-    use super::anything;
     use crate::prelude::*;
 
     #[test]

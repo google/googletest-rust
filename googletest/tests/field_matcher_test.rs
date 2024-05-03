@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::matcher::{Matcher, MatcherResult};
+use googletest::matcher::MatcherResult;
 use googletest::prelude::*;
 
 #[derive(Debug)]
@@ -61,7 +61,7 @@ fn struct_in_other_module_matches() -> Result<()> {
 }
 
 #[derive(Debug)]
-struct Tuple(i32, String);
+struct Tuple(i32, #[allow(unused)] String);
 
 #[test]
 fn tuple_matches_with_index() -> Result<()> {
@@ -136,6 +136,7 @@ fn shows_correct_failure_message_for_wrong_enum_value_with_tuple_field() -> Resu
     enum AnEnum {
         #[allow(dead_code)] // This variant is intentionally unused.
         AValue(u32),
+        #[allow(unused)]
         AnotherValue(u32),
     }
     let value = AnEnum::AnotherValue(123);

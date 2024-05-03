@@ -80,7 +80,7 @@ impl<ActualT: AsRef<str> + Debug + Copy> Matcher<ActualT> for ContainsRegexMatch
 
 #[cfg(test)]
 mod tests {
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::MatcherResult;
     use crate::prelude::*;
 
     #[test]

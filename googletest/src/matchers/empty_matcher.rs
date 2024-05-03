@@ -60,7 +60,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::empty;
     use crate::prelude::*;
     use std::collections::HashSet;
 

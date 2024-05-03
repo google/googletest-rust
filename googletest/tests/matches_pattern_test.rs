@@ -258,6 +258,7 @@ fn has_correct_assertion_failure_message_for_field_and_property() -> Result<()> 
 fn has_meaningful_assertion_failure_message_when_wrong_enum_variant_is_used() -> Result<()> {
     #[derive(Debug)]
     enum AnEnum {
+        #[allow(unused)]
         A(u32),
         #[allow(unused)]
         B(u32),

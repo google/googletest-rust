@@ -74,7 +74,7 @@ macro_rules! __any {
 
 #[cfg(test)]
 mod tests {
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::MatcherResult;
     use crate::prelude::*;
     use indoc::indoc;
 

@@ -109,8 +109,7 @@ impl<'a, T: Debug, E: Debug, InnerMatcherT: Matcher<&'a E>> Matcher<&'a std::res
 
 #[cfg(test)]
 mod tests {
-    use super::err;
-    use crate::matcher::{Matcher, MatcherResult};
+    use crate::matcher::MatcherResult;
     use crate::prelude::*;
     use indoc::indoc;
 

@@ -66,7 +66,6 @@ impl<T: Debug + Display + Copy, InnerMatcher: for<'a> Matcher<&'a str>> Matcher<
 
 #[cfg(test)]
 mod tests {
-    use super::displays_as;
     use crate::prelude::*;
     use indoc::indoc;
     use serial_test::parallel;

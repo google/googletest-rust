@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use googletest::matcher::{Matcher, MatcherResult};
+use googletest::matcher::MatcherResult;
 use googletest::prelude::*;
 use indoc::indoc;
 
