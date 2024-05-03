@@ -32,7 +32,7 @@ pub enum TestOutcome {
 }
 
 thread_local! {
-    static CURRENT_TEST_OUTCOME: RefCell<Option<TestOutcome>> = RefCell::new(None);
+    static CURRENT_TEST_OUTCOME: RefCell<Option<TestOutcome>> = const { RefCell::new(None) };
 }
 
 impl TestOutcome {
