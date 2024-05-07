@@ -267,7 +267,7 @@ pub mod internal {
         }
 
         fn explain_match(&self, actual: &'a OuterT) -> Description {
-            let actual_inner = (self.extractor)(&actual);
+            let actual_inner = (self.extractor)(actual);
             format!(
                 "whose property `{}` is `{:#?}`, {}",
                 self.property_desc,

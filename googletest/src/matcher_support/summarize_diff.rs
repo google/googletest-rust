@@ -296,6 +296,7 @@ impl<'a> Default for Buffer<'a> {
 
 #[rustversion::since(1.70)]
 fn stdout_supports_color() -> bool {
+    #[allow(clippy::incompatible_msrv)]
     match (is_env_var_set("NO_COLOR"), is_env_var_set("FORCE_COLOR")) {
         (true, _) => false,
         (false, true) => true,
