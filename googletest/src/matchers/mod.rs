@@ -110,6 +110,7 @@ pub mod __internal_unstable_do_not_depend_on_these {
     pub use super::elements_are_matcher::internal::ElementsAre;
     pub use super::field_matcher::internal::field_matcher;
     pub use super::is_matcher::is;
+    pub use super::matches_pattern::internal::pattern_only;
     pub use super::pointwise_matcher::internal::PointwiseMatcher;
     pub use super::property_matcher::internal::{property_matcher, property_ref_matcher};
     pub use super::unordered_elements_are_matcher::internal::{
