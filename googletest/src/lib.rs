@@ -111,6 +111,7 @@ pub type Result<T> = std::result::Result<T, TestAssertionFailure>;
 /// }
 /// # verify_that!(should_fail_and_not_execute_last_assertion(), err(displays_as(contains_substring("Test failed")))).unwrap();
 /// ```
+#[track_caller]
 pub fn verify_current_test_outcome() -> Result<()> {
     TestOutcome::get_current_test_outcome()
 }
@@ -260,6 +261,7 @@ pub trait IntoTestResult<T> {
 
 #[cfg(feature = "anyhow")]
 impl<T> IntoTestResult<T> for std::result::Result<T, anyhow::Error> {
+    #[track_caller]
     fn into_test_result(self) -> std::result::Result<T, TestAssertionFailure> {
         self.map_err(|e| TestAssertionFailure::create(format!("{e}")))
     }

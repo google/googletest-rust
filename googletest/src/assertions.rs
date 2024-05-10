@@ -126,7 +126,6 @@ macro_rules! verify_that {
             $actual.check(
                 $crate::matchers::elements_are![$($expecteds),+],
                 stringify!($actual),
-                $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!()),
             )
         }
     };
@@ -136,7 +135,6 @@ macro_rules! verify_that {
             $actual.check(
                 $crate::matchers::unordered_elements_are![$($expecteds),+],
                 stringify!($actual),
-                $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!()),
             )
         }
     };
@@ -146,7 +144,6 @@ macro_rules! verify_that {
             $actual.check(
                 $expected,
                 stringify!($actual),
-                $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!()),
             )
         }
     };
@@ -226,11 +223,6 @@ macro_rules! verify_pred {
             $crate::assertions::internal::report_failed_predicate(
                 concat!(stringify!($($predicate)*), stringify!(($($arg),*))),
                 vec![$((format!(concat!(stringify!($arg), " = {:?}"), $arg))),*],
-                $crate::internal::source_location::SourceLocation::new(
-                    file!(),
-                    line!(),
-                    column!(),
-                ),
             )
         } else {
             Ok(())
@@ -294,9 +286,6 @@ macro_rules! fail {
     ($($message:expr),+ $(,)?) => {{
         $crate::assertions::internal::create_fail_result(
             format!($($message),*),
-            file!(),
-            line!(),
-            column!(),
         )
     }};
 
@@ -327,9 +316,9 @@ macro_rules! fail {
 macro_rules! succeed {
     ($($message:expr),+ $(,)?) => {{
         println!(
-            "{}\n{}",
+            "{}\n at {}:{}:{}",
             format!($($message),*),
-            $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!())
+            file!(), line!(), column!()
         );
     }};
 
@@ -372,9 +361,6 @@ macro_rules! add_failure {
         use $crate::GoogleTestSupport;
         $crate::assertions::internal::create_fail_result(
             format!($($message),*),
-            file!(),
-            line!(),
-            column!(),
         ).and_log_failure();
     }};
 
@@ -423,10 +409,7 @@ macro_rules! add_failure_at {
         use $crate::GoogleTestSupport;
         $crate::assertions::internal::create_fail_result(
             format!($($message),*),
-            $file,
-            $line,
-            $column,
-        ).and_log_failure();
+        ).map_err(|e| e.with_fake_location($file, $line, $column)).and_log_failure();
     }};
 
     ($file:expr, $line:expr, $column:expr $(,)?) => {
@@ -462,11 +445,7 @@ macro_rules! add_failure_at {
 macro_rules! verify_true {
     ($condition:expr) => {{
         use $crate::assertions::internal::Subject;
-        ($condition).check(
-            $crate::matchers::eq(true),
-            stringify!($condition),
-            $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!()),
-        )
+        ($condition).check($crate::matchers::eq(true), stringify!($condition))
     }};
 }
 
@@ -701,7 +680,7 @@ macro_rules! expect_pred {
 #[doc(hidden)]
 pub mod internal {
     use crate::{
-        internal::{source_location::SourceLocation, test_outcome::TestAssertionFailure},
+        internal::test_outcome::TestAssertionFailure,
         matcher::{create_assertion_failure, Matcher, MatcherResult},
     };
     use std::fmt::Debug;
@@ -728,16 +707,16 @@ pub mod internal {
         ///
         /// **For internal use only. API stablility is not guaranteed!**
         #[must_use = "The assertion result must be evaluated to affect the test result."]
+        #[track_caller]
         fn check(
             self,
             expected: impl Matcher<Self>,
             actual_expr: &'static str,
-            source_location: SourceLocation,
         ) -> Result<(), TestAssertionFailure> {
             match expected.matches(self) {
                 MatcherResult::Match => Ok(()),
                 MatcherResult::NoMatch => {
-                    Err(create_assertion_failure(&expected, self, actual_expr, source_location))
+                    Err(create_assertion_failure(&expected, self, actual_expr))
                 }
             }
         }
@@ -751,17 +730,16 @@ pub mod internal {
     /// This intended only for use by the macro [`crate::verify_pred`].
     ///
     /// **For internal use only. API stablility is not guaranteed!**
+    #[track_caller]
     #[must_use = "The assertion result must be evaluated to affect the test result."]
     pub fn report_failed_predicate(
         actual_expr: &'static str,
         formatted_arguments: Vec<String>,
-        source_location: SourceLocation,
     ) -> Result<(), TestAssertionFailure> {
         Err(TestAssertionFailure::create(format!(
-            "{} was false with\n  {}\n{}",
+            "{} was false with\n  {}",
             actual_expr,
-            formatted_arguments.join(",\n  "),
-            source_location,
+            formatted_arguments.join(",\n  ")
         )))
     }
 
@@ -769,16 +747,8 @@ pub mod internal {
     ///
     /// **For internal use only. API stability is not guaranteed!**
     #[must_use = "The assertion result must be evaluated to affect the test result."]
-    pub fn create_fail_result(
-        message: String,
-        file: &'static str,
-        line: u32,
-        column: u32,
-    ) -> crate::Result<()> {
-        Err(crate::internal::test_outcome::TestAssertionFailure::create(format!(
-            "{}\n{}",
-            message,
-            crate::internal::source_location::SourceLocation::new(file, line, column),
-        )))
+    #[track_caller]
+    pub fn create_fail_result(message: String) -> crate::Result<()> {
+        Err(crate::internal::test_outcome::TestAssertionFailure::create(message))
     }
 }

@@ -166,6 +166,11 @@ path = "src/failure_due_to_returned_error.rs"
 test = false
 
 [[bin]]
+name = "failure_due_to_returned_error_with_line_numbers"
+path = "src/failure_due_to_returned_error_with_line_numbers.rs"
+test = false
+
+[[bin]]
 name = "fatal_and_non_fatal_failure"
 path = "src/fatal_and_non_fatal_failure.rs"
 test = false

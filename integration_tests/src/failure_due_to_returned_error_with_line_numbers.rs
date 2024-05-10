@@ -12,7 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![doc(hidden)]
+fn main() {}
 
-pub(crate) mod description_renderer;
-pub mod test_outcome;
+#[cfg(test)]
+mod tests {
+
+    use googletest::prelude::*;
+
+    #[derive(Debug)]
+    struct FakeError;
+
+    impl std::fmt::Display for FakeError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{:?}", self)
+        }
+    }
+    impl std::error::Error for FakeError {}
+
+    fn return_error() -> std::result::Result<String, FakeError> {
+        Err(FakeError)
+    }
+
+    #[googletest::test]
+    fn should_fail_due_to_returned_error() -> Result<()> {
+        return_error()?;
+
+        Ok(())
+    }
+}

@@ -241,6 +241,20 @@ mod tests {
     }
 
     #[test]
+    fn should_log_error_location_in_returned_error() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "failure_due_to_returned_error_with_line_numbers",
+        )?;
+
+        verify_that!(
+            output,
+            contains_substring(
+                "FakeError\n  at integration_tests/src/failure_due_to_returned_error_with_line_numbers.rs:38:9"
+            )
+        )
+    }
+
+    #[test]
     fn should_fail_test_on_and_log_failure() -> Result<()> {
         let status = run_external_process("non_fatal_failure_in_subroutine").status()?;
 

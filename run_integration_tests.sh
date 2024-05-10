@@ -35,6 +35,7 @@ INTEGRATION_TEST_BINARIES=(
   "failure_due_to_fail_macro_with_empty_message"
   "failure_due_to_fail_macro_with_format_arguments"
   "failure_due_to_returned_error"
+  "failure_due_to_returned_error_with_line_numbers"
   "success_with_succeed_macro"
   "success_with_succeed_macro_with_empty_message"
   "success_with_succeed_macro_with_format_arguments"
