@@ -161,6 +161,21 @@ path = "src/expect_true_macro_on_false_condition_fails_test_and_continues.rs"
 test = false
 
 [[bin]]
+name = "verify_false_macro_on_true_condition"
+path = "src/verify_false_macro_on_true_condition.rs"
+test = false
+
+[[bin]]
+name = "assert_false_macro_on_true_condition_panics"
+path = "src/assert_false_macro_on_true_condition_panics.rs"
+test = false
+
+[[bin]]
+name = "expect_false_macro_on_true_condition_fails_test_and_continues"
+path = "src/expect_false_macro_on_true_condition_fails_test_and_continues.rs"
+test = false
+
+[[bin]]
 name = "failure_due_to_returned_error"
 path = "src/failure_due_to_returned_error.rs"
 test = false

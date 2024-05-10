@@ -778,6 +778,76 @@ mod tests {
     }
 
     #[test]
+    fn verify_false_when_false_returns_ok() {
+        assert!(verify_false!("test" == "not test").is_ok())
+    }
+
+    #[test]
+    fn verify_false_when_true_returns_err() {
+        assert!(verify_false!(2 + 2 == 4).is_err())
+    }
+
+    #[googletest::test]
+    fn verify_false_macro_on_true_condition_logs_error_when_handled() -> Result<()> {
+        let output =
+            run_external_process_in_tests_directory("verify_false_macro_on_true_condition")?;
+
+        verify_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is equal to false
+                Actual: true,
+                  which isn't equal to false
+                  at .*verify_false_macro_on_true_condition.rs:23:9
+                "})
+        )
+    }
+
+    #[googletest::test]
+    fn assert_false_macro_on_false_condition_does_nothing() {
+        assert_false!(2 + 2 == 5);
+    }
+
+    #[googletest::test]
+    fn assert_false_macro_on_true_condition_panics() -> Result<()> {
+        let output =
+            run_external_process_in_tests_directory("assert_false_macro_on_true_condition_panics")?;
+
+        verify_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is equal to false
+                Actual: true,
+                  which isn't equal to false
+                  at .*assert_false_macro_on_true_condition_panics.rs:23:9
+                "})
+        )
+    }
+
+    #[googletest::test]
+    fn expect_false_macro_on_false_condition_does_nothing() {
+        expect_false!(2 + 2 == 5)
+    }
+
+    #[googletest::test]
+    fn expect_false_macro_on_true_condition_fails_test_and_continues() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "expect_false_macro_on_true_condition_fails_test_and_continues",
+        )?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is equal to false
+                Actual: true,
+                  which isn't equal to false
+                  at .*expect_false_macro_on_true_condition_fails_test_and_continues.rs:23:9
+                "})
+        );
+        verify_that!(output, contains_regex("This will print"))
+    }
+
+    #[test]
     fn test_using_normal_test_attribute_macro_formats_failure_message_correctly() -> Result<()> {
         let result = should_display_error_correctly_without_google_test_macro();
 

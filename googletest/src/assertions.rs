@@ -523,6 +523,95 @@ macro_rules! expect_true {
     }};
 }
 
+/// Verify if the condition evaluates to false and returns `Result`.
+///
+/// Evaluates to `Result::Ok(())` if the condition is false and
+/// `Result::Err(TestAssertionFailure)` if it evaluates to true. The caller
+/// must then decide how to handle the `Err` variant. It has a few options:
+///   * Abort the current function with the `?` operator. This requires that the
+///     function return a suitable `Result`.
+///   * Log the failure and continue by calling the method `and_log_failure`.
+///
+/// Of course, one can also use all other standard methods on `Result`.
+///
+/// **Invoking this macro by itself does not cause a test failure to be recorded
+/// or output.** The resulting `Result` must be handled as described above to
+/// cause the test to be recorded as a failure.
+///
+/// Example:
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[test]
+/// fn should_fail() -> Result<()> {
+///     verify_false!(2 + 2 == 4)
+/// }
+/// ```
+#[macro_export]
+macro_rules! verify_false {
+    ($condition:expr) => {{
+        use $crate::assertions::internal::Subject;
+        ($condition).check(
+            $crate::matchers::eq(false),
+            stringify!($condition),
+            $crate::internal::source_location::SourceLocation::new(file!(), line!(), column!()),
+        )
+    }};
+}
+
+/// Assert if the condition evaluates to false and panics if true.
+///
+/// This is the same as calling `and_log_failure` on [`verify_false`] macro
+/// Result.
+///
+/// This can only be invoked inside tests with the
+/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// in the same thread as that running the thread itself.
+///
+/// Example:
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[googletest::test]
+/// fn should_fail() {
+///     assert_false!(2 + 2 == 4);
+/// }
+/// ```
+#[macro_export]
+macro_rules! assert_false {
+    ($condition:expr) => {
+        verify_false!($condition).and_log_failure()
+    };
+}
+
+/// Marks test as failed and continue execution if the expression evaluates to
+/// true.
+///
+/// This is a **not-fatal** failure. The test continues execution even after the
+/// macro execution.
+///
+/// This can only be invoked inside tests with the
+/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// in the same thread as that running the thread itself.
+///
+/// Example:
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[googletest::test]
+/// fn should_fail() {
+///     expect_false!(2 + 2 == 4);
+///     println!("This will print");
+/// }
+/// ```
+#[macro_export]
+macro_rules! expect_false {
+    ($condition:expr) => {{
+        use $crate::GoogleTestSupport;
+        verify_false!($condition).and_log_failure()
+    }};
+}
+
 /// Matches the given value against the given matcher, panicking if it does not
 /// match.
 ///
