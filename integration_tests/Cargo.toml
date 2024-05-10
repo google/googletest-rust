@@ -146,6 +146,21 @@ path = "src/add_failure_at_macro_needs_googletest_attribute.rs"
 test = false
 
 [[bin]]
+name = "verify_true_macro_on_false_condition"
+path = "src/verify_true_macro_on_false_condition.rs"
+test = false
+
+[[bin]]
+name = "assert_true_macro_on_false_condition_panics"
+path = "src/assert_true_macro_on_false_condition_panics.rs"
+test = false
+
+[[bin]]
+name = "expect_true_macro_on_false_condition_fails_test_and_continues"
+path = "src/expect_true_macro_on_false_condition_fails_test_and_continues.rs"
+test = false
+
+[[bin]]
 name = "failure_due_to_returned_error"
 path = "src/failure_due_to_returned_error.rs"
 test = false

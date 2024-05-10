@@ -50,8 +50,8 @@ pub mod prelude {
     pub use super::Result;
     // Assert macros
     pub use super::{
-        add_failure, add_failure_at, assert_that, expect_pred, expect_that, fail, succeed,
-        verify_pred, verify_that,
+        add_failure, add_failure_at, assert_that, assert_true, expect_pred, expect_that,
+        expect_true, fail, succeed, verify_pred, verify_that, verify_true,
     };
 }
 
