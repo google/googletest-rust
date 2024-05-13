@@ -15,7 +15,6 @@
 //! The components required to implement matchers.
 
 use crate::description::Description;
-use crate::internal::source_location::SourceLocation;
 use crate::internal::test_outcome::TestAssertionFailure;
 use crate::matchers::__internal_unstable_do_not_depend_on_these::ConjunctionMatcher;
 use crate::matchers::__internal_unstable_do_not_depend_on_these::DisjunctionMatcher;
@@ -230,11 +229,11 @@ const PRETTY_PRINT_LENGTH_THRESHOLD: usize = 60;
 ///
 /// The parameter `actual_expr` contains the expression which was evaluated to
 /// obtain `actual`.
+#[track_caller]
 pub(crate) fn create_assertion_failure<T: Debug + Copy>(
     matcher: &impl Matcher<T>,
     actual: T,
     actual_expr: &'static str,
-    source_location: SourceLocation,
 ) -> TestAssertionFailure {
     let actual_formatted = format!("{actual:?}");
     let actual_formatted = if actual_formatted.len() > PRETTY_PRINT_LENGTH_THRESHOLD {
@@ -247,8 +246,7 @@ pub(crate) fn create_assertion_failure<T: Debug + Copy>(
 Value of: {actual_expr}
 Expected: {}
 Actual: {actual_formatted},
-{}
-{source_location}",
+{}",
         matcher.describe(MatcherResult::Match),
         matcher.explain_match(actual).indent(),
     ))

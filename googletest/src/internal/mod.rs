@@ -15,5 +15,4 @@
 #![doc(hidden)]
 
 pub(crate) mod description_renderer;
-pub mod source_location;
 pub mod test_outcome;
