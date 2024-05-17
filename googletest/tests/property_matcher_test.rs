@@ -278,3 +278,16 @@ fn matches_ref_to_ref_with_binding_mode() -> Result<()> {
 
     verify_that!(Struct, property!(Struct.property(), eq("something")))
 }
+
+#[test]
+fn matches_property_auto_ref_eq() -> Result<()> {
+    #[derive(Debug)]
+    struct Struct;
+    impl Struct {
+        fn property(&self) -> String {
+            "something".into()
+        }
+    }
+
+    verify_that!(Struct, property!(Struct.property(), "something"))
+}

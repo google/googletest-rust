@@ -138,6 +138,27 @@
 /// #     .unwrap();
 /// ```
 ///
+/// If an inner matcher is `eq(...)`, it can be omitted:
+///
+/// ```
+/// # use googletest::prelude::*;
+/// #[derive(Debug)]
+/// struct MyStruct {
+///     a_field: String,
+///     another_field: String,
+/// }
+///
+/// let my_struct = MyStruct {
+///     a_field: "this".into(),
+///     another_field: "that".into()
+/// };
+/// verify_that!(my_struct, matches_pattern!(MyStruct {
+///     a_field: "this",
+///     another_field: "that",
+/// }))
+/// #     .unwrap();
+/// ```
+///
 /// **Important**: The method should be pure function with a deterministic
 /// output and no side effects. In particular, in the event of an assertion
 /// failure, it will be invoked a second time, with the assertion failure output

@@ -18,7 +18,13 @@
 //! these facilities could be useful to downstream users writing custom
 //! matchers.
 
+mod auto_ref_eq;
 pub(crate) mod count_elements;
 pub(crate) mod edit_distance;
 pub(crate) mod summarize_diff;
 pub(crate) mod zipped_iterator;
+
+pub mod __internal_unstable_do_not_depend_on_these {
+    pub use super::auto_ref_eq::internal::{ExpectedKind, MatcherKind};
+    pub use crate::__auto_ref_eq as auto_ref_eq;
+}
