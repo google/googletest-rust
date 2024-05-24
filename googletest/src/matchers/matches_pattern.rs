@@ -272,6 +272,16 @@
 ///
 /// Trailing commas are allowed (but not required) in both ordinary and tuple
 /// structs.
+///
+/// Note that the default format (rustfmt) can format macros if the macro
+/// argument is parseable Rust code. This is mostly true for this macro with two
+/// exceptions:
+///  * property matching
+///  * `ref` keyword with named fields
+///
+/// An option for formatting large is to avoid these exceptions (by removing the
+/// parenthesis of properties and the `ref` keywords), run `rustfmt` and add
+/// them back.
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __matches_pattern {
