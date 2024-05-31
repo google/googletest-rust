@@ -1799,3 +1799,18 @@ fn matches_copy_struct_property_non_copy() -> Result<()> {
 
     verify_that!(actual, matches_pattern!(AStruct { prop(): ref eq("123") }))
 }
+
+#[test]
+fn matches_struct_auto_ref_eq() -> Result<()> {
+    #[derive(Debug, Clone)]
+    struct AStruct {
+        int: i32,
+        string: String,
+        option: Option<i32>,
+    }
+
+    verify_that!(
+        AStruct { int: 123, string: "123".into(), option: Some(123) },
+        matches_pattern!(&AStruct { int: 123, string: ref "123", option: Some(123) })
+    )
+}

@@ -89,6 +89,21 @@
 /// # should_pass().unwrap();
 /// ```
 ///
+/// If the inner matcher is `eq(...)`, it can be omitted:
+///
+/// ```
+/// # use googletest::prelude::*;
+/// #[derive(Debug)]
+/// struct IntField {
+///   int: i32
+/// }
+/// # fn should_pass() -> Result<()> {
+/// verify_that!(IntField{int: 32}, field!(&IntField.int, 32))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// ```
+///
 /// Nested structures are *not supported*, however:
 ///
 /// ```compile_fail
@@ -183,6 +198,7 @@ macro_rules! __field {
 macro_rules! field_internal {
     (&$($t:ident)::+.$field:tt, ref $m:expr) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher;
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_ref_eq;
         field_matcher(
             |o: &_| {
                 match o {
@@ -195,10 +211,11 @@ macro_rules! field_internal {
                 }
             },
             &stringify!($field),
-            $m)
+            auto_ref_eq!($m))
     }};
     (&$($t:ident)::+.$field:tt, $m:expr) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher;
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_ref_eq;
         field_matcher(
             |o: &&_| {
                 match o {
@@ -211,10 +228,11 @@ macro_rules! field_internal {
                 }
             },
             &stringify!($field),
-            $m)
+            auto_ref_eq!($m))
     }};
     ($($t:ident)::+.$field:tt, $m:expr) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher;
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_ref_eq;
         field_matcher(
             |o: &_| {
                 match o {
@@ -227,7 +245,7 @@ macro_rules! field_internal {
                 }
             },
             &stringify!($field),
-            $m)
+            auto_ref_eq!($m))
     }};
 }
 

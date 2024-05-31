@@ -39,6 +39,25 @@
 /// #    .unwrap();
 /// ```
 ///
+///
+/// If the inner matcher is `eq(...)`, it can be omitted:
+///
+/// ```
+/// # use googletest::prelude::*;
+/// #[derive(Debug)]
+/// pub struct MyStruct {
+///     a_field: u32,
+/// }
+///
+/// impl MyStruct {
+///     pub fn get_a_field(&self) -> u32 { self.a_field }
+/// }
+///
+/// let value = vec![MyStruct { a_field: 100 }];
+/// verify_that!(value, contains(property!(&MyStruct.get_a_field(), 100)))
+/// #    .unwrap();
+/// ```
+///
 /// **Important**: The method should be pure function with a deterministic
 /// output and no side effects. In particular, in the event of an assertion
 /// failure, it will be invoked a second time, with the assertion failure output
@@ -160,31 +179,35 @@ macro_rules! property_internal {
 
     (&$($t:ident)::+.$method:tt($($argument:tt),* $(,)?), ref $m:expr) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::property_ref_matcher;
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_ref_eq;
         property_ref_matcher(
             |o: &$($t)::+| $($t)::+::$method(o, $($argument),*),
             &stringify!($method($($argument),*)),
-            $m)
+            auto_ref_eq!($m))
     }};
     ($($t:ident)::+.$method:tt($($argument:tt),* $(,)?), ref $m:expr) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::property_ref_matcher;
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_ref_eq;
         property_ref_matcher(
             |o: $($t)::+| $($t)::+::$method(o, $($argument),*),
             &stringify!($method($($argument),*)),
-            $m)
+            auto_ref_eq!($m))
     }};
     (& $($t:ident)::+.$method:tt($($argument:tt),* $(,)?), $m:expr) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::property_matcher;
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_ref_eq;
         property_matcher(
             |o: &&$($t)::+| o.$method($($argument),*),
             &stringify!($method($($argument),*)),
-            $m)
+            auto_ref_eq!($m))
     }};
     ($($t:ident)::+.$method:tt($($argument:tt),* $(,)?), $m:expr) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::property_matcher;
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_ref_eq;
         property_matcher(
             |o: &$($t)::+| o.$method($($argument),*),
             &stringify!($method($($argument),*)),
-            $m)
+            auto_ref_eq!($m))
     }};
 }
 

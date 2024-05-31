@@ -227,3 +227,25 @@ fn matches_struct_ref_to_ref_binding_mode() -> Result<()> {
 
     verify_that!(Strukt { a_field: "32".into() }, field!(Strukt.a_field, eq("32")))
 }
+
+#[test]
+fn matches_struct_with_auto_ref_eq() -> Result<()> {
+    #[derive(Debug)]
+    struct Strukt {
+        a_field: String,
+    }
+
+    verify_that!(Strukt { a_field: "32".into() }, field!(Strukt.a_field, "32"))
+}
+
+#[test]
+fn matches_enum_with_auto_ref_eq() -> Result<()> {
+    #[derive(Debug)]
+    enum Enum {
+        Str(String),
+        #[allow(unused)]
+        Int(i32),
+    }
+
+    verify_that!(Enum::Str("32".into()), field!(Enum::Str.0, "32"))
+}
