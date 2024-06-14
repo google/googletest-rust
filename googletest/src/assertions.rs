@@ -587,6 +587,184 @@ macro_rules! expect_false {
     }};
 }
 
+/// Checks whether the second argument is equal to the first argument.
+///
+/// Evaluates to `Result::Ok(())` if they are equal and
+/// `Result::Err(TestAssertionFailure)` if they are not. The caller must then
+/// decide how to handle the `Err` variant. It has a few options:
+///  * Abort the current function with the `?` operator. This requires that the
+///    function return a suitable `Result`.
+///  * Log the test failure and continue by calling the method
+///    `and_log_failure`.
+///
+/// Of course, one can also use all other standard methods on `Result`.
+///
+/// **Invoking this macro by itself does not cause a test failure to be recorded
+/// or output.** The resulting `Result` must be handled as described above to
+/// cause the test to be recorded as a failure.
+///
+/// Example:
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[test]
+/// fn should_fail() -> Result<()> {
+///     verify_eq!(2, 1)
+/// }
+/// ```
+///
+/// This macro has special support for matching against container. Namely:
+///  * `verify_eq!(actual, [e1, e2, ...])` is equivalent to
+///    `verify_that!(actual, elements_are![eq(e1), eq(e2), ...])`
+///  * `verify_eq!(actual, {e1, e2, ...})` is equivalent to
+///    `verify_that!(actual, unordered_elements_are![eq(e1), eq(e2), ...])`
+#[macro_export]
+macro_rules! verify_eq {
+    ($actual:expr, [$($expected:expr),+ $(,)?] $(,)?) => {
+        verify_that!($actual, [$($crate::matchers::eq(&$expected)),*])
+    };
+    ($actual:expr, {$($expected:expr),+ $(,)?} $(,)?) => {
+        verify_that!($actual, {$($crate::matchers::eq(&$expected)),*})
+    };
+    ($actual:expr, $expected:expr $(,)?) => {
+        verify_that!($actual, $crate::matchers::eq($expected))
+    };
+}
+
+/// Panics if the second argument is not equal to first argument.
+///
+/// This is the same as calling `and_log_failure` on [`verify_eq`] macro Result.
+///
+/// This can only be invoked inside tests with the
+/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// in the same thread as that running the thread itself.
+///
+/// Example:
+/// ```ignore
+/// use googletest;
+///
+/// #[googletest::test]
+/// fn should_fail() {
+///     googletest::assert_eq!(2, 1);
+/// }
+/// ```
+///
+/// This macro has special support for matching against container. Namely:
+///  * `assert_eq!(actual, [e1, e2, ...])` for checking actual contains "e1, e2,
+///    ..." in order.
+///  * `assert_eq!(actual, {e1, e2, ...})` for checking actual contains "e1, e2,
+///    ..." in any order.
+///
+/// One may include formatted arguments in the failure message:
+///```ignore
+/// use googletest;
+///
+/// #[googletest::test]
+/// fn should_fail() {
+///     let argument = "argument"
+///     googletest::assert_eq!(2, 1, "custom failure message: {argument}");
+/// }
+/// ```
+#[macro_export]
+macro_rules! assert_eq {
+    ($actual:expr, [$($expected:expr),+ $(,)?] $(,)?) => {
+        verify_eq!($actual, [$($expected),*]).and_log_failure();
+    };
+    ($actual:expr, [$($expected:expr),+ $(,)?], $($format_args:expr),* $(,)?) => {
+        verify_eq!($actual, [$($expected),*])
+            .with_failure_message(|| format!($($format_args),*))
+            .and_log_failure();
+    };
+    ($actual:expr, {$($expected:expr),+ $(,)?} $(,)?) => {
+        verify_eq!($actual, {$($expected),*}).and_log_failure();
+    };
+    ($actual:expr, {$($expected:expr),+ $(,)?}, $($format_args:expr),* $(,)?) => {
+        verify_eq!($actual, {$($expected),*})
+            .with_failure_message(|| format!($($format_args),*))
+            .and_log_failure();
+    };
+    ($actual:expr, $expected:expr $(,)?) => {
+        verify_eq!($actual, $expected).and_log_failure();
+    };
+    ($actual:expr, $expected:expr, $($format_args:expr),* $(,)?) => {
+        verify_eq!($actual, $expected)
+            .with_failure_message(|| format!($($format_args),*))
+            .and_log_failure();
+    };
+}
+
+/// Marks test as failed and continues execution if the second argument is not
+/// equal to first argument.
+///
+/// This is a **not-fatal** failure. The test continues execution even after the
+/// macro execution.
+///
+/// This can only be invoked inside tests with the
+/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// in the same thread as that running the thread itself.
+///
+/// Example:
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[googletest::test]
+/// fn should_fail() {
+///     expect_eq!(2, 1);
+///     println!("This will print!");
+/// }
+/// ```
+///
+/// This macro has special support for matching against container. Namely:
+///  * `expect_eq!(actual, [e1, e2, ...])` for checking actual contains "e1, e2,
+///    ..." in order.
+///  * `expect_eq!(actual, {e1, e2, ...})` for checking actual contains "e1, e2,
+///    ..." in any order.
+///
+/// One may include formatted arguments in the failure message:
+///```ignore
+/// use googletest::prelude::*;
+///
+/// #[googletest::test]
+/// fn should_fail() {
+///     let argument = "argument"
+///     expect_eq!(2, 1, "custom failure message: {argument}");
+///     println!("This will print!");
+/// }
+/// ```
+#[macro_export]
+macro_rules! expect_eq {
+    ($actual:expr, [$($expected:expr),+ $(,)?] $(,)?) => {
+        use $crate::GoogleTestSupport;
+        verify_eq!($actual, [$($expected),*]).and_log_failure();
+    };
+    ($actual:expr, [$($expected:expr),+ $(,)?], $($format_args:expr),* $(,)?) => {
+        use $crate::GoogleTestSupport;
+        verify_eq!($actual, [$($expected),*])
+            .with_failure_message(|| format!($($format_args),*))
+            .and_log_failure();
+    };
+    ($actual:expr, {$($expected:expr),+ $(,)?} $(,)?) => {
+        use $crate::GoogleTestSupport;
+        verify_eq!($actual, {$($expected),*}).and_log_failure();
+    };
+    ($actual:expr, {$($expected:expr),+ $(,)?}, $($format_args:expr),* $(,)?) => {
+        use $crate::GoogleTestSupport;
+        verify_eq!($actual, {$($expected),*})
+            .with_failure_message(|| format!($($format_args),*))
+            .and_log_failure();
+    };
+    ($actual:expr, $expected:expr $(,)?) => {
+        use $crate::GoogleTestSupport;
+        verify_eq!($actual, $expected).and_log_failure();
+    };
+    ($actual:expr, $expected:expr, $($format_args:expr),* $(,)?) => {
+        use $crate::GoogleTestSupport;
+        verify_eq!($actual, $expected)
+            .with_failure_message(|| format!($($format_args),*))
+            .and_log_failure();
+    };
+}
+
 /// Matches the given value against the given matcher, panicking if it does not
 /// match.
 ///

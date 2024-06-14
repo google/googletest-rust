@@ -176,6 +176,81 @@ path = "src/expect_false_macro_on_true_condition_fails_test_and_continues.rs"
 test = false
 
 [[bin]]
+name = "verify_eq_when_not_equal_returns_error"
+path = "src/verify_eq_when_not_equal_returns_error.rs"
+test = false
+
+[[bin]]
+name = "verify_eq_with_ordered_elements_when_not_equal_returns_error"
+path = "src/verify_eq_with_ordered_elements_when_not_equal_returns_error.rs"
+test = false
+
+[[bin]]
+name = "verify_eq_with_unordered_elements_when_not_equal_returns_error"
+path = "src/verify_eq_with_unordered_elements_when_not_equal_returns_error.rs"
+test = false
+
+[[bin]]
+name = "assert_eq_when_not_equal_returns_error"
+path = "src/assert_eq_when_not_equal_returns_error.rs"
+test = false
+
+[[bin]]
+name = "assert_eq_supports_custom_message"
+path = "src/assert_eq_supports_custom_message.rs"
+test = false
+
+[[bin]]
+name = "assert_eq_with_ordered_elements_when_not_equal_returns_error"
+path = "src/assert_eq_with_ordered_elements_when_not_equal_returns_error.rs"
+test = false
+
+[[bin]]
+name = "assert_eq_with_ordered_elements_supports_custom_message"
+path = "src/assert_eq_with_ordered_elements_supports_custom_message.rs"
+test = false
+
+[[bin]]
+name = "assert_eq_with_unordered_elements_when_not_equal_returns_error"
+path = "src/assert_eq_with_unordered_elements_when_not_equal_returns_error.rs"
+test = false
+
+[[bin]]
+name = "assert_eq_with_unordered_elements_supports_custom_message"
+path = "src/assert_eq_with_unordered_elements_supports_custom_message.rs"
+test = false
+
+[[bin]]
+name = "expect_eq_when_not_equal_returns_error"
+path = "src/expect_eq_when_not_equal_returns_error.rs"
+test = false
+
+[[bin]]
+name = "expect_eq_supports_custom_message"
+path = "src/expect_eq_supports_custom_message.rs"
+test = false
+
+[[bin]]
+name = "expect_eq_with_ordered_elements_when_not_equal_returns_error"
+path = "src/expect_eq_with_ordered_elements_when_not_equal_returns_error.rs"
+test = false
+
+[[bin]]
+name = "expect_eq_with_ordered_elements_supports_custom_message"
+path = "src/expect_eq_with_ordered_elements_supports_custom_message.rs"
+test = false
+
+[[bin]]
+name = "expect_eq_with_unordered_elements_when_not_equal_returns_error"
+path = "src/expect_eq_with_unordered_elements_when_not_equal_returns_error.rs"
+test = false
+
+[[bin]]
+name = "expect_eq_with_unordered_elements_supports_custom_message"
+path = "src/expect_eq_with_unordered_elements_supports_custom_message.rs"
+test = false
+
+[[bin]]
 name = "failure_due_to_returned_error"
 path = "src/failure_due_to_returned_error.rs"
 test = false

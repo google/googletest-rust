@@ -862,6 +862,417 @@ mod tests {
     }
 
     #[test]
+    fn verify_eq_should_pass() -> Result<()> {
+        let value = 2;
+        verify_eq!(value, 2)
+    }
+
+    #[test]
+    fn verify_eq_supports_trailing_comma() -> Result<()> {
+        let value = 2;
+        verify_eq!(value, 2,)
+    }
+
+    #[test]
+    fn verify_eq_supports_tuples() -> Result<()> {
+        verify_eq!((Some("a"), Some("b")), (Some("a"), Some("b")))
+    }
+
+    #[test]
+    fn verify_eq_supports_ordered_elements() -> Result<()> {
+        verify_eq!(vec![1, 2], [1, 2])
+    }
+
+    #[test]
+    fn verify_eq_supports_ordered_elements_with_non_primitives() -> Result<()> {
+        verify_eq!(vec![Some("a"), Some("b")], [Some("a"), Some("b")])
+    }
+
+    #[test]
+    fn verify_eq_supports_unordered_elements() -> Result<()> {
+        verify_eq!(vec![1, 2], {2, 1})
+    }
+
+    #[test]
+    fn verify_eq_supports_unordered_elements_with_non_primitives() -> Result<()> {
+        verify_eq!(vec![Some("a"), Some("b")], {Some("b"), Some("a")})
+    }
+
+    #[test]
+    fn verify_eq_supports_ordered_elements_with_trailing_comma() -> Result<()> {
+        verify_eq!(vec![1, 2], [1, 2,],)
+    }
+
+    #[test]
+    fn verify_eq_supports_unordered_elements_with_trailing_comma() -> Result<()> {
+        verify_eq!(vec![1, 2], {2, 1,},)
+    }
+
+    #[test]
+    fn verify_eq_when_not_equal_returns_error() -> Result<()> {
+        let output =
+            run_external_process_in_tests_directory("verify_eq_when_not_equal_returns_error")?;
+
+        verify_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is equal to 1
+                Actual: 2,
+                  which isn't equal to 1
+                  at .*verify_eq_when_not_equal_returns_error.rs:23:9
+                "})
+        )
+    }
+
+    #[test]
+    fn verify_eq_with_ordered_elements_when_not_equal_returns_error() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "verify_eq_with_ordered_elements_when_not_equal_returns_error",
+        )?;
+
+        verify_that!(
+            output,
+            contains_regex(indoc! {r"
+                Expected: has elements:
+                  0. is equal to 1
+                  1. is equal to 3
+                Actual: \[1, 2\],
+                  where element #1 is 2, which isn't equal to 3
+                  at .*verify_eq_with_ordered_elements_when_not_equal_returns_error.rs:23:9
+                "})
+        )
+    }
+
+    #[test]
+    fn verify_eq_with_unordered_elements_when_not_equal_returns_error() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "verify_eq_with_unordered_elements_when_not_equal_returns_error",
+        )?;
+
+        verify_that!(
+            output,
+            contains_regex(indoc! {r"
+                Expected: contains elements matching in any order:
+                  0. is equal to 3
+                  1. is equal to 1
+                Actual: \[1, 2\],
+                  whose element #1 does not match any expected elements and no elements match the expected element #0
+                  at .*verify_eq_with_unordered_elements_when_not_equal_returns_error.rs:23:9
+                "})
+        )
+    }
+
+    #[googletest::test]
+    fn assert_eq_should_pass() {
+        let value = 2;
+        googletest::assert_eq!(value, 2);
+    }
+
+    #[googletest::test]
+    fn assert_eq_supports_trailing_comma() {
+        let value = 2;
+        googletest::assert_eq!(value, 2,);
+    }
+
+    #[googletest::test]
+    fn assert_eq_supports_tuples() {
+        googletest::assert_eq!((Some("a"), Some("b")), (Some("a"), Some("b")));
+    }
+
+    #[googletest::test]
+    fn assert_eq_supports_ordered_elements() {
+        googletest::assert_eq!(vec![1, 2], [1, 2]);
+    }
+
+    #[googletest::test]
+    fn assert_eq_supports_ordered_elements_with_non_primitives() {
+        googletest::assert_eq!(vec![Some("a"), Some("b")], [Some("a"), Some("b")]);
+    }
+
+    #[googletest::test]
+    fn assert_eq_supports_ordered_elements_with_trailing_comma() {
+        googletest::assert_eq!(vec![1, 2], [1, 2,],);
+    }
+
+    #[googletest::test]
+    fn assert_eq_supports_unordered_elements() {
+        googletest::assert_eq!(vec![1, 2], {2, 1});
+    }
+
+    #[googletest::test]
+    fn assert_eq_supports_unordered_elements_with_trailing_comma() {
+        googletest::assert_eq!(vec![1, 2], {2, 1,},);
+    }
+
+    #[test]
+    fn assert_eq_when_not_equal_returns_error() -> Result<()> {
+        let output =
+            run_external_process_in_tests_directory("assert_eq_when_not_equal_returns_error")?;
+
+        verify_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is equal to 1
+                Actual: 2,
+                  which isn't equal to 1
+                  at .*assert_eq_when_not_equal_returns_error.rs:23:9
+                "})
+        )
+    }
+
+    #[test]
+    fn assert_eq_supports_custom_message() -> Result<()> {
+        let output = run_external_process_in_tests_directory("assert_eq_supports_custom_message")?;
+
+        verify_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is equal to 1
+                Actual: 2,
+                  which isn't equal to 1
+                Failure message with argument: argument
+                  at .*assert_eq_supports_custom_message.rs:[0-9]+:[0-9]
+                "})
+        )
+    }
+
+    #[test]
+    fn assert_eq_with_ordered_elements_when_not_equal_returns_error() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "assert_eq_with_ordered_elements_when_not_equal_returns_error",
+        )?;
+
+        verify_that!(
+            output,
+            contains_regex(indoc! {r"
+                Expected: has elements:
+                  0. is equal to 1
+                  1. is equal to 3
+                Actual: \[1, 2\],
+                  where element #1 is 2, which isn't equal to 3
+                  at .*assert_eq_with_ordered_elements_when_not_equal_returns_error.rs:[0-9]+:[0-9]
+                "})
+        )
+    }
+
+    #[test]
+    fn assert_eq_with_ordered_elements_supports_custom_message() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "assert_eq_with_ordered_elements_supports_custom_message",
+        )?;
+
+        verify_that!(
+            output,
+            contains_regex(indoc! {r"
+                Expected: has elements:
+                  0. is equal to 1
+                  1. is equal to 3
+                Actual: \[1, 2\],
+                  where element #1 is 2, which isn't equal to 3
+                Failure message with argument: argument
+                  at .*assert_eq_with_ordered_elements_supports_custom_message.rs:[0-9]+:[0-9]
+                "})
+        )
+    }
+
+    #[test]
+    fn assert_eq_with_unordered_elements_when_not_equal_returns_error() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "assert_eq_with_unordered_elements_when_not_equal_returns_error",
+        )?;
+
+        verify_that!(
+            output,
+            contains_regex(indoc! {r"
+                Expected: contains elements matching in any order:
+                  0. is equal to 3
+                  1. is equal to 1
+                Actual: \[1, 2\],
+                  whose element #1 does not match any expected elements and no elements match the expected element #0
+                  at .*assert_eq_with_unordered_elements_when_not_equal_returns_error.rs:[0-9]+:[0-9]
+                "})
+        )
+    }
+
+    #[test]
+    fn assert_eq_with_unordered_elements_supports_custom_message() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "assert_eq_with_unordered_elements_supports_custom_message",
+        )?;
+
+        verify_that!(
+            output,
+            contains_regex(indoc! {r"
+                Expected: contains elements matching in any order:
+                  0. is equal to 3
+                  1. is equal to 1
+                Actual: \[1, 2\],
+                  whose element #1 does not match any expected elements and no elements match the expected element #0
+                Failure message with argument: argument
+                  at .*assert_eq_with_unordered_elements_supports_custom_message.rs:[0-9]+:[0-9]
+                "})
+        )
+    }
+
+    #[googletest::test]
+    fn expect_eq_should_pass() {
+        let value = 2;
+        expect_eq!(value, 2);
+    }
+
+    #[googletest::test]
+    fn expect_eq_supports_trailing_comma() {
+        let value = 2;
+        expect_eq!(value, 2,);
+    }
+
+    #[googletest::test]
+    fn expect_eq_supports_tuples() {
+        expect_eq!((Some("a"), Some("b")), (Some("a"), Some("b")));
+    }
+
+    #[googletest::test]
+    fn expect_eq_supports_ordered_elements() {
+        expect_eq!(vec![1, 2], [1, 2]);
+    }
+
+    #[googletest::test]
+    fn expect_eq_supports_ordered_elements_with_non_primitives() {
+        expect_eq!(vec![Some("a"), Some("b")], [Some("a"), Some("b")]);
+    }
+
+    #[googletest::test]
+    fn expect_eq_supports_ordered_elements_with_trailing_comma() {
+        expect_eq!(vec![1, 2], [1, 2,],);
+    }
+
+    #[googletest::test]
+    fn expect_eq_supports_unordered_elements() {
+        expect_eq!(vec![1, 2], {2, 1});
+    }
+
+    #[googletest::test]
+    fn expect_eq_supports_unordered_elements_with_trailing_comma() {
+        expect_eq!(vec![1, 2], {2, 1,},);
+    }
+
+    #[googletest::test]
+    fn expect_eq_when_not_equal_returns_error() -> Result<()> {
+        let output =
+            run_external_process_in_tests_directory("expect_eq_when_not_equal_returns_error")?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is equal to 1
+                Actual: 2,
+                  which isn't equal to 1
+                  at .*expect_eq_when_not_equal_returns_error.rs:23:9
+                "})
+        );
+        verify_that!(output, contains_regex("This will print"))
+    }
+
+    #[googletest::test]
+    fn expect_eq_supports_custom_message() -> Result<()> {
+        let output = run_external_process_in_tests_directory("expect_eq_supports_custom_message")?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is equal to 1
+                Actual: 2,
+                  which isn't equal to 1
+                Failure message with argument: argument
+                  at .*expect_eq_supports_custom_message.rs:[0-9]+:[0-9]
+                "})
+        );
+        verify_that!(output, contains_regex("This will print"))
+    }
+
+    #[googletest::test]
+    fn expect_eq_with_ordered_elements_when_not_equal_returns_error() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "expect_eq_with_ordered_elements_when_not_equal_returns_error",
+        )?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {r"
+                Expected: has elements:
+                  0. is equal to 1
+                  1. is equal to 3
+                Actual: \[1, 2\],
+                  where element #1 is 2, which isn't equal to 3
+                  at .*expect_eq_with_ordered_elements_when_not_equal_returns_error.rs:[0-9]+:[0-9]
+                "})
+        );
+        verify_that!(output, contains_regex("This will print"))
+    }
+
+    #[googletest::test]
+    fn expect_eq_with_ordered_elements_supports_custom_message() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "expect_eq_with_ordered_elements_supports_custom_message",
+        )?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {r"
+                Expected: has elements:
+                  0. is equal to 1
+                  1. is equal to 3
+                Actual: \[1, 2\],
+                  where element #1 is 2, which isn't equal to 3
+                Failure message with argument: argument
+                  at .*expect_eq_with_ordered_elements_supports_custom_message.rs:[0-9]+:[0-9]
+                "})
+        );
+        verify_that!(output, contains_regex("This will print"))
+    }
+
+    #[googletest::test]
+    fn expect_eq_with_unordered_elements_when_not_equal_returns_error() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "expect_eq_with_unordered_elements_when_not_equal_returns_error",
+        )?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {r"
+                Expected: contains elements matching in any order:
+                  0. is equal to 3
+                  1. is equal to 1
+                Actual: \[1, 2\],
+                  whose element #1 does not match any expected elements and no elements match the expected element #0
+                  at .*expect_eq_with_unordered_elements_when_not_equal_returns_error.rs:[0-9]+:[0-9]
+                "})
+        );
+        verify_that!(output, contains_regex("This will print"))
+    }
+
+    #[googletest::test]
+    fn expect_eq_with_unordered_elements_supports_custom_message() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "expect_eq_with_unordered_elements_supports_custom_message",
+        )?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {r"
+                Expected: contains elements matching in any order:
+                  0. is equal to 3
+                  1. is equal to 1
+                Actual: \[1, 2\],
+                  whose element #1 does not match any expected elements and no elements match the expected element #0
+                Failure message with argument: argument
+                  at .*expect_eq_with_unordered_elements_supports_custom_message.rs:[0-9]+:[0-9]
+                "})
+        );
+        verify_that!(output, contains_regex("This will print"))
+    }
+
+    #[test]
     fn test_using_normal_test_attribute_macro_formats_failure_message_correctly() -> Result<()> {
         let result = should_display_error_correctly_without_google_test_macro();
 
