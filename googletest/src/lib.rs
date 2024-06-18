@@ -26,6 +26,7 @@ pub mod internal;
 pub mod matcher;
 pub mod matcher_support;
 pub mod matchers;
+pub mod fixtures;
 
 /// Re-exports of the symbols in this crate which are most likely to be used.
 ///
@@ -48,6 +49,7 @@ pub mod prelude {
     pub use super::GoogleTestSupport;
     pub use super::IntoTestResult;
     pub use super::Result;
+    pub use super::fixtures::Fixture;
     // Assert macros
     pub use super::{
         add_failure, add_failure_at, assert_that, expect_eq, expect_false, expect_float_eq,

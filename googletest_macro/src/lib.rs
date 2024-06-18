@@ -13,7 +13,10 @@
 // limitations under the License.
 
 use quote::quote;
-use syn::{parse_macro_input, Attribute, DeriveInput, ItemFn, ReturnType};
+use syn::{
+    parse_macro_input, punctuated::Punctuated, spanned::Spanned, Attribute, DeriveInput, FnArg,
+    ItemFn, PatType, ReturnType, Signature, Type,
+};
 
 /// Marks a test to be run by the Google Rust test runner.
 ///
@@ -72,9 +75,7 @@ pub fn test(
     _args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let mut parsed_fn = parse_macro_input!(input as ItemFn);
-    let attrs = parsed_fn.attrs.drain(..).collect::<Vec<_>>();
-    let (mut sig, block) = (parsed_fn.sig, parsed_fn.block);
+    let ItemFn { attrs, mut sig, block, .. } = parse_macro_input!(input as ItemFn);
     let (outer_return_type, trailer) =
         if attrs.iter().any(|attr| attr.path().is_ident("should_panic")) {
             (quote! { () }, quote! { .unwrap(); })
@@ -84,11 +85,14 @@ pub fn test(
                 quote! {},
             )
         };
-    let output_type = match sig.output.clone() {
-        ReturnType::Type(_, output_type) => Some(output_type),
-        ReturnType::Default => None,
+
+    let inner_sig = sig.clone();
+    let closure_body = match closure_body(&inner_sig) {
+        Ok(body) => body,
+        Err(e) => return e.into_compile_error().into(),
     };
     sig.output = ReturnType::Default;
+    sig.inputs = Punctuated::new();
     let (maybe_closure, invocation) = if sig.asyncness.is_some() {
         (
             // In the async case, the ? operator returns from the *block* rather than the
@@ -106,38 +110,28 @@ pub fn test(
             // create a separate closure from which the ? operator can return in order to capture
             // the output.
             quote! {
-                let test = move || #block;
+                #inner_sig { #block }
+                let test = move || {
+                    #closure_body
+                };
             },
             quote! {
                 test()
             },
         )
     };
-    let function = if let Some(output_type) = output_type {
-        quote! {
-            #(#attrs)*
-            #sig -> #outer_return_type {
-                #maybe_closure
-                use googletest::internal::test_outcome::TestOutcome;
-                TestOutcome::init_current_test_outcome();
-                let result: #output_type = #invocation;
-                TestOutcome::close_current_test_outcome(result)
-                #trailer
-            }
-        }
-    } else {
-        quote! {
-            #(#attrs)*
-            #sig -> #outer_return_type {
-                #maybe_closure
-                use googletest::internal::test_outcome::TestOutcome;
-                TestOutcome::init_current_test_outcome();
-                #invocation;
-                TestOutcome::close_current_test_outcome(googletest::Result::Ok(()))
-                #trailer
-            }
+    let function = quote! {
+        #(#attrs)*
+        #sig -> #outer_return_type {
+            #maybe_closure
+            use googletest::internal::test_outcome::TestOutcome;
+            TestOutcome::init_current_test_outcome();
+            let result = #invocation;
+            TestOutcome::close_current_test_outcome(result)
+            #trailer
         }
     };
+
     let output = if attrs.iter().any(is_test_attribute) {
         function
     } else {
@@ -150,18 +144,110 @@ pub fn test(
 }
 
 fn is_test_attribute(attr: &Attribute) -> bool {
-    let first_segment = match attr.path().segments.first() {
-        Some(first_segment) => first_segment,
-        None => return false,
+    match attr.path().segments.last() {
+        Some(last_segment) => last_segment.ident == "test",
+        None => false,
+    }
+}
+
+struct Fixture {
+    identifier: syn::Ident,
+    ty: Box<syn::Type>,
+    consumable: bool,
+    mutability: Option<syn::token::Mut>,
+}
+
+impl Fixture {
+    fn new(index: usize, ty: Box<syn::Type>) -> Self {
+        match &*ty {
+            Type::Reference(reference) => Self {
+                identifier: syn::Ident::new(&format!("fixture_{index}"), ty.span()),
+                ty: reference.elem.clone(),
+                consumable: false,
+                mutability: reference.mutability,
+            },
+            Type::Path(..) => Self {
+                identifier: syn::Ident::new(&format!("fixture_{index}"), ty.span()),
+                ty,
+                consumable: true,
+                mutability: None,
+            },
+            Type::Array(_) => todo!(),
+            Type::BareFn(_) => todo!(),
+            Type::Group(_) => todo!(),
+            Type::ImplTrait(_) => todo!(),
+            Type::Infer(_) => todo!(),
+            Type::Macro(_) => todo!(),
+            Type::Never(_) => todo!(),
+            Type::Paren(_) => todo!(),
+            Type::Ptr(_) => todo!(),
+            Type::Slice(_) => todo!(),
+            Type::TraitObject(_) => todo!(),
+            Type::Tuple(_) => todo!(),
+            Type::Verbatim(_) => todo!(),
+            _ => todo!(),
+        }
+    }
+
+    fn parameter(&self) -> proc_macro2::TokenStream {
+        let Self { identifier, mutability, consumable, .. } = self;
+        if *consumable { quote!(#identifier) } else { quote!(& #mutability #identifier) }
+    }
+
+    fn wrap_call(&self, inner_call: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+        let Self { identifier, mutability, ty, consumable } = self;
+        if *consumable {
+            quote!(
+                let #identifier = <#ty as googletest::fixtures::ConsumableFixture>::set_up()?;
+                (||{#inner_call})()
+            )
+        } else {
+            quote!(
+                let #mutability #identifier = <#ty as googletest::fixtures::Fixture>::set_up()?;
+                let result = std::panic::catch_unwind(|| {#inner_call});
+                let tear_down_result = googletest::fixtures::Fixture::tear_down(#identifier);
+                match result {
+                    Ok(result) => result.and(tear_down_result),
+                    Err(panic_error) => std::panic::resume_unwind(panic_error)
+                }
+            )
+        }
+    }
+}
+
+fn closure_body(signature: &Signature) -> syn::Result<proc_macro2::TokenStream> {
+    let input_types = signature
+        .inputs
+        .iter()
+        .enumerate()
+        .map(|(index, typed)| {
+            let FnArg::Typed(PatType { ty, .. }) = typed else {
+                return Err(syn::Error::new(
+                    typed.span(),
+                    "`self` receiver is not accepted as test argument",
+                ));
+            };
+            Ok(Fixture::new(index, ty.clone()))
+        })
+        .collect::<syn::Result<Vec<_>>>()?;
+
+    let mut call = {
+        let parameters = input_types.iter().map(Fixture::parameter);
+
+        let test_name = &signature.ident;
+        match signature.output {
+            ReturnType::Default => {
+                quote!({#test_name(#(#parameters, )*); googletest::Result::Ok(())})
+            }
+            ReturnType::Type(_, _) => quote!(#test_name(#(#parameters, )*)),
+        }
     };
-    let last_segment = match attr.path().segments.last() {
-        Some(last_segment) => last_segment,
-        None => return false,
-    };
-    last_segment.ident == "test"
-        || (first_segment.ident == "rstest"
-            && last_segment.ident == "rstest"
-            && attr.path().segments.len() <= 2)
+
+    for fixture in input_types.iter().rev() {
+        call = fixture.wrap_call(call);
+    }
+
+    Ok(call)
 }
 
 #[proc_macro_derive(MatcherBase)]

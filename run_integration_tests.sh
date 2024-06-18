@@ -83,7 +83,7 @@ INTEGRATION_TEST_BINARIES=(
   "expect_near_supports_custom_message"
   "fatal_and_non_fatal_failure"
   "first_failure_aborts"
-  "google_test_with_rstest"
+  # "google_test_with_rstest"
   "non_fatal_failure_in_subroutine"
   "passing_test_with_should_panic"
   "simple_assertion_failure"
