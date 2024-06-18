@@ -13,7 +13,10 @@
 // limitations under the License.
 
 use quote::quote;
-use syn::{parse_macro_input, Attribute, DeriveInput, ItemFn, ReturnType};
+use syn::{
+    parse_macro_input, punctuated::Punctuated, spanned::Spanned, Attribute, DeriveInput, FnArg,
+    ItemFn, PatType, ReturnType, Signature, Type, TypeReference,
+};
 
 /// Marks a test to be run by the Google Rust test runner.
 ///
@@ -72,9 +75,7 @@ pub fn test(
     _args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let mut parsed_fn = parse_macro_input!(input as ItemFn);
-    let attrs = parsed_fn.attrs.drain(..).collect::<Vec<_>>();
-    let (mut sig, block) = (parsed_fn.sig, parsed_fn.block);
+    let ItemFn { attrs, mut sig, block, .. } = parse_macro_input!(input as ItemFn);
     let (outer_return_type, trailer) =
         if attrs.iter().any(|attr| attr.path().is_ident("should_panic")) {
             (quote! { () }, quote! { .unwrap(); })
@@ -84,11 +85,15 @@ pub fn test(
                 quote! {},
             )
         };
+
+    let inner_sig = sig.clone();
+    let closure_body = closure_body(&inner_sig);
     let output_type = match sig.output.clone() {
         ReturnType::Type(_, output_type) => Some(output_type),
         ReturnType::Default => None,
     };
     sig.output = ReturnType::Default;
+    sig.inputs = Punctuated::new();
     let (maybe_closure, invocation) = if sig.asyncness.is_some() {
         (
             // In the async case, the ? operator returns from the *block* rather than the
@@ -106,7 +111,10 @@ pub fn test(
             // create a separate closure from which the ? operator can return in order to capture
             // the output.
             quote! {
-                let test = move || #block;
+                #inner_sig { #block }
+                let test = move || {
+                    #closure_body
+                };
             },
             quote! {
                 test()
@@ -150,18 +158,61 @@ pub fn test(
 }
 
 fn is_test_attribute(attr: &Attribute) -> bool {
-    let first_segment = match attr.path().segments.first() {
-        Some(first_segment) => first_segment,
-        None => return false,
+    match attr.path().segments.last() {
+        Some(last_segment) => last_segment.ident == "test",
+        None => false,
+    }
+}
+
+fn closure_body(signature: &Signature) -> proc_macro2::TokenStream {
+    let input_types = signature
+        .inputs
+        .iter()
+        .enumerate()
+        .map(|(index, typed)| {
+            let FnArg::Typed(PatType { ty, .. }) = typed else {
+                todo!();
+            };
+            let Type::Reference(reference) = &**ty else {
+                todo!();
+            };
+            (syn::Ident::new(&format!("fixture_{index}"), typed.span()), reference)
+        })
+        .collect::<Vec<_>>();
+    let set_ups = input_types.iter().map(|(identifier, TypeReference { elem, mutability, .. })| {
+        quote! {
+            let #mutability #identifier = <#elem as googletest::fixtures::Fixture>::set_up()?;
+        }
+    });
+    let call = {
+        let arguments = input_types.iter().map(|(identifier, TypeReference { mutability, .. })| {
+            quote! {
+                &#mutability #identifier
+            }
+        });
+        let test_name = &signature.ident;
+        quote! {
+            #test_name ( #(#arguments),*)
+        }
     };
-    let last_segment = match attr.path().segments.last() {
-        Some(last_segment) => last_segment,
-        None => return false,
-    };
-    last_segment.ident == "test"
-        || (first_segment.ident == "rstest"
-            && last_segment.ident == "rstest"
-            && attr.path().segments.len() <= 2)
+    let tear_downs = input_types.iter().map(|(identifier, _)| {
+        quote! {
+            googletest::fixtures::Fixture::tear_down(#identifier)?;
+        }
+    });
+    match signature.output {
+        ReturnType::Default => quote! {
+            #(#set_ups)*
+            #call
+            #(#tear_downs)*
+        },
+        ReturnType::Type(_, _) => quote! {
+           #(#set_ups)*
+           #call?;
+           #(#tear_downs)*
+           Ok(())
+        },
+    }
 }
 
 #[proc_macro_derive(MatcherBase)]
