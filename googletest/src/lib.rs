@@ -22,6 +22,7 @@ extern crate quickcheck;
 #[macro_use]
 pub mod assertions;
 pub mod description;
+pub mod fixtures;
 pub mod internal;
 pub mod matcher;
 pub mod matcher_support;
@@ -42,6 +43,7 @@ pub mod matchers;
 /// }
 /// ```
 pub mod prelude {
+    pub use super::fixtures::{ConsumableFixture, Fixture, FixtureOf, StaticFixture};
     pub use super::gtest;
     pub use super::matcher::{Matcher, MatcherBase};
     pub use super::matchers::*;

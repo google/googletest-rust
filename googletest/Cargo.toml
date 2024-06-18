@@ -22,7 +22,7 @@ repository = "https://github.com/google/googletest-rust"
 readme = "../README.md"
 license = "Apache-2.0"
 edition = "2021"
-rust-version = "1.66.0"
+rust-version = "1.70.0"
 authors = [
   "Bradford Hovinen <hovinen@google.com>",
   "Bastien Jacot-Guillarmod <bjacotg@google.com>",
