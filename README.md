@@ -25,7 +25,7 @@ This library brings the rich assertion types of Google's C++ testing library
  * A new set of assertion macros offering similar functionality to those of
    [GoogleTest](https://google.github.io/googletest/primer.html#assertions).
 
-**The minimum supported Rust version is 1.66**.
+**The minimum supported Rust version is 1.70**.
 
 > :warning: The API is not fully stable and may still be changed until we
 > publish version 1.0.
