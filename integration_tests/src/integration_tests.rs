@@ -1273,6 +1273,76 @@ mod tests {
     }
 
     #[test]
+    fn verify_ne_should_pass() -> Result<()> {
+        let value = 2;
+        verify_ne!(value, 3)
+    }
+
+    #[test]
+    fn verify_ne_supports_trailing_comma() -> Result<()> {
+        let value = 2;
+        verify_ne!(value, 3,)
+    }
+
+    #[test]
+    fn verify_ne_when_equal_returns_error() -> Result<()> {
+        let output = run_external_process_in_tests_directory("verify_ne_when_equal_returns_error")?;
+
+        verify_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: isn't equal to 1
+                Actual: 1,
+                  which is equal to 1
+                  at .*verify_ne_when_equal_returns_error.rs:[0-9]+:[0-9]
+            "})
+        )
+    }
+
+    #[googletest::test]
+    fn expect_ne_should_pass() {
+        expect_ne!(1, 2);
+    }
+
+    #[googletest::test]
+    fn expect_ne_supports_trailing_comma() {
+        expect_ne!(1, 2,);
+    }
+
+    #[googletest::test]
+    fn expect_ne_when_equal_marks_failed() -> Result<()> {
+        let output = run_external_process_in_tests_directory("expect_ne_when_equal_marks_failed")?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: isn't equal to 1
+                Actual: 1,
+                  which is equal to 1
+                  at .*expect_ne_when_equal_marks_failed.rs:[0-9]+:[0-9]
+            "})
+        );
+        verify_that!(output, contains_regex("This will print"))
+    }
+
+    #[googletest::test]
+    fn expect_ne_supports_custom_message() -> Result<()> {
+        let output = run_external_process_in_tests_directory("expect_ne_supports_custom_message")?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: isn't equal to 1
+                Actual: 1,
+                  which is equal to 1
+                Failure message with argument: argument
+                  at .*expect_ne_supports_custom_message.rs:[0-9]+:[0-9]
+            "})
+        );
+        verify_that!(output, contains_regex("This will print"))
+    }
+
+    #[test]
     fn test_using_normal_test_attribute_macro_formats_failure_message_correctly() -> Result<()> {
         let result = should_display_error_correctly_without_google_test_macro();
 
