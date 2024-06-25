@@ -266,6 +266,21 @@ path = "src/expect_ne_supports_custom_message.rs"
 test = false
 
 [[bin]]
+name = "verify_lt_when_not_less_returns_error"
+path = "src/verify_lt_when_not_less_returns_error.rs"
+test = false
+
+[[bin]]
+name = "expect_lt_when_not_less_marks_failed"
+path = "src/expect_lt_when_not_less_marks_failed.rs"
+test = false
+
+[[bin]]
+name = "expect_lt_supports_custom_message"
+path = "src/expect_lt_supports_custom_message.rs"
+test = false
+
+[[bin]]
 name = "failure_due_to_returned_error"
 path = "src/failure_due_to_returned_error.rs"
 test = false

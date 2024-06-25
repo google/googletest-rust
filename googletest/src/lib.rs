@@ -51,8 +51,8 @@ pub mod prelude {
     // Assert macros
     pub use super::{
         add_failure, add_failure_at, assert_false, assert_that, assert_true, expect_eq,
-        expect_false, expect_ne, expect_pred, expect_that, expect_true, fail, succeed, verify_eq,
-        verify_false, verify_ne, verify_pred, verify_that, verify_true,
+        expect_false, expect_lt, expect_ne, expect_pred, expect_that, expect_true, fail, succeed,
+        verify_eq, verify_false, verify_lt, verify_ne, verify_pred, verify_that, verify_true,
     };
 }
 
