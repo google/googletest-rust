@@ -334,7 +334,7 @@ macro_rules! succeed {
 ///
 /// This can only be invoked inside tests with the
 /// [`googletest::test`][crate::test] attribute. The failure must be generated
-/// in the same thread as that running the thread itself.
+/// in the same thread as that running the test itself.
 ///
 /// ```ignore
 /// use googletest::prelude::*;
@@ -377,7 +377,7 @@ macro_rules! add_failure {
 ///
 /// This can only be invoked inside tests with the
 /// [`googletest::test`][crate::test] attribute. The failure must be generated
-/// in the same thread as that running the thread itself.
+/// in the same thread as that running the test itself.
 ///
 /// ```ignore
 /// use googletest::prelude::*;
@@ -456,7 +456,7 @@ macro_rules! verify_true {
 ///
 /// This can only be invoked inside tests with the
 /// [`googletest::test`][crate::test] attribute. The failure must be generated
-/// in the same thread as that running the thread itself.
+/// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
@@ -482,7 +482,7 @@ macro_rules! assert_true {
 ///
 /// This can only be invoked inside tests with the
 /// [`googletest::test`][crate::test] attribute. The failure must be generated
-/// in the same thread as that running the thread itself.
+/// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
@@ -541,7 +541,7 @@ macro_rules! verify_false {
 ///
 /// This can only be invoked inside tests with the
 /// [`googletest::test`][crate::test] attribute. The failure must be generated
-/// in the same thread as that running the thread itself.
+/// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
@@ -567,7 +567,7 @@ macro_rules! assert_false {
 ///
 /// This can only be invoked inside tests with the
 /// [`googletest::test`][crate::test] attribute. The failure must be generated
-/// in the same thread as that running the thread itself.
+/// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
@@ -637,7 +637,7 @@ macro_rules! verify_eq {
 ///
 /// This can only be invoked inside tests with the
 /// [`googletest::test`][crate::test] attribute. The failure must be generated
-/// in the same thread as that running the thread itself.
+/// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
@@ -701,7 +701,7 @@ macro_rules! assert_eq {
 ///
 /// This can only be invoked inside tests with the
 /// [`googletest::test`][crate::test] attribute. The failure must be generated
-/// in the same thread as that running the thread itself.
+/// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
@@ -805,7 +805,7 @@ macro_rules! verify_ne {
 ///
 /// This can only be invoked inside tests with the
 /// [`googletest::test`][crate::test] attribute. The failure must be generated
-/// in the same thread as that running the thread itself.
+/// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
@@ -883,7 +883,7 @@ macro_rules! verify_lt {
 ///
 /// This can only be invoked inside tests with the
 /// [`googletest::test`][crate::test] attribute. The failure must be generated
-/// in the same thread as that running the thread itself.
+/// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
@@ -918,6 +918,85 @@ macro_rules! expect_lt {
     ($actual:expr, $expected:expr $(,)?) => {
         use $crate::GoogleTestSupport;
         verify_lt!($actual, $expected).and_log_failure();
+    };
+}
+
+/// Checks whether the first argument is less than or equal to the second
+/// argument.
+///
+/// Evaluates to `Result::Ok(())` if the first argument is less than or equal to
+/// the second and `Result::Err(TestAssertionFailure)` if it is greater. The
+/// caller must then decide how to handle the `Err` variant. It has a few
+/// options:
+///  * Abort the current function with the `?` operator. This requires that the
+///    function return a suitable `Result`.
+///  * Log the test failure and continue by calling the method
+///    `and_log_failure`.
+///
+/// Of course, one can also use all other standard methods on `Result`.
+///
+/// **Invoking this macro by itself does not cause a test failure to be recorded
+/// or output.** The resulting `Result` must be handled as described above to
+/// cause the test to be recorded as a failure.
+///
+/// Example:
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[test]
+/// fn should_fail() -> Result<()> {
+///     verify_le!(2, 1)
+/// }
+#[macro_export]
+macro_rules! verify_le {
+    ($actual:expr, $expected:expr $(,)?) => {
+        verify_that!($actual, $crate::matchers::le($expected))
+    };
+}
+
+/// Marks test as failed and continues execution if the first argument is
+/// greater than the second argument.
+///
+/// This is a **not-fatal** failure. The test continues execution even after the
+/// macro execution.
+///
+/// This can only be invoked inside tests with the
+/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// in the same thread as that running the test itself.
+///
+/// Example:
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[googletest::test]
+/// fn should_fail() {
+///     expect_le!(2, 1);
+///     println!("This will print!");
+/// }
+/// ```
+///
+/// One may include formatted arguments in the failure message:
+///```ignore
+/// use googletest::prelude::*;
+///
+/// #[googletest::test]
+/// fn should_fail() {
+///     let argument = "argument"
+///     expect_le!(2, 1, "custom failure message: {argument}");
+///     println!("This will print!");
+/// }
+/// ```
+#[macro_export]
+macro_rules! expect_le {
+    ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {
+        use $crate::GoogleTestSupport;
+        verify_le!($actual, $expected)
+            .with_failure_message(|| format!($($format_args),*))
+            .and_log_failure();
+    };
+    ($actual:expr, $expected:expr $(,)?) => {
+        use $crate::GoogleTestSupport;
+        verify_le!($actual, $expected).and_log_failure();
     };
 }
 

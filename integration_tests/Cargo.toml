@@ -286,6 +286,21 @@ path = "src/failure_due_to_returned_error.rs"
 test = false
 
 [[bin]]
+name = "verify_le_when_greater_returns_error"
+path = "src/verify_le_when_greater_returns_error.rs"
+test = false
+
+[[bin]]
+name = "expect_le_when_greater_marks_failed"
+path = "src/expect_le_when_greater_marks_failed.rs"
+test = false
+
+[[bin]]
+name = "expect_le_supports_custom_message"
+path = "src/expect_le_supports_custom_message.rs"
+test = false
+
+[[bin]]
 name = "failure_due_to_returned_error_with_line_numbers"
 path = "src/failure_due_to_returned_error_with_line_numbers.rs"
 test = false
