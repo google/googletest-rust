@@ -1485,6 +1485,76 @@ mod tests {
     }
 
     #[test]
+    fn verify_gt_should_pass() -> Result<()> {
+        verify_gt!(2, 1)
+    }
+
+    #[test]
+    fn verify_gt_supports_trailing_comma() -> Result<()> {
+        verify_gt!(2, 1,)
+    }
+
+    #[test]
+    fn verify_gt_when_not_greater_returns_error() -> Result<()> {
+        let output =
+            run_external_process_in_tests_directory("verify_gt_when_not_greater_returns_error")?;
+
+        verify_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is greater than 2
+                Actual: 1,
+                  which is less than or equal to 2
+                  at .*verify_gt_when_not_greater_returns_error.rs:[0-9]+:[0-9]
+            "})
+        )
+    }
+
+    #[googletest::test]
+    fn expect_gt_should_pass() {
+        expect_gt!(2, 1);
+    }
+
+    #[googletest::test]
+    fn expect_gt_supports_trailing_comma() {
+        expect_gt!(2, 1,);
+    }
+
+    #[googletest::test]
+    fn expect_gt_when_not_greater_marks_failed() -> Result<()> {
+        let output =
+            run_external_process_in_tests_directory("expect_gt_when_not_greater_marks_failed")?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is greater than 2
+                Actual: 1,
+                  which is less than or equal to 2
+                  at .*expect_gt_when_not_greater_marks_failed.rs:[0-9]+:[0-9]
+            "})
+        );
+        verify_that!(output, contains_regex("This will print"))
+    }
+
+    #[googletest::test]
+    fn expect_gt_supports_custom_message() -> Result<()> {
+        let output = run_external_process_in_tests_directory("expect_gt_supports_custom_message")?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is greater than 2
+                Actual: 1,
+                  which is less than or equal to 2
+                Failure message with argument: argument
+                  at .*expect_gt_supports_custom_message.rs:[0-9]+:[0-9]
+            "})
+        );
+        verify_that!(output, contains_regex("This will print"))
+    }
+
+    #[test]
     fn test_using_normal_test_attribute_macro_formats_failure_message_correctly() -> Result<()> {
         let result = should_display_error_correctly_without_google_test_macro();
 
