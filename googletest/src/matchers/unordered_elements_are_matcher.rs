@@ -371,7 +371,7 @@ pub mod internal {
     }
 
     impl Requirements {
-        fn explain_size_mismatch<ContainerT: ?Sized + IntoIterator + Copy>(
+        fn explain_size_mismatch<ContainerT: IntoIterator + Copy>(
             &self,
             actual: ContainerT,
             expected_size: usize,
