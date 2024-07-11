@@ -31,7 +31,7 @@ macro_rules! __auto_ref_eq {
             ExpectedKind, MatcherKind,
         };
         match $e {
-            expected => (&expected).kind().new(expected),
+            expected => (&expected).kind().matcher(expected),
         }
     }};
 }
@@ -57,7 +57,7 @@ pub mod internal {
 
     impl MatcherTag {
         #[inline]
-        pub fn new<M>(self, matcher: M) -> M {
+        pub fn matcher<M>(self, matcher: M) -> M {
             matcher
         }
     }
@@ -75,7 +75,7 @@ pub mod internal {
 
     impl ExpectedTag {
         #[inline]
-        pub fn new<T>(self, expected: T) -> EqMatcher<T> {
+        pub fn matcher<T>(self, expected: T) -> EqMatcher<T> {
             eq(expected)
         }
     }
