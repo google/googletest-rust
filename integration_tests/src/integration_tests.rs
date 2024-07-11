@@ -1121,6 +1121,12 @@ mod tests {
     }
 
     #[googletest::test]
+    fn expect_eq_should_allow_multiple_calls() {
+        expect_eq!(1, 1);
+        expect_eq!(2, 2);
+    }
+
+    #[googletest::test]
     fn expect_eq_supports_trailing_comma() {
         let value = 2;
         expect_eq!(value, 2,);
@@ -1305,6 +1311,12 @@ mod tests {
     }
 
     #[googletest::test]
+    fn expect_ne_should_allow_multiple_calls() {
+        expect_ne!(1, 2);
+        expect_ne!(1, 3);
+    }
+
+    #[googletest::test]
     fn expect_ne_supports_trailing_comma() {
         expect_ne!(1, 2,);
     }
@@ -1373,6 +1385,12 @@ mod tests {
     #[googletest::test]
     fn expect_lt_should_pass() {
         expect_lt!(1, 2);
+    }
+
+    #[googletest::test]
+    fn expect_lt_should_allow_multuple_calls() {
+        expect_lt!(1, 2);
+        expect_lt!(1, 3);
     }
 
     #[googletest::test]
@@ -1446,6 +1464,12 @@ mod tests {
     }
 
     #[googletest::test]
+    fn expect_le_should_allow_multiple_calls() {
+        expect_le!(1, 1);
+        expect_le!(1, 2);
+    }
+
+    #[googletest::test]
     fn expect_le_supports_trailing_comma() {
         expect_le!(1, 2,);
     }
@@ -1516,6 +1540,12 @@ mod tests {
     }
 
     #[googletest::test]
+    fn expect_gt_should_allow_multiple_calls() {
+        expect_gt!(2, 1);
+        expect_gt!(3, 1);
+    }
+
+    #[googletest::test]
     fn expect_gt_supports_trailing_comma() {
         expect_gt!(2, 1,);
     }
@@ -1582,6 +1612,12 @@ mod tests {
     #[googletest::test]
     fn expect_ge_should_pass() {
         expect_ge!(1, 1);
+    }
+
+    #[googletest::test]
+    fn expect_ge_should_allow_multiple_calls() {
+        expect_ge!(1, 1);
+        expect_ge!(2, 1);
     }
 
     #[googletest::test]

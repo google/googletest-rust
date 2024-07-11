@@ -733,36 +733,36 @@ macro_rules! assert_eq {
 /// ```
 #[macro_export]
 macro_rules! expect_eq {
-    ($actual:expr, [$($expected:expr),+ $(,)?] $(,)?) => {
+    ($actual:expr, [$($expected:expr),+ $(,)?] $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_eq!($actual, [$($expected),*]).and_log_failure();
-    };
-    ($actual:expr, [$($expected:expr),+ $(,)?], $($format_args:expr),* $(,)?) => {
+    }};
+    ($actual:expr, [$($expected:expr),+ $(,)?], $($format_args:expr),* $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_eq!($actual, [$($expected),*])
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
-    };
-    ($actual:expr, {$($expected:expr),+ $(,)?} $(,)?) => {
+    }};
+    ($actual:expr, {$($expected:expr),+ $(,)?} $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_eq!($actual, {$($expected),*}).and_log_failure();
-    };
-    ($actual:expr, {$($expected:expr),+ $(,)?}, $($format_args:expr),* $(,)?) => {
+    }};
+    ($actual:expr, {$($expected:expr),+ $(,)?}, $($format_args:expr),* $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_eq!($actual, {$($expected),*})
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
-    };
-    ($actual:expr, $expected:expr $(,)?) => {
+    }};
+    ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_eq!($actual, $expected).and_log_failure();
-    };
-    ($actual:expr, $expected:expr, $($format_args:expr),* $(,)?) => {
+    }};
+    ($actual:expr, $expected:expr, $($format_args:expr),* $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_eq!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
-    };
+    }};
 }
 
 /// Checks whether the second argument is not equal to the first argument.
@@ -831,16 +831,16 @@ macro_rules! verify_ne {
 /// ```
 #[macro_export]
 macro_rules! expect_ne {
-    ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {
+    ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_ne!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
-    };
-    ($actual:expr, $expected:expr $(,)?) => {
+    }};
+    ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_ne!($actual, $expected).and_log_failure();
-    };
+    }};
 }
 
 /// Checks whether the first argument is less than second argument.
@@ -909,16 +909,16 @@ macro_rules! verify_lt {
 /// ```
 #[macro_export]
 macro_rules! expect_lt {
-    ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {
+    ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_lt!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
-    };
-    ($actual:expr, $expected:expr $(,)?) => {
+    }};
+    ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_lt!($actual, $expected).and_log_failure();
-    };
+    }};
 }
 
 /// Checks whether the first argument is less than or equal to the second
@@ -988,16 +988,16 @@ macro_rules! verify_le {
 /// ```
 #[macro_export]
 macro_rules! expect_le {
-    ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {
+    ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_le!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
-    };
-    ($actual:expr, $expected:expr $(,)?) => {
+    }};
+    ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_le!($actual, $expected).and_log_failure();
-    };
+    }};
 }
 
 /// Checks whether the first argument is greater than the second argument.
@@ -1066,16 +1066,16 @@ macro_rules! verify_gt {
 /// ```
 #[macro_export]
 macro_rules! expect_gt {
-    ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {
+    ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_gt!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
-    };
-    ($actual:expr, $expected:expr $(,)?) => {
+    }};
+    ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_gt!($actual, $expected).and_log_failure();
-    };
+    }};
 }
 
 /// Checks whether the first argument is greater than or equal to the second
@@ -1146,16 +1146,16 @@ macro_rules! verify_ge {
 /// ```
 #[macro_export]
 macro_rules! expect_ge {
-    ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {
+    ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_ge!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
-    };
-    ($actual:expr, $expected:expr $(,)?) => {
+    }};
+    ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport;
         verify_ge!($actual, $expected).and_log_failure();
-    };
+    }};
 }
 
 /// Matches the given value against the given matcher, panicking if it does not
