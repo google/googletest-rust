@@ -151,11 +151,6 @@ path = "src/verify_true_macro_on_false_condition.rs"
 test = false
 
 [[bin]]
-name = "assert_true_macro_on_false_condition_panics"
-path = "src/assert_true_macro_on_false_condition_panics.rs"
-test = false
-
-[[bin]]
 name = "expect_true_macro_on_false_condition_fails_test_and_continues"
 path = "src/expect_true_macro_on_false_condition_fails_test_and_continues.rs"
 test = false
@@ -163,11 +158,6 @@ test = false
 [[bin]]
 name = "verify_false_macro_on_true_condition"
 path = "src/verify_false_macro_on_true_condition.rs"
-test = false
-
-[[bin]]
-name = "assert_false_macro_on_true_condition_panics"
-path = "src/assert_false_macro_on_true_condition_panics.rs"
 test = false
 
 [[bin]]
@@ -188,36 +178,6 @@ test = false
 [[bin]]
 name = "verify_eq_with_unordered_elements_when_not_equal_returns_error"
 path = "src/verify_eq_with_unordered_elements_when_not_equal_returns_error.rs"
-test = false
-
-[[bin]]
-name = "assert_eq_when_not_equal_returns_error"
-path = "src/assert_eq_when_not_equal_returns_error.rs"
-test = false
-
-[[bin]]
-name = "assert_eq_supports_custom_message"
-path = "src/assert_eq_supports_custom_message.rs"
-test = false
-
-[[bin]]
-name = "assert_eq_with_ordered_elements_when_not_equal_returns_error"
-path = "src/assert_eq_with_ordered_elements_when_not_equal_returns_error.rs"
-test = false
-
-[[bin]]
-name = "assert_eq_with_ordered_elements_supports_custom_message"
-path = "src/assert_eq_with_ordered_elements_supports_custom_message.rs"
-test = false
-
-[[bin]]
-name = "assert_eq_with_unordered_elements_when_not_equal_returns_error"
-path = "src/assert_eq_with_unordered_elements_when_not_equal_returns_error.rs"
-test = false
-
-[[bin]]
-name = "assert_eq_with_unordered_elements_supports_custom_message"
-path = "src/assert_eq_with_unordered_elements_supports_custom_message.rs"
 test = false
 
 [[bin]]

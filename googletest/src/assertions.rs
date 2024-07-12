@@ -449,31 +449,6 @@ macro_rules! verify_true {
     }};
 }
 
-/// Assert if the condition evaluates to true and panics if false.
-///
-/// This is the same as calling `and_log_failure` on [`verify_true`] macro
-/// Result.
-///
-/// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The failure must be generated
-/// in the same thread as that running the test itself.
-///
-/// Example:
-/// ```ignore
-/// use googletest::prelude::*;
-///
-/// #[googletest::test]
-/// fn should_fail() {
-///     assert_true!(2 + 2 == 5);
-/// }
-/// ```
-#[macro_export]
-macro_rules! assert_true {
-    ($condition:expr) => {
-        verify_true!($condition).and_log_failure()
-    };
-}
-
 /// Marks test as failed and continue execution if the expression evaluates to
 /// false.
 ///
@@ -532,31 +507,6 @@ macro_rules! verify_false {
         use $crate::assertions::internal::Subject;
         ($condition).check($crate::matchers::eq(false), stringify!($condition))
     }};
-}
-
-/// Assert if the condition evaluates to false and panics if true.
-///
-/// This is the same as calling `and_log_failure` on [`verify_false`] macro
-/// Result.
-///
-/// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The failure must be generated
-/// in the same thread as that running the test itself.
-///
-/// Example:
-/// ```ignore
-/// use googletest::prelude::*;
-///
-/// #[googletest::test]
-/// fn should_fail() {
-///     assert_false!(2 + 2 == 4);
-/// }
-/// ```
-#[macro_export]
-macro_rules! assert_false {
-    ($condition:expr) => {
-        verify_false!($condition).and_log_failure()
-    };
 }
 
 /// Marks test as failed and continue execution if the expression evaluates to
@@ -628,68 +578,6 @@ macro_rules! verify_eq {
     };
     ($actual:expr, $expected:expr $(,)?) => {
         verify_that!($actual, $crate::matchers::eq($expected))
-    };
-}
-
-/// Panics if the second argument is not equal to first argument.
-///
-/// This is the same as calling `and_log_failure` on [`verify_eq`] macro Result.
-///
-/// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The failure must be generated
-/// in the same thread as that running the test itself.
-///
-/// Example:
-/// ```ignore
-/// use googletest;
-///
-/// #[googletest::test]
-/// fn should_fail() {
-///     googletest::assert_eq!(2, 1);
-/// }
-/// ```
-///
-/// This macro has special support for matching against container. Namely:
-///  * `assert_eq!(actual, [e1, e2, ...])` for checking actual contains "e1, e2,
-///    ..." in order.
-///  * `assert_eq!(actual, {e1, e2, ...})` for checking actual contains "e1, e2,
-///    ..." in any order.
-///
-/// One may include formatted arguments in the failure message:
-///```ignore
-/// use googletest;
-///
-/// #[googletest::test]
-/// fn should_fail() {
-///     let argument = "argument"
-///     googletest::assert_eq!(2, 1, "custom failure message: {argument}");
-/// }
-/// ```
-#[macro_export]
-macro_rules! assert_eq {
-    ($actual:expr, [$($expected:expr),+ $(,)?] $(,)?) => {
-        verify_eq!($actual, [$($expected),*]).and_log_failure();
-    };
-    ($actual:expr, [$($expected:expr),+ $(,)?], $($format_args:expr),* $(,)?) => {
-        verify_eq!($actual, [$($expected),*])
-            .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure();
-    };
-    ($actual:expr, {$($expected:expr),+ $(,)?} $(,)?) => {
-        verify_eq!($actual, {$($expected),*}).and_log_failure();
-    };
-    ($actual:expr, {$($expected:expr),+ $(,)?}, $($format_args:expr),* $(,)?) => {
-        verify_eq!($actual, {$($expected),*})
-            .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure();
-    };
-    ($actual:expr, $expected:expr $(,)?) => {
-        verify_eq!($actual, $expected).and_log_failure();
-    };
-    ($actual:expr, $expected:expr, $($format_args:expr),* $(,)?) => {
-        verify_eq!($actual, $expected)
-            .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure();
     };
 }
 
