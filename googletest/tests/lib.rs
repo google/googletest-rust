@@ -21,7 +21,6 @@ mod field_matcher_test;
 mod matches_pattern_test;
 mod pointwise_matcher_test;
 mod property_matcher_test;
-#[cfg(feature = "proptest")]
 mod proptest_integration_test;
 mod tuple_matcher_test;
 mod unordered_elements_are_matcher_test;

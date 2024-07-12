@@ -36,7 +36,7 @@ mod tests {
 
     #[test]
     fn count_elements_vec() -> Result<()> {
-        verify_that!(count_elements(&vec![1, 2, 3]), eq(3))
+        verify_that!(count_elements(vec![1, 2, 3]), eq(3))
     }
 
     #[test]

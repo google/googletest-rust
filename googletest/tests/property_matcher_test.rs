@@ -128,12 +128,15 @@ fn describes_itself_in_not_matching_case() -> Result<()> {
 
 #[test]
 fn explains_mismatch_referencing_explanation_of_inner_matcher() -> Result<()> {
+    #[derive(Debug)]
+    struct SomeStruct;
+
     impl SomeStruct {
         fn get_a_collection(&self) -> Vec<u32> {
             vec![]
         }
     }
-    let value = SomeStruct { a_property: 2 };
+    let value = SomeStruct;
     let result =
         verify_that!(value, property!(&SomeStruct.get_a_collection(), ref container_eq([1])));
 
@@ -184,12 +187,14 @@ fn describes_itself_in_not_matching_case_for_ref() -> Result<()> {
 #[test]
 fn explains_mismatch_referencing_explanation_of_inner_matcher_for_ref() -> Result<()> {
     static EMPTY_COLLECTION: Vec<u32> = vec![];
+    #[derive(Debug)]
+    struct SomeStruct;
     impl SomeStruct {
         fn get_a_collection_ref(&self) -> &[u32] {
             &EMPTY_COLLECTION
         }
     }
-    let value = SomeStruct { a_property: 2 };
+    let value = SomeStruct;
     let result =
         verify_that!(value, property!(&SomeStruct.get_a_collection_ref(), container_eq([1])));
 

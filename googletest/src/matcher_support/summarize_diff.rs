@@ -306,7 +306,7 @@ fn stdout_supports_color() -> bool {
 
 #[rustversion::not(since(1.70))]
 fn stdout_supports_color() -> bool {
-    is_env_var_set("FORCE_COLOR")
+    is_env_var_set("FORCE_COLOR") && !is_env_var_set("NO_COLOR")
 }
 
 fn is_env_var_set(var: &'static str) -> bool {
