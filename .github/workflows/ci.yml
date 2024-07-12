@@ -37,6 +37,7 @@ jobs:
       - name: cargo clippy
         uses: actions-rs/clippy-check@v1.0.7
         with:
+          args: --all-targets --all-features
           token: ${{ secrets.GITHUB_TOKEN }}
 
   test:
@@ -56,6 +57,22 @@ jobs:
         run: cargo generate-lockfile
       - name: cargo test --locked
         run: cargo test --locked --all-features
+
+  lint:
+    runs-on: ubuntu-latest
+    name: lint / ubuntu
+    strategy:
+      matrix:
+        toolchain: [nightly]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ${{ matrix.toolchain }}
+        uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          components: rustfmt
+      - name: cargo fmt --check
+        run: cargo fmt --check
 
   test-no-default-features:
     runs-on: ubuntu-latest

@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn has_correct_explanation_in_matched_case() -> Result<()> {
-        let explanation = is_utf8_string(eq("A string")).explain_match(&"A string".as_bytes());
+        let explanation = is_utf8_string(eq("A string")).explain_match("A string".as_bytes());
 
         verify_that!(
             explanation,
@@ -158,15 +158,14 @@ mod tests {
 
     #[test]
     fn has_correct_explanation_when_byte_array_is_not_utf8_encoded() -> Result<()> {
-        let explanation = is_utf8_string(eq("A string")).explain_match(&&[192, 128, 0, 64]);
+        let explanation = is_utf8_string(eq("A string")).explain_match([192, 128, 0, 64]);
 
         verify_that!(explanation, displays_as(starts_with("which is not a UTF-8 encoded string: ")))
     }
 
     #[test]
     fn has_correct_explanation_when_inner_matcher_does_not_match() -> Result<()> {
-        let explanation =
-            is_utf8_string(eq("A string")).explain_match(&"Another string".as_bytes());
+        let explanation = is_utf8_string(eq("A string")).explain_match("Another string".as_bytes());
 
         verify_that!(
             explanation,
