@@ -574,7 +574,6 @@ mod tests {
     use crate::matcher::MatcherResult;
     use crate::prelude::*;
     use indoc::indoc;
-    use serial_test::parallel;
 
     #[test]
     fn matches_string_reference_with_equal_string_reference() -> Result<()> {
@@ -953,7 +952,6 @@ mod tests {
     }
 
     #[test]
-    #[parallel]
     fn match_explanation_for_starts_with_ignores_trailing_lines_in_actual_string() -> Result<()> {
         let result = verify_that!(
             indoc!(
