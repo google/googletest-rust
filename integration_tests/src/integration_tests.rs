@@ -1465,6 +1465,84 @@ mod tests {
     }
 
     #[test]
+    fn verify_float_eq_should_pass() -> Result<()> {
+        verify_float_eq!(1.0, 1.0)
+    }
+
+    #[test]
+    fn verify_float_eq_supports_trailing_comma() -> Result<()> {
+        verify_float_eq!(1.0, 1.0,)
+    }
+
+    #[googletest::test]
+    fn verify_float_eq_when_not_equal_returns_error() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "verify_float_eq_when_not_equal_returns_error",
+        )?;
+
+        verify_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is within 1.[0-9]+e-[0-9]+ of 2.0
+                Actual: 1.0,
+                  which isn't within 1.[0-9]+e-[0-9]+ of 2.0
+                  at .*verify_float_eq_when_not_equal_returns_error.rs:[0-9]+:[0-9]
+            "})
+        )
+    }
+
+    #[googletest::test]
+    fn expect_float_eq_should_pass() {
+        expect_float_eq!(1.0, 1.0);
+    }
+
+    #[googletest::test]
+    fn expect_float_eq_supports_trailing_comma() {
+        expect_float_eq!(1.0, 1.0,);
+    }
+
+    #[googletest::test]
+    fn expect_float_eq_allows_multiple_invocations() {
+        expect_float_eq!(1.0, 1.0);
+        expect_float_eq!(2.0, 2.0);
+    }
+
+    #[googletest::test]
+    fn expect_float_eq_when_not_equal_marks_failed() -> Result<()> {
+        let output =
+            run_external_process_in_tests_directory("expect_float_eq_when_not_equal_marks_failed")?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is within 1.[0-9]+e-[0-9]+ of 2.0
+                Actual: 1.0,
+                  which isn't within 1.[0-9]+e-[0-9]+ of 2.0
+                  at .*expect_float_eq_when_not_equal_marks_failed.rs:[0-9]+:[0-9]
+            "})
+        );
+        verify_that!(output, contains_regex("This will print"))
+    }
+
+    #[googletest::test]
+    fn expect_float_eq_supports_custom_message() -> Result<()> {
+        let output =
+            run_external_process_in_tests_directory("expect_float_eq_supports_custom_message")?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is within 1.[0-9]+e-[0-9]+ of 2.0
+                Actual: 1.0,
+                  which isn't within 1.[0-9]+e-[0-9]+ of 2.0
+                Failure message with argument: argument
+                  at .*expect_float_eq_supports_custom_message.rs:[0-9]+:[0-9]
+            "})
+        );
+        verify_that!(output, contains_regex("This will print"))
+    }
+
+    #[test]
     fn test_using_normal_test_attribute_macro_formats_failure_message_correctly() -> Result<()> {
         let result = should_display_error_correctly_without_google_test_macro();
 

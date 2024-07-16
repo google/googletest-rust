@@ -291,6 +291,21 @@ path = "src/expect_ge_supports_custom_message.rs"
 test = false
 
 [[bin]]
+name = "verify_float_eq_when_not_equal_returns_error"
+path = "src/verify_float_eq_when_not_equal_returns_error.rs"
+test = false
+
+[[bin]]
+name = "expect_float_eq_when_not_equal_marks_failed"
+path = "src/expect_float_eq_when_not_equal_marks_failed.rs"
+test = false
+
+[[bin]]
+name = "expect_float_eq_supports_custom_message"
+path = "src/expect_float_eq_supports_custom_message.rs"
+test = false
+
+[[bin]]
 name = "failure_due_to_returned_error_with_line_numbers"
 path = "src/failure_due_to_returned_error_with_line_numbers.rs"
 test = false
