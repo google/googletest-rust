@@ -17,7 +17,7 @@
 use crate::matcher_support::edit_distance;
 #[rustversion::since(1.70)]
 use std::io::IsTerminal;
-use std::{borrow::Cow, fmt::Display};
+use std::{borrow::Cow, cell::Cell, fmt::Display};
 
 /// Returns a string describing how the expected and actual lines differ.
 ///
@@ -81,9 +81,9 @@ pub(crate) fn create_diff_reversed(
 }
 
 // Produces the header, with or without coloring depending on
-// stdout_supports_color()
+// USE_COLOR
 fn summary_header() -> Cow<'static, str> {
-    if stdout_supports_color() {
+    if USE_COLOR.with(Cell::get) {
         format!(
             "Difference(-{ACTUAL_ONLY_STYLE}actual{RESET_ALL} / +{EXPECTED_ONLY_STYLE}expected{RESET_ALL}):"
         ).into()
@@ -294,6 +294,10 @@ impl<'a> Default for Buffer<'a> {
     }
 }
 
+thread_local! {
+  pub(crate) static USE_COLOR: Cell<bool> = Cell::new(stdout_supports_color());
+}
+
 #[rustversion::since(1.70)]
 fn stdout_supports_color() -> bool {
     #[allow(clippy::incompatible_msrv)]
@@ -389,14 +393,14 @@ impl SummaryBuilder {
     }
 
     fn reset_ansi(&mut self) {
-        if !self.last_ansi_style.is_empty() && stdout_supports_color() {
+        if !self.last_ansi_style.is_empty() && USE_COLOR.with(Cell::get) {
             self.summary.push_str(RESET_ALL);
             self.last_ansi_style = "";
         }
     }
 
     fn set_ansi(&mut self, ansi_style: &'static str) {
-        if !stdout_supports_color() || self.last_ansi_style == ansi_style {
+        if !USE_COLOR.with(Cell::get) || self.last_ansi_style == ansi_style {
             return;
         }
         if !self.last_ansi_style.is_empty() {
@@ -412,7 +416,6 @@ mod tests {
     use super::*;
     use crate::{matcher_support::edit_distance::Mode, prelude::*};
     use indoc::indoc;
-    use serial_test::{parallel, serial};
     use std::fmt::Write;
 
     // Make a long text with each element of the iterator on one line.
@@ -428,13 +431,11 @@ mod tests {
     }
 
     #[test]
-    #[parallel]
     fn create_diff_smaller_than_one_line() -> Result<()> {
         verify_that!(create_diff("One", "Two", Mode::Exact), eq(""))
     }
 
     #[test]
-    #[parallel]
     fn create_diff_exact_same() -> Result<()> {
         let expected = indoc! {"
             One
@@ -451,7 +452,6 @@ mod tests {
     }
 
     #[test]
-    #[parallel]
     fn create_diff_multiline_diff() -> Result<()> {
         let expected = indoc! {"
             prefix
@@ -484,13 +484,11 @@ mod tests {
     }
 
     #[test]
-    #[parallel]
     fn create_diff_exact_unrelated() -> Result<()> {
         verify_that!(create_diff(&build_text(1..500), &build_text(501..1000), Mode::Exact), eq(""))
     }
 
     #[test]
-    #[parallel]
     fn create_diff_exact_small_difference() -> Result<()> {
         verify_that!(
             create_diff(&build_text(1..50), &build_text(1..51), Mode::Exact),
@@ -508,27 +506,9 @@ mod tests {
         )
     }
 
-    // Test with color enabled.
-
-    struct ForceColor;
-
-    fn force_color() -> ForceColor {
-        std::env::set_var("FORCE_COLOR", "1");
-        std::env::remove_var("NO_COLOR");
-        ForceColor
-    }
-
-    impl Drop for ForceColor {
-        fn drop(&mut self) {
-            std::env::remove_var("FORCE_COLOR");
-            std::env::set_var("NO_COLOR", "1");
-        }
-    }
-
     #[test]
-    #[serial]
     fn create_diff_exact_small_difference_with_color() -> Result<()> {
-        let _keep = force_color();
+        USE_COLOR.with(|cell| cell.set(true));
 
         verify_that!(
             create_diff(&build_text(1..50), &build_text(1..51), Mode::Exact),
@@ -547,9 +527,9 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn create_diff_exact_difference_with_inline_color() -> Result<()> {
-        let _keep = force_color();
+        USE_COLOR.with(|cell| cell.set(true));
+
         let actual = indoc!(
             "There is a home in Nouvelle Orleans
             They say, it is the rising sons
