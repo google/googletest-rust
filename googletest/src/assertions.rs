@@ -1141,6 +1141,87 @@ macro_rules! expect_float_eq {
     }};
 }
 
+/// Checks whether the float given by first argument is equal to second argument
+/// with error tolerance of max_abs_error.
+///
+/// Evaluates to `Result::Ok(())` if the first argument is approximately equal
+/// to the second and `Result::Err(TestAssertionFailure)` if it is not. The
+/// caller must then decide how to handle the `Err` variant. It has a few
+/// options:
+///  * Abort the current function with the `?` operator. This requires that the
+///    function return a suitable `Result`.
+///  * Log the test failure and continue by calling the method
+///    `and_log_failure`.
+///
+/// Of course, one can also use all other standard methods on `Result`.
+///
+/// **Invoking this macro by itself does not cause a test failure to be recorded
+/// or output.** The resulting `Result` must be handled as described above to
+/// cause the test to be recorded as a failure.
+///
+/// Example:
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[test]
+/// fn should_fail() -> Result<()> {
+///     verify_near!(1.12345, 1.12346, 1e-6)
+/// }
+/// ```
+#[macro_export]
+macro_rules! verify_near {
+    ($actual:expr, $expected:expr, $max_abs_error:expr $(,)?) => {
+        verify_that!($actual, $crate::matchers::near($expected, $max_abs_error))
+    };
+}
+
+/// Marks the test as failed and continues execution if the float given by first
+/// argument is not equal to second argument with error tolerance of
+/// max_abs_error.
+///
+/// This is a **not-fatal** failure. The test continues execution even after the
+/// macro execution.
+///
+/// This can only be invoked inside tests with the
+/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// in the same thread as that running the test itself.
+///
+/// Example:
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[googletest::test]
+/// fn should_fail() {
+///     expect_near!(1.12345, 1.12346, 1e-6);
+///     println!("This will print!");
+/// }
+/// ```
+///
+/// One may include formatted arguments in the failure message:
+///```ignore
+/// use googletest::prelude::*;
+///
+/// #[googletest::test]
+/// fn should_fail() {
+///     let argument = "argument"
+///     expect_near!(1.12345, 1.12346, 1e-6, "custom failure message: {argument}");
+///     println!("This will print!");
+/// }
+/// ```
+#[macro_export]
+macro_rules! expect_near {
+    ($actual:expr, $expected:expr, $max_abs_error:expr, $($format_args:expr),+ $(,)?) => {{
+        use $crate::GoogleTestSupport;
+        verify_near!($actual, $expected, $max_abs_error)
+            .with_failure_message(|| format!($($format_args),*))
+            .and_log_failure();
+    }};
+    ($actual:expr, $expected:expr, $max_abs_error:expr $(,)?) => {{
+        use $crate::GoogleTestSupport;
+        verify_near!($actual, $expected, $max_abs_error).and_log_failure();
+    }};
+}
+
 /// Matches the given value against the given matcher, panicking if it does not
 /// match.
 ///

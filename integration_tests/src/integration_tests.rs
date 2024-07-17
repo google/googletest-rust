@@ -1543,6 +1543,83 @@ mod tests {
     }
 
     #[test]
+    fn verify_near_should_pass() -> Result<()> {
+        verify_near!(1.12345, 1.12346, 1e-5)
+    }
+
+    #[test]
+    fn verify_near_supports_trailing_comma() -> Result<()> {
+        verify_near!(1.12345, 1.12346, 1e-5,)
+    }
+
+    #[googletest::test]
+    fn verify_near_when_not_near_returns_error() -> Result<()> {
+        let output =
+            run_external_process_in_tests_directory("verify_near_when_not_near_returns_error")?;
+
+        verify_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is within 1e-6 of 1.12346
+                Actual: 1.12345,
+                  which isn't within 1e-6 of 1.12346
+                  at .*verify_near_when_not_near_returns_error.rs:[0-9]+:[0-9]
+            "})
+        )
+    }
+
+    #[googletest::test]
+    fn expect_near_should_pass() {
+        expect_near!(1.12345, 1.12346, 1e-5);
+    }
+
+    #[googletest::test]
+    fn expect_near_should_allow_trailing_comma() {
+        expect_near!(1.12345, 1.12346, 1e-5,);
+    }
+
+    #[googletest::test]
+    fn expect_near_should_allow_multiple_execution() {
+        expect_near!(1.12345, 1.12346, 1e-5);
+        expect_near!(1.123456, 1.123457, 1e-6);
+    }
+
+    #[googletest::test]
+    fn expect_near_when_not_near_marks_failed() -> Result<()> {
+        let output =
+            run_external_process_in_tests_directory("expect_near_when_not_near_marks_failed")?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is within 1e-6 of 1.12346
+                Actual: 1.12345,
+                  which isn't within 1e-6 of 1.12346
+                  at .*expect_near_when_not_near_marks_failed.rs:[0-9]+:[0-9]
+            "})
+        );
+        verify_that!(output, contains_regex("This will print"))
+    }
+
+    #[googletest::test]
+    fn expect_near_supports_custom_message() -> Result<()> {
+        let output =
+            run_external_process_in_tests_directory("expect_near_supports_custom_message")?;
+
+        expect_that!(
+            output,
+            contains_regex(indoc! {"
+                Expected: is within 1e-6 of 1.12346
+                Actual: 1.12345,
+                  which isn't within 1e-6 of 1.12346
+                Failure message with argument: argument
+                  at .*expect_near_supports_custom_message.rs:[0-9]+:[0-9]
+            "})
+        );
+        verify_that!(output, contains_regex("This will print"))
+    }
+
+    #[test]
     fn test_using_normal_test_attribute_macro_formats_failure_message_correctly() -> Result<()> {
         let result = should_display_error_correctly_without_google_test_macro();
 

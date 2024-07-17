@@ -306,6 +306,21 @@ path = "src/expect_float_eq_supports_custom_message.rs"
 test = false
 
 [[bin]]
+name = "verify_near_when_not_near_returns_error"
+path = "src/verify_near_when_not_near_returns_error.rs"
+test = false
+
+[[bin]]
+name = "expect_near_when_not_near_marks_failed"
+path = "src/expect_near_when_not_near_marks_failed.rs"
+test = false
+
+[[bin]]
+name = "expect_near_supports_custom_message"
+path = "src/expect_near_supports_custom_message.rs"
+test = false
+
+[[bin]]
 name = "failure_due_to_returned_error_with_line_numbers"
 path = "src/failure_due_to_returned_error_with_line_numbers.rs"
 test = false
