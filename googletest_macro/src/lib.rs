@@ -160,13 +160,20 @@ struct Fixture {
 impl Fixture {
     fn new(index: usize, ty: Box<syn::Type>) -> Self {
         match &*ty {
-            Type::Reference(reference) => Self {
-                identifier: syn::Ident::new(&format!("fixture_{index}"), ty.span()),
-                ty: reference.elem.clone(),
-                consumable: false,
-                mutability: reference.mutability,
-            },
-            Type::Path(..) => Self {
+            Type::Reference(reference)
+                if !reference
+                    .lifetime
+                    .as_ref()
+                    .is_some_and(|lifetime| lifetime.to_string() == "'static") =>
+            {
+                Self {
+                    identifier: syn::Ident::new(&format!("fixture_{index}"), ty.span()),
+                    ty: reference.elem.clone(),
+                    consumable: false,
+                    mutability: reference.mutability,
+                }
+            }
+            Type::Path(..) | Type::Reference(..) => Self {
                 identifier: syn::Ident::new(&format!("fixture_{index}"), ty.span()),
                 ty,
                 consumable: true,

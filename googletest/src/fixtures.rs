@@ -7,9 +7,7 @@ use std::{
 
 pub trait Fixture: Sized {
     fn set_up() -> crate::Result<Self>;
-    fn tear_down(self) -> crate::Result<()> {
-        Ok(())
-    }
+    fn tear_down(self) -> crate::Result<()>;
 }
 
 pub trait ConsumableFixture: Sized {
@@ -42,7 +40,7 @@ pub trait StaticFixture: Sized + Sync + Send {
     fn set_up_once() -> crate::Result<Self>;
 }
 
-impl<F: StaticFixture + 'static> Fixture for &F {
+impl<F: StaticFixture + 'static> ConsumableFixture for &'static F {
     fn set_up() -> crate::Result<Self> {
         static ONCE_FIXTURE_REPO: OnceLock<
             Mutex<HashMap<TypeId, &'static (dyn Any + Sync + Send)>>,
@@ -63,8 +61,8 @@ mod tests {
 
     use std::sync::Once;
 
-    use super::StaticFixture;
     use super::FixtureOf;
+    use super::StaticFixture;
     use crate as googletest;
     use crate::prelude::*;
     use crate::test;
@@ -79,6 +77,10 @@ mod tests {
     impl Fixture for AlwaysSucceed {
         fn set_up() -> crate::Result<Self> {
             Ok(Self)
+        }
+
+        fn tear_down(self) -> crate::Result<()> {
+            Ok(())
         }
     }
 
@@ -145,10 +147,10 @@ mod tests {
     }
 
     #[test]
-    fn using_once(_: &&OnlyOnce) {}
+    fn using_once(_: &'static OnlyOnce) {}
     #[test]
-    fn using_once_twice(_: &&OnlyOnce, _: &&OnlyOnce) {}
+    fn using_once_twice(_: &'static OnlyOnce, _: &'static OnlyOnce) {}
 
     #[test]
-    fn using_others(_: &&OnlyOnce, _: &&AnotherStaticFixture) {}
+    fn using_others(_: &'static OnlyOnce, _: &'static AnotherStaticFixture) {}
 }
