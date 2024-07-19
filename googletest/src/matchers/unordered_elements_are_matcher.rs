@@ -73,6 +73,15 @@
 /// # .unwrap();
 /// ```
 ///
+///  If an inner matcher is `eq(...)`, it can be omitted:
+///
+/// ```
+/// # use googletest::prelude::*;
+///
+/// verify_that!(vec![1,2,3], unordered_elements_are![lt(&2), gt(&1), &3])
+/// #     .unwrap();
+/// ```
+///
 /// The matcher proceeds in three stages:
 ///
 /// 1. It first checks whether the actual value is of the right size to possibly
@@ -109,7 +118,8 @@ macro_rules! __unordered_elements_are {
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsAreMatcher, Requirements
         };
-        UnorderedElementsAreMatcher::new([$(Box::new($matcher)),*], Requirements::PerfectMatch)
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
+        UnorderedElementsAreMatcher::new([$(Box::new(auto_eq!($matcher))),*], Requirements::PerfectMatch)
     }};
 }
 
@@ -153,6 +163,15 @@ macro_rules! __unordered_elements_are {
 /// The actual value must be a container such as a `&Vec`, an array, or a
 /// slice. More precisely, the actual value must implement [`IntoIterator`].
 ///
+///  If an inner matcher is `eq(...)`, it can be omitted:
+///
+/// ```
+/// # use googletest::prelude::*;
+///
+/// verify_that!(vec![1,2,3], contains_each![lt(&2), &3])
+/// #     .unwrap();
+/// ```
+///
 /// The matcher proceeds in three stages:
 ///
 /// 1. It first checks whether the actual value is large enough to possibly be
@@ -183,10 +202,11 @@ macro_rules! __contains_each {
     }};
 
     ($($matcher:expr),* $(,)?) => {{
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsAreMatcher, Requirements
         };
-        UnorderedElementsAreMatcher::new([$(Box::new($matcher)),*], Requirements::Superset)
+        UnorderedElementsAreMatcher::new([$(Box::new(auto_eq!($matcher))),*], Requirements::Superset)
     }}
 }
 
@@ -231,6 +251,15 @@ macro_rules! __contains_each {
 /// The actual value must be a container such as a `&Vec`, an array, or a slice.
 /// More precisely, the actual value must implement [`IntoIterator`].
 ///
+///  If an inner matcher is `eq(...)`, it can be omitted:
+///
+/// ```
+/// # use googletest::prelude::*;
+///
+/// verify_that!(vec![1,2,3], is_contained_in![lt(&2), &3, &4, gt(&0)])
+/// #     .unwrap();
+/// ```
+///
 /// The matcher proceeds in three stages:
 ///
 /// 1. It first checks whether the actual value is too large to possibly be
@@ -264,7 +293,8 @@ macro_rules! __is_contained_in {
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
             UnorderedElementsAreMatcher, Requirements
         };
-        UnorderedElementsAreMatcher::new([$(Box::new($matcher)),*], Requirements::Subset)
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
+        UnorderedElementsAreMatcher::new([$(Box::new(auto_eq!($matcher))),*], Requirements::Subset)
     }}
 }
 

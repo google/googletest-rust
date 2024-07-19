@@ -448,3 +448,18 @@ fn is_contained_in_explains_mismatch_due_to_no_graph_matching_found() -> Result<
               Expected element `is greater than or equal to 3` at index 1 did not match any remaining actual element."))
     ))
 }
+
+#[test]
+fn unordered_elements_are_with_auto_eq() -> Result<()> {
+    verify_that!(vec![3, 4, 2], unordered_elements_are![&2, &3, &4])
+}
+
+#[test]
+fn contains_each_with_auto_eq() -> Result<()> {
+    verify_that!(vec![3, 4, 2], contains_each![&2, &4])
+}
+
+#[test]
+fn is_contained_in_with_auto_eq() -> Result<()> {
+    verify_that!(vec![3, 4, 2], is_contained_in![&1, &2, &3, &4])
+}

@@ -139,3 +139,8 @@ fn elements_are_works_when_matcher_is_created_in_subroutine() -> Result<()> {
 fn elements_are_implicitly_called() -> Result<()> {
     verify_that!(vec![1, 2, 3], [eq(&1), eq(&2), eq(&3)])
 }
+
+#[test]
+fn elements_are_with_auto_eq() -> Result<()> {
+    verify_that!(vec![1, 2, 3], [&1, &2, lt(&43)])
+}

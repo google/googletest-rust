@@ -65,6 +65,15 @@
 /// # .unwrap();
 /// ```
 ///
+///  If an inner matcher is `eq(...)`, it can be omitted:
+///
+/// ```
+/// # use googletest::prelude::*;
+///
+/// verify_that!(vec![1,2,3], elements_are![&1, lt(&1000), gt(&1)])
+/// #     .unwrap();
+/// ```
+///
 /// Do not use this with unordered containers, since that will lead to flaky
 /// tests. Use
 /// [`unordered_elements_are!`][crate::matchers::unordered_elements_are]
@@ -79,7 +88,8 @@
 macro_rules! __elements_are {
     ($($matcher:expr),* $(,)?) => {{
         use $crate::matchers::__internal_unstable_do_not_depend_on_these::ElementsAre;
-        ElementsAre::new(vec![$(Box::new($matcher)),*])
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
+        ElementsAre::new(vec![$(Box::new(auto_eq!($matcher))),*])
     }}
 }
 
