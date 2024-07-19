@@ -108,18 +108,15 @@
 #[doc(hidden)]
 macro_rules! __unordered_elements_are {
     ($(,)?) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
-            UnorderedElementsAreMatcher, Requirements
-        };
-        UnorderedElementsAreMatcher::new([], Requirements::PerfectMatch)
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::UnorderedElementsAreMatcher::new(
+            [], $crate::matchers::__internal_unstable_do_not_depend_on_these::Requirements::PerfectMatch)
     }};
 
     ($($matcher:expr),* $(,)?) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
-            UnorderedElementsAreMatcher, Requirements
-        };
-        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
-        UnorderedElementsAreMatcher::new([$(Box::new(auto_eq!($matcher))),*], Requirements::PerfectMatch)
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::UnorderedElementsAreMatcher::new(
+            [$(Box::new(
+                $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($matcher))),*],
+            $crate::matchers::__internal_unstable_do_not_depend_on_these::Requirements::PerfectMatch)
     }};
 }
 
@@ -195,18 +192,16 @@ macro_rules! __unordered_elements_are {
 #[doc(hidden)]
 macro_rules! __contains_each {
     ($(,)?) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
-            UnorderedElementsAreMatcher, Requirements
-        };
-        UnorderedElementsAreMatcher::new([], Requirements::Superset)
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::UnorderedElementsAreMatcher::new(
+            [], $crate::matchers::__internal_unstable_do_not_depend_on_these::Requirements::Superset)
     }};
 
     ($($matcher:expr),* $(,)?) => {{
-        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
-            UnorderedElementsAreMatcher, Requirements
-        };
-        UnorderedElementsAreMatcher::new([$(Box::new(auto_eq!($matcher))),*], Requirements::Superset)
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::UnorderedElementsAreMatcher::new(
+            [$(Box::new(
+                $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($matcher)
+            )),*],
+            $crate::matchers::__internal_unstable_do_not_depend_on_these::Requirements::Superset)
     }}
 }
 
@@ -283,18 +278,16 @@ macro_rules! __contains_each {
 #[doc(hidden)]
 macro_rules! __is_contained_in {
     ($(,)?) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
-            UnorderedElementsAreMatcher, Requirements
-        };
-        UnorderedElementsAreMatcher::new([], Requirements::Subset)
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::UnorderedElementsAreMatcher::new(
+            [], $crate::matchers::__internal_unstable_do_not_depend_on_these::Requirements::Subset)
     }};
 
     ($($matcher:expr),* $(,)?) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
-            UnorderedElementsAreMatcher, Requirements
-        };
-        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
-        UnorderedElementsAreMatcher::new([$(Box::new(auto_eq!($matcher))),*], Requirements::Subset)
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::UnorderedElementsAreMatcher::new(
+            [$(Box::new(
+                $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($matcher)
+            )),*],
+            $crate::matchers::__internal_unstable_do_not_depend_on_these::Requirements::Subset)
     }}
 }
 

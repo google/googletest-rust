@@ -87,9 +87,10 @@
 #[doc(hidden)]
 macro_rules! __elements_are {
     ($($matcher:expr),* $(,)?) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::ElementsAre;
-        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
-        ElementsAre::new(vec![$(Box::new(auto_eq!($matcher))),*])
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::ElementsAre::new(
+            vec![$(Box::new(
+                $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($matcher)
+            )),*])
     }}
 }
 

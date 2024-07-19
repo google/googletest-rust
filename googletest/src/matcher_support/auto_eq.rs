@@ -27,7 +27,7 @@
 macro_rules! __auto_eq {
     ($e:expr) => {{
         #[allow(unused_imports)]
-        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::ExpectedKind;
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::ExpectedKind as _;
         match $e {
             expected => {
                 $crate::matcher_support::__internal_unstable_do_not_depend_on_these::Wrapper(
