@@ -52,6 +52,15 @@
 /// ```
 ///
 /// Assertion failure messages are not guaranteed to be identical, however.
+///
+///  If an inner matcher is `eq(...)`, it can be omitted:
+///
+/// ```
+/// # use googletest::prelude::*;
+///
+/// verify_that!(123, any![lt(1), 123, gt(1000)])
+/// #     .unwrap();
+/// ```
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __any {
@@ -59,14 +68,17 @@ macro_rules! __any {
         $crate::matchers::not($crate::matchers::anything())
     }} ;
     ($matcher:expr $(,)?) => {{
-        $matcher
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
+        auto_eq!($matcher)
     }};
     ($head:expr, $head2:expr $(,)?) => {{
-        $crate::matchers::__internal_unstable_do_not_depend_on_these::DisjunctionMatcher::new($head, $head2)
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::DisjunctionMatcher::new(auto_eq!($head), auto_eq!($head2))
     }};
     ($head:expr, $head2:expr, $($tail:expr),+ $(,)?) => {{
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
         $crate::__any![
-            $crate::matchers::__internal_unstable_do_not_depend_on_these::DisjunctionMatcher::new($head, $head2),
+            $crate::matchers::__internal_unstable_do_not_depend_on_these::DisjunctionMatcher::new(auto_eq!($head), auto_eq!($head2)),
             $($tail),+
         ]
     }}
@@ -133,5 +145,10 @@ mod tests {
     #[test]
     fn empty_any_matcher_never_matches() -> Result<()> {
         verify_that!(123, not(any![]))
+    }
+
+    #[test]
+    fn any_with_auto_eq() -> Result<()> {
+        verify_that!(42, any![1, 2, 42, gt(123)])
     }
 }

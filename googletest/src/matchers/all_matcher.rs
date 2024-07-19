@@ -50,6 +50,15 @@
 /// ```
 ///
 /// Assertion failure messages are not guaranteed to be identical, however.
+///
+///  If an inner matcher is `eq(...)`, it can be omitted:
+///
+/// ```
+/// # use googletest::prelude::*;
+///
+/// verify_that!(123, all![123, lt(1000), gt(100)])
+/// #     .unwrap();
+/// ```
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __all {
@@ -57,14 +66,17 @@ macro_rules! __all {
         $crate::matchers::anything()
     }} ;
     ($matcher:expr $(,)?) => {{
-        $matcher
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
+        auto_eq!($matcher)
     }};
     ($head:expr, $head2:expr $(,)?) => {{
-        $crate::matchers::__internal_unstable_do_not_depend_on_these::ConjunctionMatcher::new($head, $head2)
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::ConjunctionMatcher::new(auto_eq!($head), auto_eq!($head2))
     }};
     ($head:expr, $head2:expr, $($tail:expr),+ $(,)?) => {{
+        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
         $crate::__all![
-            $crate::matchers::__internal_unstable_do_not_depend_on_these::ConjunctionMatcher::new($head, $head2),
+            $crate::matchers::__internal_unstable_do_not_depend_on_these::ConjunctionMatcher::new(auto_eq!($head), auto_eq!($head2)),
             $($tail),+
         ]
     }}
@@ -126,5 +138,10 @@ mod tests {
             matcher.explain_match("A string"),
             displays_as(eq("which does not start with \"Another\""))
         )
+    }
+
+    #[test]
+    fn all_with_auto_eq() -> Result<()> {
+        verify_that!(42, all![eq(42), 42, lt(100)])
     }
 }
