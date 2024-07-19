@@ -197,9 +197,7 @@ macro_rules! __field {
 #[macro_export]
 macro_rules! field_internal {
     (&$($t:ident)::+.$field:tt, ref $m:expr) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher;
-        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
-        field_matcher(
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher(
             |o: &_| {
                 match o {
                     &$($t)::* {$field: ref value, .. } => Some(value),
@@ -211,12 +209,10 @@ macro_rules! field_internal {
                 }
             },
             &stringify!($field),
-            auto_eq!($m))
+            $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($m))
     }};
     (&$($t:ident)::+.$field:tt, $m:expr) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher;
-        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
-        field_matcher(
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher(
             |o: &&_| {
                 match o {
                     &$($t)::* {$field: value, .. } => Some(value),
@@ -228,12 +224,10 @@ macro_rules! field_internal {
                 }
             },
             &stringify!($field),
-            auto_eq!($m))
+            $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($m))
     }};
     ($($t:ident)::+.$field:tt, $m:expr) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher;
-        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
-        field_matcher(
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher(
             |o: &_| {
                 match o {
                     $($t)::* {$field: value, .. } => Some(value),
@@ -245,7 +239,7 @@ macro_rules! field_internal {
                 }
             },
             &stringify!($field),
-            auto_eq!($m))
+            $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($m))
     }};
 }
 

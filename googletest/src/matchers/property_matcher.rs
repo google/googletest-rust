@@ -178,36 +178,28 @@ macro_rules! __property {
 macro_rules! property_internal {
 
     (&$($t:ident)::+.$method:tt($($argument:tt),* $(,)?), ref $m:expr) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::property_ref_matcher;
-        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
-        property_ref_matcher(
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::property_ref_matcher(
             |o: &$($t)::+| $($t)::+::$method(o, $($argument),*),
             &stringify!($method($($argument),*)),
-            auto_eq!($m))
+            $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($m))
     }};
     ($($t:ident)::+.$method:tt($($argument:tt),* $(,)?), ref $m:expr) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::property_ref_matcher;
-        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
-        property_ref_matcher(
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::property_ref_matcher(
             |o: $($t)::+| $($t)::+::$method(o, $($argument),*),
             &stringify!($method($($argument),*)),
-            auto_eq!($m))
+            $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($m))
     }};
     (& $($t:ident)::+.$method:tt($($argument:tt),* $(,)?), $m:expr) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::property_matcher;
-        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
-        property_matcher(
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::property_matcher(
             |o: &&$($t)::+| o.$method($($argument),*),
             &stringify!($method($($argument),*)),
-            auto_eq!($m))
+            $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($m))
     }};
     ($($t:ident)::+.$method:tt($($argument:tt),* $(,)?), $m:expr) => {{
-        use $crate::matchers::__internal_unstable_do_not_depend_on_these::property_matcher;
-        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
-        property_matcher(
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::property_matcher(
             |o: &$($t)::+| o.$method($($argument),*),
             &stringify!($method($($argument),*)),
-            auto_eq!($m))
+            $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($m))
     }};
 }
 
