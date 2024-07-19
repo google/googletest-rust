@@ -1801,7 +1801,7 @@ fn matches_copy_struct_property_non_copy() -> Result<()> {
 }
 
 #[test]
-fn matches_struct_auto_ref_eq() -> Result<()> {
+fn matches_struct_auto_eq() -> Result<()> {
     #[derive(Debug, Clone)]
     struct AStruct {
         int: i32,

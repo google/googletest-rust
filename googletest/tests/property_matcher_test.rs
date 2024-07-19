@@ -285,7 +285,7 @@ fn matches_ref_to_ref_with_binding_mode() -> Result<()> {
 }
 
 #[test]
-fn matches_property_auto_ref_eq() -> Result<()> {
+fn matches_property_auto_eq() -> Result<()> {
     #[derive(Debug)]
     struct Struct;
     impl Struct {
