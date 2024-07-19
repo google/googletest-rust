@@ -229,7 +229,7 @@ fn matches_struct_ref_to_ref_binding_mode() -> Result<()> {
 }
 
 #[test]
-fn matches_struct_with_auto_ref_eq() -> Result<()> {
+fn matches_struct_with_auto_eq() -> Result<()> {
     #[derive(Debug)]
     struct Strukt {
         a_field: String,
@@ -239,7 +239,7 @@ fn matches_struct_with_auto_ref_eq() -> Result<()> {
 }
 
 #[test]
-fn matches_enum_with_auto_ref_eq() -> Result<()> {
+fn matches_enum_with_auto_eq() -> Result<()> {
     #[derive(Debug)]
     enum Enum {
         Str(String),
@@ -248,4 +248,17 @@ fn matches_enum_with_auto_ref_eq() -> Result<()> {
     }
 
     verify_that!(Enum::Str("32".into()), field!(Enum::Str.0, "32"))
+}
+
+#[test]
+fn matches_enum_with_auto_eq_with_wrapper() -> Result<()> {
+    #[derive(Debug)]
+    struct Wrapper<I> {
+        wrapped: I,
+    }
+
+    verify_that!(
+        Wrapper { wrapped: Wrapper { wrapped: 23 } },
+        field!(Wrapper.wrapped, field!(Wrapper.wrapped, &23))
+    )
 }
