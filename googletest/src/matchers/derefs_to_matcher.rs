@@ -33,7 +33,7 @@ pub fn derefs_to<Inner>(inner: Inner) -> DerefsTo<Inner> {
 /// A matcher which derefs a value and verifies that the result matches the
 /// `inner` matcher.
 ///
-/// See [`deref_to`].
+/// See [`derefs_to`].
 #[derive(MatcherBase)]
 pub struct DerefsTo<InnerT> {
     pub(crate) inner: InnerT,
