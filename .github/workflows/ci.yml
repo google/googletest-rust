@@ -40,6 +40,23 @@ jobs:
           args: --all-targets --all-features
           token: ${{ secrets.GITHUB_TOKEN }}
 
+  test-latest-deps:
+    runs-on: ubuntu-latest
+    name: test (latest deps) / ubuntu / ${{ matrix.toolchain }}
+    strategy:
+      matrix:
+        toolchain: [stable, nightly, beta]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ${{ matrix.toolchain }}
+        uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - name: cargo update
+        run: cargo update
+      - name: cargo test --locked
+        run: cargo test --locked --all-features
+
   test:
     runs-on: ubuntu-latest
     name: test / ubuntu / ${{ matrix.toolchain }}
@@ -52,9 +69,6 @@ jobs:
         uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17
         with:
           toolchain: ${{ matrix.toolchain }}
-      - name: cargo generate-lockfile
-        if: hashFiles('Cargo.lock') == ''
-        run: cargo generate-lockfile
       - name: cargo test --locked
         run: cargo test --locked --all-features
 
@@ -86,9 +100,6 @@ jobs:
         uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17
         with:
           toolchain: ${{ matrix.toolchain }}
-      - name: cargo generate-lockfile
-        if: hashFiles('Cargo.lock') == ''
-        run: cargo generate-lockfile
       - name: cargo test --locked
         run: cargo test --locked --no-default-features
 
@@ -104,12 +115,25 @@ jobs:
         uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17
         with:
           toolchain: ${{ matrix.toolchain }}
-      - name: cargo generate-lockfile
-        if: hashFiles('Cargo.lock') == ''
-        run: cargo generate-lockfile
       - name: run_integration_tests.sh
         run: /bin/bash ./run_integration_tests.sh
 
+  integration-test-latest-deps:
+    runs-on: ubuntu-latest
+    name: integration-test (latest deps) / ubuntu / ${{ matrix.toolchain }}
+    strategy:
+      matrix:
+        toolchain: [stable, nightly, beta]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ${{ matrix.toolchain }}
+        uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - name: cargo update
+        run: cargo update
+      - name: run_integration_tests.sh
+        run: /bin/bash ./run_integration_tests.sh
   doc:
     runs-on: ubuntu-latest
     name: doc / nightly
