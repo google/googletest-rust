@@ -110,6 +110,7 @@ use std::fmt::Debug;
 /// # }
 /// # should_pass().unwrap();
 /// ```
+#[track_caller]
 pub fn near<T: Debug + Float + Copy>(expected: T, max_abs_error: T) -> NearMatcher<T> {
     if max_abs_error.is_nan() {
         panic!("max_abs_error must not be NaN");
