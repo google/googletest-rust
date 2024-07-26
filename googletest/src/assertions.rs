@@ -571,13 +571,13 @@ macro_rules! expect_false {
 #[macro_export]
 macro_rules! verify_eq {
     ($actual:expr, [$($expected:expr),+ $(,)?] $(,)?) => {
-        verify_that!($actual, [$($crate::matchers::eq(&$expected)),*])
+        verify_that!(&$actual, [$($crate::matchers::eq(&$expected)),*])
     };
     ($actual:expr, {$($expected:expr),+ $(,)?} $(,)?) => {
-        verify_that!($actual, {$($crate::matchers::eq(&$expected)),*})
+        verify_that!(&$actual, {$($crate::matchers::eq(&$expected)),*})
     };
     ($actual:expr, $expected:expr $(,)?) => {
-        verify_that!($actual, $crate::matchers::eq($expected))
+        verify_that!(&$actual, $crate::matchers::eq(&$expected))
     };
 }
 
@@ -681,7 +681,7 @@ macro_rules! expect_eq {
 #[macro_export]
 macro_rules! verify_ne {
     ($actual:expr, $expected:expr $(,)?) => {
-        verify_that!($actual, $crate::matchers::not($crate::matchers::eq($expected)))
+        verify_that!(&$actual, $crate::matchers::not($crate::matchers::eq(&$expected)))
     };
 }
 
