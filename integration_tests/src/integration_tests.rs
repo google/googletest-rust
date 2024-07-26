@@ -825,6 +825,13 @@ mod tests {
         verify_eq!(value, 2)
     }
 
+    #[googletest::test]
+    fn verify_eq_with_non_copyable_type() -> Result<()> {
+        #[derive(Debug, PartialEq)]
+        struct NonCopyable(i32);
+        verify_eq!(NonCopyable(123), NonCopyable(123))
+    }
+
     #[test]
     fn verify_eq_supports_trailing_comma() -> Result<()> {
         let value = 2;
@@ -924,6 +931,13 @@ mod tests {
     fn expect_eq_should_pass() {
         let value = 2;
         expect_eq!(value, 2);
+    }
+
+    #[googletest::test]
+    fn expect_eq_with_non_copyable_type() {
+        #[derive(Debug, PartialEq)]
+        struct NonCopyable(i32);
+        expect_eq!(NonCopyable(123), NonCopyable(123));
     }
 
     #[googletest::test]
@@ -1090,6 +1104,13 @@ mod tests {
         verify_ne!(value, 3)
     }
 
+    #[googletest::test]
+    fn verify_ne_with_non_copyable_type() -> Result<()> {
+        #[derive(Debug, PartialEq)]
+        struct NonCopyable(i32);
+        verify_ne!(NonCopyable(123), NonCopyable(321))
+    }
+
     #[test]
     fn verify_ne_supports_trailing_comma() -> Result<()> {
         let value = 2;
@@ -1114,6 +1135,13 @@ mod tests {
     #[googletest::test]
     fn expect_ne_should_pass() {
         expect_ne!(1, 2);
+    }
+
+    #[googletest::test]
+    fn expect_ne_with_non_copyable_type() {
+        #[derive(Debug, PartialEq)]
+        struct NonCopyable(i32);
+        expect_ne!(NonCopyable(123), NonCopyable(321));
     }
 
     #[googletest::test]
