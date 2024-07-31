@@ -66,8 +66,8 @@ where
     InnerMatcherT: for<'a> Matcher<&'a str>,
 {
     fn matches(&self, actual: ActualT) -> MatcherResult {
-        String::from_utf8(actual.as_ref().to_vec())
-            .map(|s| self.inner.matches(&s))
+        std::str::from_utf8(actual.as_ref())
+            .map(|s| self.inner.matches(s))
             .unwrap_or(MatcherResult::NoMatch)
     }
 
@@ -87,9 +87,9 @@ where
     }
 
     fn explain_match(&self, actual: ActualT) -> Description {
-        match String::from_utf8(actual.as_ref().to_vec()) {
+        match std::str::from_utf8(actual.as_ref()) {
             Ok(s) => {
-                format!("which is a UTF-8 encoded string {}", self.inner.explain_match(&s)).into()
+                format!("which is a UTF-8 encoded string {}", self.inner.explain_match(s)).into()
             }
             Err(e) => format!("which is not a UTF-8 encoded string: {e}").into(),
         }
