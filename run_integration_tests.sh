@@ -89,6 +89,8 @@ INTEGRATION_TEST_BINARIES=(
   "simple_assertion_failure"
   "simple_assertion_failure_with_assert_that"
   "test_returning_anyhow_error"
+  "test_returning_string_error"
+  "test_returning_option"
   "two_expect_pred_failures"
   "two_expect_that_failures"
   "two_non_fatal_failures"

@@ -1746,6 +1746,34 @@ mod tests {
         verify_that!(output, contains_substring("Error from Anyhow"))
     }
 
+    #[test]
+    fn test_can_return_option_generated_error() -> Result<()> {
+        let output = run_external_process_in_tests_directory("test_returning_option")?;
+
+        verify_that!(
+            output,
+            all![
+                contains_substring(
+                    "called `Option::into_test_result()` on a `Option::<()>::None` value"
+                ),
+                contains_substring("test_returning_option.rs:23")
+            ]
+        )
+    }
+
+    #[test]
+    fn test_can_return_string_error_generated_error() -> Result<()> {
+        let output = run_external_process_in_tests_directory("test_returning_string_error")?;
+
+        verify_that!(
+            output,
+            all![
+                contains_substring("Error as a String"),
+                contains_substring("test_returning_string_error.rs:23")
+            ]
+        )
+    }
+
     #[::core::prelude::v1::test]
     #[should_panic]
     fn should_panic_when_expect_that_runs_without_attribute_macro() {

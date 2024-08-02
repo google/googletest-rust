@@ -366,6 +366,16 @@ path = "src/test_returning_anyhow_error.rs"
 test = false
 
 [[bin]]
+name = "test_returning_string_error"
+path = "src/test_returning_string_error.rs"
+test = false
+
+[[bin]]
+name = "test_returning_option"
+path = "src/test_returning_option.rs"
+test = false
+
+[[bin]]
 name = "two_expect_pred_failures"
 path = "src/two_expect_pred_failures.rs"
 test = false

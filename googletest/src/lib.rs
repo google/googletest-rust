@@ -236,45 +236,52 @@ impl<T> GoogleTestSupport for std::result::Result<T, TestAssertionFailure> {
 ///
 /// A type can implement this trait to provide an easy way to return immediately
 /// from a test in conjunction with the `?` operator. This is useful for
-/// [`Result`][std::result::Result] types whose `Result::Err` variant does not
-/// implement [`std::error::Error`].
+/// [`Option`] and [`Result`][std::result::Result] types whose `Result::Err`
+/// variant does not implement [`std::error::Error`].
 ///
-/// There is an implementation of this trait for [`anyhow::Error`] (which does
-/// not implement `std::error::Error`) when the `anyhow` feature is enabled.
-/// Importing this trait allows one to easily map [`anyhow::Error`] to a test
-/// failure:
+/// If `Result::Err` implements [`std::error::Error`] you can just use the `?`
+/// operator directly.
 ///
 /// ```ignore
 /// #[test]
-/// fn should_work() -> Result<()> {
+/// fn should_work() -> googletest::Result<()> {
 ///     let value = something_which_can_fail().into_test_result()?;
+///     let value = something_which_can_fail_with_option().into_test_result()?;
 ///     ...
 /// }
 ///
-/// fn something_which_can_fail() -> anyhow::Result<...> { ... }
+/// fn something_which_can_fail() -> std::result::Result<T, String> { ... }
+/// fn something_which_can_fail_with_option() -> Option<T> { ... }
 /// ```
 pub trait IntoTestResult<T> {
     /// Converts this instance into a [`Result`].
     ///
-    /// Typically, the `Self` type is itself a [`std::result::Result`]. This
-    /// method should then map the `Err` variant to a [`TestAssertionFailure`]
-    /// and leave the `Ok` variant unchanged.
+    /// Typically, the `Self` type is itself an implementation of the
+    /// [`std::ops::Try`] trait. This method should then map the `Residual`
+    /// variant to a [`TestAssertionFailure`] and leave the `Output` variant
+    /// unchanged.
     fn into_test_result(self) -> Result<T>;
 }
 
-#[cfg(feature = "anyhow")]
-impl<T> IntoTestResult<T> for std::result::Result<T, anyhow::Error> {
+impl<T, E: std::fmt::Debug> IntoTestResult<T> for std::result::Result<T, E> {
     #[track_caller]
     fn into_test_result(self) -> std::result::Result<T, TestAssertionFailure> {
-        self.map_err(|e| TestAssertionFailure::create(format!("{e}")))
+        match self {
+            Ok(t) => Ok(t),
+            Err(e) => Err(TestAssertionFailure::create(format!("{e:?}"))),
+        }
     }
 }
 
-#[cfg(feature = "proptest")]
-impl<OkT, CaseT: std::fmt::Debug> IntoTestResult<OkT>
-    for std::result::Result<OkT, proptest::test_runner::TestError<CaseT>>
-{
-    fn into_test_result(self) -> std::result::Result<OkT, TestAssertionFailure> {
-        self.map_err(|e| TestAssertionFailure::create(format!("{e}")))
+impl<T> IntoTestResult<T> for Option<T> {
+    #[track_caller]
+    fn into_test_result(self) -> std::result::Result<T, TestAssertionFailure> {
+        match self {
+            Some(t) => Ok(t),
+            None => Err(TestAssertionFailure::create(format!(
+                "called `Option::into_test_result()` on a `Option::<{}>::None` value",
+                std::any::type_name::<T>()
+            ))),
+        }
     }
 }
