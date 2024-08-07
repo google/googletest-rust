@@ -16,8 +16,10 @@ fn main() {}
 
 #[cfg(test)]
 mod tests {
+    use googletest::prelude::*;
+
     #[googletest::test]
-    fn should_fail_due_to_returned_error() -> Result<(), i32> {
+    fn should_fail_due_to_returned_error() -> std::result::Result<(), i32> {
         Err(123)
     }
 }
