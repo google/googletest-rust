@@ -68,7 +68,7 @@ use syn::{parse_macro_input, Attribute, DeriveInput, ItemFn, ReturnType};
 ///
 /// [`googletest::Result`]: type.Result.html
 #[proc_macro_attribute]
-pub fn test(
+pub fn gtest(
     _args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
@@ -147,6 +147,31 @@ pub fn test(
         }
     };
     output.into()
+}
+
+/// Alias for [`googletest::gtest`].
+///
+/// Generally, prefer using `#[gtest]` to mark googletest-based tests.
+///
+/// Use `#[googletest::test]` instead of `#[gtest]` to satisfy compatibility
+/// requirements. For example, the rstest crate can be composed with other test
+/// attributes but it requires the attribute to be named `test`.
+///
+/// ```ignore
+/// #[rstest]
+/// #[googletest::test]
+/// fn rstest_with_googletest() -> Result<()> {
+///   verify_that!(1, eq(1))
+/// }
+/// ```
+///
+/// [`googletest::gtest`]: attr.gtest.html
+#[proc_macro_attribute]
+pub fn test(
+    args: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    gtest(args, input)
 }
 
 fn is_test_attribute(attr: &Attribute) -> bool {

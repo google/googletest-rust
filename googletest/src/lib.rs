@@ -58,6 +58,7 @@ pub mod prelude {
     };
 }
 
+pub use googletest_macro::gtest;
 pub use googletest_macro::test;
 
 use internal::test_outcome::{TestAssertionFailure, TestOutcome};
