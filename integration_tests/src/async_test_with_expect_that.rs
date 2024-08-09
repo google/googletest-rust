@@ -21,7 +21,7 @@ mod tests {
     use std::time::Duration;
     use tokio::time::sleep;
 
-    #[googletest::test]
+    #[gtest]
     #[tokio::test]
     async fn async_test_failure_with_non_fatal_assertion() -> Result<()> {
         sleep(Duration::from_millis(1)).await;
@@ -29,7 +29,7 @@ mod tests {
         Ok(())
     }
 
-    #[googletest::test]
+    #[gtest]
     #[tokio::test]
     async fn async_test_failure_with_fatal_assertion() -> Result<()> {
         sleep(Duration::from_millis(1)).await;

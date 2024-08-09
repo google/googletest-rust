@@ -38,8 +38,7 @@ thread_local! {
 impl TestOutcome {
     /// Resets the current test's [`TestOutcome`].
     ///
-    /// This is intended only for use by the attribute macro
-    /// `#[googletest::test]`.
+    /// This is intended only for use by the attribute macro `#[gtest]`.
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
@@ -123,7 +122,7 @@ impl TestOutcome {
             outcome.as_ref().expect(
                 "
 No test context found.
- * Did you annotate the test with googletest::test?
+ * Did you annotate the test with gtest?
  * Is the assertion running in the original test thread?
 ",
             );

@@ -20,7 +20,7 @@ use syn::{parse_macro_input, Attribute, DeriveInput, ItemFn, ReturnType};
 /// Annotate tests the same way ordinary Rust tests are annotated:
 ///
 /// ```ignore
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_work() {
 ///     ...
 /// }
@@ -32,7 +32,7 @@ use syn::{parse_macro_input, Attribute, DeriveInput, ItemFn, ReturnType};
 /// example:
 ///
 /// ```ignore
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_work() -> googletest::Result<()> {
 ///     let value = 2;
 ///     expect_that!(value, gt(0));
@@ -44,7 +44,7 @@ use syn::{parse_macro_input, Attribute, DeriveInput, ItemFn, ReturnType};
 /// expected to panic. For example:
 ///
 /// ```ignore
-/// #[googletest::test]
+/// #[gtest]
 /// #[should_panic]
 /// fn passes_due_to_should_panic() {
 ///     let value = 2;
@@ -53,12 +53,12 @@ use syn::{parse_macro_input, Attribute, DeriveInput, ItemFn, ReturnType};
 /// }
 /// ```
 ///
-/// Using `#[should_panic]` modifies the behaviour of `#[googletest::test]` so
+/// Using `#[should_panic]` modifies the behaviour of `#[gtest]` so
 /// that the test panics (and passes) if any non-fatal assertion occurs.
 /// For example, the following test passes:
 ///
 /// ```ignore
-/// #[googletest::test]
+/// #[gtest]
 /// #[should_panic]
 /// fn passes_due_to_should_panic_and_failing_assertion() {
 ///     let value = 2;
@@ -153,13 +153,13 @@ pub fn gtest(
 ///
 /// Generally, prefer using `#[gtest]` to mark googletest-based tests.
 ///
-/// Use `#[googletest::test]` instead of `#[gtest]` to satisfy compatibility
+/// Use `#[gtest]` instead of `#[gtest]` to satisfy compatibility
 /// requirements. For example, the rstest crate can be composed with other test
 /// attributes but it requires the attribute to be named `test`.
 ///
 /// ```ignore
 /// #[rstest]
-/// #[googletest::test]
+/// #[gtest]
 /// fn rstest_with_googletest() -> Result<()> {
 ///   verify_that!(1, eq(1))
 /// }

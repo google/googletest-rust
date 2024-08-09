@@ -15,7 +15,7 @@ fn main() {}
 #[cfg(test)]
 mod tests {
     use googletest::prelude::*;
-    #[googletest::test]
+    #[gtest]
     fn should_fail() {
         expect_float_eq!(1.0, 2.0);
         println!("This will print");

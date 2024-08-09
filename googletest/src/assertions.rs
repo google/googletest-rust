@@ -333,13 +333,13 @@ macro_rules! succeed {
 /// macro execution.
 ///
 /// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// [`gtest`][crate::gtest] attribute. The failure must be generated
 /// in the same thread as that running the test itself.
 ///
 /// ```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail_but_not_abort() {
 ///     add_failure!();
 /// }
@@ -350,7 +350,7 @@ macro_rules! succeed {
 /// ```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail_but_not_abort() {
 ///     add_failure!("I am just a fake test: {}", "a fake test indeed");
 /// }
@@ -376,13 +376,13 @@ macro_rules! add_failure {
 /// macro execution.
 ///
 /// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// [`gtest`][crate::gtest] attribute. The failure must be generated
 /// in the same thread as that running the test itself.
 ///
 /// ```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail_but_not_abort() {
 ///     add_failure_at!("src/my_file.rs", 32, 12);
 /// }
@@ -393,7 +393,7 @@ macro_rules! add_failure {
 /// ```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail_but_not_abort() {
 ///     add_failure_at!(
 ///         "src/my_file.rs",
@@ -456,14 +456,14 @@ macro_rules! verify_true {
 /// macro execution.
 ///
 /// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// [`gtest`][crate::gtest] attribute. The failure must be generated
 /// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     expect_true!(2 + 2 == 5);
 ///     println!("This will print");
@@ -516,14 +516,14 @@ macro_rules! verify_false {
 /// macro execution.
 ///
 /// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// [`gtest`][crate::gtest] attribute. The failure must be generated
 /// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     expect_false!(2 + 2 == 4);
 ///     println!("This will print");
@@ -588,14 +588,14 @@ macro_rules! verify_eq {
 /// macro execution.
 ///
 /// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// [`gtest`][crate::gtest] attribute. The failure must be generated
 /// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     expect_eq!(2, 1);
 ///     println!("This will print!");
@@ -612,7 +612,7 @@ macro_rules! verify_eq {
 ///```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     let argument = "argument"
 ///     expect_eq!(2, 1, "custom failure message: {argument}");
@@ -692,14 +692,14 @@ macro_rules! verify_ne {
 /// macro execution.
 ///
 /// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// [`gtest`][crate::gtest] attribute. The failure must be generated
 /// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     expect_ne!(1, 1);
 ///     println!("This will print!");
@@ -710,7 +710,7 @@ macro_rules! verify_ne {
 ///```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     let argument = "argument"
 ///     expect_ne!(1, 1, "custom failure message: {argument}");
@@ -770,14 +770,14 @@ macro_rules! verify_lt {
 /// macro execution.
 ///
 /// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// [`gtest`][crate::gtest] attribute. The failure must be generated
 /// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     expect_lt!(2, 1);
 ///     println!("This will print!");
@@ -788,7 +788,7 @@ macro_rules! verify_lt {
 ///```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     let argument = "argument"
 ///     expect_lt!(1, 1, "custom failure message: {argument}");
@@ -849,14 +849,14 @@ macro_rules! verify_le {
 /// macro execution.
 ///
 /// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// [`gtest`][crate::gtest] attribute. The failure must be generated
 /// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     expect_le!(2, 1);
 ///     println!("This will print!");
@@ -867,7 +867,7 @@ macro_rules! verify_le {
 ///```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     let argument = "argument"
 ///     expect_le!(2, 1, "custom failure message: {argument}");
@@ -927,14 +927,14 @@ macro_rules! verify_gt {
 /// macro execution.
 ///
 /// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// [`gtest`][crate::gtest] attribute. The failure must be generated
 /// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     expect_gt!(1, 2);
 ///     println!("This will print!");
@@ -945,7 +945,7 @@ macro_rules! verify_gt {
 ///```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     let argument = "argument"
 ///     expect_gt!(1, 2, "custom failure message: {argument}");
@@ -1007,14 +1007,14 @@ macro_rules! verify_ge {
 /// macro execution.
 ///
 /// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// [`gtest`][crate::gtest] attribute. The failure must be generated
 /// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     expect_ge!(1, 2);
 ///     println!("This will print!");
@@ -1025,7 +1025,7 @@ macro_rules! verify_ge {
 ///```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     let argument = "argument"
 ///     expect_ge!(1, 2, "custom failure message: {argument}");
@@ -1102,14 +1102,14 @@ macro_rules! verify_float_eq {
 /// macro execution.
 ///
 /// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// [`gtest`][crate::gtest] attribute. The failure must be generated
 /// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     expect_float_eq!(1.0, 2.0);
 ///     println!("This will print!");
@@ -1120,7 +1120,7 @@ macro_rules! verify_float_eq {
 ///```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     let argument = "argument"
 ///     expect_float_eq!(1.0, 2.0, "custom failure message: {argument}");
@@ -1183,14 +1183,14 @@ macro_rules! verify_near {
 /// macro execution.
 ///
 /// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The failure must be generated
+/// [`gtest`][crate::gtest] attribute. The failure must be generated
 /// in the same thread as that running the test itself.
 ///
 /// Example:
 /// ```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     expect_near!(1.12345, 1.12346, 1e-6);
 ///     println!("This will print!");
@@ -1201,7 +1201,7 @@ macro_rules! verify_near {
 ///```ignore
 /// use googletest::prelude::*;
 ///
-/// #[googletest::test]
+/// #[gtest]
 /// fn should_fail() {
 ///     let argument = "argument"
 ///     expect_near!(1.12345, 1.12346, 1e-6, "custom failure message: {argument}");
@@ -1321,7 +1321,7 @@ macro_rules! assert_pred {
 /// execution in the event of assertion failure.
 ///
 /// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The assertion must
+/// [`gtest`][crate::gtest] attribute. The assertion must
 /// occur in the same thread as that running the test itself.
 ///
 /// Invoking this macro is equivalent to using
@@ -1377,7 +1377,7 @@ macro_rules! expect_that {
 /// continues execution in the event of assertion failure.
 ///
 /// This can only be invoked inside tests with the
-/// [`googletest::test`][crate::test] attribute. The assertion must
+/// [`gtest`][crate::gtest] attribute. The assertion must
 /// occur in the same thread as that running the test itself.
 ///
 /// Invoking this macro is equivalent to using

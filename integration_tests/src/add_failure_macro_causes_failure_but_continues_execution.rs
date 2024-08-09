@@ -18,7 +18,7 @@ fn main() {}
 mod tests {
     use googletest::prelude::*;
 
-    #[googletest::test]
+    #[gtest]
     fn should_fail_but_not_abort() {
         add_failure!("First failure");
         add_failure!("Second failure");

@@ -18,7 +18,7 @@ fn main() {}
 mod tests {
     use googletest::prelude::*;
 
-    #[googletest::test]
+    #[gtest]
     fn just_fails() -> Result<()> {
         let argument = "An argument";
         fail!("Failure message with argument: {argument}").and_log_failure();

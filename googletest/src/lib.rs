@@ -97,13 +97,12 @@ pub type Result<T> = std::result::Result<T, TestAssertionFailure>;
 /// `?` operator to continue execution of the test conditionally on there not
 /// having been any failure yet.
 ///
-/// This requires the use of the [`#[googletest::test]`][crate::test] attribute
-/// macro.
+/// This requires the use of the [`#[gtest]`][crate::gtest] attribute macro.
 ///
 /// ```
 /// # use googletest::prelude::*;
 /// # /* Make sure this also compiles as a doctest.
-/// #[googletest::test]
+/// #[gtest]
 /// # */
 /// # fn foo() -> u32 { 1 }
 /// # fn bar() -> u32 { 2 }

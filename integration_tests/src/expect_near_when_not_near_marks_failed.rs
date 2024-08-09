@@ -16,7 +16,7 @@ fn main() {}
 mod tests {
     use googletest::prelude::*;
 
-    #[googletest::test]
+    #[gtest]
     fn should_fail() {
         expect_near!(1.12345, 1.12346, 1e-6);
         println!("This will print");

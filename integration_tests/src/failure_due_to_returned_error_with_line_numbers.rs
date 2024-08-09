@@ -33,7 +33,7 @@ mod tests {
         Err(FakeError)
     }
 
-    #[googletest::test]
+    #[gtest]
     fn should_fail_due_to_returned_error() -> Result<()> {
         return_error()?;
 

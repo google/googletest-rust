@@ -18,7 +18,7 @@ fn main() {}
 mod tests {
     use googletest::prelude::*;
 
-    #[googletest::test]
+    #[gtest]
     fn should_fail() {
         expect_false!(2 + 2 == 4);
         println!("This will print");

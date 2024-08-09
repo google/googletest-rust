@@ -71,26 +71,26 @@ mod tests {
         assert_that!(value, eq(2), "A custom error message",);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn should_pass_with_expect_that() -> Result<()> {
         let value = 2;
         expect_that!(value, eq(2));
         Ok(())
     }
 
-    #[googletest::test]
+    #[gtest]
     fn should_pass_with_expect_that_returning_unit() {
         let value = 2;
         expect_that!(value, eq(2));
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_that_supports_trailing_comma() {
         let value = 2;
         expect_that!(value, eq(2),);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_that_with_custom_failure_message_supports_trailing_comma() {
         let value = 2;
         expect_that!(value, eq(2), "A custom error message",);
@@ -187,7 +187,7 @@ mod tests {
         )
     }
 
-    #[googletest::test]
+    #[gtest]
     fn should_output_failure_message_with_simple_structured_value() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "assertion_failures_with_short_structured_actual_values",
@@ -385,7 +385,7 @@ mod tests {
         a == b
     }
 
-    #[googletest::test]
+    #[gtest]
     fn should_verify_predicate_with_success_using_expect_pred() -> Result<()> {
         expect_pred!(eq_predicate(1, 1));
         Ok(())
@@ -623,7 +623,7 @@ mod tests {
         verify_that!(output, contains_regex("Success message with argument: An argument"))
     }
 
-    #[googletest::test]
+    #[gtest]
     fn add_failure_macro_causes_failure_but_continues_execution() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "add_failure_macro_causes_failure_but_continues_execution",
@@ -669,10 +669,10 @@ mod tests {
             "add_failure_macro_needs_googletest_attribute",
         )?;
 
-        verify_that!(output, contains_regex("Did you annotate the test with googletest::test?"))
+        verify_that!(output, contains_regex("Did you annotate the test with gtest?"))
     }
 
-    #[googletest::test]
+    #[gtest]
     fn add_failure_at_macro_causes_failure_but_continues_execution() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "add_failure_at_macro_causes_failure_but_continues_execution",
@@ -718,7 +718,7 @@ mod tests {
             "add_failure_at_macro_needs_googletest_attribute",
         )?;
 
-        verify_that!(output, contains_regex("Did you annotate the test with googletest::test?"))
+        verify_that!(output, contains_regex("Did you annotate the test with gtest?"))
     }
 
     #[test]
@@ -731,7 +731,7 @@ mod tests {
         assert!(verify_true!(2 + 2 == 5).is_err())
     }
 
-    #[googletest::test]
+    #[gtest]
     fn verify_true_macro_on_false_condition_logs_error_when_handled() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("verify_true_macro_on_false_condition")?;
@@ -747,12 +747,12 @@ mod tests {
         )
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_true_macro_on_true_condition_does_nothing() {
         expect_true!(2 + 2 == 4)
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_true_macro_on_false_condition_fails_test_and_continues() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "expect_true_macro_on_false_condition_fails_test_and_continues",
@@ -780,7 +780,7 @@ mod tests {
         assert!(verify_false!(2 + 2 == 4).is_err())
     }
 
-    #[googletest::test]
+    #[gtest]
     fn verify_false_macro_on_true_condition_logs_error_when_handled() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("verify_false_macro_on_true_condition")?;
@@ -796,12 +796,12 @@ mod tests {
         )
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_false_macro_on_false_condition_does_nothing() {
         expect_false!(2 + 2 == 5)
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_false_macro_on_true_condition_fails_test_and_continues() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "expect_false_macro_on_true_condition_fails_test_and_continues",
@@ -825,7 +825,7 @@ mod tests {
         verify_eq!(value, 2)
     }
 
-    #[googletest::test]
+    #[gtest]
     fn verify_eq_with_non_copyable_type() -> Result<()> {
         #[derive(Debug, PartialEq)]
         struct NonCopyable(i32);
@@ -927,62 +927,62 @@ mod tests {
         )
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_should_pass() {
         let value = 2;
         expect_eq!(value, 2);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_with_non_copyable_type() {
         #[derive(Debug, PartialEq)]
         struct NonCopyable(i32);
         expect_eq!(NonCopyable(123), NonCopyable(123));
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_should_allow_multiple_calls() {
         expect_eq!(1, 1);
         expect_eq!(2, 2);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_supports_trailing_comma() {
         let value = 2;
         expect_eq!(value, 2,);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_supports_tuples() {
         expect_eq!((Some("a"), Some("b")), (Some("a"), Some("b")));
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_supports_ordered_elements() {
         expect_eq!(vec![1, 2], [1, 2]);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_supports_ordered_elements_with_non_primitives() {
         expect_eq!(vec![Some("a"), Some("b")], [Some("a"), Some("b")]);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_supports_ordered_elements_with_trailing_comma() {
         expect_eq!(vec![1, 2], [1, 2,],);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_supports_unordered_elements() {
         expect_eq!(vec![1, 2], {2, 1});
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_supports_unordered_elements_with_trailing_comma() {
         expect_eq!(vec![1, 2], {2, 1,},);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_when_not_equal_returns_error() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("expect_eq_when_not_equal_returns_error")?;
@@ -999,7 +999,7 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_supports_custom_message() -> Result<()> {
         let output = run_external_process_in_tests_directory("expect_eq_supports_custom_message")?;
 
@@ -1016,7 +1016,7 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_with_ordered_elements_when_not_equal_returns_error() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "expect_eq_with_ordered_elements_when_not_equal_returns_error",
@@ -1036,7 +1036,7 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_with_ordered_elements_supports_custom_message() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "expect_eq_with_ordered_elements_supports_custom_message",
@@ -1057,7 +1057,7 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_with_unordered_elements_when_not_equal_returns_error() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "expect_eq_with_unordered_elements_when_not_equal_returns_error",
@@ -1077,7 +1077,7 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_eq_with_unordered_elements_supports_custom_message() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "expect_eq_with_unordered_elements_supports_custom_message",
@@ -1104,7 +1104,7 @@ mod tests {
         verify_ne!(value, 3)
     }
 
-    #[googletest::test]
+    #[gtest]
     fn verify_ne_with_non_copyable_type() -> Result<()> {
         #[derive(Debug, PartialEq)]
         struct NonCopyable(i32);
@@ -1132,30 +1132,30 @@ mod tests {
         )
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_ne_should_pass() {
         expect_ne!(1, 2);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_ne_with_non_copyable_type() {
         #[derive(Debug, PartialEq)]
         struct NonCopyable(i32);
         expect_ne!(NonCopyable(123), NonCopyable(321));
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_ne_should_allow_multiple_calls() {
         expect_ne!(1, 2);
         expect_ne!(1, 3);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_ne_supports_trailing_comma() {
         expect_ne!(1, 2,);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_ne_when_equal_marks_failed() -> Result<()> {
         let output = run_external_process_in_tests_directory("expect_ne_when_equal_marks_failed")?;
 
@@ -1171,7 +1171,7 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_ne_supports_custom_message() -> Result<()> {
         let output = run_external_process_in_tests_directory("expect_ne_supports_custom_message")?;
 
@@ -1216,23 +1216,23 @@ mod tests {
         )
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_lt_should_pass() {
         expect_lt!(1, 2);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_lt_should_allow_multuple_calls() {
         expect_lt!(1, 2);
         expect_lt!(1, 3);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_lt_supports_trailing_comma() {
         expect_lt!(1, 2,);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_lt_when_not_less_marks_failed() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("expect_lt_when_not_less_marks_failed")?;
@@ -1249,7 +1249,7 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_lt_supports_custom_message() -> Result<()> {
         let output = run_external_process_in_tests_directory("expect_lt_supports_custom_message")?;
 
@@ -1292,23 +1292,23 @@ mod tests {
         )
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_le_should_pass() {
         expect_le!(1, 1);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_le_should_allow_multiple_calls() {
         expect_le!(1, 1);
         expect_le!(1, 2);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_le_supports_trailing_comma() {
         expect_le!(1, 2,);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_le_when_greater_marks_failed() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("expect_le_when_greater_marks_failed")?;
@@ -1325,7 +1325,7 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_le_supports_custom_message() -> Result<()> {
         let output = run_external_process_in_tests_directory("expect_le_supports_custom_message")?;
 
@@ -1368,23 +1368,23 @@ mod tests {
         )
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_gt_should_pass() {
         expect_gt!(2, 1);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_gt_should_allow_multiple_calls() {
         expect_gt!(2, 1);
         expect_gt!(3, 1);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_gt_supports_trailing_comma() {
         expect_gt!(2, 1,);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_gt_when_not_greater_marks_failed() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("expect_gt_when_not_greater_marks_failed")?;
@@ -1401,7 +1401,7 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_gt_supports_custom_message() -> Result<()> {
         let output = run_external_process_in_tests_directory("expect_gt_supports_custom_message")?;
 
@@ -1443,23 +1443,23 @@ mod tests {
         )
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_ge_should_pass() {
         expect_ge!(1, 1);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_ge_should_allow_multiple_calls() {
         expect_ge!(1, 1);
         expect_ge!(2, 1);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_ge_supports_trailing_comma() {
         expect_ge!(2, 1,);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_ge_when_less_marks_failed() -> Result<()> {
         let output = run_external_process_in_tests_directory("expect_ge_when_less_marks_failed")?;
 
@@ -1475,7 +1475,7 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_ge_supports_custom_message() -> Result<()> {
         let output = run_external_process_in_tests_directory("expect_ge_supports_custom_message")?;
 
@@ -1502,7 +1502,7 @@ mod tests {
         verify_float_eq!(1.0, 1.0,)
     }
 
-    #[googletest::test]
+    #[gtest]
     fn verify_float_eq_when_not_equal_returns_error() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "verify_float_eq_when_not_equal_returns_error",
@@ -1519,23 +1519,23 @@ mod tests {
         )
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_float_eq_should_pass() {
         expect_float_eq!(1.0, 1.0);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_float_eq_supports_trailing_comma() {
         expect_float_eq!(1.0, 1.0,);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_float_eq_allows_multiple_invocations() {
         expect_float_eq!(1.0, 1.0);
         expect_float_eq!(2.0, 2.0);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_float_eq_when_not_equal_marks_failed() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("expect_float_eq_when_not_equal_marks_failed")?;
@@ -1552,7 +1552,7 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_float_eq_supports_custom_message() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("expect_float_eq_supports_custom_message")?;
@@ -1580,7 +1580,7 @@ mod tests {
         verify_near!(1.12345, 1.12346, 1e-5,)
     }
 
-    #[googletest::test]
+    #[gtest]
     fn verify_near_when_not_near_returns_error() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("verify_near_when_not_near_returns_error")?;
@@ -1596,23 +1596,23 @@ mod tests {
         )
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_near_should_pass() {
         expect_near!(1.12345, 1.12346, 1e-5);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_near_should_allow_trailing_comma() {
         expect_near!(1.12345, 1.12346, 1e-5,);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_near_should_allow_multiple_execution() {
         expect_near!(1.12345, 1.12346, 1e-5);
         expect_near!(1.123456, 1.123457, 1e-6);
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_near_when_not_near_marks_failed() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("expect_near_when_not_near_marks_failed")?;
@@ -1629,7 +1629,7 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[googletest::test]
+    #[gtest]
     fn expect_near_supports_custom_message() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("expect_near_supports_custom_message")?;
@@ -1690,7 +1690,7 @@ mod tests {
         )
     }
 
-    #[googletest::test]
+    #[gtest]
     fn test_with_google_test_and_rstest_runs_only_once() -> Result<()> {
         let output = run_external_process_in_tests_directory("google_test_with_rstest")?;
 
@@ -1721,7 +1721,7 @@ mod tests {
         )
     }
 
-    #[googletest::test]
+    #[gtest]
     fn async_test_with_google_test_runs_correctly() -> Result<()> {
         let output = run_external_process_in_tests_directory("async_test_with_expect_that")?;
 
@@ -1786,30 +1786,30 @@ mod tests {
         verify_that!(123, eq(123)).and_log_failure();
     }
 
-    #[googletest::test]
+    #[gtest]
     fn should_just_pass() -> Result<()> {
         Ok(())
     }
 
-    #[googletest::test]
+    #[gtest]
     #[should_panic]
     fn should_pass_with_should_panic() {
         expect_that!(2, eq(4));
     }
 
-    #[googletest::test]
+    #[gtest]
     #[should_panic(expected = "See failure output above")]
     fn should_pass_with_should_panic_with_expectation() {
         expect_that!(2, eq(4));
     }
 
     #[should_panic]
-    #[googletest::test]
+    #[gtest]
     fn should_pass_with_should_panic_in_first_position() {
         expect_that!(2, eq(4));
     }
 
-    #[googletest::test]
+    #[gtest]
     #[should_panic]
     fn should_pass_with_should_panic_and_verify_that() -> Result<()> {
         verify_that!(2, eq(4))?;
@@ -1826,7 +1826,7 @@ mod tests {
     #[::core::prelude::v1::test]
     #[should_panic]
     fn should_panic_when_expect_that_runs_without_attribute_macro_after_another_test() {
-        // The boilerplate in the attribute googletest::test should reset the test
+        // The boilerplate in the attribute gtest should reset the test
         // context when the test has finished running. If it fails to do so, then the
         // expect_that! call will see a test context and *not* panic, causing the test
         // to fail.

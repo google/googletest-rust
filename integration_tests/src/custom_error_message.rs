@@ -65,13 +65,13 @@ mod tests {
         );
     }
 
-    #[googletest::test]
+    #[gtest]
     fn should_include_failure_message_in_third_parameter_to_expect_that() {
         let value = 2;
         expect_that!(value, eq(3), "expect_that: A custom error message for value {value}");
     }
 
-    #[googletest::test]
+    #[gtest]
     fn should_include_failure_message_in_third_parameter_with_format_arguments_to_expect_that() {
         let value = 2;
         expect_that!(
@@ -82,7 +82,7 @@ mod tests {
         );
     }
 
-    #[googletest::test]
+    #[gtest]
     fn should_accept_trailing_comma_after_format_arguments_in_expect_that() {
         let value = 2;
         expect_that!(

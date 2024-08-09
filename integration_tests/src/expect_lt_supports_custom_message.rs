@@ -18,7 +18,7 @@ fn main() {}
 mod tests {
     use googletest::prelude::*;
 
-    #[googletest::test]
+    #[gtest]
     fn should_fail() {
         let arg = "argument";
         expect_lt!(1, 1, "Failure message with argument: {arg}");

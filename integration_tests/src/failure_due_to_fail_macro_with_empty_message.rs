@@ -18,7 +18,7 @@ fn main() {}
 mod tests {
     use googletest::prelude::*;
 
-    #[googletest::test]
+    #[gtest]
     fn just_fails() -> Result<()> {
         fail!().and_log_failure();
         Ok(())

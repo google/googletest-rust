@@ -14,7 +14,7 @@
 
 fn main() {}
 
-// Mixing rstest and googletest::test should not result in any compiler
+// Mixing rstest and gtest should not result in any compiler
 // warnings. The fact that this successfully compiles is part of the test.
 #[deny(warnings)]
 #[cfg(test)]
@@ -22,6 +22,9 @@ mod tests {
     use googletest::prelude::*;
     use rstest::rstest;
 
+    // The following tests use `#[googletest::test]` instead of `#[gtest]` because
+    // `#[rstest]` requires a third-party testing attribute to be called
+    // literally `test`.
     #[rstest]
     #[googletest::test]
     fn test_should_work_with_rstest_first() -> Result<()> {
@@ -34,13 +37,13 @@ mod tests {
         verify_that!(1, eq(1))
     }
 
-    #[googletest::test]
+    #[gtest]
     #[rstest]
     fn test_should_work_with_rstest_second() -> Result<()> {
         verify_that!(1, eq(1))
     }
 
-    #[googletest::test]
+    #[gtest]
     #[rstest::rstest]
     fn test_should_work_with_qualified_rstest_second() -> Result<()> {
         verify_that!(1, eq(1))
@@ -48,12 +51,12 @@ mod tests {
 
     #[rstest]
     #[case(1)]
-    #[googletest::test]
+    #[gtest]
     fn paramterised_test_should_work_with_rstest_first(#[case] value: u32) -> Result<()> {
         verify_that!(value, eq(value))
     }
 
-    #[googletest::test]
+    #[gtest]
     #[rstest]
     #[case(1)]
     fn paramterised_test_should_work_with_rstest_second(#[case] value: u32) -> Result<()> {
@@ -64,13 +67,13 @@ mod tests {
         pub use rstest::rstest as test;
     }
 
-    #[googletest::test]
+    #[gtest]
     #[submodule::test]
     fn test_should_work_with_qualified_test_annotation() -> Result<()> {
         verify_that!(1, eq(1))
     }
 
-    #[googletest::test]
+    #[gtest]
     #[test]
     fn test_should_work_with_second_test_annotation() -> Result<()> {
         verify_that!(1, eq(1))

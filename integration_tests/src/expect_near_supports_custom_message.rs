@@ -16,7 +16,7 @@ fn main() {}
 mod tests {
     use googletest::prelude::*;
 
-    #[googletest::test]
+    #[gtest]
     fn should_fail() {
         let arg = "argument";
         expect_near!(1.12345, 1.12346, 1e-6, "Failure message with argument: {arg}");

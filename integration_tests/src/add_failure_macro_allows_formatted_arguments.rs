@@ -18,7 +18,7 @@ fn main() {}
 mod tests {
     use googletest::prelude::*;
 
-    #[googletest::test]
+    #[gtest]
     fn should_fail_but_not_abort() {
         let argument = "An argument";
         add_failure!("Failure message with argument: {argument}");

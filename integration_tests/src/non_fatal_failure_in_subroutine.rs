@@ -18,7 +18,7 @@ fn main() {}
 mod tests {
     use googletest::prelude::*;
 
-    #[googletest::test]
+    #[gtest]
     fn calls_verify_that_in_subroutine() -> Result<()> {
         verify_that_things_are_okay(2);
         Ok(())

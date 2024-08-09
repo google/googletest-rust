@@ -18,7 +18,7 @@ fn main() {}
 mod tests {
     use googletest::prelude::*;
 
-    #[googletest::test]
+    #[gtest]
     fn should_fail_due_to_returned_error() -> std::result::Result<(), i32> {
         Err(123)
     }

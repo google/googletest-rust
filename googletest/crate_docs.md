@@ -26,7 +26,7 @@ To make an assertion using a matcher, GoogleTest offers three macros:
  * [`assert_that!`] panics if the assertion fails, aborting the test.
  * [`expect_that!`] logs an assertion failure, marking the test as having
    failed, but allows the test to continue running (called a _non-fatal
-   assertion_). It requires the use of the [`googletest::test`][crate::test]
+   assertion_). It requires the use of the [`gtest`]
    attribute macro on the test itself.
  * [`verify_that!`] has no side effects and evaluates to a [`Result`] whose
    `Err` variant describes the assertion failure, if there is one. In
@@ -49,7 +49,7 @@ fn fails_and_panics() {
 }
 
 # /* The attribute macro would prevent the function from being compiled in a doctest.
-#[googletest::test]
+#[gtest]
 # */
 fn two_logged_failures() {
     let value = 2;
@@ -82,7 +82,7 @@ Matchers are composable:
 use googletest::prelude::*;
 
 # /* The attribute macro would prevent the function from being compiled in a doctest.
-#[googletest::test]
+#[gtest]
 # */
 fn contains_at_least_one_item_at_least_3() {
 # googletest::internal::test_outcome::TestOutcome::init_current_test_outcome();
@@ -100,7 +100,7 @@ They can also be logically combined, with methods from [`MatcherBase`]:
 use googletest::prelude::*;
 
 # /* The attribute macro would prevent the function from being compiled in a doctest.
-#[googletest::test]
+#[gtest]
 # */
 fn strictly_between_9_and_11() {
 # googletest::internal::test_outcome::TestOutcome::init_current_test_outcome();
@@ -319,7 +319,7 @@ impl<T: PartialEq + Debug + Copy> Matcher<T> for MyEqMatcher<T> {
 #    MyEqMatcher { expected }
 # }
 # /* The attribute macro would prevent the function from being compiled in a doctest.
-#[googletest::test]
+#[gtest]
 # */
 fn should_be_equal_by_my_definition() {
 # googletest::internal::test_outcome::TestOutcome::init_current_test_outcome();
@@ -338,13 +338,12 @@ having failed, but execution continues until the test completes or otherwise
 aborts.
 
 To make a non-fatal assertion, use the macro [`expect_that!`]. The test must
-also be marked with [`googletest::test`][crate::test] instead of the
-Rust-standard `#[test]`.
+also be marked with [`gtest`] instead of the Rust-standard `#[test]`.
 
 ```no_run
 use googletest::prelude::*;
 
-#[googletest::test]
+#[gtest]
 fn three_non_fatal_assertions() {
     let value = 2;
     expect_that!(value, eq(2));  // Passes; test still considered passing.
@@ -360,7 +359,7 @@ function must also return [`Result<()>`]:
 use googletest::prelude::*;
 
 # /* Make sure this also compiles as a doctest.
-#[googletest::test]
+#[gtest]
 # */
 fn failing_non_fatal_assertion() -> Result<()> {
     let value = 2;
@@ -374,7 +373,7 @@ fn failing_non_fatal_assertion() -> Result<()> {
 ```no_run
 use googletest::prelude::*;
 
-#[googletest::test]
+#[gtest]
 fn failing_fatal_assertion_after_non_fatal_assertion() -> Result<()> {
     let value = 2;
     expect_that!(value, eq(2));  // Passes; test still considered passing.
@@ -491,7 +490,7 @@ impl PngImage {
 }
 
 # /* The attribute macro would prevent the function from being compiled in a doctest.
-#[googletest::test]
+#[gtest]
 # */
 fn test_png_image_binary() -> googletest::Result<()> {
   // Arrange
@@ -508,7 +507,7 @@ impl PngImage {
 }
 
 # /* The attribute macro would prevent the function from being compiled in a doctest.
-#[googletest::test]
+#[gtest]
 # */
 fn test_png_from_cache() -> googletest::Result<()> {
   // Arrange

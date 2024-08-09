@@ -15,7 +15,7 @@ fn main() {}
 #[cfg(test)]
 mod tests {
     use googletest::prelude::*;
-    #[googletest::test]
+    #[gtest]
     fn should_fail() {
         expect_ge!(1, 2);
         println!("This will print");

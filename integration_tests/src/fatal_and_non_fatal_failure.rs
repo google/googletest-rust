@@ -18,7 +18,7 @@ fn main() {}
 mod tests {
     use googletest::prelude::*;
 
-    #[googletest::test]
+    #[gtest]
     fn fatal_and_non_fatal_failure() -> Result<()> {
         let value = 2;
         verify_that!(value, eq(3)).and_log_failure();
