@@ -20,52 +20,52 @@ mod tests {
     use indoc::indoc;
     use std::process::Command;
 
-    #[test]
+    #[gtest]
     fn should_pass() -> Result<()> {
         let value = 2;
         verify_that!(value, eq(2))
     }
 
-    #[test]
+    #[gtest]
     fn verify_that_supports_trailing_comma() -> Result<()> {
         let value = 2;
         verify_that!(value, eq(2),)
     }
 
-    #[test]
+    #[gtest]
     fn should_pass_with_omitted_elements_are() -> Result<()> {
         verify_that!(vec![1, 2], [eq(&1), eq(&2)])
     }
 
-    #[test]
+    #[gtest]
     fn should_pass_with_omitted_unordered_elements_are() -> Result<()> {
         verify_that!(vec![1, 2], {eq(&2), eq(&1)})
     }
 
-    #[test]
+    #[gtest]
     fn verify_that_with_short_elements_are_syntax_supports_trailing_comma() -> Result<()> {
         verify_that!(vec![1, 2], [eq(&1), eq(&2),])
     }
 
-    #[test]
+    #[gtest]
     fn verify_that_with_short_unordered_elements_are_syntax_supports_trailing_comma() -> Result<()>
     {
         verify_that!(vec![1, 2], {eq(&2), eq(&1),})
     }
 
-    #[test]
+    #[gtest]
     fn should_pass_with_assert_that() {
         let value = 2;
         assert_that!(value, eq(2));
     }
 
-    #[test]
+    #[gtest]
     fn assert_that_supports_trailing_comma() {
         let value = 2;
         assert_that!(value, eq(2),);
     }
 
-    #[test]
+    #[gtest]
     fn assert_that_with_custom_failure_message_supports_trailing_comma() {
         let value = 2;
         assert_that!(value, eq(2), "A custom error message",);
@@ -96,28 +96,28 @@ mod tests {
         expect_that!(value, eq(2), "A custom error message",);
     }
 
-    #[test]
+    #[gtest]
     fn should_fail_on_assertion_failure() -> Result<()> {
         let status = run_external_process("simple_assertion_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[test]
+    #[gtest]
     fn should_fail_on_assertion_failure_with_assert_that() -> Result<()> {
         let status = run_external_process("simple_assertion_failure_with_assert_that").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[test]
+    #[gtest]
     fn should_fail_on_assertion_failure_with_expect_that() -> Result<()> {
         let status = run_external_process("expect_that_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[test]
+    #[gtest]
     fn should_output_failure_message_on_assertion_failure() -> Result<()> {
         let output = run_external_process_in_tests_directory("simple_assertion_failure")?;
 
@@ -132,7 +132,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn should_output_failure_message_on_assertion_failure_with_assert_that() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("simple_assertion_failure_with_assert_that")?;
@@ -149,7 +149,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn should_output_failure_message_on_assertion_failure_with_expect_that() -> Result<()> {
         let output = run_external_process_in_tests_directory("expect_that_failure")?;
 
@@ -165,7 +165,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn should_output_both_failure_messages_when_two_expect_that_assertions_fail() -> Result<()> {
         let output = run_external_process_in_tests_directory("two_expect_that_failures")?;
 
@@ -226,21 +226,21 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn should_fail_due_to_assertion_failure_in_subroutine() -> Result<()> {
         let status = run_external_process("simple_assertion_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[test]
+    #[gtest]
     fn should_fail_due_to_returned_error_in_subroutine() -> Result<()> {
         let status = run_external_process("failure_due_to_returned_error").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[test]
+    #[gtest]
     fn should_log_error_location_in_returned_error() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "failure_due_to_returned_error_with_line_numbers",
@@ -254,14 +254,14 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn should_fail_test_on_and_log_failure() -> Result<()> {
         let status = run_external_process("non_fatal_failure_in_subroutine").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[test]
+    #[gtest]
     fn should_log_test_failures_to_stdout() -> Result<()> {
         let output = run_external_process_in_tests_directory("two_non_fatal_failures")?;
 
@@ -282,7 +282,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn should_log_fatal_and_non_fatal_errors_to_stdout() -> Result<()> {
         let output = run_external_process_in_tests_directory("fatal_and_non_fatal_failure")?;
 
@@ -303,7 +303,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn should_abort_after_first_failure() -> Result<()> {
         let output = run_external_process_in_tests_directory("first_failure_aborts")?;
 
@@ -317,7 +317,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn should_fail_with_assertion_in_a_subroutine() -> Result<()> {
         let output = run_external_process_in_tests_directory("non_fatal_failure_in_subroutine")?;
 
@@ -331,7 +331,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn should_include_custom_error_message_in_failure() -> Result<()> {
         let output = run_external_process_in_tests_directory("custom_error_message")?;
 
@@ -364,19 +364,19 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn should_not_run_closure_with_custom_error_message_if_test_passes() -> Result<()> {
         let value = 2;
         verify_that!(value, eq(2))
             .with_failure_message(|| panic!("This should not execute, since the assertion passes."))
     }
 
-    #[test]
+    #[gtest]
     fn should_verify_predicate_with_success() -> Result<()> {
         verify_pred!(eq_predicate(1, 1))
     }
 
-    #[test]
+    #[gtest]
     fn should_verify_predicate_with_trailing_comma() -> Result<()> {
         verify_pred!(eq_predicate(1, 1,))
     }
@@ -391,14 +391,14 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn verify_pred_should_fail_test_on_failure() -> Result<()> {
         let status = run_external_process("verify_predicate_with_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[test]
+    #[gtest]
     fn verify_pred_should_output_correct_failure_message() -> Result<()> {
         let output = run_external_process_in_tests_directory("verify_predicate_with_failure")?;
 
@@ -412,21 +412,21 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn assert_pred_should_fail_test_on_failure() -> Result<()> {
         let status = run_external_process("assert_predicate_with_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[test]
+    #[gtest]
     fn expect_pred_should_fail_test_on_failure() -> Result<()> {
         let status = run_external_process("expect_pred_failure").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[test]
+    #[gtest]
     fn assert_pred_should_output_correct_failure_message() -> Result<()> {
         let output = run_external_process_in_tests_directory("assert_predicate_with_failure")?;
 
@@ -440,7 +440,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn expect_pred_should_output_correct_failure_message() -> Result<()> {
         let output = run_external_process_in_tests_directory("expect_pred_failure")?;
 
@@ -454,7 +454,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn expect_pred_should_output_failure_message_for_second_failure() -> Result<()> {
         let output = run_external_process_in_tests_directory("two_expect_pred_failures")?;
 
@@ -468,7 +468,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn should_verify_predicate_in_a_submodule() -> Result<()> {
         verify_pred!(submodule::eq_predicate_in_submodule(1, 1))
     }
@@ -479,14 +479,14 @@ mod tests {
         }
     }
 
-    #[test]
+    #[gtest]
     fn should_verify_predicate_as_a_method() -> Result<()> {
         let a_struct = AStruct {};
 
         verify_pred!(a_struct.eq_predicate_as_method(1, 1))
     }
 
-    #[test]
+    #[gtest]
     fn should_verify_predicate_as_a_method_on_an_expresion_result() -> Result<()> {
         verify_pred!((AStruct {}).eq_predicate_as_method(1, 1))
     }
@@ -499,7 +499,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[gtest]
     fn should_verify_predicate_as_a_method_in_submodule() -> Result<()> {
         verify_pred!(another_submodule::A_STRUCT_IN_SUBMODULE.eq_predicate_as_method(1, 1))
     }
@@ -508,7 +508,7 @@ mod tests {
         pub(super) static A_STRUCT_IN_SUBMODULE: super::AStruct = super::AStruct {};
     }
 
-    #[test]
+    #[gtest]
     fn should_verify_predicate_as_a_method_on_a_field() -> Result<()> {
         let another_struct = AnotherStruct { a_struct: AStruct {} };
 
@@ -519,7 +519,7 @@ mod tests {
         a_struct: AStruct,
     }
 
-    #[test]
+    #[gtest]
     #[rustversion::before(1.76)]
     fn verify_pred_should_show_correct_qualified_function_name_in_test_failure_output() -> Result<()>
     {
@@ -537,7 +537,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     #[rustversion::since(1.76)]
     fn verify_pred_should_show_correct_qualified_function_name_in_test_failure_output() -> Result<()>
     {
@@ -555,14 +555,14 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn fail_macro_causes_test_failure() -> Result<()> {
         let status = run_external_process("failure_due_to_fail_macro").status()?;
 
         verify_that!(status.success(), eq(false))
     }
 
-    #[test]
+    #[gtest]
     fn fail_macro_outputs_message() -> Result<()> {
         let output = run_external_process_in_tests_directory("failure_due_to_fail_macro")?;
 
@@ -575,7 +575,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn fail_macro_allows_empty_message() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "failure_due_to_fail_macro_with_empty_message",
@@ -584,7 +584,7 @@ mod tests {
         verify_that!(output, contains_substring("Test failed"))
     }
 
-    #[test]
+    #[gtest]
     fn fail_macro_allows_message_with_format_arguments() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "failure_due_to_fail_macro_with_format_arguments",
@@ -593,7 +593,7 @@ mod tests {
         verify_that!(output, contains_substring("Failure message with argument: An argument"))
     }
 
-    #[test]
+    #[gtest]
     fn succeed_macro_test_completes() -> Result<()> {
         let output = run_external_process_in_tests_directory_with_args(
             "success_with_succeed_macro",
@@ -603,7 +603,7 @@ mod tests {
         verify_that!(output, contains_regex("Should do nothing"))
     }
 
-    #[test]
+    #[gtest]
     fn succeed_macro_allows_empty_message() -> Result<()> {
         let output = run_external_process_in_tests_directory_with_args(
             "success_with_succeed_macro_with_empty_message",
@@ -613,7 +613,7 @@ mod tests {
         verify_that!(output, contains_regex("Success"))
     }
 
-    #[test]
+    #[gtest]
     fn succeed_macro_with_format_arguments() -> Result<()> {
         let output = run_external_process_in_tests_directory_with_args(
             "success_with_succeed_macro_with_format_arguments",
@@ -646,7 +646,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn add_failure_macro_allows_empty_message() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("add_failure_macro_allows_empty_message")?;
@@ -654,7 +654,7 @@ mod tests {
         verify_that!(output, contains_regex("Failed"))
     }
 
-    #[test]
+    #[gtest]
     fn add_failure_macro_allows_formatted_arguments() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "add_failure_macro_allows_formatted_arguments",
@@ -663,7 +663,7 @@ mod tests {
         verify_that!(output, contains_regex("Failure message with argument: An argument"))
     }
 
-    #[test]
+    #[gtest]
     fn add_failure_macro_needs_googletest_attribute() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "add_failure_macro_needs_googletest_attribute",
@@ -695,7 +695,7 @@ mod tests {
         Ok(())
     }
 
-    #[test]
+    #[gtest]
     fn add_failure_at_macro_allows_empty_message() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("add_failure_at_macro_allows_empty_message")?;
@@ -703,7 +703,7 @@ mod tests {
         verify_that!(output, contains_regex("Failed"))
     }
 
-    #[test]
+    #[gtest]
     fn add_failure_at_macro_allows_formatted_arguments() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "add_failure_at_macro_allows_formatted_arguments",
@@ -712,7 +712,7 @@ mod tests {
         verify_that!(output, contains_regex("Failure message with argument: An argument"))
     }
 
-    #[test]
+    #[gtest]
     fn add_failure_at_macro_needs_googletest_attribute() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "add_failure_at_macro_needs_googletest_attribute",
@@ -721,12 +721,12 @@ mod tests {
         verify_that!(output, contains_regex("Did you annotate the test with gtest?"))
     }
 
-    #[test]
+    #[gtest]
     fn verify_true_when_true_returns_ok() {
         assert!(verify_true!("test" == "test").is_ok())
     }
 
-    #[test]
+    #[gtest]
     fn verify_true_when_false_returns_err() {
         assert!(verify_true!(2 + 2 == 5).is_err())
     }
@@ -770,12 +770,12 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[test]
+    #[gtest]
     fn verify_false_when_false_returns_ok() {
         assert!(verify_false!("test" == "not test").is_ok())
     }
 
-    #[test]
+    #[gtest]
     fn verify_false_when_true_returns_err() {
         assert!(verify_false!(2 + 2 == 4).is_err())
     }
@@ -819,7 +819,7 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[test]
+    #[gtest]
     fn verify_eq_should_pass() -> Result<()> {
         let value = 2;
         verify_eq!(value, 2)
@@ -832,48 +832,48 @@ mod tests {
         verify_eq!(NonCopyable(123), NonCopyable(123))
     }
 
-    #[test]
+    #[gtest]
     fn verify_eq_supports_trailing_comma() -> Result<()> {
         let value = 2;
         verify_eq!(value, 2,)
     }
 
-    #[test]
+    #[gtest]
     fn verify_eq_supports_tuples() -> Result<()> {
         verify_eq!((Some("a"), Some("b")), (Some("a"), Some("b")))
     }
 
-    #[test]
+    #[gtest]
     fn verify_eq_supports_ordered_elements() -> Result<()> {
         verify_eq!(vec![1, 2], [1, 2])
     }
 
-    #[test]
+    #[gtest]
     fn verify_eq_supports_ordered_elements_with_non_primitives() -> Result<()> {
         verify_eq!(vec![Some("a"), Some("b")], [Some("a"), Some("b")])
     }
 
-    #[test]
+    #[gtest]
     fn verify_eq_supports_unordered_elements() -> Result<()> {
         verify_eq!(vec![1, 2], {2, 1})
     }
 
-    #[test]
+    #[gtest]
     fn verify_eq_supports_unordered_elements_with_non_primitives() -> Result<()> {
         verify_eq!(vec![Some("a"), Some("b")], {Some("b"), Some("a")})
     }
 
-    #[test]
+    #[gtest]
     fn verify_eq_supports_ordered_elements_with_trailing_comma() -> Result<()> {
         verify_eq!(vec![1, 2], [1, 2,],)
     }
 
-    #[test]
+    #[gtest]
     fn verify_eq_supports_unordered_elements_with_trailing_comma() -> Result<()> {
         verify_eq!(vec![1, 2], {2, 1,},)
     }
 
-    #[test]
+    #[gtest]
     fn verify_eq_when_not_equal_returns_error() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("verify_eq_when_not_equal_returns_error")?;
@@ -889,7 +889,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn verify_eq_with_ordered_elements_when_not_equal_returns_error() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "verify_eq_with_ordered_elements_when_not_equal_returns_error",
@@ -908,7 +908,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn verify_eq_with_unordered_elements_when_not_equal_returns_error() -> Result<()> {
         let output = run_external_process_in_tests_directory(
             "verify_eq_with_unordered_elements_when_not_equal_returns_error",
@@ -1098,7 +1098,7 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[test]
+    #[gtest]
     fn verify_ne_should_pass() -> Result<()> {
         let value = 2;
         verify_ne!(value, 3)
@@ -1111,13 +1111,13 @@ mod tests {
         verify_ne!(NonCopyable(123), NonCopyable(321))
     }
 
-    #[test]
+    #[gtest]
     fn verify_ne_supports_trailing_comma() -> Result<()> {
         let value = 2;
         verify_ne!(value, 3,)
     }
 
-    #[test]
+    #[gtest]
     fn verify_ne_when_equal_returns_error() -> Result<()> {
         let output = run_external_process_in_tests_directory("verify_ne_when_equal_returns_error")?;
 
@@ -1188,19 +1188,19 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[test]
+    #[gtest]
     fn verify_lt_should_pass() -> Result<()> {
         let value = 2;
         verify_lt!(value, 3)
     }
 
-    #[test]
+    #[gtest]
     fn verify_lt_supports_trailing_comma() -> Result<()> {
         let value = 2;
         verify_lt!(value, 3,)
     }
 
-    #[test]
+    #[gtest]
     fn verify_lt_when_not_less_returns_error() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("verify_lt_when_not_less_returns_error")?;
@@ -1266,17 +1266,17 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[test]
+    #[gtest]
     fn verify_le_should_pass() -> Result<()> {
         verify_le!(1, 1)
     }
 
-    #[test]
+    #[gtest]
     fn verify_le_supports_trailing_comma() -> Result<()> {
         verify_le!(1, 2,)
     }
 
-    #[test]
+    #[gtest]
     fn verify_le_when_greater_returns_error() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("verify_le_when_greater_returns_error")?;
@@ -1342,17 +1342,17 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[test]
+    #[gtest]
     fn verify_gt_should_pass() -> Result<()> {
         verify_gt!(2, 1)
     }
 
-    #[test]
+    #[gtest]
     fn verify_gt_supports_trailing_comma() -> Result<()> {
         verify_gt!(2, 1,)
     }
 
-    #[test]
+    #[gtest]
     fn verify_gt_when_not_greater_returns_error() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("verify_gt_when_not_greater_returns_error")?;
@@ -1418,17 +1418,17 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[test]
+    #[gtest]
     fn verify_ge_should_pass() -> Result<()> {
         verify_ge!(1, 1)
     }
 
-    #[test]
+    #[gtest]
     fn verify_ge_supports_trailing_comma() -> Result<()> {
         verify_ge!(2, 1,)
     }
 
-    #[test]
+    #[gtest]
     fn verify_ge_when_less_returns_error() -> Result<()> {
         let output = run_external_process_in_tests_directory("verify_ge_when_less_returns_error")?;
 
@@ -1492,12 +1492,12 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[test]
+    #[gtest]
     fn verify_float_eq_should_pass() -> Result<()> {
         verify_float_eq!(1.0, 1.0)
     }
 
-    #[test]
+    #[gtest]
     fn verify_float_eq_supports_trailing_comma() -> Result<()> {
         verify_float_eq!(1.0, 1.0,)
     }
@@ -1570,12 +1570,12 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[test]
+    #[gtest]
     fn verify_near_should_pass() -> Result<()> {
         verify_near!(1.12345, 1.12346, 1e-5)
     }
 
-    #[test]
+    #[gtest]
     fn verify_near_supports_trailing_comma() -> Result<()> {
         verify_near!(1.12345, 1.12346, 1e-5,)
     }
@@ -1647,7 +1647,7 @@ mod tests {
         verify_that!(output, contains_regex("This will print"))
     }
 
-    #[test]
+    #[gtest]
     fn test_using_normal_test_attribute_macro_formats_failure_message_correctly() -> Result<()> {
         let result = should_display_error_correctly_without_google_test_macro();
 
@@ -1669,7 +1669,7 @@ mod tests {
         verify_that!(1, eq(2))
     }
 
-    #[test]
+    #[gtest]
     fn failure_message_uses_pretty_print_for_actual_value_when_long_enough() -> Result<()> {
         #[derive(Debug)]
         #[allow(unused)]
@@ -1739,14 +1739,14 @@ mod tests {
         verify_that!(output, contains_substring("Expected: is equal to 4"))
     }
 
-    #[test]
+    #[gtest]
     fn test_can_return_anyhow_generated_error() -> Result<()> {
         let output = run_external_process_in_tests_directory("test_returning_anyhow_error")?;
 
         verify_that!(output, contains_substring("Error from Anyhow"))
     }
 
-    #[test]
+    #[gtest]
     fn test_can_return_option_generated_error() -> Result<()> {
         let output = run_external_process_in_tests_directory("test_returning_option")?;
 
@@ -1761,7 +1761,7 @@ mod tests {
         )
     }
 
-    #[test]
+    #[gtest]
     fn test_can_return_string_error_generated_error() -> Result<()> {
         let output = run_external_process_in_tests_directory("test_returning_string_error")?;
 
@@ -1816,7 +1816,7 @@ mod tests {
         verify_that!(3, eq(3))
     }
 
-    #[test]
+    #[gtest]
     fn should_fail_when_should_panic_is_present_and_no_panic_occurs() -> Result<()> {
         let output = run_external_process_in_tests_directory("passing_test_with_should_panic")?;
 
