@@ -399,3 +399,8 @@ test = false
 name = "verify_predicate_with_failure_as_method_in_submodule"
 path = "src/verify_predicate_with_failure_as_method_in_submodule.rs"
 test = false
+
+[[bin]]
+name = "macro_hygiene"
+path = "src/macro_hygiene.rs"
+test = false

@@ -96,6 +96,7 @@ INTEGRATION_TEST_BINARIES=(
   "two_non_fatal_failures"
   "verify_predicate_with_failure"
   "verify_predicate_with_failure_as_method_in_submodule"
+  "macro_hygiene"
 )
 
 cargo build

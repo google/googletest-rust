@@ -75,15 +75,17 @@ pub fn gtest(
     let mut parsed_fn = parse_macro_input!(input as ItemFn);
     let attrs = parsed_fn.attrs.drain(..).collect::<Vec<_>>();
     let (mut sig, block) = (parsed_fn.sig, parsed_fn.block);
-    let (outer_return_type, trailer) =
-        if attrs.iter().any(|attr| attr.path().is_ident("should_panic")) {
-            (quote! { () }, quote! { .unwrap(); })
-        } else {
-            (
-                quote! { std::result::Result<(), googletest::internal::test_outcome::TestFailure> },
-                quote! {},
-            )
-        };
+    let (outer_return_type, trailer) = if attrs
+        .iter()
+        .any(|attr| attr.path().is_ident("should_panic"))
+    {
+        (quote! { () }, quote! { .unwrap(); })
+    } else {
+        (
+            quote! { ::std::result::Result<(), googletest::internal::test_outcome::TestFailure> },
+            quote! {},
+        )
+    };
     let output_type = match sig.output.clone() {
         ReturnType::Type(_, output_type) => Some(output_type),
         ReturnType::Default => None,

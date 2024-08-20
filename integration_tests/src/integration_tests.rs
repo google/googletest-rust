@@ -1834,6 +1834,48 @@ mod tests {
         expect_that!(123, eq(123));
     }
 
+    #[gtest]
+    fn macros_are_hygenic() -> Result<()> {
+        let output = run_external_process_in_tests_directory("macro_hygiene")?;
+
+        verify_that!(
+            output,
+            all!(
+                contains_substring("test tests::verify_that_works ... ok"),
+                contains_substring("test tests::verify_pred_works ... ok"),
+                contains_substring("test tests::fail_works ... FAILED"),
+                contains_substring("test tests::succeed_works ... ok"),
+                contains_substring("test tests::add_failure_works ... FAILED"),
+                contains_substring("test tests::add_failure_at_works ... FAILED"),
+                contains_substring("test tests::verify_true_works ... ok"),
+                contains_substring("test tests::expect_true_works ... ok"),
+                contains_substring("test tests::verify_false_works ... ok"),
+                contains_substring("test tests::expect_false_works ... ok"),
+                contains_substring("test tests::verify_eq_works ... ok"),
+                contains_substring("test tests::expect_eq_works ... ok"),
+                contains_substring("test tests::verify_ne_works ... ok"),
+                contains_substring("test tests::expect_ne_works ... ok"),
+                contains_substring("test tests::verify_lt_works ... ok"),
+                contains_substring("test tests::expect_lt_works ... ok"),
+                contains_substring("test tests::verify_le_works ... ok"),
+                contains_substring("test tests::expect_le_works ... ok"),
+                contains_substring("test tests::verify_gt_works ... ok"),
+                contains_substring("test tests::expect_gt_works ... ok"),
+                contains_substring("test tests::verify_ge_works ... ok"),
+                contains_substring("test tests::expect_ge_works ... ok"),
+                contains_substring("test tests::verify_float_eq_works ... ok"),
+                contains_substring("test tests::expect_float_eq_works ... ok"),
+                contains_substring("test tests::verify_near_works ... ok"),
+                contains_substring("test tests::expect_near_works ... ok"),
+                contains_substring("test tests::assert_that_works ... ok"),
+                contains_substring("test tests::assert_pred_works ... ok"),
+                contains_substring("test tests::expect_that_works ... ok"),
+                contains_substring("test tests::expect_pred_works ... ok"),
+                contains_substring("test result: FAILED. 27 passed; 3 failed;")
+            )
+        )
+    }
+
     fn run_external_process_in_tests_directory_with_args(
         name: &'static str,
         args: &[&'static str],
