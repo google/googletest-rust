@@ -16,9 +16,9 @@ fn main() {}
 
 #[cfg(test)]
 mod tests {
-    use googletest::assert_pred;
+    use googletest::prelude::*;
 
-    #[test]
+    #[gtest]
     fn assert_predicate_with_failure() {
         let a = 1;
         let b = 2;
