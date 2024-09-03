@@ -370,10 +370,10 @@ pub use succeed;
 #[macro_export]
 macro_rules! add_failure {
     ($($message:expr),+ $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
+        $crate::GoogleTestSupport::and_log_failure(
         $crate::assertions::internal::create_fail_result(
             format!($($message),*),
-        ).and_log_failure();
+        ));
     }};
 
     () => {
@@ -419,10 +419,10 @@ pub use add_failure;
 #[macro_export]
 macro_rules! add_failure_at {
     ($file:expr, $line:expr, $column:expr, $($message:expr),+ $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
+        $crate::GoogleTestSupport::and_log_failure(
         $crate::assertions::internal::create_fail_result(
             format!($($message),*),
-        ).map_err(|e| e.with_fake_location($file, $line, $column)).and_log_failure();
+        ).map_err(|e| e.with_fake_location($file, $line, $column)));
     }};
 
     ($file:expr, $line:expr, $column:expr $(,)?) => {
@@ -487,8 +487,7 @@ pub use verify_true;
 #[macro_export]
 macro_rules! expect_true {
     ($condition:expr) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_true!($condition).and_log_failure()
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_true!($condition))
     }};
 }
 pub use expect_true;
@@ -549,8 +548,7 @@ pub use verify_false;
 #[macro_export]
 macro_rules! expect_false {
     ($condition:expr) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_false!($condition).and_log_failure()
+        $crate::GoogleTestSupport::and_log_failure(($crate::verify_false!($condition)))
     }};
 }
 pub use expect_false;
@@ -674,34 +672,28 @@ pub use verify_eq;
 #[macro_export]
 macro_rules! expect_eq {
     ($actual:expr, [$($expected:expr),+ $(,)?] $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_eq!($actual, [$($expected),*]).and_log_failure();
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_eq!($actual, [$($expected),*]));
     }};
     ($actual:expr, [$($expected:expr),+ $(,)?], $($format_args:expr),* $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_eq!($actual, [$($expected),*])
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_eq!($actual, [$($expected),*])
             .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure();
+            );
     }};
     ($actual:expr, {$($expected:expr),+ $(,)?} $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_eq!($actual, {$($expected),*}).and_log_failure();
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_eq!($actual, {$($expected),*}));
     }};
     ($actual:expr, {$($expected:expr),+ $(,)?}, $($format_args:expr),* $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_eq!($actual, {$($expected),*})
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_eq!($actual, {$($expected),*})
             .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure();
+            );
     }};
     ($actual:expr, $expected:expr $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_eq!($actual, $expected).and_log_failure();
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_eq!($actual, $expected));
     }};
     ($actual:expr, $expected:expr, $($format_args:expr),* $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_eq!($actual, $expected)
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_eq!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure();
+            );
     }};
 }
 pub use expect_eq;
@@ -774,14 +766,12 @@ pub use verify_ne;
 #[macro_export]
 macro_rules! expect_ne {
     ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_ne!($actual, $expected)
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_ne!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure();
+            );
     }};
     ($actual:expr, $expected:expr $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_ne!($actual, $expected).and_log_failure();
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_ne!($actual, $expected));
     }};
 }
 pub use expect_ne;
@@ -854,14 +844,12 @@ pub use verify_lt;
 #[macro_export]
 macro_rules! expect_lt {
     ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_lt!($actual, $expected)
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_lt!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure();
+            );
     }};
     ($actual:expr, $expected:expr $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_lt!($actual, $expected).and_log_failure();
+       $crate::GoogleTestSupport::and_log_failure($crate::verify_lt!($actual, $expected));
     }};
 }
 pub use expect_lt;
@@ -935,14 +923,12 @@ pub use verify_le;
 #[macro_export]
 macro_rules! expect_le {
     ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_le!($actual, $expected)
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_le!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure();
+            );
     }};
     ($actual:expr, $expected:expr $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_le!($actual, $expected).and_log_failure();
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_le!($actual, $expected));
     }};
 }
 pub use expect_le;
@@ -1015,14 +1001,12 @@ pub use verify_gt;
 #[macro_export]
 macro_rules! expect_gt {
     ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_gt!($actual, $expected)
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_gt!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure();
+            );
     }};
     ($actual:expr, $expected:expr $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_gt!($actual, $expected).and_log_failure();
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_gt!($actual, $expected));
     }};
 }
 pub use expect_gt;
@@ -1097,14 +1081,12 @@ pub use verify_ge;
 #[macro_export]
 macro_rules! expect_ge {
     ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_ge!($actual, $expected)
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_ge!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure();
+            );
     }};
     ($actual:expr, $expected:expr $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_ge!($actual, $expected).and_log_failure();
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_ge!($actual, $expected));
     }};
 }
 pub use expect_ge;
@@ -1194,14 +1176,12 @@ pub use verify_float_eq;
 #[macro_export]
 macro_rules! expect_float_eq {
     ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_float_eq!($actual, $expected)
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_float_eq!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure();
+            );
     }};
     ($actual:expr, $expected:expr $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_float_eq!($actual, $expected).and_log_failure();
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_float_eq!($actual, $expected));
     }};
 }
 pub use expect_float_eq;
@@ -1277,14 +1257,12 @@ pub use verify_near;
 #[macro_export]
 macro_rules! expect_near {
     ($actual:expr, $expected:expr, $max_abs_error:expr, $($format_args:expr),+ $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_near!($actual, $expected, $max_abs_error)
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_near!($actual, $expected, $max_abs_error)
             .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure();
+            );
     }};
     ($actual:expr, $expected:expr, $max_abs_error:expr $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_near!($actual, $expected, $max_abs_error).and_log_failure();
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_near!($actual, $expected, $max_abs_error));
     }};
 }
 pub use expect_near;
@@ -1483,44 +1461,38 @@ pub use assert_pred;
 macro_rules! expect_that {
     // specialized to sequence:
     ($actual:expr, [$($expected:expr),*] $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_that!($actual, [$($expected),*]).and_log_failure();
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_that!($actual, [$($expected),*]));
     }};
 
     // specialized to unordered sequence:
     ($actual:expr, {$($expected:expr),*} $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_that!($actual, {$($expected),*}).and_log_failure();
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_that!($actual, {$($expected),*}));
     }};
 
     // w/ format args, specialized to sequence:
     ($actual:expr, [$($expected:expr),*], $($format_args:expr),* $(,)?) => {
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_that!($actual, [$($expected),*])
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_that!($actual, [$($expected),*])
             .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure()
+            )
     };
 
     // w/ format args, specialized to unordered sequence:
     ($actual:expr, {$($expected:expr),*}, $($format_args:expr),* $(,)?) => {
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_that!($actual, {$($expected),*})
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_that!($actual, {$($expected),*})
             .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure()
+            )
     };
 
     // general case:
     ($actual:expr, $expected:expr $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_that!($actual, $expected).and_log_failure();
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_that!($actual, $expected));
     }};
 
     // w/ format args, general case:
     ($actual:expr, $expected:expr, $($format_args:expr),* $(,)?) => {
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_that!($actual, $expected)
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_that!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure()
+            )
     };
 }
 pub use expect_that;
@@ -1544,8 +1516,7 @@ pub use expect_that;
 #[macro_export]
 macro_rules! expect_pred {
     ($($content:tt)*) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_pred!($($content)*).and_log_failure();
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_pred!($($content)*));
     }};
 }
 pub use expect_pred;
