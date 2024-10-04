@@ -78,4 +78,16 @@ mod tests {
     fn test_should_work_with_second_test_annotation() -> Result<()> {
         verify_that!(1, eq(1))
     }
+
+    #[rstest]
+    #[googletest::test]
+    fn test_should_work_with_rstest_no_return_first() {
+        expect_that!(1, eq(1));
+    }
+
+    #[googletest::test]
+    #[rstest]
+    fn test_should_work_with_rstest_no_return_second() {
+        expect_that!(1, eq(1));
+    }
 }
