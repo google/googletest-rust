@@ -77,7 +77,7 @@ jobs:
     name: lint / ubuntu
     strategy:
       matrix:
-        toolchain: [nightly]
+        toolchain: [1.79]
     steps:
       - uses: actions/checkout@v4
       - name: Install ${{ matrix.toolchain }}
