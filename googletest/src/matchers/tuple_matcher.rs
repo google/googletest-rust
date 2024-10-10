@@ -44,6 +44,16 @@ pub mod internal {
         }
     }
 
+    impl Matcher<&()> for () {
+        fn matches(&self, _: &()) -> MatcherResult {
+            MatcherResult::Match
+        }
+
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
+            <Self as Matcher<()>>::describe(self, matcher_result)
+        }
+    }
+
     /// Generates a tuple matcher for tuples of a specific length.
     ///
     /// **For internal use only. API stablility is not guaranteed!**

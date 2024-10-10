@@ -22,6 +22,12 @@ fn empty_matcher_matches_empty_tuple() -> Result<()> {
 }
 
 #[test]
+fn empty_matcher_matches_empty_tuple_reference() -> Result<()> {
+    let a_ok: std::result::Result<(), String> = Ok(()); // Non copy
+    verify_that!(a_ok, ok(()))
+}
+
+#[test]
 fn singleton_matcher_matches_matching_singleton_tuple() -> Result<()> {
     verify_that!((123,), (eq(123),))
 }
