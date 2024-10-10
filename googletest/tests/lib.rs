@@ -14,6 +14,7 @@
 
 mod all_matcher_test;
 mod any_matcher_test;
+mod assertions_test;
 mod colorized_diff_test;
 mod composition_test;
 mod elements_are_matcher_test;

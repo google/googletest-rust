@@ -168,24 +168,23 @@ macro_rules! verify_that {
 /// # */
 /// fn test() -> Result<()> {
 ///     let a = 1;
-///     let b = 7;
-///     let n = 5;
-///     verify_pred!(equals_modulo(a, b, n))?;
+///     fn b(_x: i32) -> i32 { 7 }
+///     verify_pred!(equals_modulo(a, b(b(2)), 2 + 3))?;
 ///     Ok(())
 /// }
 /// # verify_that!(
 /// #     test(),
-/// #     err(displays_as(contains_substring("equals_modulo(a, b, n) was false with")))
+/// #     err(displays_as(contains_substring("equals_modulo(a, b(b(2)), 2 + 3) was false with")))
 /// # ).unwrap();
 /// ```
 ///
 /// This results in the following message:
 ///
 /// ```text
-/// equals_modulo(a, b, n) was false with
+/// equals_modulo(a, b(b(2)), 2 + 3) was false with
 ///   a = 1,
-///   b = 7,
-///   n = 5
+///   b(v) = 7,
+///   2 + 3 = 5
 /// ```
 ///
 /// The function passed to this macro must return `bool`. Each of the arguments
@@ -205,12 +204,11 @@ macro_rules! verify_that {
 /// ```
 ///
 /// **Warning:** This macro assumes that the arguments passed to the predicate
-/// are either *variables* or *calls to pure functions*. If two subsequent
-/// invocations to any of the expresssions passed as arguments result in
-/// different values, then the output message of a test failure will deviate
-/// from the values actually passed to the predicate. For this reason, *always
-/// assign the outputs of non-pure functions to variables before using them in
-/// this macro. For example:
+/// are pure so that two subsequent invocations to any of the expresssions
+/// passed as arguments result in different values, then the output message of a
+/// test failure will deviate from the values actually passed to the predicate.
+/// For this reason, *always assign the outputs of non-pure functions to
+/// variables before using them in this macro. For example:
 ///
 /// ```ignore
 /// let output = generate_random_number();  // Assigned outside of verify_pred.
@@ -218,7 +216,18 @@ macro_rules! verify_that {
 /// ```
 #[macro_export]
 macro_rules! verify_pred {
-    ([$($predicate:tt)*]($($arg:tt),* $(,)?)) => {
+    (@internal [$($predicate:tt)+] $(,)?) => {
+        if !$($predicate)* {
+            $crate::assertions::internal::report_failed_predicate(
+                stringify!($($predicate)*),
+                vec![],
+            )
+        } else {
+            Ok(())
+        }
+    };
+
+    (@internal [$($predicate:tt)+]($($arg:expr),* $(,)?)) => {
         if !$($predicate)*($($arg),*) {
             $crate::assertions::internal::report_failed_predicate(
                 concat!(stringify!($($predicate)*), stringify!(($($arg),*))),
@@ -229,12 +238,12 @@ macro_rules! verify_pred {
         }
     };
 
-    ([$($predicate:tt)*] $first:tt $($rest:tt)*) => {
-        $crate::verify_pred!([$($predicate)* $first] $($rest)*)
+    (@internal [$($predicate:tt)+] $first:tt $($rest:tt)*) => {
+        $crate::verify_pred!(@internal [$($predicate)* $first] $($rest)*)
     };
 
     ($first:tt $($rest:tt)*) => {
-        $crate::verify_pred!([$first] $($rest)*)
+        $crate::verify_pred!(@internal [$first] $($rest)*)
     };
 }
 
