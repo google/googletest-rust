@@ -1368,14 +1368,16 @@ macro_rules! assert_pred {
 #[macro_export]
 macro_rules! expect_that {
     ($actual:expr, $expected:expr $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_that!($actual, $expected).and_log_failure();
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_that!($actual, $expected));
     }};
 
     ($actual:expr, $expected:expr, $($format_args:expr),* $(,)?) => {
-        $crate::verify_that!($actual, $expected)
-            .with_failure_message(|| format!($($format_args),*))
-            .and_log_failure()
+        $crate::GoogleTestSupport::and_log_failure(
+            $crate::GoogleTestSupport::with_failure_message(
+                $crate::verify_that!($actual, $expected),
+                || format!($($format_args),*)
+            )
+        )
     };
 }
 
