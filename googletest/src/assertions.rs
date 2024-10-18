@@ -183,13 +183,9 @@ macro_rules! verify_that {
 /// ```text
 /// equals_modulo(a, b(b(2)), 2 + 3) was false with
 ///   a = 1,
-///   b(v) = 7,
-///   2 + 3 = 5
+///   b(b(2)) = 7,
+///   2 + 3 = 5,
 /// ```
-///
-/// The function passed to this macro must return `bool`. Each of the arguments
-/// must evaluate to a type implementing [`std::fmt::Debug`]. The debug output
-/// is used to construct the failure message.
 ///
 /// The predicate can also be a method on a struct, e.g.:
 ///
@@ -203,47 +199,72 @@ macro_rules! verify_that {
 /// verify_pred!((AStruct {}).equals_modulo(a, b, n))?;
 /// ```
 ///
-/// **Warning:** This macro assumes that the arguments passed to the predicate
-/// are pure so that two subsequent invocations to any of the expresssions
-/// passed as arguments result in different values, then the output message of a
-/// test failure will deviate from the values actually passed to the predicate.
-/// For this reason, *always assign the outputs of non-pure functions to
-/// variables before using them in this macro. For example:
+/// The expression passed to this macro must return `bool`. In the most general
+/// case, it prints out each of the `.`-separated parts of the expression and
+/// the arguments of all top-level method calls as long as they implement
+/// `Debug`. It evaluates every value (including the method receivers) exactly
+/// once, but the value must not be consumed so that it's available to be
+/// printed in the failure message, even if the value does not implement
+/// `Debug`. Effectively, for `verify_pred!((a + 1).b(x + y).c.d(z + w, 2))`, it
+/// generates code analogous to:
 ///
 /// ```ignore
-/// let output = generate_random_number();  // Assigned outside of verify_pred.
-/// verify_pred!(is_sufficiently_random(output))?;
+/// let mut x1 = (a + 1);
+/// let mut x2 = x + y;
+/// let mut x3 = x1.b(x2);
+/// let mut x4 = z + w;
+/// let mut x5 = 2;
+/// let mut x6 = x3.c.d(x4, x5);
+/// if (x6) {
+///   Ok(())
+/// } else {
+///   Err("(a + 1).b(x + y).c.d(z + w, 2) was false with\n  {},",
+///       vec![
+///           format!("(a + 1) = {:?}", x1),
+///           format!("x + y = {:?}", x2),
+///           format!("(a + 1).b(x + y) = {:?}", x3),
+///           format!("(a + 1).b(x + y).c = {:?}", x3.c),
+///           format!("z + w = {:?}", x4),
+///           format!("2 = {:?}", x5),
+///       ].join(",\n  ")),
+///   )
+/// }
+/// ```
+///
+/// Wrapping the passed-in expression in parens or curly braces will prevent the
+/// detailed printing of the expression and works around the lack of support for
+/// argument-consuming method calls.
+///
+/// ```ignore
+/// verify_pred!({ f_consumes_argument(String::from("hello")) })?;
+/// ```
+///
+/// This strategy can also be used for the method receivers that may be
+/// consumed and are not available for printing on error:
+///
+/// ```ignore
+/// verify_pred!((self.consuming_method()).non_consuming_method())?;
+/// ```
+///
+/// would generate code analogous to:
+///
+/// ```
+/// let mut x1 = self.consuming_method();
+/// let mut x2 = x1.non_consuming_method();
+/// if (x2) {
+///   Ok(())
+/// } else {
+///   Err("(self.consuming_method()).non_consuming_method() was false with\n  {},",
+///       vec![
+///           format!("(self.consuming_method()) = {:?}", x1),
+///       ].join(",\n  ")),
+///   )
+/// }
 /// ```
 #[macro_export]
 macro_rules! verify_pred {
-    (@internal [$($predicate:tt)+] $(,)?) => {
-        if !$($predicate)* {
-            $crate::assertions::internal::report_failed_predicate(
-                stringify!($($predicate)*),
-                vec![],
-            )
-        } else {
-            Ok(())
-        }
-    };
-
-    (@internal [$($predicate:tt)+]($($arg:expr),* $(,)?)) => {
-        if !$($predicate)*($($arg),*) {
-            $crate::assertions::internal::report_failed_predicate(
-                concat!(stringify!($($predicate)*), stringify!(($($arg),*))),
-                vec![$((format!(concat!(stringify!($arg), " = {:?}"), $arg))),*],
-            )
-        } else {
-            Ok(())
-        }
-    };
-
-    (@internal [$($predicate:tt)+] $first:tt $($rest:tt)*) => {
-        $crate::verify_pred!(@internal [$($predicate)* $first] $($rest)*)
-    };
-
-    ($first:tt $($rest:tt)*) => {
-        $crate::verify_pred!(@internal [$first] $($rest)*)
+    ($expr:expr $(,)?) => {
+        $crate::assertions::internal::__googletest_macro_verify_pred!($expr)
     };
 }
 
@@ -1414,6 +1435,8 @@ pub mod internal {
     };
     use std::fmt::Debug;
 
+    pub use ::googletest_macro::__googletest_macro_verify_pred;
+
     /// Extension trait to perform autoref through method lookup in the
     /// assertion macros. With this trait, the subject can be either a value
     /// or a reference. For example, this trait makes the following code
@@ -1466,7 +1489,7 @@ pub mod internal {
         formatted_arguments: Vec<String>,
     ) -> Result<(), TestAssertionFailure> {
         Err(TestAssertionFailure::create(format!(
-            "{} was false with\n  {}",
+            "{} was false with\n  {},",
             actual_expr,
             formatted_arguments.join(",\n  ")
         )))
@@ -1480,4 +1503,42 @@ pub mod internal {
     pub fn create_fail_result(message: String) -> crate::Result<()> {
         Err(crate::internal::test_outcome::TestAssertionFailure::create(message))
     }
+
+    /// Trait that defaults to not rendering values. Used for autoref
+    /// specialization to conditionally render only values that implement
+    /// `Debug`. See also [`DebugToFormatString`].
+    pub trait DefaultToNoFormatString {
+        fn __googletest_format_if_debug(&self, expr_label: &str) -> Option<String>;
+    }
+
+    impl<T> DefaultToNoFormatString for &T {
+        fn __googletest_format_if_debug(&self, _expr_label: &str) -> Option<String> {
+            None
+        }
+    }
+
+    /// Trait to render values that implement `Debug` to a format string. Used
+    /// for autoref specialization to conditionally render only values that
+    /// implement `Debug`. See also [`DefaultToNoFormatString`].
+    pub trait DebugToFormatString {
+        fn __googletest_format_if_debug(&self, expr_label: &str) -> Option<String>;
+    }
+
+    impl<T: Debug> DebugToFormatString for T {
+        fn __googletest_format_if_debug(&self, expr_label: &str) -> Option<String> {
+            Some(format!("{} = {:?}", expr_label, self))
+        }
+    }
+
+    #[macro_export]
+    macro_rules! __googletest_format_if_debug_macro(
+        ($expr_str:expr, $value:expr $(,)?) => {
+            {
+                use $crate::assertions::internal::DefaultToNoFormatString;
+                use $crate::assertions::internal::DebugToFormatString;
+                (&$value).__googletest_format_if_debug($expr_str)
+            }
+        }
+    );
+    pub use __googletest_format_if_debug_macro;
 }
