@@ -50,6 +50,7 @@ mod points_to_matcher;
 mod pointwise_matcher;
 mod predicate_matcher;
 mod property_matcher;
+mod result_of_matcher;
 mod some_matcher;
 mod str_matcher;
 mod subset_of_matcher;
@@ -95,8 +96,8 @@ pub use superset_of_matcher::superset_of;
 pub use crate::{
     __all as all, __any as any, __contains_each as contains_each, __elements_are as elements_are,
     __field as field, __is_contained_in as is_contained_in, __matches_pattern as matches_pattern,
-    __pat as pat, __pointwise as pointwise, __property as property,
-    __unordered_elements_are as unordered_elements_are,
+    __pat as pat, __pointwise as pointwise, __property as property, __result_of as result_of,
+    __result_of_ref as result_of_ref, __unordered_elements_are as unordered_elements_are,
 };
 
 // Types and functions used by macros matchers.
@@ -113,6 +114,7 @@ pub mod __internal_unstable_do_not_depend_on_these {
     pub use super::matches_pattern::internal::pattern_only;
     pub use super::pointwise_matcher::internal::PointwiseMatcher;
     pub use super::property_matcher::internal::{property_matcher, property_ref_matcher};
+    pub use super::result_of_matcher::internal::{result_of, result_of_ref};
     pub use super::unordered_elements_are_matcher::internal::{
         Requirements, UnorderedElementsAreMatcher,
     };
