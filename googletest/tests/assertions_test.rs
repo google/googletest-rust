@@ -3,7 +3,7 @@ mod verify_pred {
     use indoc::indoc;
 
     #[test]
-    fn supports_function_call() -> Result<()> {
+    fn supports_nested_function_calls() -> Result<()> {
         fn f(_a: u32, _b: u32, _c: u32) -> bool {
             false
         }
@@ -15,17 +15,14 @@ mod verify_pred {
         let res = verify_pred!(f(a, g(g(3)), 1 + 2));
         verify_that!(
             res,
-            err(displays_as(contains_substring(indoc! {
-                "
+            err(displays_as(contains_substring(indoc! {"
                 f(a, g(g(3)), 1 + 2) was false with
                   a = 1,
                   g(g(3)) = 5,
-                  1 + 2 = 3
-                "
+                  1 + 2 = 3,
+                  at"
             })))
-        )?;
-
-        Ok(())
+        )
     }
 
     #[test]
@@ -40,41 +37,235 @@ mod verify_pred {
     }
 
     #[test]
-    fn supports_method_calls() -> Result<()> {
-        struct Foo {
-            b: Bar,
+    fn does_not_print_literals() -> Result<()> {
+        trait Foo {
+            fn f(&self, _a: u32, _b: i32, _c: u32, _d: &str) -> bool {
+                false
+            }
         }
-        struct Bar;
-        impl Bar {
+        impl Foo for i32 {}
+
+        let res = verify_pred!(0.f(1, 2_i32.abs(), 1 + 2, "hello"));
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {r#"
+                0.f(1, 2_i32.abs(), 1 + 2, "hello") was false with
+                  2_i32.abs() = 2,
+                  1 + 2 = 3,
+                  at"#
+            })))
+        )
+    }
+
+    #[test]
+    fn supports_chained_field_access_and_method_calls() -> Result<()> {
+        // Non-Debug
+        struct Apple {
+            b: Banana,
+        }
+        #[derive(Debug)]
+        struct Banana;
+        impl Banana {
             fn c(&self) -> bool {
                 false
             }
         }
 
-        let a = Foo { b: Bar };
-        let res = verify_pred!(a.b.c());
-        verify_that!(res, err(displays_as(contains_substring("a.b.c() was false"))))
+        let a = Apple { b: Banana };
+        let res = verify_pred! { a.b.c() };
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {"
+                a.b.c() was false with
+                  a.b = Banana,
+                  at"
+            })))
+        )
     }
 
     #[test]
     fn supports_chained_method_calls() -> Result<()> {
-        struct Foo;
-        impl Foo {
-            fn b(self) -> Bar {
-                Bar
+        #[derive(Debug)]
+        struct Apple;
+        impl Apple {
+            fn b(&self, _b: u32) -> Banana {
+                Banana
             }
         }
-        struct Bar;
-        impl Bar {
+        // Non-Debug: Not printed on error.
+        struct Banana;
+        impl Banana {
+            fn c(&self, _c0: u32, _c1: Cherry) -> bool {
+                false
+            }
+        }
+        // Non-Debug: not printed on error.
+        #[derive(Copy, Clone)]
+        struct Cherry;
+
+        let a = Apple;
+        let v = 10;
+        let res = verify_pred!(a.b(v).c(11, Cherry));
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {"
+                a.b(v).c(11, Cherry) was false with
+                  a = Apple,
+                  v = 10,
+                  at"
+            })))
+        )
+    }
+
+    #[test]
+    fn prints_consumed_values() -> Result<()> {
+        // Non-Debug
+        struct Apple;
+        impl Apple {
+            fn b(self) -> Banana {
+                Banana
+            }
+        }
+        #[derive(Debug)]
+        struct Banana;
+        impl Banana {
             fn c(self) -> bool {
                 false
             }
         }
 
-        let a = Foo;
+        let a = Apple;
         let res = verify_pred!(a.b().c());
-        verify_that!(res, err(displays_as(contains_substring("a.b().c() was false"))))?;
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {"
+                a.b().c() was false with
+                  a.b() = Banana,
+                  at"
+            })))
+        )
+    }
+
+    #[test]
+    fn works_with_realistic_example_with_consumed_intermediate_values() -> Result<()> {
+        let res =
+            verify_pred!(vec![1, 2].into_iter().map(|x| x * 2).collect::<Vec<_>>().is_empty());
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {"
+                vec! [1, 2].into_iter().map(| x | x * 2).collect :: < Vec < _ > >
+                ().is_empty() was false with
+                  vec! [1, 2] = [1, 2],
+                  vec! [1, 2].into_iter() = IntoIter([1, 2]),
+                  vec! [1, 2].into_iter().map(| x | x * 2) = Map { iter: IntoIter([1, 2]) },
+                  vec! [1, 2].into_iter().map(| x | x * 2).collect :: < Vec < _ > > () = [2, 4],
+                  at"
+            })))
+        )
+    }
+
+    #[test]
+    fn values_should_be_accessible_after_test() -> Result<()> {
+        // Not `Copy` and should not be consumed by the generated test code.
+        #[derive(Debug)]
+        struct Apple;
+        impl Apple {
+            fn b(&self, _c: &mut u32) -> bool {
+                false
+            }
+        }
+
+        let mut c = 0;
+        let a = Apple;
+        let res = verify_pred!(a.b(&mut c));
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {"
+                a.b(& mut c) was false with
+                  a = Apple,
+                  & mut c = 0,
+                  at"
+            })))
+        )?;
+
+        // `a` and `&mut c` should still be accessible after the test despite not being
+        // `Copy`.
+        let _ = a.b(&mut c);
 
         Ok(())
+    }
+
+    #[test]
+    fn prints_correct_values_for_mutating_expressions() -> Result<()> {
+        let mut a = 1;
+        let mut b = 2;
+        let mut c = 0;
+        trait Mutator {
+            fn mutate_and_false(&mut self, b: &mut u32) -> bool;
+        }
+        impl Mutator for u32 {
+            fn mutate_and_false(&mut self, b: &mut u32) -> bool {
+                *self += 10;
+                *b += 20;
+                false
+            }
+        }
+
+        // Macro to to avoid the inconsistency in how `;` and `&mut` are printedbetween
+        // Rust versions when printing out the stringified version of the block.
+        macro_rules! block_a {
+            () => {{
+                c += 10;
+                &mut a
+            }};
+        }
+        macro_rules! block_b {
+            () => {{
+                c += 100;
+                &mut b
+            }};
+        }
+        let res = verify_pred! { block_a!().mutate_and_false(block_b!()) };
+
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {"
+                block_a! ().mutate_and_false(block_b! ()) was false with
+                  block_a! () = 1,
+                  block_b! () = 2,
+                  at"
+            })))
+        )?;
+
+        verify_that!((a, b, c), eq((11, 22, 110)))
+    }
+
+    #[test]
+    fn values_can_be_insulated_with_parens() -> Result<()> {
+        // Not `Copy` and has a consuming method.
+        struct Apple;
+        impl Apple {
+            fn b(self) -> Banana {
+                Banana
+            }
+        }
+        #[derive(Debug)]
+        struct Banana;
+        impl Banana {
+            fn c(&self) -> bool {
+                false
+            }
+        }
+
+        let a = Apple;
+        let res = verify_pred!({ a.b() }.c());
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {"
+                { a.b() }.c() was false with
+                  { a.b() } = Banana,
+                  at"
+            })))
+        )
     }
 }
