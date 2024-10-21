@@ -240,15 +240,15 @@ mod tests {
     }
 
     #[test]
-    fn container_eq_matches_owned_vec_of_owned_strings_with_slice_of_string_references()
-    -> Result<()> {
+    fn container_eq_matches_owned_vec_of_owned_strings_with_slice_of_string_references(
+    ) -> Result<()> {
         let vector = vec!["A string".to_string(), "Another string".to_string()];
         verify_that!(vector, container_eq(["A string", "Another string"]))
     }
 
     #[test]
-    fn container_eq_matches_owned_vec_of_owned_strings_with_shorter_slice_of_string_references()
-    -> Result<()> {
+    fn container_eq_matches_owned_vec_of_owned_strings_with_shorter_slice_of_string_references(
+    ) -> Result<()> {
         let actual = vec!["A string".to_string(), "Another string".to_string()];
         let matcher = container_eq(["A string"]);
 

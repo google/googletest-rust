@@ -860,9 +860,9 @@ mod tests {
         // aren't dropped too early.
         let matchers = ((eq(&2), eq(&"Two")), (eq(&1), eq(&"One")), (eq(&3), eq(&"Three")));
         let matcher = unordered_elements_are![
-            (matchers.0.0, matchers.0.1),
-            (matchers.1.0, matchers.1.1),
-            (matchers.2.0, matchers.2.1)
+            (matchers.0 .0, matchers.0 .1),
+            (matchers.1 .0, matchers.1 .1),
+            (matchers.2 .0, matchers.2 .1)
         ];
         verify_that!(
             Matcher::<&HashMap<i32, String>>::describe(&matcher, MatcherResult::Match),
@@ -892,23 +892,20 @@ mod tests {
         let value: HashMap<u32, u32> = HashMap::from_iter([(0, 1), (1, 1), (2, 2)]);
         let matchers = ((anything(), eq(&1)), (anything(), eq(&2)), (anything(), eq(&2)));
         let matcher = unordered_elements_are![
-            (matchers.0.0, matchers.0.1),
-            (matchers.1.0, matchers.1.1),
-            (matchers.2.0, matchers.2.1),
+            (matchers.0 .0, matchers.0 .1),
+            (matchers.1 .0, matchers.1 .1),
+            (matchers.2 .0, matchers.2 .1),
         ];
-        verify_that!(
-            matcher.explain_match(&value),
-            all![
-                displays_as(contains_regex(
-                    "Actual element \\(2, 2\\) at index [0-2] matched expected element `is a tuple whose values respectively match:\n    is anything\n    is equal to 2` at index [0-2]."
-                )),
-                displays_as(contains_regex(
-                    "Actual element \\(\n      [0-1],\n      [0-1],\n  \\) at index [0-2] did not match any remaining expected element."
-                )),
-                displays_as(contains_substring(
-                    "Expected element `is a tuple whose values respectively match:\n    is anything\n    is equal to 2` at index 2 did not match any remaining actual element."
-                ))
-            ]
-        )
+        verify_that!(matcher.explain_match(&value), all![
+            displays_as(contains_regex(
+                "Actual element \\(2, 2\\) at index [0-2] matched expected element `is a tuple whose values respectively match:\n    is anything\n    is equal to 2` at index [0-2]."
+            )),
+            displays_as(contains_regex(
+                "Actual element \\(\n      [0-1],\n      [0-1],\n  \\) at index [0-2] did not match any remaining expected element."
+            )),
+            displays_as(contains_substring(
+                "Expected element `is a tuple whose values respectively match:\n    is anything\n    is equal to 2` at index 2 did not match any remaining actual element."
+            ))
+        ])
     }
 }

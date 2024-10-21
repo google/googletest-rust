@@ -263,7 +263,11 @@ pub enum MatcherResult {
 
 impl From<bool> for MatcherResult {
     fn from(b: bool) -> Self {
-        if b { MatcherResult::Match } else { MatcherResult::NoMatch }
+        if b {
+            MatcherResult::Match
+        } else {
+            MatcherResult::NoMatch
+        }
     }
 }
 
