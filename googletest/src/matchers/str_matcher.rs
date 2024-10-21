@@ -699,8 +699,8 @@ mod tests {
     }
 
     #[test]
-    fn matches_string_containing_expected_value_in_contains_mode_while_ignoring_ascii_case()
-    -> Result<()> {
+    fn matches_string_containing_expected_value_in_contains_mode_while_ignoring_ascii_case(
+    ) -> Result<()> {
         verify_that!("Some string", contains_substring("STR").ignoring_ascii_case())
     }
 
@@ -844,8 +844,8 @@ mod tests {
     }
 
     #[test]
-    fn describes_itself_for_matching_result_ignoring_ascii_case_and_leading_whitespace()
-    -> Result<()> {
+    fn describes_itself_for_matching_result_ignoring_ascii_case_and_leading_whitespace(
+    ) -> Result<()> {
         let matcher = StrMatcher::with_default_config("A string")
             .ignoring_leading_whitespace()
             .ignoring_ascii_case();
@@ -985,8 +985,8 @@ mod tests {
     }
 
     #[test]
-    fn match_explanation_for_starts_with_includes_both_versions_of_differing_last_line()
-    -> Result<()> {
+    fn match_explanation_for_starts_with_includes_both_versions_of_differing_last_line(
+    ) -> Result<()> {
         let result = verify_that!(
             indoc!(
                 "
@@ -1087,8 +1087,8 @@ mod tests {
     }
 
     #[test]
-    fn match_explanation_for_contains_substring_shows_diff_when_first_and_last_line_are_incomplete()
-    -> Result<()> {
+    fn match_explanation_for_contains_substring_shows_diff_when_first_and_last_line_are_incomplete(
+    ) -> Result<()> {
         let result = verify_that!(
             indoc!(
                 "

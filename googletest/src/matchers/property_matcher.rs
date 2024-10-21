@@ -317,11 +317,11 @@ pub mod internal {
     }
 
     impl<
-        InnerT: Debug,
-        OuterT: Debug + Copy,
-        MatcherT: for<'a> Matcher<&'a InnerT>,
-        ExtractorT: Fn(OuterT) -> InnerT,
-    > Matcher<OuterT> for PropertyRefMatcher<ExtractorT, MatcherT>
+            InnerT: Debug,
+            OuterT: Debug + Copy,
+            MatcherT: for<'a> Matcher<&'a InnerT>,
+            ExtractorT: Fn(OuterT) -> InnerT,
+        > Matcher<OuterT> for PropertyRefMatcher<ExtractorT, MatcherT>
     {
         fn matches(&self, actual: OuterT) -> MatcherResult {
             self.inner.matches(&(self.extractor)(actual))

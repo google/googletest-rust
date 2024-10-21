@@ -256,7 +256,11 @@ impl Fixture {
 
     fn parameter(&self) -> proc_macro2::TokenStream {
         let Self { identifier, mutability, consumable, .. } = self;
-        if *consumable { quote!(#identifier) } else { quote!(& #mutability #identifier) }
+        if *consumable {
+            quote!(#identifier)
+        } else {
+            quote!(& #mutability #identifier)
+        }
     }
 
     fn wrap_call(&self, inner_call: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
