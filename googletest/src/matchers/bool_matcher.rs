@@ -17,7 +17,7 @@ use crate::{
     matcher::{Matcher, MatcherBase, MatcherResult},
 };
 
-/// Matcher that matches boolean value `true`.
+/// Matches boolean value `true`.
 pub fn is_true() -> BoolMatcher {
     BoolMatcher { expected: true }
 }
@@ -28,7 +28,7 @@ pub fn is_false() -> BoolMatcher {
 }
 
 
-/// Match a bool value or bool reference.
+/// Matches a bool value or bool reference.
 #[derive(MatcherBase)]
 pub struct BoolMatcher {
     expected: bool,
