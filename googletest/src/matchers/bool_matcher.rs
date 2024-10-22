@@ -17,6 +17,17 @@ use crate::{
     matcher::{Matcher, MatcherBase, MatcherResult},
 };
 
+/// Matcher that matches boolean value `true`.
+pub fn is_true() -> BoolMatcher {
+    BoolMatcher { expected: true }
+}
+
+/// Matches boolean value `false`.
+pub fn is_false() -> BoolMatcher {
+    BoolMatcher { expected: false }
+}
+
+
 /// Match a bool value or bool reference.
 #[derive(MatcherBase)]
 pub struct BoolMatcher {
@@ -55,17 +66,10 @@ impl<'a> Matcher<&'a bool> for BoolMatcher {
     }
 }
 
-pub fn is_true() -> BoolMatcher {
-    BoolMatcher { expected: true }
-}
-
-pub fn is_false() -> BoolMatcher {
-    BoolMatcher { expected: false }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
+    use super::*;
 
     #[test]
     fn match_value() -> Result<()> {
@@ -84,5 +88,13 @@ mod tests {
         verify_that!(&t, not(is_false()))?;
         verify_that!(&f, is_false())?;
         verify_that!(&f, not(is_true()))
+    }
+
+    #[test]
+    fn describe() {
+        assert_eq!(is_true().describe(MatcherResult::Match).to_string(), "is true");
+        assert_eq!(is_true().describe(MatcherResult::NoMatch).to_string(), "is false");
+        assert_eq!(is_false().describe(MatcherResult::Match).to_string(), "is false");
+        assert_eq!(is_false().describe(MatcherResult::NoMatch).to_string(), "is true");
     }
 }
