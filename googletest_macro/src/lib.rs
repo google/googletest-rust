@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use quote::quote;
-use syn::{
-    parse_macro_input, punctuated::Punctuated, spanned::Spanned, Attribute, DeriveInput, FnArg,
-    ItemFn, PatType, ReturnType, Signature, Type,
-};
+use quote::{quote, ToTokens};
+use syn::{parse_macro_input, punctuated::Punctuated, spanned::Spanned, Attribute, DeriveInput, Expr, FnArg, ItemFn, PatType, ReturnType, Signature, Token, Type};
+use syn::parse::{Parse, ParseStream};
 
 /// Marks a test to be run by the Google Rust test runner.
 ///
@@ -327,3 +325,49 @@ pub fn derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     }
     .into()
 }
+
+struct ToStringInput {
+    target: String,
+    length: usize
+}
+
+impl ToStringInput {
+    const DEFAULT_LENGTH_LIMIT: usize = 20;
+
+    fn shrunk(&self) -> std::borrow::Cow<str> {
+        if self.target.len() > self.length {
+            let mut shrunk = String::from(&self.target[..self.length]);
+            shrunk.push_str("...");
+            std::borrow::Cow::Owned(shrunk)
+        } else {
+            std::borrow::Cow::Borrowed(&self.target)
+        }
+    }
+}
+
+impl Parse for ToStringInput {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let expr = input.parse::<Expr>()?;
+        let target = expr.to_token_stream().to_string();
+
+        let _comma = input.parse::<Token![,]>();
+        let length = match input.parse::<Expr>() {
+            Ok(Expr::Lit(syn::ExprLit { attrs: _, lit: syn::Lit::Int(length) })) => length.base10_parse::<usize>()?,
+            Ok(_) => return Err(input.error("expected a positive integer literal")),
+            _ => Self::DEFAULT_LENGTH_LIMIT,
+        };
+        Ok(ToStringInput {
+            target, length
+        })
+    }
+}
+#[proc_macro]
+pub fn to_string(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as ToStringInput);
+    let reduced_target = input.shrunk();
+    quote! {
+        #reduced_target
+    }.into()
+}
+
+

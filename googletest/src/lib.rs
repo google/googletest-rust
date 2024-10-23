@@ -63,6 +63,7 @@ pub mod prelude {
 
 pub use googletest_macro::gtest;
 pub use googletest_macro::test;
+pub use googletest_macro::to_string;
 
 use internal::test_outcome::{TestAssertionFailure, TestOutcome};
 
