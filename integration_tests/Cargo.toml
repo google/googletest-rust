@@ -404,3 +404,9 @@ test = false
 name = "macro_hygiene"
 path = "src/macro_hygiene.rs"
 test = false
+
+[[bin]]
+name = "to_string"
+path = "src/to_string_macro.rs"
+test = false
+
