@@ -27,7 +27,6 @@ pub fn is_false() -> BoolMatcher {
     BoolMatcher { expected: false }
 }
 
-
 /// Matches a bool value or bool reference.
 #[derive(MatcherBase)]
 pub struct BoolMatcher {
@@ -68,8 +67,8 @@ impl<'a> Matcher<&'a bool> for BoolMatcher {
 
 #[cfg(test)]
 mod tests {
-    use crate::prelude::*;
     use super::*;
+    use crate::prelude::*;
 
     #[test]
     fn match_value() -> Result<()> {
