@@ -23,6 +23,8 @@ extern crate quickcheck;
 pub mod assertions;
 pub mod description;
 pub mod fixtures;
+#[macro_use]
+pub mod fmt;
 pub mod internal;
 pub mod matcher;
 pub mod matcher_support;
