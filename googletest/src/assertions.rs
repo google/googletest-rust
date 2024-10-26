@@ -183,13 +183,9 @@ macro_rules! verify_that {
 /// ```text
 /// equals_modulo(a, b(b(2)), 2 + 3) was false with
 ///   a = 1,
-///   b(v) = 7,
-///   2 + 3 = 5
+///   b(b(2)) = 7,
+///   2 + 3 = 5,
 /// ```
-///
-/// The function passed to this macro must return `bool`. Each of the arguments
-/// must evaluate to a type implementing [`std::fmt::Debug`]. The debug output
-/// is used to construct the failure message.
 ///
 /// The predicate can also be a method on a struct, e.g.:
 ///
@@ -204,46 +200,12 @@ macro_rules! verify_that {
 /// ```
 ///
 /// **Warning:** This macro assumes that the arguments passed to the predicate
-/// are pure so that two subsequent invocations to any of the expresssions
-/// passed as arguments result in different values, then the output message of a
-/// test failure will deviate from the values actually passed to the predicate.
-/// For this reason, *always assign the outputs of non-pure functions to
-/// variables before using them in this macro. For example:
-///
-/// ```ignore
-/// let output = generate_random_number();  // Assigned outside of verify_pred.
-/// verify_pred!(is_sufficiently_random(output))?;
-/// ```
+/// cause no mutations, or else the output message of a test failure will
+/// deviate from the values actually passed to the predicate.
 #[macro_export]
 macro_rules! verify_pred {
-    (@internal [$($predicate:tt)+] $(,)?) => {
-        if !$($predicate)* {
-            $crate::assertions::internal::report_failed_predicate(
-                stringify!($($predicate)*),
-                vec![],
-            )
-        } else {
-            Ok(())
-        }
-    };
-
-    (@internal [$($predicate:tt)+]($($arg:expr),* $(,)?)) => {
-        if !$($predicate)*($($arg),*) {
-            $crate::assertions::internal::report_failed_predicate(
-                concat!(stringify!($($predicate)*), stringify!(($($arg),*))),
-                vec![$((format!(concat!(stringify!($arg), " = {:?}"), $arg))),*],
-            )
-        } else {
-            Ok(())
-        }
-    };
-
-    (@internal [$($predicate:tt)+] $first:tt $($rest:tt)*) => {
-        $crate::verify_pred!(@internal [$($predicate)* $first] $($rest)*)
-    };
-
-    ($first:tt $($rest:tt)*) => {
-        $crate::verify_pred!(@internal [$first] $($rest)*)
+    ($expr:expr $(,)?) => {
+        $crate::assertions::internal::__googletest_macro_verify_pred!($expr)
     };
 }
 
@@ -1414,6 +1376,8 @@ pub mod internal {
     };
     use std::fmt::Debug;
 
+    pub use ::googletest_macro::__googletest_macro_verify_pred;
+
     /// Extension trait to perform autoref through method lookup in the
     /// assertion macros. With this trait, the subject can be either a value
     /// or a reference. For example, this trait makes the following code
@@ -1453,25 +1417,6 @@ pub mod internal {
 
     impl<T: Copy + Debug> Subject for T {}
 
-    /// Constructs a `Result::Err(TestAssertionFailure)` for a predicate failure
-    /// as produced by the macro [`crate::verify_pred`].
-    ///
-    /// This intended only for use by the macro [`crate::verify_pred`].
-    ///
-    /// **For internal use only. API stablility is not guaranteed!**
-    #[track_caller]
-    #[must_use = "The assertion result must be evaluated to affect the test result."]
-    pub fn report_failed_predicate(
-        actual_expr: &'static str,
-        formatted_arguments: Vec<String>,
-    ) -> Result<(), TestAssertionFailure> {
-        Err(TestAssertionFailure::create(format!(
-            "{} was false with\n  {}",
-            actual_expr,
-            formatted_arguments.join(",\n  ")
-        )))
-    }
-
     /// Creates a failure at specified location.
     ///
     /// **For internal use only. API stability is not guaranteed!**
@@ -1480,4 +1425,45 @@ pub mod internal {
     pub fn create_fail_result(message: String) -> crate::Result<()> {
         Err(crate::internal::test_outcome::TestAssertionFailure::create(message))
     }
+
+    /// Trait that defaults to not rendering values. Used for autoref
+    /// specialization to conditionally render only values that implement
+    /// `Debug`. See also [`FormatDebug`].
+    pub trait FormatNonDebug {
+        fn __googletest_format_as_line(&self, output: &mut String, expr_label: &str) {
+            use ::std::fmt::Write as _;
+            write!(output, "\n  {} does not implement Debug,", expr_label)
+                .expect("Formatting to String should never fail");
+        }
+    }
+
+    impl<T> FormatNonDebug for &T {}
+
+    /// Trait to render values that implement `Debug` to a format string. Used
+    /// for autoref specialization to conditionally render only values that
+    /// implement `Debug`. See also [`FormatNonDebug`].
+    pub trait FormatDebug {
+        fn __googletest_format_as_line(&self, output: &mut String, expr_label: &str);
+    }
+
+    impl<T: Debug> FormatDebug for T {
+        #[track_caller]
+        fn __googletest_format_as_line(&self, output: &mut String, expr_label: &str) {
+            use ::std::fmt::Write as _;
+            write!(output, "\n  {} = {:?},", expr_label, self)
+                .expect("Formatting to String should never fail");
+        }
+    }
+
+    #[macro_export]
+    macro_rules! __googletest__format_as_line(
+        ($output_str:expr, $expr_str:expr, $value:expr $(,)?) => {
+            {
+                use $crate::assertions::internal::FormatNonDebug as _;
+                use $crate::assertions::internal::FormatDebug as _;
+                (&$value).__googletest_format_as_line($output_str, $expr_str)
+            }
+        }
+    );
+    pub use __googletest__format_as_line;
 }

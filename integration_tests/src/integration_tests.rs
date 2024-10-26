@@ -407,8 +407,9 @@ mod tests {
             contains_substring(indoc! {"
                 eq_predicate(a, b) was false with
                   a = 1,
-                  b = 2
-                "})
+                  b = 2,
+                  at"
+            })
         )
     }
 
@@ -435,8 +436,9 @@ mod tests {
             contains_substring(indoc! {"
                 eq_predicate(a, b) was false with
                   a = 1,
-                  b = 2
-                "})
+                  b = 2,
+                  at"
+            })
         )
     }
 
@@ -449,8 +451,9 @@ mod tests {
             contains_substring(indoc! {"
                 eq_predicate(a, b) was false with
                   a = 1,
-                  b = 2
-                "})
+                  b = 2,
+                  at"
+            })
         )
     }
 
@@ -463,8 +466,9 @@ mod tests {
             contains_substring(indoc! {"
                 eq_predicate(a, b) was false with
                   a = 3,
-                  b = 4
-                "})
+                  b = 4,
+                  at"
+            })
         )
     }
 
@@ -520,7 +524,6 @@ mod tests {
     }
 
     #[gtest]
-    #[rustversion::before(1.76)]
     fn verify_pred_should_show_correct_qualified_function_name_in_test_failure_output() -> Result<()>
     {
         let output = run_external_process_in_tests_directory(
@@ -532,26 +535,9 @@ mod tests {
             contains_substring(indoc! {"
                 a_submodule :: A_STRUCT_IN_SUBMODULE.eq_predicate_as_method(a, b) was false with
                   a = 1,
-                  b = 2
-                "})
-        )
-    }
-
-    #[gtest]
-    #[rustversion::since(1.76)]
-    fn verify_pred_should_show_correct_qualified_function_name_in_test_failure_output() -> Result<()>
-    {
-        let output = run_external_process_in_tests_directory(
-            "verify_predicate_with_failure_as_method_in_submodule",
-        )?;
-
-        verify_that!(
-            output,
-            contains_substring(indoc! {"
-                a_submodule::A_STRUCT_IN_SUBMODULE.eq_predicate_as_method(a, b) was false with
-                  a = 1,
-                  b = 2
-                "})
+                  b = 2,
+                  at"
+            })
         )
     }
 

@@ -256,7 +256,11 @@ impl Fixture {
 
     fn parameter(&self) -> proc_macro2::TokenStream {
         let Self { identifier, mutability, consumable, .. } = self;
-        if *consumable { quote!(#identifier) } else { quote!(& #mutability #identifier) }
+        if *consumable {
+            quote!(#identifier)
+        } else {
+            quote!(& #mutability #identifier)
+        }
     }
 
     fn wrap_call(&self, inner_call: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
@@ -326,4 +330,15 @@ pub fn derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         impl #impl_generics MatcherBase for #ident #ty_generics #where_clause {}
     }
     .into()
+}
+
+mod verify_pred;
+
+/// This is an implementation detail of `verify_pred!`.
+///
+/// It's not intended to be used directly.
+#[doc(hidden)]
+#[proc_macro]
+pub fn __googletest_macro_verify_pred(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    verify_pred::verify_pred_impl(input)
 }
