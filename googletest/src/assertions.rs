@@ -215,9 +215,8 @@ macro_rules! verify_that {
 /// let mut x1 = (a + 1);
 /// let mut x2 = x + y;
 /// let mut x3 = &mut z;
-/// let mut x4 = 2;
-/// let mut x5 = x1.b.c(x2, x3, x4); // <- Might mutate `&mut z` before printing below.
-/// if (x5) {
+/// let mut x4 = x1.b.c(x2, x3, 2); // <- Might mutate `&mut z` before printing below.
+/// if (x4) {
 ///   Ok(())
 /// } else {
 ///   Err(
@@ -228,7 +227,6 @@ macro_rules! verify_that {
 ///               format!("(a + 1).b = {:?}", x1.b),
 ///               format!("x + y = {:?}", x2),
 ///               format!("& mut z = {:?}", x3),
-///               format!("2 = {:?}", x4),
 ///           ].join(",\n  "),
 ///       ),
 ///   )

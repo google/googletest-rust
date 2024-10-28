@@ -39,6 +39,27 @@ mod verify_pred {
     }
 
     #[test]
+    fn does_not_print_literals() -> Result<()> {
+        trait Foo {
+            fn f(&self, _a: u32, _b: i32, _c: u32, _d: &str) -> bool {
+                false
+            }
+        }
+        impl Foo for i32 {}
+
+        let res = verify_pred!(0.f(1, 2_i32.abs(), 1 + 2, "hello"));
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {r#"
+                0.f(1, 2_i32.abs(), 1 + 2, "hello") was false with
+                  2_i32.abs() = 2,
+                  1 + 2 = 3,
+                  at"#
+            })))
+        )
+    }
+
+    #[test]
     fn supports_chained_field_access_and_method_calls_with_non_debug_types() -> Result<()> {
         // Non-Debug
         struct Apple {
@@ -153,7 +174,6 @@ mod verify_pred {
                   a = Apple,
                   v = 10,
                   a.b(v) does not implement Debug,
-                  11 = 11,
                   Cherry does not implement Debug,
                   at"
             })))

@@ -53,6 +53,8 @@ impl AccumulatePartsState {
                 *group.expr = self.accumulate_parts(*group.expr);
                 return Expr::Group(group);
             }
+            // Literals don't need to be printed or stored in intermediate variables.
+            Expr::Lit(_) => return expr,
             Expr::Field(mut field) => {
                 // Don't assign field access to an intermediate variable to avoid moving out of
                 // non-`Copy` fields.
@@ -98,6 +100,11 @@ impl AccumulatePartsState {
     ) -> Punctuated<Expr, Comma> {
         args.into_pairs()
             .map(|mut pair| {
+                // Don't need to assign literals to intermediate variables.
+                if let Expr::Lit(_) = pair.value() {
+                    return pair;
+                }
+
                 let var_expr = self.define_variable(pair.value());
                 let error_message_ident = &self.error_message_ident;
                 let expr_string = expr_to_string(pair.value());
