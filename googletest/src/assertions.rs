@@ -203,69 +203,37 @@ macro_rules! verify_that {
 /// case, it prints out each of the `.`-separated parts of the expression and
 /// the arguments of all top-level method calls as long as they implement
 /// `Debug`. It evaluates every value (including the method receivers) exactly
-/// once, but the value must not be consumed so that it's available to be
-/// printed in the failure message, even if the value does not implement
-/// `Debug`. Effectively, for `verify_pred!((a + 1).b.c(x + y, &mut z, 2))`, it
-/// generates code analogous to the following.
-///
-/// WARNING: If any values are mutated in-place, the error message will print
-/// their mutated values.
+/// once. Effectively, for `verify_pred!((a + 1).b.c(x + y, &mut z, 2))`, it
+/// generates code analogous to the following, which allows printing accurate
+/// intermediate values even if they are subsequently consumed (moved out) or
+/// mutated in-place by the expression:
 ///
 /// ```ignore
+/// let mut error_message = "(a + 1).b.c(x + y, 2) was false with".to_string();
 /// let mut x1 = (a + 1);
+/// write!(error_message, "\n  (a + 1) = {:?},", x1);
+/// write!(error_message, "\n  (a + 1).b = {:?},", x1.b);
 /// let mut x2 = x + y;
+/// write!(error_message, "\n  x + y = {:?},", x2);
 /// let mut x3 = &mut z;
-/// let mut x4 = x1.b.c(x2, x3, 2); // <- Might mutate `&mut z` before printing below.
+/// write!(error_message, "\n  & mut z = {:?},", x3);
+/// let mut x4 = x1.b.c(x2, x3, 2);
 /// if (x4) {
 ///   Ok(())
 /// } else {
-///   Err(
-///       format!(
-///           "(a + 1).b.c(x + y, & mut z, 2) was false with\n  {},",
-///           vec![
-///               format!("(a + 1) = {:?}", x1),
-///               format!("(a + 1).b = {:?}", x1.b),
-///               format!("x + y = {:?}", x2),
-///               format!("& mut z = {:?}", x3),
-///           ].join(",\n  "),
-///       ),
-///   )
+///   Err(error_message)
 /// }
 /// ```
 ///
 /// Wrapping the passed-in expression in parens or curly braces will prevent the
-/// detailed printing of the expression and works around the lack of support for
-/// argument-consuming method calls.
+/// detailed printing of the expression.
 ///
 /// ```ignore
-/// verify_pred!({ f_consumes_argument(String::from("hello")) })?;
+/// verify_pred!((a.foo()).bar())?;
 /// ```
 ///
-/// This strategy can also be used for the method receivers that may be
-/// consumed and are not available for printing on error:
-///
-/// ```ignore
-/// verify_pred!((a.consuming_method()).non_consuming_method())?;
-/// ```
-///
-/// would generate code analogous to:
-///
-/// ```ignore
-/// let mut x1 = a.consuming_method();
-/// let mut x2 = x1.non_consuming_method();
-/// if (x2) {
-///   Ok(())
-/// } else {
-///   Err(
-///       format!(
-///           "(a.consuming_method()).non_consuming_method() was false with\n  {},",
-///           vec![
-///               format!("(a.consuming_method()) = {:?}", x1),
-///           ].join(",\n  "),
-///       ),
-///   )
-/// }
-/// ```
+/// would not print `a`, but would print `(a.foo())` and `(a.foo()).bar()` on
+/// error.
 #[macro_export]
 macro_rules! verify_pred {
     ($expr:expr $(,)?) => {

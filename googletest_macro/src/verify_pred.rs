@@ -16,9 +16,9 @@ use quote::quote;
 use syn::{parse_macro_input, punctuated::Punctuated, spanned::Spanned, token::Comma, Expr, Ident};
 
 struct AccumulatePartsState {
+    var_num: usize,
     error_message_ident: Ident,
-    var_defs: Vec<proc_macro2::TokenStream>,
-    formats: Vec<proc_macro2::TokenStream>,
+    statements: Vec<proc_macro2::TokenStream>,
 }
 
 fn expr_to_string(expr: &Expr) -> String {
@@ -28,12 +28,12 @@ fn expr_to_string(expr: &Expr) -> String {
 impl AccumulatePartsState {
     fn new() -> Self {
         Self {
+            var_num: 0,
             error_message_ident: Ident::new(
                 "__googletest__verify_pred__error_message",
                 ::proc_macro2::Span::call_site(),
             ),
-            var_defs: vec![],
-            formats: vec![],
+            statements: vec![],
         }
     }
 
@@ -82,7 +82,7 @@ impl AccumulatePartsState {
             _ => self.define_variable(&expr),
         };
         let error_message_ident = &self.error_message_ident;
-        self.formats.push(quote! {
+        self.statements.push(quote! {
             ::googletest::fmt::internal::__googletest__write_expr_value!(
                 &mut #error_message_ident,
                 #expr_string,
@@ -108,7 +108,7 @@ impl AccumulatePartsState {
                 let var_expr = self.define_variable(pair.value());
                 let error_message_ident = &self.error_message_ident;
                 let expr_string = expr_to_string(pair.value());
-                self.formats.push(quote! {
+                self.statements.push(quote! {
                     ::googletest::fmt::internal::__googletest__write_expr_value!(
                         &mut #error_message_ident,
                         #expr_string,
@@ -126,11 +126,10 @@ impl AccumulatePartsState {
     /// variable as an expression to be used in place of the passed-in
     /// expression.
     fn define_variable(&mut self, value: &Expr) -> Expr {
-        let var_name = Ident::new(
-            &format!("__googletest__verify_pred__var{}", self.var_defs.len()),
-            value.span(),
-        );
-        self.var_defs.push(quote! {
+        let var_name =
+            Ident::new(&format!("__googletest__verify_pred__var{}", self.var_num), value.span());
+        self.var_num += 1;
+        self.statements.push(quote! {
             #[allow(non_snake_case)]
             let mut #var_name = #value;
         });
@@ -144,17 +143,16 @@ pub fn verify_pred_impl(input: proc_macro::TokenStream) -> proc_macro::TokenStre
 
     let mut state = AccumulatePartsState::new();
     let pred_value = state.accumulate_parts(parsed);
-    let AccumulatePartsState { error_message_ident, var_defs, mut formats, .. } = state;
+    let AccumulatePartsState { error_message_ident, mut statements, .. } = state;
 
-    let _ = formats.pop(); // The last one is the full expression itself.
+    let _ = statements.pop(); // The last statement prints the full expression itself.
     quote! {
         {
-            #(#var_defs)*
+            let mut #error_message_ident = #error_message.to_string();
+            #(#statements)*
             if (#pred_value) {
                 Ok(())
             } else {
-                let mut #error_message_ident = #error_message.to_string();
-                #(#formats)*
                 ::core::result::Result::Err(
                     ::googletest::internal::test_outcome::TestAssertionFailure::create(
                         #error_message_ident))

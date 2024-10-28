@@ -181,6 +181,55 @@ mod verify_pred {
     }
 
     #[test]
+    fn prints_consumed_values() -> Result<()> {
+        // Non-Debug
+        struct Apple;
+        impl Apple {
+            fn b(self) -> Banana {
+                Banana
+            }
+        }
+        #[derive(Debug)]
+        struct Banana;
+        impl Banana {
+            fn c(self) -> bool {
+                false
+            }
+        }
+
+        let a = Apple;
+        let res = verify_pred!(a.b().c());
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {"
+                a.b().c() was false with
+                  a does not implement Debug,
+                  a.b() = Banana,
+                  at"
+            })))
+        )
+    }
+
+    #[test]
+    fn works_with_realistic_example_with_consumed_intermediate_values() -> Result<()> {
+        let res =
+            verify_pred!(vec![1, 2].into_iter().map(|x| x * 2).collect::<Vec<_>>().is_empty());
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {"
+                vec! [1, 2].into_iter().map(| x | x * 2).collect :: < Vec < _ > >
+                ().is_empty() was false with
+                  vec! [1, 2] = [1, 2],
+                  vec! [1, 2].into_iter() = IntoIter([1, 2]),
+                  | x | x * 2 does not implement Debug,
+                  vec! [1, 2].into_iter().map(| x | x * 2) = Map { iter: IntoIter([1, 2]) },
+                  vec! [1, 2].into_iter().map(| x | x * 2).collect :: < Vec < _ > > () = [2, 4],
+                  at"
+            })))
+        )
+    }
+
+    #[test]
     fn values_should_be_accessible_after_test() -> Result<()> {
         // Not `Copy` and should not be consumed by the generated test code.
         #[derive(Debug)]
@@ -245,11 +294,10 @@ mod verify_pred {
 
         verify_that!(
             res,
-            // Unfortunately prints the mutated values.
             err(displays_as(contains_substring(indoc! {"
                 block_a! ().mutate_and_false(block_b! ()) was false with
-                  block_a! () = 11,
-                  block_b! () = 22,
+                  block_a! () = 1,
+                  block_b! () = 2,
                   at"
             })))
         )?;
