@@ -53,6 +53,12 @@ impl AccumulatePartsState {
                 *group.expr = self.accumulate_parts(*group.expr);
                 return Expr::Group(group);
             }
+            Expr::Field(mut field) => {
+                // Don't assign field access to an intermediate variable to avoid moving out of
+                // non-`Copy` fields.
+                *field.base = self.accumulate_parts(*field.base);
+                Expr::Field(field)
+            }
             Expr::Call(mut call) => {
                 // Cache args into intermediate variables.
                 call.args = self.define_variables_for_args(call.args);
@@ -60,11 +66,15 @@ impl AccumulatePartsState {
                 self.define_variable(&Expr::Call(call))
             }
             Expr::MethodCall(mut method_call) => {
+                *method_call.receiver = self.accumulate_parts(*method_call.receiver);
                 // Cache args into intermediate variables.
                 method_call.args = self.define_variables_for_args(method_call.args);
                 // Cache method value into an intermediate variable.
                 self.define_variable(&Expr::MethodCall(method_call))
             }
+            // A path expression doesn't need to be stored in an intermediate variable.
+            // This avoids moving out of an existing variable.
+            Expr::Path(_) => expr,
             // By default, assume it's some expression that needs to be cached to avoid
             // double-evaluation.
             _ => self.define_variable(&expr),

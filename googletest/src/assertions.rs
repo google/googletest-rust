@@ -199,9 +199,75 @@ macro_rules! verify_that {
 /// verify_pred!((AStruct {}).equals_modulo(a, b, n))?;
 /// ```
 ///
-/// **Warning:** This macro assumes that the arguments passed to the predicate
-/// cause no mutations, or else the output message of a test failure will
-/// deviate from the values actually passed to the predicate.
+/// The expression passed to this macro must return `bool`. In the most general
+/// case, it prints out each of the `.`-separated parts of the expression and
+/// the arguments of all top-level method calls as long as they implement
+/// `Debug`. It evaluates every value (including the method receivers) exactly
+/// once, but the value must not be consumed so that it's available to be
+/// printed in the failure message, even if the value does not implement
+/// `Debug`. Effectively, for `verify_pred!((a + 1).b.c(x + y, &mut z, 2))`, it
+/// generates code analogous to the following.
+///
+/// WARNING: If any values are mutated in-place, the error message will print
+/// their mutated values.
+///
+/// ```ignore
+/// let mut x1 = (a + 1);
+/// let mut x2 = x + y;
+/// let mut x3 = &mut z;
+/// let mut x4 = 2;
+/// let mut x5 = x1.b.c(x2, x3, x4); // <- Might mutate `&mut z` before printing below.
+/// if (x5) {
+///   Ok(())
+/// } else {
+///   Err(
+///       format!(
+///           "(a + 1).b.c(x + y, & mut z, 2) was false with\n  {},",
+///           vec![
+///               format!("(a + 1) = {:?}", x1),
+///               format!("(a + 1).b = {:?}", x1.b),
+///               format!("x + y = {:?}", x2),
+///               format!("& mut z = {:?}", x3),
+///               format!("2 = {:?}", x4),
+///           ].join(",\n  "),
+///       ),
+///   )
+/// }
+/// ```
+///
+/// Wrapping the passed-in expression in parens or curly braces will prevent the
+/// detailed printing of the expression and works around the lack of support for
+/// argument-consuming method calls.
+///
+/// ```ignore
+/// verify_pred!({ f_consumes_argument(String::from("hello")) })?;
+/// ```
+///
+/// This strategy can also be used for the method receivers that may be
+/// consumed and are not available for printing on error:
+///
+/// ```ignore
+/// verify_pred!((a.consuming_method()).non_consuming_method())?;
+/// ```
+///
+/// would generate code analogous to:
+///
+/// ```ignore
+/// let mut x1 = a.consuming_method();
+/// let mut x2 = x1.non_consuming_method();
+/// if (x2) {
+///   Ok(())
+/// } else {
+///   Err(
+///       format!(
+///           "(a.consuming_method()).non_consuming_method() was false with\n  {},",
+///           vec![
+///               format!("(a.consuming_method()) = {:?}", x1),
+///           ].join(",\n  "),
+///       ),
+///   )
+/// }
+/// ```
 #[macro_export]
 macro_rules! verify_pred {
     ($expr:expr $(,)?) => {

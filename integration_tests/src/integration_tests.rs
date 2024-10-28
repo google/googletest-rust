@@ -534,6 +534,7 @@ mod tests {
             output,
             contains_substring(indoc! {"
                 a_submodule :: A_STRUCT_IN_SUBMODULE.eq_predicate_as_method(a, b) was false with
+                  a_submodule :: A_STRUCT_IN_SUBMODULE does not implement Debug,
                   a = 1,
                   b = 2,
                   at"
