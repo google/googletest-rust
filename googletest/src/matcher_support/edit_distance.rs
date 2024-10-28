@@ -430,8 +430,8 @@ mod tests {
     }
 
     #[test]
-    fn returns_common_part_plus_difference_plus_common_part_when_there_is_common_prefix_and_suffix()
-    -> Result<()> {
+    fn returns_common_part_plus_difference_plus_common_part_when_there_is_common_prefix_and_suffix(
+    ) -> Result<()> {
         let result = edit_list(
             ["Common part (1)", "Actual only", "Common part (2)"],
             ["Common part (1)", "Expected only", "Common part (2)"],
@@ -449,8 +449,8 @@ mod tests {
     }
 
     #[test]
-    fn returns_common_part_plus_extra_actual_plus_common_part_when_there_is_common_prefix_and_suffix()
-    -> Result<()> {
+    fn returns_common_part_plus_extra_actual_plus_common_part_when_there_is_common_prefix_and_suffix(
+    ) -> Result<()> {
         let result = edit_list(
             ["Common part (1)", "Actual only", "Common part (2)"],
             ["Common part (1)", "Common part (2)"],
@@ -467,8 +467,8 @@ mod tests {
     }
 
     #[test]
-    fn returns_common_part_plus_extra_expected_plus_common_part_when_there_is_common_prefix_and_suffix()
-    -> Result<()> {
+    fn returns_common_part_plus_extra_expected_plus_common_part_when_there_is_common_prefix_and_suffix(
+    ) -> Result<()> {
         let result = edit_list(
             ["Common part (1)", "Common part (2)"],
             ["Common part (1)", "Expected only", "Common part (2)"],
@@ -500,8 +500,8 @@ mod tests {
     }
 
     #[test]
-    fn does_not_skip_extra_parts_on_actual_in_prefix_mode_at_end_when_they_are_in_common()
-    -> Result<()> {
+    fn does_not_skip_extra_parts_on_actual_in_prefix_mode_at_end_when_they_are_in_common(
+    ) -> Result<()> {
         let result = edit_list(
             ["Actual only", "Common part"],
             ["Expected only", "Common part"],
@@ -518,8 +518,8 @@ mod tests {
     }
 
     #[test]
-    fn does_not_skip_corresponding_line_on_actual_when_actual_and_expected_differ_in_prefix_mode()
-    -> Result<()> {
+    fn does_not_skip_corresponding_line_on_actual_when_actual_and_expected_differ_in_prefix_mode(
+    ) -> Result<()> {
         let result = edit_list(["Actual only"], ["Expected only"], Mode::Prefix);
         verify_that!(
             result,

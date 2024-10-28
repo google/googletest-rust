@@ -860,9 +860,9 @@ mod tests {
         // aren't dropped too early.
         let matchers = ((eq(&2), eq(&"Two")), (eq(&1), eq(&"One")), (eq(&3), eq(&"Three")));
         let matcher = unordered_elements_are![
-            (matchers.0.0, matchers.0.1),
-            (matchers.1.0, matchers.1.1),
-            (matchers.2.0, matchers.2.1)
+            (matchers.0 .0, matchers.0 .1),
+            (matchers.1 .0, matchers.1 .1),
+            (matchers.2 .0, matchers.2 .1)
         ];
         verify_that!(
             Matcher::<&HashMap<i32, String>>::describe(&matcher, MatcherResult::Match),
@@ -892,9 +892,9 @@ mod tests {
         let value: HashMap<u32, u32> = HashMap::from_iter([(0, 1), (1, 1), (2, 2)]);
         let matchers = ((anything(), eq(&1)), (anything(), eq(&2)), (anything(), eq(&2)));
         let matcher = unordered_elements_are![
-            (matchers.0.0, matchers.0.1),
-            (matchers.1.0, matchers.1.1),
-            (matchers.2.0, matchers.2.1),
+            (matchers.0 .0, matchers.0 .1),
+            (matchers.1 .0, matchers.1 .1),
+            (matchers.2 .0, matchers.2 .1),
         ];
         verify_that!(
             matcher.explain_match(&value),
