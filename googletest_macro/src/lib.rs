@@ -191,7 +191,7 @@ pub fn gtest(
 ///
 /// Generally, prefer using `#[gtest]` to mark googletest-based tests.
 ///
-/// Use `#[gtest]` instead of `#[gtest]` to satisfy compatibility
+/// Use `#[test]` instead of `#[gtest]` to satisfy compatibility
 /// requirements. For example, the rstest crate can be composed with other test
 /// attributes but it requires the attribute to be named `test`.
 ///
