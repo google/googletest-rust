@@ -30,7 +30,7 @@ pub mod matcher;
 pub mod matcher_support;
 pub mod matchers;
 
-pub use googletest_macro::__googletest_macro_verify_pred;
+pub use googletest_macro::{__abbreviated_stringify, __googletest_macro_verify_pred};
 
 /// Re-exports of the symbols in this crate which are most likely to be used.
 ///

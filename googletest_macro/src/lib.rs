@@ -342,3 +342,47 @@ mod verify_pred;
 pub fn __googletest_macro_verify_pred(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     verify_pred::verify_pred_impl(input)
 }
+
+/// Stringifies its argument (like `stringify!()` from the standard library) but
+/// limits the output to a provided maximum length.
+///
+/// The input is a tuple of `target` and `max_length` seprated by a comma.
+/// The `max_length` is the maximum number of characters to include in the
+/// abbreviated string. For example:
+///
+/// ```ignore
+/// #[rstest]
+/// #[gtest]
+/// fn test_abbreviated_string() -> Result<()> {
+///   verifiy_eq!(__abbreviated_stringify!(|x| x + 1, 6), "|x|...")?;
+///   Ok(())
+/// }
+/// ```
+#[doc(hidden)]
+#[proc_macro]
+pub fn __abbreviated_stringify(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = input.to_string();
+    let abbreviated = abbreviated_string(&input).unwrap();
+    quote! {
+        #abbreviated
+    }
+    .into()
+}
+
+fn abbreviated_string(target: &str) -> Result<std::borrow::Cow<str>, &'static str> {
+    use std::borrow::Cow;
+    match target.rsplit_once(',') {
+        None => Err("Expect a `max_length` argument, but got none"),
+        Some((expr, limit)) => match limit.trim().parse::<usize>() {
+            Ok(limit) if expr.len() > limit => {
+                if limit >= 4 {
+                    Ok(Cow::Owned(format!("{}...", &expr[..limit - 3])))
+                } else {
+                    Err("The `max_length` argument is too small. It must be at least 4.")
+                }
+            }
+            Ok(_) => Ok(Cow::Borrowed(expr)),
+            Err(_) => Err("The `max_length` argument is not a number."),
+        },
+    }
+}

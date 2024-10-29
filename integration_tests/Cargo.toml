@@ -404,3 +404,8 @@ test = false
 name = "macro_hygiene"
 path = "src/macro_hygiene.rs"
 test = false
+
+[[bin]]
+name = "abbreviated_stringify_macro"
+path = "src/abbreviated_stringify_macro.rs"
+test = false
