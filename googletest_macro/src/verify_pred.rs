@@ -45,6 +45,10 @@ impl AccumulatePartsState {
     /// of the input expression with parts of it potentially replaced by the
     /// intermediate variables.
     fn accumulate_parts(&mut self, expr: Expr) -> Expr {
+        // Literals don't need to be printed or stored in intermediate variables.
+        if is_literal(&expr) {
+            return expr;
+        }
         let expr_string = expr_to_string(&expr);
         let new_expr = match expr {
             Expr::Group(mut group) => {
@@ -53,8 +57,6 @@ impl AccumulatePartsState {
                 *group.expr = self.accumulate_parts(*group.expr);
                 return Expr::Group(group);
             }
-            // Literals don't need to be printed or stored in intermediate variables.
-            Expr::Lit(_) => return expr,
             Expr::Field(mut field) => {
                 // Don't assign field access to an intermediate variable to avoid moving out of
                 // non-`Copy` fields.
@@ -73,6 +75,15 @@ impl AccumulatePartsState {
                 method_call.args = self.define_variables_for_args(method_call.args);
                 // Cache method value into an intermediate variable.
                 self.define_variable(&Expr::MethodCall(method_call))
+            }
+            Expr::Binary(mut binary) => {
+                *binary.left = self.accumulate_parts(*binary.left);
+                *binary.right = self.accumulate_parts(*binary.right);
+                Expr::Binary(binary)
+            }
+            Expr::Unary(mut unary) => {
+                *unary.expr = self.accumulate_parts(*unary.expr);
+                Expr::Unary(unary)
             }
             // A path expression doesn't need to be stored in an intermediate variable.
             // This avoids moving out of an existing variable.
@@ -101,7 +112,7 @@ impl AccumulatePartsState {
         args.into_pairs()
             .map(|mut pair| {
                 // Don't need to assign literals to intermediate variables.
-                if let Expr::Lit(_) = pair.value() {
+                if is_literal(pair.value()) {
                     return pair;
                 }
 
@@ -134,6 +145,15 @@ impl AccumulatePartsState {
             let mut #var_name = #value;
         });
         syn::parse::<Expr>(quote!(#var_name).into()).unwrap()
+    }
+}
+
+// Whether it's a literal or unary operator applied to a literal (1, -1).
+fn is_literal(expr: &Expr) -> bool {
+    match expr {
+        Expr::Lit(_) => true,
+        Expr::Unary(unary) => matches!(&*unary.expr, Expr::Lit(_)),
+        _ => false,
     }
 }
 

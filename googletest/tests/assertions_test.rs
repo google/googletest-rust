@@ -333,4 +333,95 @@ mod verify_pred {
             })))
         )
     }
+
+    #[test]
+    fn binary_operator() -> Result<()> {
+        // Add chaining and function calls.
+        fn f(x: u32) -> u32 {
+            x + 1
+        }
+        #[derive(Debug)]
+        struct Apple;
+        impl Apple {
+            fn b(&self, y: u32) -> u32 {
+                y + 10
+            }
+        }
+        let a = Apple;
+        let x = 1;
+        let y = 2;
+        let res = verify_pred!(f(x) - 1 == a.b(y + 1) + f(y));
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {"
+                f(x) - 1 == a.b(y + 1) + f(y) was false with
+                  x = 1,
+                  f(x) = 2,
+                  f(x) - 1 = 1,
+                  a = Apple,
+                  y + 1 = 3,
+                  a.b(y + 1) = 13,
+                  y = 2,
+                  f(y) = 3,
+                  a.b(y + 1) + f(y) = 16,
+                  at"
+            })))
+        )
+    }
+
+    #[rustversion::before(1.77)]
+    #[test]
+    fn unary_operator() -> Result<()> {
+        #[derive(Debug)]
+        struct Apple;
+        impl Apple {
+            fn b(&self, _b: u32, _c: i32) -> i32 {
+                0
+            }
+        }
+
+        let a = Apple;
+        let b = 1;
+        let res = verify_pred!(!a.b(b, -1) == !-2);
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {"
+                ! a.b(b, - 1) ==! - 2 was false with
+                  a = Apple,
+                  b = 1,
+                  a.b(b, - 1) = 0,
+                  ! a.b(b, - 1) = -1,
+                  ! - 2 = 1,
+                  at"
+            })))
+        )
+    }
+
+    #[rustversion::since(1.77)]
+    #[test]
+    fn unary_operator() -> Result<()> {
+        #[derive(Debug)]
+        struct Apple;
+        impl Apple {
+            fn b(&self, _b: u32, _c: i32) -> i32 {
+                0
+            }
+        }
+
+        let a = Apple;
+        let b = 1;
+        let res = verify_pred!(!a.b(b, -1) == !-2);
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {"
+                ! a.b(b, - 1) == ! - 2 was false with
+                  a = Apple,
+                  b = 1,
+                  a.b(b, - 1) = 0,
+                  ! a.b(b, - 1) = -1,
+                  ! - 2 = 1,
+                  at"
+            })))
+        )
+    }
 }
