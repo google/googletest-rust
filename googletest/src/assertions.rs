@@ -1457,45 +1457,4 @@ pub mod internal {
     pub fn create_fail_result(message: String) -> crate::Result<()> {
         Err(crate::internal::test_outcome::TestAssertionFailure::create(message))
     }
-
-    /// Trait that defaults to not rendering values. Used for autoref
-    /// specialization to conditionally render only values that implement
-    /// `Debug`. See also [`FormatDebug`].
-    pub trait FormatNonDebug {
-        fn __googletest_format_as_line(&self, output: &mut String, expr_label: &str) {
-            use ::std::fmt::Write as _;
-            write!(output, "\n  {} does not implement Debug,", expr_label)
-                .expect("Formatting to String should never fail");
-        }
-    }
-
-    impl<T> FormatNonDebug for &T {}
-
-    /// Trait to render values that implement `Debug` to a format string. Used
-    /// for autoref specialization to conditionally render only values that
-    /// implement `Debug`. See also [`FormatNonDebug`].
-    pub trait FormatDebug {
-        fn __googletest_format_as_line(&self, output: &mut String, expr_label: &str);
-    }
-
-    impl<T: Debug> FormatDebug for T {
-        #[track_caller]
-        fn __googletest_format_as_line(&self, output: &mut String, expr_label: &str) {
-            use ::std::fmt::Write as _;
-            write!(output, "\n  {} = {:?},", expr_label, self)
-                .expect("Formatting to String should never fail");
-        }
-    }
-
-    #[macro_export]
-    macro_rules! __googletest__format_as_line(
-        ($output_str:expr, $expr_str:expr, $value:expr $(,)?) => {
-            {
-                use $crate::assertions::internal::FormatNonDebug as _;
-                use $crate::assertions::internal::FormatDebug as _;
-                (&$value).__googletest_format_as_line($output_str, $expr_str)
-            }
-        }
-    );
-    pub use __googletest__format_as_line;
 }
