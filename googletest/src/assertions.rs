@@ -1361,12 +1361,43 @@ macro_rules! assert_pred {
 /// ```
 #[macro_export]
 macro_rules! expect_that {
+    // specialized to sequence:
+    ($actual:expr, [$($expected:expr),*] $(,)?) => {{
+        use $crate::GoogleTestSupport as _;
+        $crate::verify_that!($actual, [$($expected),*]).and_log_failure();
+    }};
+
+    // specialized to unordered sequence:
+    ($actual:expr, {$($expected:expr),*} $(,)?) => {{
+        use $crate::GoogleTestSupport as _;
+        $crate::verify_that!($actual, {$($expected),*}).and_log_failure();
+    }};
+
+    // general case:
     ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport as _;
         $crate::verify_that!($actual, $expected).and_log_failure();
     }};
 
+    // w/ format args, specialized to sequence:
+    ($actual:expr, [$($expected:expr),*], $($format_args:expr),* $(,)?) => {
+        use $crate::GoogleTestSupport as _;
+        $crate::verify_that!($actual, [$($expected),*])
+            .with_failure_message(|| format!($($format_args),*))
+            .and_log_failure()
+    };
+
+    // w/ format args, specialized to unordered sequence:
+    ($actual:expr, {$($expected:expr),*}, $($format_args:expr),* $(,)?) => {
+        use $crate::GoogleTestSupport as _;
+        $crate::verify_that!($actual, {$($expected),*})
+            .with_failure_message(|| format!($($format_args),*))
+            .and_log_failure()
+    };
+
+    // w/ format args, general case:
     ($actual:expr, $expected:expr, $($format_args:expr),* $(,)?) => {
+        use $crate::GoogleTestSupport as _;
         $crate::verify_that!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure()
