@@ -17,27 +17,21 @@
 ///
 /// The `callable` will be called twice, so make sure it is pure.
 /// ```
-/// # use googletest::prelude::*;
-/// # fn should_pass() -> googletest::Result<()> {
-/// #    verify_that!(100, result_of!(|value| value + 1, eq(101)))?; // Passes
-/// #    Ok(())
-/// # }
+/// use googletest::prelude::*;
+/// fn should_pass() -> googletest::Result<()> {
+///    verify_that!(100, result_of!(|value| value + 1, eq(101)))?; // Passes
+///    Ok(())
+/// }
 ///
-/// # fn should_fail() -> googletest::Result<()> {
-/// #    verify_that!(100, result_of!(|value| value * 2, eq(100)))?; // Fails
-/// #    Ok(())
-/// # }
-/// # should_pass().unwrap();
-/// # should_fail().unwrap_err();
+/// fn should_fail() -> googletest::Result<()> {
+///    verify_that!(100, result_of!(|value| value * 2, eq(100)))?; // Fails
+///    Ok(())
+/// }
+/// should_pass().unwrap();
+/// should_fail().unwrap_err();
 /// ```
 #[macro_export]
-#[doc(hidden)]
 macro_rules! __result_of {
-    ($($t: tt)*) => { $crate::result_of_internal!($($t)*) };
-}
-
-#[macro_export]
-macro_rules! result_of_internal {
     ($function: expr, $matcher: expr) => {{
         $crate::matchers::__internal_unstable_do_not_depend_on_these::result_of(
             $function,
@@ -52,33 +46,27 @@ macro_rules! result_of_internal {
 ///
 /// The `callable` will be called twice, so make sure it is pure.
 /// ```
-/// # use googletest::prelude::*;
-/// # fn should_pass_1() -> googletest::Result<()> {
-/// #    verify_that!("hello", result_of_ref!(|s: &str| s.to_uppercase(), eq("HELLO")))?; // Passes
-/// #    Ok(())
-/// # }
+/// use googletest::prelude::*;
+/// fn should_pass_1() -> googletest::Result<()> {
+///    verify_that!("hello", result_of_ref!(|s: &str| s.to_uppercase(), eq("HELLO")))?; // Passes
+///    Ok(())
+/// }
 ///
-/// # fn should_pass_2() -> googletest::Result<()> {
-/// #    verify_that!(100, result_of_ref!(|value| value + 1, eq(&101)))?; // Passes
-/// #    Ok(())
-/// # }
+/// fn should_pass_2() -> googletest::Result<()> {
+///    verify_that!(100, result_of_ref!(|value| value + 1, eq(&101)))?; // Passes
+///    Ok(())
+/// }
 ///
-/// # fn should_fail() -> googletest::Result<()> {
-/// #    verify_that!("world", result_of_ref!(|s: &str| s.to_uppercase(), eq("HELLO")))?; // Passes
-/// #    Ok(())
-/// # }
-/// # should_pass_1().unwrap();
-/// # should_pass_2().unwrap();
-/// # should_fail().unwrap_err();
+/// fn should_fail() -> googletest::Result<()> {
+///    verify_that!("world", result_of_ref!(|s: &str| s.to_uppercase(), eq("HELLO")))?; // Passes
+///    Ok(())
+/// }
+/// should_pass_1().unwrap();
+/// should_pass_2().unwrap();
+/// should_fail().unwrap_err();
 /// ```
 #[macro_export]
-#[doc(hidden)]
 macro_rules! __result_of_ref {
-    ($($t: tt)*) => { $crate::result_of_ref_internal!($($t)*)};
-}
-
-#[macro_export]
-macro_rules! result_of_ref_internal {
     ($function: expr, $matcher: expr) => {{
         $crate::matchers::__internal_unstable_do_not_depend_on_these::result_of_ref(
             $function,
@@ -120,17 +108,16 @@ pub mod internal {
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> Description {
-            self.inner_matcher.describe(matcher_result)
+            Description::new()
+                .text(format!("by applying {},", self.callable_description))
+                .nested(self.inner_matcher.describe(matcher_result))
         }
 
         fn explain_match(&self, actual: I) -> Description {
             let actual_result = (self.callable)(actual);
-            format!(
-                "where the result of applying {actual:?} to the callable `{}` is {actual_result:?} which {}",
-                self.callable_description,
-                self.describe(self.inner_matcher.matches(actual_result))
-            )
-            .into()
+            Description::new()
+                .text(format!("which, results into {actual_result:?}",))
+                .nested(self.describe(self.matches(actual)))
         }
     }
 
@@ -160,12 +147,16 @@ pub mod internal {
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> Description {
-            self.inner_matcher.describe(matcher_result)
+            Description::new()
+                .text(format!("by applying {},", self.callable_description))
+                .nested(self.inner_matcher.describe(matcher_result))
         }
 
         fn explain_match(&self, actual: I) -> Description {
             let actual_result = (self.callable)(actual);
-            Description::new().text(format!("where the result of applying {actual:?} to the callable `{}` is {actual_result:?}", self.callable_description)).nested(self.inner_matcher.explain_match(&actual_result))
+            Description::new()
+                .text(format!("which, results into {actual_result:?}",))
+                .nested(self.describe(self.matches(actual)))
         }
     }
 }
@@ -173,6 +164,7 @@ pub mod internal {
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
+    use indoc::indoc;
 
     #[test]
     fn result_of_match_with_value() -> Result<()> {
@@ -192,9 +184,17 @@ mod tests {
         let result = verify_that!(0, result_of!(|value| value - 1, eq(2)));
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "where the result of applying 0 to the callable `|value| value - 1` is -1 which isn't equal to 2"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: 0
+                Expected: by applying |value| value - 1,
+                  is equal to 2
+                Actual: 0,
+                  which, results into -1
+                    by applying |value| value - 1,
+                      isn't equal to 2
+                "
+            ))))
         )
     }
 
@@ -203,9 +203,17 @@ mod tests {
         let result = verify_that!(0, result_of!(|value| { value - 1 }, eq(2)));
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "where the result of applying 0 to the callable `|value| { value - 1 }` is -1 which isn't equal to 2"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: 0
+                Expected: by applying |value| { value - 1 },
+                  is equal to 2
+                Actual: 0,
+                  which, results into -1
+                    by applying |value| { value - 1 },
+                      isn't equal to 2
+                "
+            ))))
         )
     }
 
@@ -224,9 +232,17 @@ mod tests {
         );
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "where the result of applying 0 to the callable `|value| { let dec = value - 1; let inc = dec + 1; inc - 2 }` is -2 which isn't equal to 2"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: 0
+                Expected: by applying |value| { let dec = value - 1; let inc = dec + 1; inc - 2 },
+                  is equal to 2
+                Actual: 0,
+                  which, results into -2
+                    by applying |value| { let dec = value - 1; let inc = dec + 1; inc - 2 },
+                      isn't equal to 2
+                "
+            ))))
         )
     }
 
@@ -238,9 +254,17 @@ mod tests {
         let result = verify_that!(0, result_of!(dec_by_one, eq(2)));
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "where the result of applying 0 to the callable `dec_by_one` is -1 which isn't equal to 2"
-            )))
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: 0
+                Expected: by applying dec_by_one,
+                  is equal to 2
+                Actual: 0,
+                  which, results into -1
+                    by applying dec_by_one,
+                      isn't equal to 2
+                "
+            ))))
         )
     }
 
@@ -267,9 +291,16 @@ mod tests {
         let result = verify_that!("world", result_of_ref!(|s: &str| s.to_uppercase(), eq("HELLO")));
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "where the result of applying \"world\" to the callable `|s: &str| s.to_uppercase()` is \"WORLD\"\n    which isn't equal to \"HELLO\""
-            )))
+            err(displays_as(contains_substring(indoc!(
+                r#"
+                Value of: "world"
+                Expected: by applying |s: &str| s.to_uppercase(),
+                  is equal to "HELLO"
+                Actual: "world",
+                  which, results into "WORLD"
+                    by applying |s: &str| s.to_uppercase(),
+                      isn't equal to "HELLO""#
+            ))))
         )
     }
 
@@ -279,9 +310,17 @@ mod tests {
             verify_that!("world", result_of_ref!(|s: &str| { s.to_uppercase() }, eq("HELLO")));
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "where the result of applying \"world\" to the callable `|s: &str| { s.to_uppercase() }` is \"WORLD\"\n    which isn't equal to \"HELLO\""
-            )))
+            err(displays_as(contains_substring(indoc!(
+                r#"
+            Value of: "world"
+            Expected: by applying |s: &str| { s.to_uppercase() },
+              is equal to "HELLO"
+            Actual: "world",
+              which, results into "WORLD"
+                by applying |s: &str| { s.to_uppercase() },
+                  isn't equal to "HELLO"
+            "#
+            ))))
         )
     }
 
@@ -293,9 +332,17 @@ mod tests {
         let result = verify_that!("world", result_of_ref!(to_upper_case, eq("HELLO")));
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "where the result of applying \"world\" to the callable `to_upper_case` is \"WORLD\"\n    which isn't equal to \"HELLO\""
-            )))
+            err(displays_as(contains_substring(indoc!(
+                r#"
+            Value of: "world"
+            Expected: by applying to_upper_case,
+              is equal to "HELLO"
+            Actual: "world",
+              which, results into "WORLD"
+                by applying to_upper_case,
+                  isn't equal to "HELLO"
+            "#
+            ))))
         )
     }
 
@@ -305,9 +352,17 @@ mod tests {
         let result = verify_that!("world", result_of_ref!(to_upper_case, eq("HELLO")));
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "where the result of applying \"world\" to the callable `to_upper_case` is \"WORLD\"\n    which isn't equal to \"HELLO\""
-            )))
+            err(displays_as(contains_substring(indoc!(
+                r#"
+                Value of: "world"
+                Expected: by applying to_upper_case,
+                  is equal to "HELLO"
+                Actual: "world",
+                  which, results into "WORLD"
+                    by applying to_upper_case,
+                      isn't equal to "HELLO"
+            "#
+            ))))
         )
     }
 
@@ -316,9 +371,17 @@ mod tests {
         let result = verify_that!("world", result_of_ref!(str::to_uppercase, eq("HELLO")));
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "where the result of applying \"world\" to the callable `str::to_uppercase` is \"WORLD\"\n    which isn't equal to \"HELLO\""
-            )))
+            err(displays_as(contains_substring(indoc!(
+                r#"
+                Value of: "world"
+                Expected: by applying str::to_uppercase,
+                  is equal to "HELLO"
+                Actual: "world",
+                  which, results into "WORLD"
+                    by applying str::to_uppercase,
+                      isn't equal to "HELLO"
+            "#
+            ))))
         )
     }
 
@@ -330,8 +393,47 @@ mod tests {
         let result = verify_that!("world", result_of_ref!(upper_case(), eq("HELLO")));
         verify_that!(
             result,
-            err(displays_as(contains_substring(
-                "where the result of applying \"world\" to the callable `upper_case()` is \"WORLD\"\n    which isn't equal to \"HELLO\""
+            err(displays_as(contains_substring(indoc!(
+                r#"
+            Value of: "world"
+            Expected: by applying upper_case(),
+              is equal to "HELLO"
+            Actual: "world",
+              which, results into "WORLD"
+                by applying upper_case(),
+                  isn't equal to "HELLO"
+            "#
+            ))))
+        )
+    }
+
+    #[test]
+    fn test_describe_simple() -> Result<()> {
+        let matcher = result_of!(|x| x + 1, eq(2));
+        let description = matcher.describe(matcher.matches(0));
+        verify_that!(
+            description,
+            displays_as(eq(indoc!(
+                r#"
+        by applying |x| x + 1,
+          isn't equal to 2"#
+            )))
+        )
+    }
+
+    #[test]
+    fn test_describe_complicated() -> Result<()> {
+        let matcher = result_of_ref!(
+            |s: &str| s.chars().collect::<Vec<_>>(),
+            each(predicate(char::is_ascii_alphabetic))
+        );
+        let description = matcher.describe(matcher.matches("A quick brown fox"));
+        verify_that!(
+            description,
+            displays_as(eq(indoc!(
+                r#"
+        by applying |s: &str| s.chars().collect::<Vec<_>>(),
+          contains no element that matches"#
             )))
         )
     }
