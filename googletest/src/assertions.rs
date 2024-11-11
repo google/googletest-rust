@@ -120,6 +120,7 @@
 /// not supported; see [Rust by Example](https://doc.rust-lang.org/rust-by-example/primitives/tuples.html#tuples).
 #[macro_export]
 macro_rules! verify_that {
+    // specialized to sequences:
     ($actual:expr, [$($expecteds:expr),+ $(,)?]) => {
         {
             use $crate::assertions::internal::Subject as _;
@@ -129,6 +130,8 @@ macro_rules! verify_that {
             )
         }
     };
+
+    // specialized to unordered sequences:
     ($actual:expr, {$($expecteds:expr),+ $(,)?}) => {
         {
             use $crate::assertions::internal::Subject as  _;
@@ -138,6 +141,8 @@ macro_rules! verify_that {
             )
         }
     };
+
+    // general case:
     ($actual:expr, $expected:expr $(,)?) => {
         {
             use $crate::assertions::internal::Subject as  _;
@@ -1373,12 +1378,6 @@ macro_rules! expect_that {
         $crate::verify_that!($actual, {$($expected),*}).and_log_failure();
     }};
 
-    // general case:
-    ($actual:expr, $expected:expr $(,)?) => {{
-        use $crate::GoogleTestSupport as _;
-        $crate::verify_that!($actual, $expected).and_log_failure();
-    }};
-
     // w/ format args, specialized to sequence:
     ($actual:expr, [$($expected:expr),*], $($format_args:expr),* $(,)?) => {
         use $crate::GoogleTestSupport as _;
@@ -1394,6 +1393,12 @@ macro_rules! expect_that {
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure()
     };
+
+    // general case:
+    ($actual:expr, $expected:expr $(,)?) => {{
+        use $crate::GoogleTestSupport as _;
+        $crate::verify_that!($actual, $expected).and_log_failure();
+    }};
 
     // w/ format args, general case:
     ($actual:expr, $expected:expr, $($format_args:expr),* $(,)?) => {

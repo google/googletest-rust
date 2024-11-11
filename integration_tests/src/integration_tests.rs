@@ -107,6 +107,11 @@ mod tests {
     }
 
     #[gtest]
+    fn expect_that_with_unordered_elements_supports_custom_error_msg() {
+        expect_that!(vec![1, 2], {eq(&2), eq(&1)}, "A custom error message");
+    }
+
+    #[gtest]
     fn should_fail_on_assertion_failure() -> Result<()> {
         let status = run_external_process("simple_assertion_failure").status()?;
 
