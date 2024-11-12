@@ -1308,6 +1308,59 @@ macro_rules! expect_near {
 /// equivalent to `ASSERT_THAT`, use [`verify_that!`] with the `?` operator.
 #[macro_export]
 macro_rules! assert_that {
+    // specialized to sequence:
+    ($actual:expr, [ $($expected:expr),* ] $(,)?) => {
+        match $crate::verify_that!($actual, [ $($expected),* ]) {
+            Ok(_) => {}
+            Err(e) => {
+                // The extra newline before the assertion failure message makes the failure a
+                // bit easier to read when there's some generic boilerplate from the panic.
+                panic!("\n{}", e);
+            }
+        }
+    };
+
+    // specialized to unordered sequence
+    ($actual:expr, { $($expected:expr),* } $(,)?) => {
+        match $crate::verify_that!($actual, { $($expected),* }) {
+            Ok(_) => {}
+            Err(e) => {
+                // The extra newline before the assertion failure message makes the failure a
+                // bit easier to read when there's some generic boilerplate from the panic.
+                panic!("\n{}", e);
+            }
+        }
+    };
+
+    // w/ format args, specialized to sequence:
+    ($actual:expr, [ $($expected:expr),* ], $($format_args:expr),* $(,)?) => {
+        match $crate::verify_that!($actual, [ $($expected),* ])
+            .with_failure_message(|| format!($($format_args),*))
+        {
+            Ok(_) => {}
+            Err(e) => {
+                // The extra newline before the assertion failure message makes the failure a
+                // bit easier to read when there's some generic boilerplate from the panic.
+                panic!("\n{}", e);
+            }
+        }
+    };
+
+    // w/ format args, specialized to unordered sequence:
+    ($actual:expr, { $($expected:expr),* }, $($format_args:expr),* $(,)?) => {
+        match $crate::verify_that!($actual, { $($expected),* })
+            .with_failure_message(|| format!($($format_args),*))
+        {
+            Ok(_) => {}
+            Err(e) => {
+                // The extra newline before the assertion failure message makes the failure a
+                // bit easier to read when there's some generic boilerplate from the panic.
+                panic!("\n{}", e);
+            }
+        }
+    };
+
+    // general case:
     ($actual:expr, $expected:expr $(,)?) => {
         match $crate::verify_that!($actual, $expected) {
             Ok(_) => {}
@@ -1319,6 +1372,7 @@ macro_rules! assert_that {
         }
     };
 
+    // w/ format args, general case:
     ($actual:expr, $expected:expr, $($format_args:expr),* $(,)?) => {
         match $crate::verify_that!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))

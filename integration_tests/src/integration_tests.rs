@@ -72,6 +72,26 @@ mod tests {
     }
 
     #[gtest]
+    fn assert_that_supports_element_sequences() {
+        assert_that!(vec![1, 2], [eq(&1), eq(&2)]);
+    }
+
+    #[gtest]
+    fn assert_that_supports_unordered_element_sequences() {
+        assert_that!(vec![1, 2], {eq(&2), eq(&1)});
+    }
+
+    #[gtest]
+    fn assert_that_supports_ordered_element_sequences_with_format_string() {
+        assert_that!(vec![1, 2], [eq(&1), eq(&2)], "A custom error message");
+    }
+
+    #[gtest]
+    fn assert_that_supports_unordered_element_sequences_with_format_string() {
+        assert_that!(vec![1, 2], {eq(&2), eq(&1)}, "A custom error message");
+    }
+
+    #[gtest]
     fn should_pass_with_expect_that() -> Result<()> {
         let value = 2;
         expect_that!(value, eq(2));
