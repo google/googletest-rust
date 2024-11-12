@@ -578,12 +578,45 @@ macro_rules! expect_false {
 ///    `verify_that!(actual, unordered_elements_are![eq(e1), eq(e2), ...])`
 #[macro_export]
 macro_rules! verify_eq {
+    // Specialization for ordered sequences of tuples:
+    ($actual:expr, [ $( ( $($tuple_elt:expr),* ) ),+ $(,)? ] $(,)?) => {
+        verify_that!(&$actual, [
+            $(
+                // tuple matching
+                (
+                    $(
+                        $crate::matchers::eq(&$tuple_elt)
+                    ),*
+                )
+            ),*
+        ])
+    };
+
+    // Specialization for unordered sequences of tuples:
+    ($actual:expr, { $( ( $($tuple_elt:expr),* ) ),+ $(,)?} $(,)?) => {
+        verify_that!(&$actual, {
+            $(
+                // tuple matching
+                (
+                    $(
+                        $crate::matchers::eq(&$tuple_elt)
+                    ),*
+                )
+            ),*
+        })
+    };
+
+    // Ordered sequences:
     ($actual:expr, [$($expected:expr),+ $(,)?] $(,)?) => {
         verify_that!(&$actual, [$($crate::matchers::eq(&$expected)),*])
     };
+
+    // Unordered sequences:
     ($actual:expr, {$($expected:expr),+ $(,)?} $(,)?) => {
         verify_that!(&$actual, {$($crate::matchers::eq(&$expected)),*})
     };
+
+    // General case:
     ($actual:expr, $expected:expr $(,)?) => {
         verify_that!(&$actual, $crate::matchers::eq(&$expected))
     };
@@ -1492,5 +1525,89 @@ pub mod internal {
     #[track_caller]
     pub fn create_fail_result(message: String) -> crate::Result<()> {
         Err(crate::internal::test_outcome::TestAssertionFailure::create(message))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+
+    #[test]
+    fn verify_of_hash_maps_with_str_string_matching() -> Result<()> {
+        let hash_map: std::collections::HashMap<String, String> =
+            std::collections::HashMap::from([("a".into(), "A".into()), ("b".into(), "B".into())]);
+        verify_eq!(hash_map, {("a", "A"), ("b", "B")})
+    }
+
+    #[test]
+    fn verify_of_hash_maps_with_ad_hoc_struct() -> Result<()> {
+        #[derive(PartialEq, Debug)]
+        struct Greek(String);
+
+        let hash_map: std::collections::HashMap<String, Greek> = std::collections::HashMap::from([
+            ("a".into(), Greek("Alpha".into())),
+            ("b".into(), Greek("Beta".into())),
+        ]);
+        verify_eq!(hash_map, {
+            ("b", Greek("Beta".into())),
+            ("a", Greek("Alpha".into())),
+        })
+    }
+
+    #[test]
+    fn verify_of_hash_maps_with_i32s() -> Result<()> {
+        let hash_map: std::collections::HashMap<i32, i32> =
+            std::collections::HashMap::from([(1, 1), (2, 4), (-1, 1), (-3, 9)]);
+        verify_eq!(hash_map, {
+            (-3, 9),
+            (-1, 1),
+            (1, 1),
+            (2, 4),
+        })
+    }
+
+    #[test]
+    fn verify_eq_of_unordered_pairs() -> Result<()> {
+        verify_eq!(vec![(1, 2), (2, 3)], {(1, 2), (2, 3)})?;
+        verify_eq!(vec![(1, 2), (2, 3)], {(2, 3), (1, 2)})
+    }
+
+    #[test]
+    fn verify_eq_of_unordered_structs() -> Result<()> {
+        #[derive(PartialEq, Debug)]
+        struct P(i32, i32);
+
+        verify_eq!(vec![P(1, 1), P(1, 2), P(3, 7)],
+                  {P(1, 1), P(1, 2), P(3, 7)})?;
+        verify_eq!(vec![P(1, 1), P(1, 2), P(3, 7)],
+                  {P(3,7), P(1, 1), P(1, 2)})
+    }
+
+    #[test]
+    fn verify_eq_of_ordered_pairs() -> Result<()> {
+        verify_eq!(vec![(1, 2), (2, 3)], [(1, 2), (2, 3)])
+    }
+
+    #[test]
+    fn verify_eq_of_ordered_structs() -> Result<()> {
+        #[derive(PartialEq, Debug)]
+        struct P(i32, i32);
+
+        verify_eq!(vec![P(1, 1), P(1, 2), P(3, 7)], [P(1, 1), P(1, 2), P(3, 7)])
+    }
+
+    #[test]
+    fn verify_eq_of_ordered_pairs_order_matters() -> Result<()> {
+        let result = verify_eq!(vec![(1, 2), (2, 3)], [(2, 3), (1, 2)]);
+        verify_that!(result, err(anything()))
+    }
+
+    #[test]
+    fn verify_eq_of_ordered_structs_order_matters() -> Result<()> {
+        #[derive(PartialEq, Debug)]
+        struct P(i32, i32);
+
+        let result = verify_eq!(vec![P(1, 1), P(1, 2), P(3, 7)], [P(3, 7), P(1, 1), P(1, 2)]);
+        verify_that!(result, err(anything()))
     }
 }
