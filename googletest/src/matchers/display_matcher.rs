@@ -111,6 +111,7 @@ mod tests {
                 "
                   Actual: \"123\\n234\",
                     which displays as \"123\\n234\" which isn't equal to \"123\\n345\"
+                    
                     Difference(-actual / +expected):
                      123
                     -234

@@ -533,7 +533,11 @@ impl Configuration {
             MatchMode::EndsWith => create_diff_reversed(actual, expected, self.mode.to_diff_mode()),
         };
 
-        format!("{default_explanation}\n{diff}").into()
+        if diff.is_empty() {
+            format!("{default_explanation}").into()
+        } else {
+            format!("{default_explanation}\n\n{diff}").into()
+        }
     }
 
     fn ignoring_leading_whitespace(self) -> Self {

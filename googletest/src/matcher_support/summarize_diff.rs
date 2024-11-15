@@ -41,7 +41,7 @@ pub(crate) fn create_diff(
     match edit_distance::edit_list(actual_debug.lines(), expected_debug.lines(), diff_mode) {
         edit_distance::Difference::Equal => "No difference found between debug strings.".into(),
         edit_distance::Difference::Editable(edit_list) => {
-            format!("\n{}{}", summary_header(), edit_list.into_iter().collect::<BufferedSummary>(),)
+            format!("{}{}", summary_header(), edit_list.into_iter().collect::<BufferedSummary>(),)
                 .into()
         }
         edit_distance::Difference::Unrelated => "".into(),
@@ -73,7 +73,7 @@ pub(crate) fn create_diff_reversed(
         edit_distance::Difference::Equal => "No difference found between debug strings.".into(),
         edit_distance::Difference::Editable(mut edit_list) => {
             edit_list.reverse();
-            format!("\n{}{}", summary_header(), edit_list.into_iter().collect::<BufferedSummary>(),)
+            format!("{}{}", summary_header(), edit_list.into_iter().collect::<BufferedSummary>(),)
                 .into()
         }
         edit_distance::Difference::Unrelated => "".into(),
@@ -470,7 +470,6 @@ mod tests {
             create_diff(expected, actual, Mode::Exact),
             eq(indoc!(
                 "
-
                 Difference(-actual / +expected):
                  prefix
                 -Actual#1
@@ -494,7 +493,6 @@ mod tests {
             create_diff(&build_text(1..50), &build_text(1..51), Mode::Exact),
             eq(indoc! {
                 "
-
                 Difference(-actual / +expected):
                  1
                  2
@@ -514,7 +512,6 @@ mod tests {
             create_diff(&build_text(1..50), &build_text(1..51), Mode::Exact),
             eq(indoc! {
                 "
-
                 Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
                  1
                  2
@@ -546,7 +543,6 @@ mod tests {
             create_diff(actual, expected, Mode::Exact),
             eq(indoc! {
                 "
-
                 Difference(-\x1B[1;31mactual\x1B[0m / +\x1B[1;32mexpected\x1B[0m):
                 -\x1B[31mThere is a ho\x1B[0m\x1B[1;31mm\x1B[0m\x1B[31me in N\x1B[0m\x1B[1;31mouv\x1B[0m\x1B[31me\x1B[0m\x1B[1;31mlle\x1B[0m\x1B[31m Orleans\x1B[0m
                 +\x1B[32mThere is a ho\x1B[0m\x1B[1;32mus\x1B[0m\x1B[32me \x1B[0m\x1B[1;32mway down \x1B[0m\x1B[32min Ne\x1B[0m\x1B[1;32mw\x1B[0m\x1B[32m Orleans\x1B[0m
