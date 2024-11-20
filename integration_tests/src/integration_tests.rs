@@ -896,6 +896,21 @@ mod tests {
     }
 
     #[gtest]
+    fn verify_eq_reports_diff_in_trailing_newline() -> Result<()> {
+        let result = verify_eq!("hello\nworld\n", "hello\nworld");
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc! {r#"
+                    Expected: is equal to "hello\nworld"
+                    Actual: "hello\nworld\n",
+                      which isn't equal to "hello\nworld"
+                      
+                      Actual includes a terminating newline that is absent from expected.
+                "#})))
+        )
+    }
+
+    #[gtest]
     fn verify_eq_when_not_equal_returns_error() -> Result<()> {
         let output =
             run_external_process_in_tests_directory("verify_eq_when_not_equal_returns_error")?;

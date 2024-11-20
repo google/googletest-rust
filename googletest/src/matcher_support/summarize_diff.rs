@@ -38,8 +38,27 @@ pub(crate) fn create_diff(
         // line-by-line diff.
         return "".into();
     }
+
     match edit_distance::edit_list(actual_debug.lines(), expected_debug.lines(), diff_mode) {
-        edit_distance::Difference::Equal => "No difference found between debug strings.".into(),
+        edit_distance::Difference::Equal => {
+            // str.lines() is oblivious to the last newline in a
+            // string, so we need to check this to make sure we don't spuriously
+            // claim that 'hello' and 'hello\n' are identical debug strings.
+            //
+            // Although we would have liked to resolve by replacing
+            // str::lines() with str::split('\n'), the potentially
+            // empty last element interferes with good diff output for
+            // "contains" checks.
+            let actual_newline_terminated = actual_debug.ends_with('\n');
+            let expected_newline_terminated = expected_debug.ends_with('\n');
+            if actual_newline_terminated && !expected_newline_terminated {
+                "Actual includes a terminating newline that is absent from expected.".into()
+            } else if !actual_newline_terminated && expected_newline_terminated {
+                "Actual omits a terminating newline that is present in expected.".into()
+            } else {
+                "No difference found between debug strings.".into()
+            }
+        }
         edit_distance::Difference::Editable(edit_list) => {
             format!("{}{}", summary_header(), edit_list.into_iter().collect::<BufferedSummary>(),)
                 .into()
@@ -551,6 +570,22 @@ mod tests {
                 -\x1B[31mAnd it has been the ruin of many a po\x1B[0m\x1B[1;31m'\x1B[0m\x1B[31mboy\x1B[0m
                 +\x1B[32mAnd it has been the ruin of many a po\x1B[0m\x1B[1;32mor \x1B[0m\x1B[32mboy\x1B[0m"
             })
+        )
+    }
+
+    #[test]
+    fn create_diff_line_termination_diff() -> Result<()> {
+        verify_that!(
+            create_diff("1\n2\n3", "1\n2\n3\n", Mode::Exact),
+            eq("Actual omits a terminating newline that is present in expected.")
+        )?;
+        verify_that!(
+            create_diff("1\n2\n3\n", "1\n2\n3", Mode::Exact),
+            eq("Actual includes a terminating newline that is absent from expected.")
+        )?;
+        verify_that!(
+            create_diff("1\n2\n3\n", "1\n2\n3\n", Mode::Exact),
+            eq("No difference found between debug strings.")
         )
     }
 }
