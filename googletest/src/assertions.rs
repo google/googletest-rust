@@ -608,17 +608,17 @@ macro_rules! verify_eq {
 
     // Ordered sequences:
     ($actual:expr, [$($expected:expr),+ $(,)?] $(,)?) => {
-        verify_that!(&$actual, [$($crate::matchers::eq(&$expected)),*])
+        $crate::verify_that!(&$actual, [$($crate::matchers::eq(&$expected)),*])
     };
 
     // Unordered sequences:
     ($actual:expr, {$($expected:expr),+ $(,)?} $(,)?) => {
-        verify_that!(&$actual, {$($crate::matchers::eq(&$expected)),*})
+        $crate::verify_that!(&$actual, {$($crate::matchers::eq(&$expected)),*})
     };
 
     // General case:
     ($actual:expr, $expected:expr $(,)?) => {
-        verify_that!(&$actual, $crate::matchers::eq(&$expected))
+        $crate::verify_that!(&$actual, $crate::matchers::eq(&$expected))
     };
 }
 
@@ -664,31 +664,31 @@ macro_rules! verify_eq {
 macro_rules! expect_eq {
     ($actual:expr, [$($expected:expr),+ $(,)?] $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_eq!($actual, [$($expected),*]).and_log_failure();
+        $crate::verify_eq!($actual, [$($expected),*]).and_log_failure();
     }};
     ($actual:expr, [$($expected:expr),+ $(,)?], $($format_args:expr),* $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_eq!($actual, [$($expected),*])
+        $crate::verify_eq!($actual, [$($expected),*])
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
     }};
     ($actual:expr, {$($expected:expr),+ $(,)?} $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_eq!($actual, {$($expected),*}).and_log_failure();
+        $crate::verify_eq!($actual, {$($expected),*}).and_log_failure();
     }};
     ($actual:expr, {$($expected:expr),+ $(,)?}, $($format_args:expr),* $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_eq!($actual, {$($expected),*})
+        $crate::verify_eq!($actual, {$($expected),*})
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
     }};
     ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_eq!($actual, $expected).and_log_failure();
+        $crate::verify_eq!($actual, $expected).and_log_failure();
     }};
     ($actual:expr, $expected:expr, $($format_args:expr),* $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_eq!($actual, $expected)
+        $crate::verify_eq!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
     }};
