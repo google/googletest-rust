@@ -14,7 +14,7 @@
 
 [package]
 name = "googletest"
-version = "0.12.0"
+version = "0.13.0"
 keywords = ["unit", "matcher", "testing", "assertions"]
 categories = ["development-tools", "development-tools::testing"]
 description = "A rich assertion and matcher library inspired by GoogleTest for C++"
@@ -31,7 +31,7 @@ authors = [
 ]
 
 [dependencies]
-googletest_macro = { path = "../googletest_macro", version = "0.12.0" }
+googletest_macro = { path = "../googletest_macro", version = "0.13.0" }
 anyhow = { version = "1", optional = true }
 num-traits = "0.2.17"
 proptest = { version = "1.2.0", optional = true }

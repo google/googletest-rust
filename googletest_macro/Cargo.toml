@@ -14,7 +14,7 @@
 
 [package]
 name = "googletest_macro"
-version = "0.12.0"
+version = "0.13.0"
 keywords = ["unit", "matcher", "testing", "assertions"]
 categories = ["development-tools", "development-tools::testing"]
 description = "Procedural macros for GoogleTest Rust"
