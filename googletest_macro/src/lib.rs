@@ -332,9 +332,22 @@ pub fn derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     .into()
 }
 
+mod matches_pattern;
+
+/// This is an implementation detail of `googletest::matches_pattern!`.
+///
+/// It's not intended to be used directly.
+#[doc(hidden)]
+#[proc_macro]
+pub fn __googletest_macro_matches_pattern(
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    matches_pattern::matches_pattern_impl(input)
+}
+
 mod verify_pred;
 
-/// This is an implementation detail of `verify_pred!`.
+/// This is an implementation detail of `googletest::verify_pred!`.
 ///
 /// It's not intended to be used directly.
 #[doc(hidden)]

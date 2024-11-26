@@ -146,21 +146,10 @@ fn has_correct_assertion_failure_message_for_single_field() -> Result<()> {
     let actual = AStruct { a_field: 123 };
     let result = verify_that!(actual, matches_pattern!(&AStruct { a_field: eq(234) }));
 
-    #[rustversion::before(1.76)]
     const EXPECTED: &str = indoc!(
         "
         Value of: actual
         Expected: is & AStruct which has field `a_field`, which is equal to 234
-        Actual: AStruct { a_field: 123 },
-          which has field `a_field`, which isn't equal to 234
-        "
-    );
-
-    #[rustversion::since(1.76)]
-    const EXPECTED: &str = indoc!(
-        "
-        Value of: actual
-        Expected: is &AStruct which has field `a_field`, which is equal to 234
         Actual: AStruct { a_field: 123 },
           which has field `a_field`, which isn't equal to 234
         "
@@ -182,23 +171,10 @@ fn has_correct_assertion_failure_message_for_two_fields() -> Result<()> {
         matches_pattern!(&AStruct { a_field: eq(234), another_field: eq(123) })
     );
 
-    #[rustversion::before(1.76)]
     const EXPECTED: &str = indoc!(
         "
         Value of: actual
         Expected: is & AStruct which has all the following properties:
-          * has field `a_field`, which is equal to 234
-          * has field `another_field`, which is equal to 123
-        Actual: AStruct { a_field: 123, another_field: 234 },
-          * which has field `a_field`, which isn't equal to 234
-          * which has field `another_field`, which isn't equal to 123"
-    );
-
-    #[rustversion::since(1.76)]
-    const EXPECTED: &str = indoc!(
-        "
-        Value of: actual
-        Expected: is &AStruct which has all the following properties:
           * has field `a_field`, which is equal to 234
           * has field `another_field`, which is equal to 123
         Actual: AStruct { a_field: 123, another_field: 234 },
@@ -227,27 +203,14 @@ fn has_correct_assertion_failure_message_for_field_and_property() -> Result<()> 
         matches_pattern!(&AStruct { get_field(): eq(234), another_field: eq(123) })
     );
 
-    #[rustversion::before(1.76)]
     const EXPECTED: &str = indoc!(
         "
     Value of: actual
     Expected: is & AStruct which has all the following properties:
-      * has property `get_field ()`, which is equal to 234
+      * has property `get_field()`, which is equal to 234
       * has field `another_field`, which is equal to 123
     Actual: AStruct { a_field: 123, another_field: 234 },
-      * whose property `get_field ()` is `123`, which isn't equal to 234
-      * which has field `another_field`, which isn't equal to 123"
-    );
-
-    #[rustversion::since(1.76)]
-    const EXPECTED: &str = indoc!(
-        "
-    Value of: actual
-    Expected: is &AStruct which has all the following properties:
-      * has property `get_field ()`, which is equal to 234
-      * has field `another_field`, which is equal to 123
-    Actual: AStruct { a_field: 123, another_field: 234 },
-      * whose property `get_field ()` is `123`, which isn't equal to 234
+      * whose property `get_field()` is `123`, which isn't equal to 234
       * which has field `another_field`, which isn't equal to 123"
     );
 
@@ -484,7 +447,8 @@ fn matches_enum_without_field() -> Result<()> {
     }
     let actual = AnEnum::A;
 
-    verify_that!(actual, matches_pattern!(&AnEnum::A))
+    verify_that!(actual, matches_pattern!(&AnEnum::A))?;
+    verify_that!(actual, matches_pattern!(&AnEnum::A,))
 }
 
 #[test]
@@ -495,7 +459,8 @@ fn matches_enum_without_field_ref_binding_mode() -> Result<()> {
     }
     let actual = AnEnum::A;
 
-    verify_that!(actual, matches_pattern!(AnEnum::A))
+    verify_that!(actual, matches_pattern!(AnEnum::A))?;
+    verify_that!(actual, matches_pattern!(AnEnum::A,))
 }
 
 #[test]
@@ -506,7 +471,43 @@ fn matches_enum_without_field_copy() -> Result<()> {
     }
     let actual = AnEnum::A;
 
-    verify_that!(actual, matches_pattern!(AnEnum::A))
+    verify_that!(actual, matches_pattern!(AnEnum::A))?;
+    verify_that!(actual, matches_pattern!(AnEnum::A,))
+}
+
+#[test]
+fn matches_match_pattern_literal() -> Result<()> {
+    let actual = false;
+    #[allow(clippy::redundant_pattern_matching)]
+    verify_that!(actual, matches_pattern!(false))?;
+    #[allow(clippy::redundant_pattern_matching)]
+    verify_that!(actual, matches_pattern!(false,))?;
+    let actual = 1;
+    verify_that!(actual, matches_pattern!(1))?;
+    verify_that!(actual, matches_pattern!(1,))?;
+    let actual = "test";
+    verify_that!(actual, matches_pattern!(&"test"))?;
+    verify_that!(actual, matches_pattern!(&"test",))
+}
+
+#[test]
+fn matches_match_pattern_struct() -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    struct AStruct {
+        a: u32,
+    }
+    let actual = AStruct { a: 123 };
+    verify_that!(actual, matches_pattern!(AStruct { .. }))
+}
+
+#[test]
+fn matches_match_pattern_tuple() -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    struct AStruct(u32);
+    let actual = AStruct(123);
+    verify_that!(actual, matches_pattern!(AStruct(_)))
 }
 
 #[test]
@@ -521,12 +522,7 @@ fn generates_correct_failure_output_when_enum_variant_without_field_is_not_match
 
     let result = verify_that!(actual, matches_pattern!(&AnEnum::A));
 
-    #[rustversion::before(1.76)]
     const EXPECTED: &str = "is not & AnEnum :: A";
-
-    #[rustversion::since(1.76)]
-    const EXPECTED: &str = "is not &AnEnum::A";
-
     verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
 }
 #[test]
@@ -539,12 +535,7 @@ fn generates_correct_failure_output_when_enum_variant_without_field_is_matched()
 
     let result = verify_that!(actual, not(matches_pattern!(&AnEnum::A)));
 
-    #[rustversion::before(1.76)]
     const EXPECTED: &str = "is & AnEnum :: A";
-
-    #[rustversion::since(1.76)]
-    const EXPECTED: &str = "is &AnEnum::A";
-
     verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
 }
 #[test]
@@ -579,12 +570,7 @@ fn includes_enum_variant_in_description_with_field() -> Result<()> {
 
     let result = verify_that!(actual, matches_pattern!(&AnEnum::A(eq(234))));
 
-    #[rustversion::before(1.76)]
     const EXPECTED: &str = "Expected: is & AnEnum :: A which has field `0`";
-
-    #[rustversion::since(1.76)]
-    const EXPECTED: &str = "Expected: is &AnEnum::A which has field `0`";
-
     verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
 }
 #[test]
@@ -597,12 +583,7 @@ fn includes_enum_variant_in_negative_description_with_field() -> Result<()> {
 
     let result = verify_that!(actual, not(matches_pattern!(&AnEnum::A(eq(123)))));
 
-    #[rustversion::before(1.76)]
     const EXPECTED: &str = "Expected: is not & AnEnum :: A which has field `0`, which is equal to";
-
-    #[rustversion::since(1.76)]
-    const EXPECTED: &str = "Expected: is not &AnEnum::A which has field `0`, which is equal to";
-
     verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
 }
 #[test]
@@ -615,12 +596,7 @@ fn includes_enum_variant_in_description_with_two_fields() -> Result<()> {
 
     let result = verify_that!(actual, matches_pattern!(&AnEnum::A(eq(234), eq(234))));
 
-    #[rustversion::before(1.76)]
     const EXPECTED: &str = "Expected: is & AnEnum :: A which has all the following properties";
-
-    #[rustversion::since(1.76)]
-    const EXPECTED: &str = "Expected: is &AnEnum::A which has all the following properties";
-
     verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
 }
 #[test]
@@ -633,12 +609,7 @@ fn includes_enum_variant_in_description_with_three_fields() -> Result<()> {
 
     let result = verify_that!(actual, matches_pattern!(&AnEnum::A(eq(234), eq(234), eq(345))));
 
-    #[rustversion::before(1.76)]
     const EXPECTED: &str = "Expected: is & AnEnum :: A which has all the following properties";
-
-    #[rustversion::since(1.76)]
-    const EXPECTED: &str = "Expected: is &AnEnum::A which has all the following properties";
-
     verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
 }
 #[test]
@@ -651,12 +622,7 @@ fn includes_enum_variant_in_description_with_named_field() -> Result<()> {
 
     let result = verify_that!(actual, matches_pattern!(&AnEnum::A { field: eq(234) }));
 
-    #[rustversion::before(1.76)]
     const EXPECTED: &str = "Expected: is & AnEnum :: A which has field `field`";
-
-    #[rustversion::since(1.76)]
-    const EXPECTED: &str = "Expected: is &AnEnum::A which has field `field`";
-
     verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
 }
 #[test]
@@ -672,12 +638,7 @@ fn includes_enum_variant_in_description_with_two_named_fields() -> Result<()> {
         matches_pattern!(&AnEnum::A { field: eq(234), another_field: eq(234) })
     );
 
-    #[rustversion::before(1.76)]
     const EXPECTED: &str = "Expected: is & AnEnum :: A which has all the following properties";
-
-    #[rustversion::since(1.76)]
-    const EXPECTED: &str = "Expected: is &AnEnum::A which has all the following properties";
-
     verify_that!(&result, err(displays_as(contains_substring(EXPECTED))))
 }
 #[test]
@@ -695,12 +656,7 @@ fn includes_struct_name_in_description_with_property() -> Result<()> {
 
     let result = verify_that!(actual, matches_pattern!(&AStruct { get_field(): eq(234) }));
 
-    #[rustversion::before(1.76)]
-    const EXPECTED: &str = "Expected: is & AStruct which has property `get_field ()`";
-
-    #[rustversion::since(1.76)]
-    const EXPECTED: &str = "Expected: is &AStruct which has property `get_field ()`";
-
+    const EXPECTED: &str = "Expected: is & AStruct which has property `get_field()`";
     verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
 }
 #[test]
@@ -718,12 +674,7 @@ fn includes_struct_name_in_description_with_ref_property() -> Result<()> {
 
     let result = verify_that!(actual, matches_pattern!(&AStruct { get_field(): eq(&234) }));
 
-    #[rustversion::before(1.76)]
-    const EXPECTED: &str = "Expected: is & AStruct which has property `get_field ()`";
-
-    #[rustversion::since(1.76)]
-    const EXPECTED: &str = "Expected: is &AStruct which has property `get_field ()`";
-
+    const EXPECTED: &str = "Expected: is & AStruct which has property `get_field()`";
     verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
 }
 
@@ -743,12 +694,7 @@ fn includes_struct_name_in_description_with_property_after_field() -> Result<()>
     let result =
         verify_that!(actual, matches_pattern!(&AStruct { field: eq(123), get_field(): eq(234) }));
 
-    #[rustversion::before(1.76)]
     const EXPECTED: &str = "Expected: is & AStruct which has all the following properties";
-
-    #[rustversion::since(1.76)]
-    const EXPECTED: &str = "Expected: is &AStruct which has all the following properties";
-
     verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
 }
 
@@ -768,12 +714,7 @@ fn includes_struct_name_in_description_with_ref_property_after_field() -> Result
     let result =
         verify_that!(actual, matches_pattern!(&AStruct { field: eq(123), get_field(): eq(&234) }));
 
-    #[rustversion::before(1.76)]
     const EXPECTED: &str = "Expected: is & AStruct which has all the following properties";
-
-    #[rustversion::since(1.76)]
-    const EXPECTED: &str = "Expected: is &AStruct which has all the following properties";
-
     verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
 }
 #[test]
