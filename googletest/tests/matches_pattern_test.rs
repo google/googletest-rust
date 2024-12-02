@@ -440,6 +440,18 @@ fn matches_tuple_struct_with_two_fields_and_trailing_comma() -> Result<()> {
 }
 
 #[test]
+fn matches_tuple_struct_with_interleaved_underscore() -> Result<()> {
+    #[derive(Debug)]
+    struct NonCopy;
+    #[derive(Debug)]
+    struct AStruct(u32, NonCopy, u32);
+    let actual = AStruct(1, NonCopy, 3);
+
+    verify_that!(actual, matches_pattern!(&AStruct(eq(1), _, eq(3))))?;
+    verify_that!(actual, matches_pattern!(AStruct(eq(&1), _, eq(&3))))
+}
+
+#[test]
 fn matches_enum_without_field() -> Result<()> {
     #[derive(Debug)]
     enum AnEnum {
@@ -499,15 +511,6 @@ fn matches_match_pattern_struct() -> Result<()> {
     }
     let actual = AStruct { a: 123 };
     verify_that!(actual, matches_pattern!(AStruct { .. }))
-}
-
-#[test]
-fn matches_match_pattern_tuple() -> Result<()> {
-    #[allow(dead_code)]
-    #[derive(Debug)]
-    struct AStruct(u32);
-    let actual = AStruct(123);
-    verify_that!(actual, matches_pattern!(AStruct(_)))
 }
 
 #[test]

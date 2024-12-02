@@ -18,7 +18,7 @@ use syn::{
     parse::{Parse, ParseStream, Parser as _},
     parse_macro_input,
     punctuated::Punctuated,
-    Expr, ExprCall, ExprInfer, Pat, Token,
+    Expr, ExprCall, Pat, Token,
 };
 
 /// This is an implementation detail of `googletest::matches_pattern!`. It
@@ -147,21 +147,15 @@ struct TupleFieldPattern {
     matcher: Expr,
 }
 
-impl Parse for TupleFieldPattern {
+struct MaybeTupleFieldPattern(Option<TupleFieldPattern>);
+
+impl Parse for MaybeTupleFieldPattern {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let ref_token = input.parse()?;
-        let matcher = input.parse()?;
-        match matcher {
-            // `_` is an expr in const generics contexts, but is not supported in regular
-            // `Expr` use like in the `matches_pattern` custom syntax. So fail in that case.
-            // That should allow `into_match_expr` above to fall back to `into_match_pattern_expr`
-            // and still attempt to parse `matcher` as a pattern.
-            Expr::Infer(ExprInfer { underscore_token, .. }) => compile_err(
-                underscore_token.spans[0],
-                "unexpected `_` for `matches_pattern!` tuple field matcher",
-            ),
-            _ => Ok(TupleFieldPattern { ref_token, matcher }),
-        }
+        let pattern = match input.parse::<Option<Token![_]>>()? {
+            Some(_) => None,
+            None => Some(TupleFieldPattern { ref_token: input.parse()?, matcher: input.parse()? }),
+        };
+        Ok(MaybeTupleFieldPattern(pattern))
     }
 }
 
@@ -170,13 +164,16 @@ fn parse_tuple_pattern_args(
     struct_name: TokenStream,
     group_content: TokenStream,
 ) -> syn::Result<TokenStream> {
-    let parser = Punctuated::<TupleFieldPattern, Token![,]>::parse_terminated;
-    let fields = parser.parse2(group_content)?.into_iter().enumerate().map(
-        |(index, TupleFieldPattern { ref_token, matcher })| {
+    let parser = Punctuated::<MaybeTupleFieldPattern, Token![,]>::parse_terminated;
+    let fields = parser
+        .parse2(group_content)?
+        .into_iter()
+        .enumerate()
+        .filter_map(|(index, maybe_pattern)| maybe_pattern.0.map(|pattern| (index, pattern)))
+        .map(|(index, TupleFieldPattern { ref_token, matcher })| {
             let index = syn::Index::from(index);
             quote! { googletest::matchers::field!(#struct_name.#index, #ref_token #matcher) }
-        },
-    );
+        });
     Ok(quote! {
         googletest::matchers::__internal_unstable_do_not_depend_on_these::is(
             stringify!(#struct_name),
