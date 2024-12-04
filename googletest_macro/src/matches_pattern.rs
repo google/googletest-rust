@@ -140,14 +140,14 @@ fn into_match_pattern_expr(stream: TokenStream) -> syn::Result<TokenStream> {
 ////////////////////////////////////////////////////////////////////////////////
 // Parse tuple struct patterns
 
-/// Each part in a tuple matcher pattern that's between the commas for use with
-/// `Punctuated`'s parser.
+/// Each part in a tuple matcher pattern that's between the commas. When `None`,
+/// it represents `_` which matches anything.
+struct MaybeTupleFieldPattern(Option<TupleFieldPattern>);
+
 struct TupleFieldPattern {
     ref_token: Option<Token![ref]>,
     matcher: Expr,
 }
-
-struct MaybeTupleFieldPattern(Option<TupleFieldPattern>);
 
 impl Parse for MaybeTupleFieldPattern {
     fn parse(input: ParseStream) -> syn::Result<Self> {
@@ -227,24 +227,93 @@ fn parse_braced_pattern_args(
     struct_name: TokenStream,
     group_content: TokenStream,
 ) -> syn::Result<TokenStream> {
-    let parser = Punctuated::<FieldOrMethodPattern, Token![,]>::parse_terminated;
-    let fields = parser.parse2(group_content)?.into_iter().map(
-        |FieldOrMethodPattern { ref_token, field_or_method, matcher }| match field_or_method {
+    let (patterns, non_exhaustive) = parse_list_terminated_pattern.parse2(group_content)?;
+    let mut field_names = vec![];
+    let field_patterns: Vec<TokenStream> = patterns
+        .into_iter()
+        .map(|FieldOrMethodPattern { ref_token, field_or_method, matcher }| match field_or_method {
             FieldOrMethod::Field(ident) => {
+                field_names.push(ident.clone());
                 quote! { field!(#struct_name . #ident, #ref_token #matcher) }
             }
             FieldOrMethod::Method(call) => {
                 quote! { property!(#struct_name . #call, #ref_token #matcher) }
             }
-        },
-    );
+        })
+        .collect();
+
+    // Do an exhaustiveness check only if the pattern doesn't end with `..` and has
+    // any fields in the pattern. This latter part is required because
+    // `matches_pattern!` also uses the brace notation for tuple structs when
+    // asserting on method calls. i.e.
+    //
+    // ```
+    // struct Struct(u32);
+    // ...
+    // matches_pattern!(foo, Struct { bar(): eq(1) })
+    // ```
+    // and we can't emit an exhaustiveness check based on the `matches_pattern!`.
+    let maybe_assert_exhaustive = if non_exhaustive || field_names.is_empty() {
+        None
+    } else {
+        // Note that `struct_name` might be an enum variant (`Enum::Foo`), which is not
+        // a valid type. So we need to infer the type, produce an instance, and match on
+        // it. Fortunately, `[_; 0]` can be trivially initialized to `[]` and can
+        // produce an instance by indexing into it without failing compilation.
+        Some(quote! {
+            fn __matches_pattern_ensure_exhastive_match(i: usize) {
+                let val: [_; 0] = [];
+                let _ = match val[i] {
+                    #struct_name { #(#field_names: _),* } => (),
+                    // The pattern below is unreachable if the type is a struct (as opposed to an
+                    // enum). Since the macro can't know which it is, we always include it and just
+                    // tell the compiler not to complain.
+                    #[allow(unreachable_patterns)]
+                    _ => (),
+                };
+            }
+        })
+    };
 
     Ok(quote! {
         googletest::matchers::__internal_unstable_do_not_depend_on_these::is(
-            stringify!(#struct_name),
-            all!( #(#fields),* )
+            stringify!(#struct_name), {
+                #maybe_assert_exhaustive
+                all!( #(#field_patterns),* )
+            }
         )
     })
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// General-purpose helpers
+
+/// Returns the parsed struct pattern body along with a boolean that indicates
+/// whether the body ended with `..`.
+///
+/// This is like `Punctuated::parse_terminated`, but additionally allows for an
+/// optional `..`, which cannot be followed by a comma.
+fn parse_list_terminated_pattern<T: Parse>(input: ParseStream<'_>) -> syn::Result<(Vec<T>, bool)> {
+    let mut patterns = vec![];
+    while !input.is_empty() {
+        // Check for trailing `..`.
+        if input.parse::<Option<Token![..]>>()?.is_some() {
+            // Must be at the end of the group content.
+            return if input.is_empty() {
+                Ok((patterns, true))
+            } else {
+                compile_err(input.span(), "`..` must be at the end of the struct pattern")
+            };
+        }
+
+        // Otherwise, parse the field/method patterns.
+        patterns.push(input.parse::<T>()?);
+        if input.is_empty() {
+            break;
+        }
+        input.parse::<Token![,]>()?;
+    }
+    Ok((patterns, false))
 }
 
 fn compile_err<T>(span: Span, message: &str) -> syn::Result<T> {

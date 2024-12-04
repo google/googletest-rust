@@ -44,8 +44,11 @@
 /// #     .unwrap();
 /// ```
 ///
-/// It is not required to include all named fields in the specification. Omitted
-/// fields have no effect on the output of the matcher.
+/// If any fields are provided in the pattern, then all fields must be
+/// specified, or the pattern must end with `..`, just like regular match
+/// patterns. Omitted fields have no effect on the output of the matcher.
+/// The `..` is unnecessary when no fields are provided and only method
+/// values are checked.
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -61,7 +64,7 @@
 /// # };
 /// verify_that!(my_struct, matches_pattern!(MyStruct {
 ///     a_field: starts_with("Something"),
-///     // another_field is missing, so it may be anything.
+///     .. // another_field is missing, so it may be anything.
 /// }))
 /// #     .unwrap();
 /// ```
@@ -366,4 +369,35 @@ pub mod internal {
             }
         }
     }
+}
+
+mod compile_fail_tests {
+    /// ```compile_fail
+    /// use ::googletest::prelude::*;
+    /// #[derive(Debug)]
+    /// struct Foo { a: u32, b: u32 }
+    /// let actual = Foo { a: 1, b: 2 };
+    /// verify_that!(actual, matches_pattern!(Foo { a: eq(&1), .., }));
+    /// ```
+    fn _dot_dot_supported_only_at_end_of_struct_pattern() {}
+
+    /// ```compile_fail
+    /// use ::googletest::prelude::*;
+    /// #[derive(Debug)]
+    /// struct Foo { a: u32, b: u32 }
+    /// let actual = Foo { a: 1, b: 2 };
+    /// verify_that!(actual, matches_pattern!(Foo { a: eq(&1) }));
+    /// ```
+    fn _unexhaustive_struct_field_check_requires_dot_dot() {}
+
+    /// ```compile_fail
+    /// use ::googletest::prelude::*;
+    /// #[derive(Debug)]
+    /// enum Foo {
+    ///     Bar { a: u32, b: u32 }
+    /// }
+    /// let actual = Foo::Bar { a: 1, b: 2 };
+    /// verify_that!(actual, matches_pattern!(Foo::Bar { a: eq(&1) }));
+    /// ```
+    fn _unexhaustive_enum_struct_field_check_requires_dot_dot() {}
 }

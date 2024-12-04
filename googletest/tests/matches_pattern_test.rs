@@ -39,6 +39,19 @@ fn matches_struct_containing_two_fields() -> Result<()> {
 }
 
 #[test]
+fn matches_struct_non_exhaustive() -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    struct AStruct {
+        a_field: u32,
+        another_field: u32,
+    }
+    let actual = AStruct { a_field: 123, another_field: 234 };
+
+    verify_that!(actual, matches_pattern!(&AStruct { a_field: eq(123), .. }))
+}
+
+#[test]
 #[rustfmt::skip]// Otherwise fmt strips the trailing comma
 fn supports_trailing_comma_with_one_field() -> Result<()> {
     #[derive(Debug)]
@@ -200,7 +213,7 @@ fn has_correct_assertion_failure_message_for_field_and_property() -> Result<()> 
     let actual = AStruct { a_field: 123, another_field: 234 };
     let result = verify_that!(
         actual,
-        matches_pattern!(&AStruct { get_field(): eq(234), another_field: eq(123) })
+        matches_pattern!(&AStruct { get_field(): eq(234), another_field: eq(123), .. })
     );
 
     const EXPECTED: &str = indoc!(
@@ -485,6 +498,29 @@ fn matches_enum_without_field_copy() -> Result<()> {
 
     verify_that!(actual, matches_pattern!(AnEnum::A))?;
     verify_that!(actual, matches_pattern!(AnEnum::A,))
+}
+
+#[test]
+fn matches_enum_struct_non_exhaustive() -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    enum AnEnum {
+        Variant1 { a_field: u32, another_field: u32 },
+    }
+    let actual: AnEnum = AnEnum::Variant1 { a_field: 123, another_field: 234 };
+    verify_that!(actual, matches_pattern!(&AnEnum::Variant1 { a_field: eq(123), .. }))
+}
+
+#[test]
+fn matches_enum_struct_exhaustive_with_multiple_variants() -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    enum AnEnum {
+        Variant1 { a_field: u32 },
+        Variant2,
+    }
+    let actual: AnEnum = AnEnum::Variant1 { a_field: 123 };
+    verify_that!(actual, matches_pattern!(&AnEnum::Variant1 { a_field: eq(123) }))
 }
 
 #[test]
@@ -933,7 +969,7 @@ fn matches_struct_with_a_method_followed_by_a_field() -> Result<()> {
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { get_field(): eq(123), another_field: eq(234) })
+        matches_pattern!(&AStruct { get_field(): eq(123), another_field: eq(234), .. })
     )
 }
 #[test]
@@ -941,21 +977,17 @@ fn matches_struct_with_a_method_followed_by_a_field_with_trailing_comma() -> Res
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
-        another_field: u32,
     }
 
     impl AStruct {
-        fn get_field(&self) -> u32 {
-            self.a_field
+        fn get_value(&self) -> u32 {
+            123
         }
     }
 
-    let actual = AStruct { a_field: 123, another_field: 234 };
+    let actual = AStruct { a_field: 234 };
 
-    verify_that!(
-        actual,
-        matches_pattern!(&AStruct { get_field(): eq(123), another_field: eq(234), })
-    )
+    verify_that!(actual, matches_pattern!(&AStruct { get_value(): eq(123), a_field: eq(234), }))
 }
 #[test]
 fn matches_struct_with_a_method_taking_two_parameters_and_field() -> Result<()> {
@@ -975,7 +1007,7 @@ fn matches_struct_with_a_method_taking_two_parameters_and_field() -> Result<()> 
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { add_product_to_field(2, 3): eq(7), another_field: eq(123) })
+        matches_pattern!(&AStruct { add_product_to_field(2, 3): eq(7), another_field: eq(123), .. })
     )
 }
 #[test]
@@ -1000,7 +1032,7 @@ fn matches_struct_with_a_method_taking_enum_value_parameter_followed_by_field() 
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { get_field(AnEnum::AVariant): eq(1), another_field: eq(2) })
+        matches_pattern!(&AStruct { get_field(AnEnum::AVariant): eq(1), another_field: eq(2), .. })
     )
 }
 #[test]
@@ -1022,7 +1054,11 @@ fn matches_struct_with_a_method_taking_two_parameters_with_trailing_comma_and_fi
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { add_product_to_field(2, 3,): eq(7), another_field: eq(123) })
+        matches_pattern!(&AStruct {
+            add_product_to_field(2, 3,): eq(7),
+            another_field: eq(123),
+            ..
+        })
     )
 }
 #[test]
@@ -1043,7 +1079,7 @@ fn matches_struct_with_a_method_returning_reference_followed_by_a_field() -> Res
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { get_field_ref(): eq(&123), another_field: eq(234) })
+        matches_pattern!(&AStruct { get_field_ref(): eq(&123), another_field: eq(234), .. })
     )
 }
 #[test]
@@ -1052,7 +1088,6 @@ fn matches_struct_with_a_method_returning_reference_followed_by_a_field_with_tra
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
-        another_field: u32,
     }
 
     impl AStruct {
@@ -1061,11 +1096,11 @@ fn matches_struct_with_a_method_returning_reference_followed_by_a_field_with_tra
         }
     }
 
-    let actual = AStruct { a_field: 123, another_field: 234 };
+    let actual = AStruct { a_field: 123 };
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { get_field_ref(): eq(&123), another_field: eq(234), })
+        matches_pattern!(&AStruct { get_field_ref(): eq(&123), a_field: eq(123), })
     )
 }
 #[test]
@@ -1086,7 +1121,7 @@ fn matches_struct_with_a_method_taking_two_parameters_ret_ref_and_field() -> Res
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { get_field_ref(2, 3): eq(&1), another_field: eq(123) })
+        matches_pattern!(&AStruct { get_field_ref(2, 3): eq(&1), another_field: eq(123), .. })
     )
 }
 #[test]
@@ -1111,7 +1146,11 @@ fn matches_struct_with_a_method_taking_enum_value_param_ret_ref_followed_by_fiel
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { get_field_ref(AnEnum::AVariant): eq(&1), another_field: eq(2) })
+        matches_pattern!(&AStruct {
+            get_field_ref(AnEnum::AVariant): eq(&1),
+            another_field: eq(2),
+            ..
+        })
     )
 }
 #[test]
@@ -1133,7 +1172,7 @@ fn matches_struct_with_a_method_taking_two_parameters_with_trailing_comma_ret_re
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { get_field_ref(2, 3,): eq(&1), another_field: eq(123) })
+        matches_pattern!(&AStruct { get_field_ref(2, 3,): eq(&1), another_field: eq(123), .. })
     )
 }
 #[test]
@@ -1154,7 +1193,7 @@ fn matches_struct_with_a_field_followed_by_a_method() -> Result<()> {
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { another_field: eq(234), get_field(): eq(123) })
+        matches_pattern!(&AStruct { another_field: eq(234), get_field(): eq(123), .. })
     )
 }
 #[test]
@@ -1162,21 +1201,17 @@ fn matches_struct_with_a_field_followed_by_a_method_with_trailing_comma() -> Res
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
-        another_field: u32,
     }
 
     impl AStruct {
-        fn get_field(&self) -> u32 {
-            self.a_field
+        fn get_value(&self) -> u32 {
+            123
         }
     }
 
-    let actual = AStruct { a_field: 123, another_field: 234 };
+    let actual = AStruct { a_field: 234 };
 
-    verify_that!(
-        actual,
-        matches_pattern!(&AStruct { another_field: eq(234), get_field(): eq(123), })
-    )
+    verify_that!(actual, matches_pattern!(&AStruct { a_field: eq(234), get_value(): eq(123), }))
 }
 #[test]
 fn matches_struct_with_a_field_followed_by_a_method_with_params() -> Result<()> {
@@ -1196,7 +1231,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params() -> Result<()> 
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { another_field: eq(234), add_product_to_field(2, 3): eq(7) })
+        matches_pattern!(&AStruct { another_field: eq(234), add_product_to_field(2, 3): eq(7), .. })
     )
 }
 #[test]
@@ -1221,7 +1256,11 @@ fn matches_struct_with_field_followed_by_method_taking_enum_value_param() -> Res
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { another_field: eq(2), get_field(AnEnum::AVariant): eq(1) })
+        matches_pattern!(&AStruct {
+            another_field: eq(2),
+            get_field(AnEnum::AVariant): eq(1),
+            ..
+        })
     )
 }
 #[test]
@@ -1242,7 +1281,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_com
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { another_field: eq(234), add_product_to_field(2, 3,): eq(7) })
+        matches_pattern!(&AStruct { another_field: eq(234), add_product_to_field(2, 3,): eq(7), .. })
     )
 }
 #[test]
@@ -1263,7 +1302,7 @@ fn matches_struct_with_a_field_followed_by_a_method_returning_reference() -> Res
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { another_field: eq(234), get_field_ref(): eq(&123) })
+        matches_pattern!(&AStruct { another_field: eq(234), get_field_ref(): eq(&123), .. })
     )
 }
 #[test]
@@ -1272,7 +1311,6 @@ fn matches_struct_with_a_field_followed_by_a_method_returning_ref_and_trailing_c
     #[derive(Debug)]
     struct AStruct {
         a_field: u32,
-        another_field: u32,
     }
 
     impl AStruct {
@@ -1281,11 +1319,11 @@ fn matches_struct_with_a_field_followed_by_a_method_returning_ref_and_trailing_c
         }
     }
 
-    let actual = AStruct { a_field: 123, another_field: 234 };
+    let actual = AStruct { a_field: 123 };
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { another_field: eq(234), get_field_ref(): eq(&123), })
+        matches_pattern!(&AStruct { a_field: eq(123), get_field_ref(): eq(&123), })
     )
 }
 #[test]
@@ -1306,7 +1344,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_ret_ref() -> Res
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { another_field: eq(234), get_field_ref(2, 3): eq(&123) })
+        matches_pattern!(&AStruct { another_field: eq(234), get_field_ref(2, 3): eq(&123), .. })
     )
 }
 #[test]
@@ -1331,7 +1369,11 @@ fn matches_struct_with_field_followed_by_method_taking_enum_value_param_ret_ref(
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { another_field: eq(2), get_field_ref(AnEnum::AVariant): eq(&1) })
+        matches_pattern!(&AStruct {
+            another_field: eq(2),
+            get_field_ref(AnEnum::AVariant): eq(&1),
+            ..
+        })
     )
 }
 #[test]
@@ -1353,7 +1395,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_com
 
     verify_that!(
         actual,
-        matches_pattern!(&AStruct { another_field: eq(234), get_field_ref(2, 3,): eq(&123) })
+        matches_pattern!(&AStruct { another_field: eq(234), get_field_ref(2, 3,): eq(&123), .. })
     )
 }
 #[test]
@@ -1378,7 +1420,8 @@ fn matches_struct_with_a_field_followed_by_a_method_followed_by_a_field() -> Res
         matches_pattern!(&AStruct {
             another_field: eq(234),
             get_field(): eq(123),
-            a_third_field: eq(345)
+            a_third_field: eq(345),
+            ..
         })
     )
 }
@@ -1389,7 +1432,6 @@ fn matches_struct_with_a_field_followed_by_a_method_followed_by_a_field_with_tra
     struct AStruct {
         a_field: u32,
         another_field: u32,
-        a_third_field: u32,
     }
 
     impl AStruct {
@@ -1398,14 +1440,14 @@ fn matches_struct_with_a_field_followed_by_a_method_followed_by_a_field_with_tra
         }
     }
 
-    let actual = AStruct { a_field: 123, another_field: 234, a_third_field: 345 };
+    let actual = AStruct { a_field: 123, another_field: 234 };
 
     verify_that!(
         actual,
         matches_pattern!(&AStruct {
-            another_field: eq(234),
+            a_field: eq(123),
             get_field(): eq(123),
-            a_third_field: eq(345),
+            another_field: eq(234),
         })
     )
 }
@@ -1433,6 +1475,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_followed_by_a_fi
             another_field: eq(234),
             add_product_to_field(2, 3): eq(7),
             a_third_field: eq(345),
+            ..
         })
     )
 }
@@ -1461,6 +1504,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_and_trailing_com
             another_field: eq(234),
             add_product_to_field(2, 3,): eq(7),
             a_third_field: eq(345),
+            ..
         })
     )
 }
@@ -1493,6 +1537,7 @@ fn matches_struct_with_field_followed_by_method_taking_enum_value_param_followed
             another_field: eq(2),
             get_field(AnEnum::AVariant): eq(1),
             a_third_field: eq(3),
+            ..
         })
     )
 }
@@ -1519,7 +1564,8 @@ fn matches_struct_with_a_field_followed_by_a_method_ret_ref_followed_by_a_field(
         matches_pattern!(&AStruct {
             another_field: eq(234),
             get_field_ref(): eq(&123),
-            a_third_field: eq(345)
+            a_third_field: eq(345),
+            ..
         })
     )
 }
@@ -1548,6 +1594,7 @@ fn matches_struct_with_a_field_followed_by_a_method_ret_ref_followed_by_a_field_
             another_field: eq(234),
             get_field_ref(): eq(&123),
             a_third_field: eq(345),
+            ..
         })
     )
 }
@@ -1576,6 +1623,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_ret_ref_followed
             another_field: eq(234),
             get_field_ref(2, 3): eq(&123),
             a_third_field: eq(345),
+            ..
         })
     )
 }
@@ -1608,6 +1656,7 @@ fn matches_struct_with_field_followed_by_method_taking_enum_value_param_ret_ref_
             another_field: eq(2),
             get_field_ref(AnEnum::AVariant): eq(&1),
             a_third_field: eq(3),
+            ..
         })
     )
 }
@@ -1636,6 +1685,7 @@ fn matches_struct_with_a_field_followed_by_a_method_with_params_trailing_comma_r
             another_field: eq(234),
             get_field_ref(2, 3,): eq(&123),
             a_third_field: eq(345),
+            ..
         })
     )
 }
