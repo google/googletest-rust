@@ -151,6 +151,23 @@ fn matches_struct_containing_non_copy_field_binding_mode() -> Result<()> {
 }
 
 #[test]
+fn matches_struct_with_interleaved_underscore() -> Result<()> {
+    #[derive(Debug)]
+    struct NonCopy;
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    struct AStruct {
+        a: u32,
+        b: NonCopy,
+        c: u32,
+    }
+    let actual = AStruct { a: 1, b: NonCopy, c: 3 };
+
+    verify_that!(actual, matches_pattern!(&AStruct { a: eq(1), b: _, c: eq(3) }))?;
+    verify_that!(actual, matches_pattern!(AStruct { a: eq(&1), b: _, c: eq(&3) }))
+}
+
+#[test]
 fn has_correct_assertion_failure_message_for_single_field() -> Result<()> {
     #[derive(Debug)]
     struct AStruct {
