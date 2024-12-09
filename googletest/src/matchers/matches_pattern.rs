@@ -375,6 +375,18 @@ mod compile_fail_tests {
     /// ```compile_fail
     /// use ::googletest::prelude::*;
     /// #[derive(Debug)]
+    /// struct Foo { a: u32 }
+    /// impl Foo {
+    ///   fn b() {}
+    /// }
+    /// let actual = Foo { a: 1 };
+    /// verify_that!(actual, matches_pattern!(Foo { a: eq(&1), b(): _ }));
+    /// ```
+    fn _underscore_unsupported_for_methods() {}
+
+    /// ```compile_fail
+    /// use ::googletest::prelude::*;
+    /// #[derive(Debug)]
     /// struct Foo { a: u32, b: u32 }
     /// let actual = Foo { a: 1, b: 2 };
     /// verify_that!(actual, matches_pattern!(Foo { a: eq(&1), .., }));

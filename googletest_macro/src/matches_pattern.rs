@@ -204,21 +204,32 @@ impl Parse for FieldOrMethod {
 }
 
 /// Either field or method call matcher. E.g.:
-/// * `field: starts_with("something")`
+/// * `field: starts_with("something")` or `field: _`
 /// * `property(arg1, arg2): starts_with("something")
 struct FieldOrMethodPattern {
     ref_token: Option<Token![ref]>,
     field_or_method: FieldOrMethod,
-    matcher: Expr,
+    /// When `None`, it represents `_` which matches anything, meaning we should
+    /// ignore it.
+    matcher: Option<Expr>,
 }
 
 impl Parse for FieldOrMethodPattern {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        Ok(FieldOrMethodPattern {
-            field_or_method: input.parse()?,
-            ref_token: input.parse()?,
-            matcher: input.parse()?,
-        })
+        let field_or_method: FieldOrMethod = input.parse()?;
+        let underscore = input.parse::<Option<Token![_]>>()?;
+        match underscore {
+            Some(underscore) if matches!(field_or_method, FieldOrMethod::Method(_)) => compile_err(
+                underscore.spans[0],
+                "Don't match a method call against `_`. Just omit it instead.",
+            ),
+            Some(_) => Ok(FieldOrMethodPattern { field_or_method, ref_token: None, matcher: None }),
+            None => Ok(FieldOrMethodPattern {
+                field_or_method,
+                ref_token: input.parse()?,
+                matcher: Some(input.parse()?),
+            }),
+        }
     }
 }
 
@@ -231,13 +242,17 @@ fn parse_braced_pattern_args(
     let mut field_names = vec![];
     let field_patterns: Vec<TokenStream> = patterns
         .into_iter()
-        .map(|FieldOrMethodPattern { ref_token, field_or_method, matcher }| match field_or_method {
-            FieldOrMethod::Field(ident) => {
-                field_names.push(ident.clone());
-                quote! { field!(#struct_name . #ident, #ref_token #matcher) }
-            }
-            FieldOrMethod::Method(call) => {
-                quote! { property!(#struct_name . #call, #ref_token #matcher) }
+        .filter_map(|FieldOrMethodPattern { ref_token, field_or_method, matcher }| {
+            match field_or_method {
+                FieldOrMethod::Field(ident) => {
+                    field_names.push(ident.clone());
+                    matcher.map(|matcher| {
+                        quote! { field!(#struct_name . #ident, #ref_token #matcher) }
+                    })
+                }
+                FieldOrMethod::Method(call) => {
+                    Some(quote! { property!(#struct_name . #call, #ref_token #matcher) })
+                }
             }
         })
         .collect();
