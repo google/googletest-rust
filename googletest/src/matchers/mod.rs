@@ -113,7 +113,9 @@ pub mod __internal_unstable_do_not_depend_on_these {
     pub use super::elements_are_matcher::internal::ElementsAre;
     pub use super::field_matcher::internal::field_matcher;
     pub use super::is_matcher::is;
-    pub use super::matches_pattern::internal::{__googletest_macro_matches_pattern, pattern_only};
+    pub use super::matches_pattern::internal::{
+        __googletest_macro_matches_pattern, compile_assert_and_match, pattern_only,
+    };
     pub use super::pointwise_matcher::internal::PointwiseMatcher;
     pub use super::property_matcher::internal::{property_matcher, property_ref_matcher};
     pub use super::result_of_matcher::internal::{result_of, result_of_ref};

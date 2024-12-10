@@ -16,9 +16,7 @@ use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
 use quote::quote;
 use syn::{
     parse::{Parse, ParseStream, Parser as _},
-    parse_macro_input,
-    punctuated::Punctuated,
-    Expr, ExprCall, Pat, Token,
+    parse_macro_input, Expr, ExprCall, Pat, Token,
 };
 
 /// This is an implementation detail of `googletest::matches_pattern!`. It
@@ -164,9 +162,10 @@ fn parse_tuple_pattern_args(
     struct_name: TokenStream,
     group_content: TokenStream,
 ) -> syn::Result<TokenStream> {
-    let parser = Punctuated::<MaybeTupleFieldPattern, Token![,]>::parse_terminated;
-    let fields = parser
-        .parse2(group_content)?
+    let (patterns, non_exhaustive) =
+        parse_list_terminated_pattern::<MaybeTupleFieldPattern>.parse2(group_content)?;
+    let field_count = patterns.len();
+    let field_patterns = patterns
         .into_iter()
         .enumerate()
         .filter_map(|(index, maybe_pattern)| maybe_pattern.0.map(|pattern| (index, pattern)))
@@ -174,12 +173,35 @@ fn parse_tuple_pattern_args(
             let index = syn::Index::from(index);
             quote! { googletest::matchers::field!(#struct_name.#index, #ref_token #matcher) }
         });
-    Ok(quote! {
+
+    let matcher = quote! {
         googletest::matchers::__internal_unstable_do_not_depend_on_these::is(
             stringify!(#struct_name),
-            all!( #(#fields),* )
+            all!( #(#field_patterns),* )
         )
-    })
+    };
+
+    // Do an exhaustiveness check only if the pattern doesn't end with `..` and has.
+    if non_exhaustive {
+        Ok(matcher)
+    } else {
+        let empty_fields = std::iter::repeat(quote! { _ }).take(field_count);
+        Ok(quote! {
+            googletest::matchers::__internal_unstable_do_not_depend_on_these::compile_assert_and_match(
+                |actual| {
+                    // Exhaustively check that all field names are specified.
+                    match actual {
+                        #struct_name ( #(#empty_fields),* ) => (),
+                        // The pattern below is unreachable if the type is a struct (as opposed to
+                        // an enum). Since the macro can't know which it is, we always include it
+                        // and just tell the compiler not to complain.
+                        #[allow(unreachable_patterns)]
+                        _ => {},
+                    }
+                },
+                #matcher)
+        })
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -257,6 +279,13 @@ fn parse_braced_pattern_args(
         })
         .collect();
 
+    let matcher = quote! {
+        googletest::matchers::__internal_unstable_do_not_depend_on_these::is(
+            stringify!(#struct_name),
+            all!(#(#field_patterns),* )
+        )
+    };
+
     // Do an exhaustiveness check only if the pattern doesn't end with `..` and has
     // any fields in the pattern. This latter part is required because
     // `matches_pattern!` also uses the brace notation for tuple structs when
@@ -268,36 +297,25 @@ fn parse_braced_pattern_args(
     // matches_pattern!(foo, Struct { bar(): eq(1) })
     // ```
     // and we can't emit an exhaustiveness check based on the `matches_pattern!`.
-    let maybe_assert_exhaustive = if non_exhaustive || field_names.is_empty() {
-        None
+    if non_exhaustive || field_names.is_empty() {
+        Ok(matcher)
     } else {
-        // Note that `struct_name` might be an enum variant (`Enum::Foo`), which is not
-        // a valid type. So we need to infer the type, produce an instance, and match on
-        // it. Fortunately, `[_; 0]` can be trivially initialized to `[]` and can
-        // produce an instance by indexing into it without failing compilation.
-        Some(quote! {
-            fn __matches_pattern_ensure_exhastive_match(i: usize) {
-                let val: [_; 0] = [];
-                let _ = match val[i] {
-                    #struct_name { #(#field_names: _),* } => (),
-                    // The pattern below is unreachable if the type is a struct (as opposed to an
-                    // enum). Since the macro can't know which it is, we always include it and just
-                    // tell the compiler not to complain.
-                    #[allow(unreachable_patterns)]
-                    _ => (),
-                };
-            }
+        Ok(quote! {
+            googletest::matchers::__internal_unstable_do_not_depend_on_these::compile_assert_and_match(
+                |actual| {
+                    // Exhaustively check that all field names are specified.
+                    match actual {
+                        #struct_name { #(#field_names: _),* } => {},
+                        // The pattern below is unreachable if the type is a struct (as opposed to
+                        // an enum). Since the macro can't know which it is, we always include it
+                        // and just tell the compiler not to complain.
+                        #[allow(unreachable_patterns)]
+                        _ => {},
+                    }
+                },
+                #matcher)
         })
-    };
-
-    Ok(quote! {
-        googletest::matchers::__internal_unstable_do_not_depend_on_these::is(
-            stringify!(#struct_name), {
-                #maybe_assert_exhaustive
-                all!( #(#field_patterns),* )
-            }
-        )
-    })
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

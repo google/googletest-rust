@@ -151,6 +151,22 @@ fn matches_struct_containing_non_copy_field_binding_mode() -> Result<()> {
 }
 
 #[test]
+fn matches_generic_struct_exhaustively() -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Copy, Clone, Debug)]
+    struct AStruct<T> {
+        a: T,
+        b: u32,
+    }
+    let actual = AStruct { a: 1, b: 3 };
+
+    // Need to use `&actual` to match the pattern since otherwise the generic
+    // argument can't be correctly deduced.
+    verify_that!(&actual, matches_pattern!(&AStruct { a: _, b: _ }))?;
+    verify_that!(actual, matches_pattern!(AStruct { a: _, b: _ }))
+}
+
+#[test]
 fn matches_struct_with_interleaved_underscore() -> Result<()> {
     #[derive(Debug)]
     struct NonCopy;
@@ -479,6 +495,35 @@ fn matches_tuple_struct_with_interleaved_underscore() -> Result<()> {
 
     verify_that!(actual, matches_pattern!(&AStruct(eq(1), _, eq(3))))?;
     verify_that!(actual, matches_pattern!(AStruct(eq(&1), _, eq(&3))))
+}
+
+#[test]
+fn matches_tuple_struct_non_exhaustive() -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Copy, Clone, Debug)]
+    struct AStruct<T>(T, u32);
+    let actual = AStruct(1, 3);
+
+    // Need to use `&actual` to match the pattern since otherwise the generic
+    // argument can't be correctly deduced.
+    verify_that!(&actual, matches_pattern!(&AStruct(_, ..)))?;
+    verify_that!(actual, matches_pattern!(AStruct(_, ..)))
+}
+
+#[test]
+fn matches_generic_tuple_struct_exhaustively() -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Copy, Clone, Debug)]
+    struct AStruct<T> {
+        a: T,
+        b: u32,
+    }
+    let actual = AStruct { a: 1, b: 3 };
+
+    // Need to use `&actual` to match the pattern since otherwise the generic
+    // argument can't be correctly deduced.
+    verify_that!(&actual, matches_pattern!(&AStruct { a: _, b: _ }))?;
+    verify_that!(actual, matches_pattern!(AStruct { a: _, b: _ }))
 }
 
 #[test]

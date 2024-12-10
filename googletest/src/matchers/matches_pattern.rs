@@ -369,6 +369,66 @@ pub mod internal {
             }
         }
     }
+
+    /// A matcher that ensures that the passed-in function compiles with the
+    /// benefit of inference from the value being tested and the attached
+    /// matcher invokes as well.
+    ///
+    /// It forwards all description responsibilities to the passed-in matcher.
+    pub fn compile_assert_and_match<T, M>(
+        must_compile_function: fn(&T),
+        matcher: M,
+    ) -> CompileAssertAndMatch<T, M> {
+        CompileAssertAndMatch { must_compile_function, matcher }
+    }
+
+    #[derive(MatcherBase)]
+    #[doc(hidden)]
+    pub struct CompileAssertAndMatch<T, M> {
+        #[allow(dead_code)]
+        must_compile_function: fn(&T),
+        matcher: M,
+    }
+
+    impl<'a, T: Debug, M> Matcher<&'a T> for CompileAssertAndMatch<T, M>
+    where
+        M: Matcher<&'a T>,
+    {
+        fn matches(&self, actual: &'a T) -> crate::matcher::MatcherResult {
+            self.matcher.matches(actual)
+        }
+
+        fn describe(
+            &self,
+            matcher_result: crate::matcher::MatcherResult,
+        ) -> crate::description::Description {
+            self.matcher.describe(matcher_result)
+        }
+
+        fn explain_match(&self, actual: &'a T) -> crate::description::Description {
+            self.matcher.explain_match(actual)
+        }
+    }
+
+    impl<T: Debug + Copy, M> Matcher<T> for CompileAssertAndMatch<T, M>
+    where
+        M: Matcher<T>,
+    {
+        fn matches(&self, actual: T) -> crate::matcher::MatcherResult {
+            self.matcher.matches(actual)
+        }
+
+        fn describe(
+            &self,
+            matcher_result: crate::matcher::MatcherResult,
+        ) -> crate::description::Description {
+            self.matcher.describe(matcher_result)
+        }
+
+        fn explain_match(&self, actual: T) -> crate::description::Description {
+            self.matcher.explain_match(actual)
+        }
+    }
 }
 
 mod compile_fail_tests {
@@ -396,6 +456,15 @@ mod compile_fail_tests {
     /// ```compile_fail
     /// use ::googletest::prelude::*;
     /// #[derive(Debug)]
+    /// struct Foo(u32, u32);
+    /// let actual = Foo(1, 2);
+    /// verify_that!(actual, matches_pattern!(Foo(eq(&1), .., )));
+    /// ```
+    fn _dot_dot_supported_only_at_end_of_tuple_struct_pattern() {}
+
+    /// ```compile_fail
+    /// use ::googletest::prelude::*;
+    /// #[derive(Debug)]
     /// struct Foo { a: u32, b: u32 }
     /// let actual = Foo { a: 1, b: 2 };
     /// verify_that!(actual, matches_pattern!(Foo { a: eq(&1) }));
@@ -412,4 +481,13 @@ mod compile_fail_tests {
     /// verify_that!(actual, matches_pattern!(Foo::Bar { a: eq(&1) }));
     /// ```
     fn _unexhaustive_enum_struct_field_check_requires_dot_dot() {}
+
+    /// ```compile_fail
+    /// use ::googletest::prelude::*;
+    /// #[derive(Debug)]
+    /// struct Foo(u32, u32, u32);
+    /// let actual = Foo(1, 2, 3);
+    /// verify_that!(actual, matches_pattern!(Foo(eq(&1), eq(&2) )));
+    /// ```
+    fn _unexhaustive_tuple_struct_field_check_requires_dot_dot() {}
 }
