@@ -151,6 +151,22 @@ fn matches_struct_containing_non_copy_field_binding_mode() -> Result<()> {
 }
 
 #[test]
+fn matches_generic_struct_exhaustively() -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Copy, Clone, Debug)]
+    struct AStruct<T> {
+        a: T,
+        b: u32,
+    }
+    let actual = AStruct { a: 1i32, b: 3 };
+
+    // Need to use `&actual` to match the pattern since otherwise the generic
+    // argument can't be correctly deduced.
+    verify_that!(&actual, matches_pattern!(&AStruct { a: _, b: _ }))?;
+    verify_that!(actual, matches_pattern!(AStruct { a: _, b: _ }))
+}
+
+#[test]
 fn matches_struct_with_interleaved_underscore() -> Result<()> {
     #[derive(Debug)]
     struct NonCopy;
