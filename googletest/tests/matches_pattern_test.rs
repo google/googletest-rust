@@ -496,6 +496,28 @@ fn matches_tuple_struct_with_interleaved_underscore() -> Result<()> {
 }
 
 #[test]
+fn matches_tuple_struct_non_exhaustive() -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    struct AStruct(i32, u32);
+    let actual = AStruct(1, 3);
+
+    verify_that!(actual, matches_pattern!(&AStruct(_, ..)))?;
+    verify_that!(actual, matches_pattern!(AStruct(_, ..)))
+}
+
+#[test]
+fn matches_generic_tuple_struct_exhaustively() -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    struct AStruct<T>(T, u32);
+    let actual = AStruct(1, 3);
+
+    verify_that!(actual, matches_pattern!(&AStruct(_, _)))?;
+    verify_that!(actual, matches_pattern!(AStruct(_, _)))
+}
+
+#[test]
 fn matches_enum_without_field() -> Result<()> {
     #[derive(Debug)]
     enum AnEnum {

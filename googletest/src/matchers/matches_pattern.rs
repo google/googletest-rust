@@ -456,6 +456,15 @@ mod compile_fail_tests {
     /// ```compile_fail
     /// use ::googletest::prelude::*;
     /// #[derive(Debug)]
+    /// struct Foo(u32, u32);
+    /// let actual = Foo(1, 2);
+    /// verify_that!(actual, matches_pattern!(Foo(eq(&1), .., )));
+    /// ```
+    fn _dot_dot_supported_only_at_end_of_tuple_struct_pattern() {}
+
+    /// ```compile_fail
+    /// use ::googletest::prelude::*;
+    /// #[derive(Debug)]
     /// struct Foo { a: u32, b: u32 }
     /// let actual = Foo { a: 1, b: 2 };
     /// verify_that!(actual, matches_pattern!(Foo { a: eq(&1) }));
@@ -472,4 +481,13 @@ mod compile_fail_tests {
     /// verify_that!(actual, matches_pattern!(Foo::Bar { a: eq(&1) }));
     /// ```
     fn _unexhaustive_enum_struct_field_check_requires_dot_dot() {}
+
+    /// ```compile_fail
+    /// use ::googletest::prelude::*;
+    /// #[derive(Debug)]
+    /// struct Foo(u32, u32, u32);
+    /// let actual = Foo(1, 2, 3);
+    /// verify_that!(actual, matches_pattern!(Foo(eq(&1), eq(&2) )));
+    /// ```
+    fn _unexhaustive_tuple_struct_field_check_requires_dot_dot() {}
 }
