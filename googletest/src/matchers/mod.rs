@@ -119,7 +119,6 @@ pub mod __internal_unstable_do_not_depend_on_these {
     pub use super::pointwise_matcher::internal::PointwiseMatcher;
     pub use super::property_matcher::internal::{property_matcher, property_ref_matcher};
     pub use super::result_of_matcher::internal::{result_of, result_of_ref};
-    pub use super::unordered_elements_are_matcher::internal::{
-        Requirements, UnorderedElementsAreMatcher,
-    };
+    pub use super::unordered_elements_are_matcher::internal::UnorderedElementsAreMatcher;
+    pub use crate::matcher_support::match_matrix::internal::Requirements;
 }
