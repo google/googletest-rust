@@ -527,7 +527,7 @@ mod tests {
 
     #[gtest]
     fn should_verify_predicate_as_a_method_on_an_expresion_result() -> Result<()> {
-        verify_pred!((AStruct {}).eq_predicate_as_method(1, 1))
+        verify_pred!(AStruct {}.eq_predicate_as_method(1, 1))
     }
 
     struct AStruct {}
