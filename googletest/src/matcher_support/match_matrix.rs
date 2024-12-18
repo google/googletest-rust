@@ -90,25 +90,21 @@ pub mod internal {
     }
 
     impl MatchMatrix {
-        pub(crate) fn generate<
-            'a,
-            T: Debug + Copy + 'a,
-            ContainerT: Debug + Copy + IntoIterator<Item = T>,
-        >(
-            actual: ContainerT,
+        pub(crate) fn generate<'a, T: Debug + Copy + 'a>(
+            actual: impl IntoIterator<Item = T>,
             expected: &[Box<dyn Matcher<T> + 'a>],
         ) -> Self {
             let expected_len = expected.len();
-            let mut matrix = MatchMatrix {
-                graph: vec![vec![MatcherResult::NoMatch; expected_len]; count_elements(actual)],
-                expected_len,
-            };
-            for (actual_idx, actual) in actual.into_iter().enumerate() {
-                for (expected_idx, expected) in expected.iter().enumerate() {
-                    matrix.graph[actual_idx][expected_idx] = expected.matches(actual);
-                }
-            }
-            matrix
+            let graph = actual
+                .into_iter()
+                .map(|actual| {
+                    expected
+                        .iter()
+                        .map(|expected_matcher| expected_matcher.matches(actual))
+                        .collect()
+                })
+                .collect();
+            MatchMatrix { graph, expected_len }
         }
 
         pub(crate) fn is_match_for(&self, requirements: Requirements) -> bool {
@@ -430,13 +426,13 @@ pub mod internal {
             self.get_unmatched_expected().is_empty()
         }
 
-        fn get_matches(&self) -> impl Iterator<Item = (usize, usize)> + '_ {
+        pub(crate) fn get_matches(&self) -> impl Iterator<Item = (usize, usize)> + '_ {
             self.actual_match.iter().enumerate().filter_map(|(actual_idx, maybe_expected_idx)| {
                 maybe_expected_idx.map(|expected_idx| (actual_idx, expected_idx))
             })
         }
 
-        fn get_unmatched_actual(&self) -> impl Iterator<Item = usize> + '_ {
+        pub(crate) fn get_unmatched_actual(&self) -> impl Iterator<Item = usize> + '_ {
             self.actual_match
                 .iter()
                 .enumerate()
@@ -444,20 +440,16 @@ pub mod internal {
                 .map(|(actual_idx, _)| actual_idx)
         }
 
-        fn get_unmatched_expected(&self) -> Vec<usize> {
+        pub(crate) fn get_unmatched_expected(&self) -> Vec<usize> {
             let matched_expected: HashSet<_> = self.actual_match.iter().flatten().collect();
             (0..self.expected_len)
                 .filter(|expected_idx| !matched_expected.contains(expected_idx))
                 .collect()
         }
 
-        pub(crate) fn get_explanation<
-            'a,
-            T: Debug + Copy,
-            ContainerT: Debug + Copy + IntoIterator<Item = T>,
-        >(
+        pub(crate) fn get_explanation<'a, T: Debug + Copy>(
             &self,
-            actual: ContainerT,
+            actual: impl IntoIterator<Item = T>,
             expected: &[Box<dyn Matcher<T> + 'a>],
             requirements: Requirements,
         ) -> Option<Description> {
@@ -497,6 +489,30 @@ pub mod internal {
             Some(format!(
                 "which does not have a {requirements} match with the expected elements. The best match found was:\n{best_match}"
             ).into())
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use crate::prelude::*;
+
+        #[test]
+        fn match_matrix_generate() {
+            let actual = vec![1, 2, 3, 4];
+            let expected: Vec<Box<dyn Matcher<i32>>> =
+                vec![Box::new(eq(1)), Box::new(eq(2)), Box::new(eq(3))];
+            let matrix = MatchMatrix::generate(actual, &expected);
+
+            assert_eq!(
+                matrix.graph,
+                vec![
+                    vec![true.into(), false.into(), false.into()],
+                    vec![false.into(), true.into(), false.into()],
+                    vec![false.into(), false.into(), true.into()],
+                    vec![false.into(), false.into(), false.into()],
+                ]
+            );
         }
     }
 }
