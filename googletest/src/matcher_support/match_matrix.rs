@@ -84,21 +84,28 @@ pub mod internal {
     }
 
     /// The bipartite matching graph between actual and expected elements.
-    pub(crate) struct MatchMatrix<const N: usize>(Vec<[MatcherResult; N]>);
+    pub(crate) struct MatchMatrix {
+        graph: Vec<Vec<MatcherResult>>, // graph[actual_idx][expected_idx]
+        expected_len: usize,
+    }
 
-    impl<const N: usize> MatchMatrix<N> {
+    impl MatchMatrix {
         pub(crate) fn generate<
             'a,
             T: Debug + Copy + 'a,
             ContainerT: Debug + Copy + IntoIterator<Item = T>,
         >(
             actual: ContainerT,
-            expected: &[Box<dyn Matcher<T> + 'a>; N],
+            expected: &[Box<dyn Matcher<T> + 'a>],
         ) -> Self {
-            let mut matrix = MatchMatrix(vec![[MatcherResult::NoMatch; N]; count_elements(actual)]);
+            let expected_len = expected.len();
+            let mut matrix = MatchMatrix {
+                graph: vec![vec![MatcherResult::NoMatch; expected_len]; count_elements(actual)],
+                expected_len,
+            };
             for (actual_idx, actual) in actual.into_iter().enumerate() {
                 for (expected_idx, expected) in expected.iter().enumerate() {
-                    matrix.0[actual_idx][expected_idx] = expected.matches(actual);
+                    matrix.graph[actual_idx][expected_idx] = expected.matches(actual);
                 }
             }
             matrix
@@ -137,28 +144,34 @@ pub mod internal {
         // each expected matches at least one actual.
         // This is a necessary condition but not sufficient. But it is faster
         // than `find_best_match()`.
-        fn find_unmatchable_elements(&self) -> UnmatchableElements<N> {
+        fn find_unmatchable_elements(&self) -> UnmatchableElements {
             let unmatchable_actual =
-                self.0.iter().map(|row| row.iter().all(|&e| e.is_no_match())).collect();
-            let mut unmatchable_expected = [false; N];
+                self.graph.iter().map(|row| row.iter().all(|&e| e.is_no_match())).collect();
+            let mut unmatchable_expected = vec![false; self.expected_len];
             for (col_idx, expected) in unmatchable_expected.iter_mut().enumerate() {
-                *expected = self.0.iter().map(|row| row[col_idx]).all(|e| e.is_no_match());
+                *expected = self.graph.iter().map(|row| row[col_idx]).all(|e| e.is_no_match());
             }
             UnmatchableElements { unmatchable_actual, unmatchable_expected }
         }
 
-        fn find_unmatched_expected(&self) -> UnmatchableElements<N> {
-            let mut unmatchable_expected = [false; N];
+        fn find_unmatched_expected(&self) -> UnmatchableElements {
+            let mut unmatchable_expected = vec![false; self.expected_len];
             for (col_idx, expected) in unmatchable_expected.iter_mut().enumerate() {
-                *expected = self.0.iter().map(|row| row[col_idx]).all(|e| e.is_no_match());
+                *expected = self.graph.iter().map(|row| row[col_idx]).all(|e| e.is_no_match());
             }
-            UnmatchableElements { unmatchable_actual: vec![false; N], unmatchable_expected }
+            UnmatchableElements {
+                unmatchable_actual: vec![false; self.expected_len],
+                unmatchable_expected,
+            }
         }
 
-        fn find_unmatched_actual(&self) -> UnmatchableElements<N> {
+        fn find_unmatched_actual(&self) -> UnmatchableElements {
             let unmatchable_actual =
-                self.0.iter().map(|row| row.iter().all(|e| e.is_no_match())).collect();
-            UnmatchableElements { unmatchable_actual, unmatchable_expected: [false; N] }
+                self.graph.iter().map(|row| row.iter().all(|e| e.is_no_match())).collect();
+            UnmatchableElements {
+                unmatchable_actual,
+                unmatchable_expected: vec![false; self.expected_len],
+            }
         }
 
         // Verifies that a full match exists.
@@ -170,16 +183,16 @@ pub mod internal {
         // expected nodes. All edges have unit capacity.
         //
         // Neither the flow graph nor the residual flow graph are represented
-        // explicitly. Instead, they are implied by the information in `self.0` and
-        // the local `actual_match : [Option<usize>; N]` whose elements are initialized
-        // to `None`. This represents the initial state of the algorithm,
-        // where the flow graph is empty, and the residual flow graph has the
-        // following edges:
+        // explicitly. Instead, they are implied by the information in `self.graph` and
+        // the local `actual_match : vec![Option<usize>; self.expected_len]` whose
+        // elements are initialized to `None`. This represents the initial state
+        // of the algorithm, where the flow graph is empty, and the residual
+        // flow graph has the following edges:
         //   - An edge from source to each actual element node
         //   - An edge from each expected element node to sink
         //   - An edge from each actual element node to each expected element node, if
         //     the actual element matches the expected element, i.e.
-        //     `matches!(self.0[actual_id][expected_id], Matches)`
+        //     `matches!(self.graph[actual_id][expected_id], Matches)`
         //
         // When the `try_augment(...)` method adds a flow, it sets `actual_match[l] =
         // Some(r)` for some nodes l and r. This induces the following changes:
@@ -195,13 +208,13 @@ pub mod internal {
         //
         // It bears repeating that the flow graph and residual flow graph are
         // never represented explicitly, but can be derived by looking at the
-        // information in 'self.0' and in `actual_match`.
+        // information in 'self.graph' and in `actual_match`.
         //
-        // As an optimization, there is a second local `expected_match: [Option<usize>;
-        // N]` which does not provide any new information. Instead, it enables
-        // more efficient queries about edges entering or leaving the expected elements
-        // nodes of the flow or residual flow graphs. The following invariants
-        // are maintained:
+        // As an optimization, there is a second local `expected_match:
+        // vec![Option<usize>; self.expected_len]` which does not provide any
+        // new information. Instead, it enables more efficient queries about
+        // edges entering or leaving the expected elements nodes of the flow or
+        // residual flow graphs. The following invariants are maintained:
         //
         // actual_match[a] == None or expected_match[actual_match[a].unwrap()] ==
         // Some(a)
@@ -225,9 +238,9 @@ pub mod internal {
         //       "Introduction to Algorithms (Second ed.)", pp. 651-664.
         //   [2] "Ford-Fulkerson algorithm", Wikipedia,
         //       'http://en.wikipedia.org/wiki/Ford%E2%80%93Fulkerson_algorithm'
-        pub(crate) fn find_best_match(&self) -> BestMatch<N> {
-            let mut actual_match = vec![None; self.0.len()];
-            let mut expected_match: [Option<usize>; N] = [None; N];
+        pub(crate) fn find_best_match(&self) -> BestMatch {
+            let mut actual_match = vec![None; self.graph.len()];
+            let mut expected_match: Vec<Option<usize>> = vec![None; self.expected_len];
             // Searches the residual flow graph for a path from each actual node to
             // the sink in the residual flow graph, and if one is found, add this path
             // to the graph.
@@ -241,12 +254,12 @@ pub mod internal {
             // need to visit the actual nodes more than once looking for
             // augmented paths. The flow is known to be possible or impossible
             // by looking at the node once.
-            for actual_idx in 0..self.0.len() {
+            for actual_idx in 0..self.graph.len() {
                 assert!(actual_match[actual_idx].is_none());
-                let mut seen = [false; N];
+                let mut seen = vec![false; self.expected_len];
                 self.try_augment(actual_idx, &mut seen, &mut actual_match, &mut expected_match);
             }
-            BestMatch(actual_match)
+            BestMatch::new(actual_match, self.expected_len)
         }
 
         // Perform a depth-first search from actual node `actual_idx` to the sink by
@@ -270,15 +283,15 @@ pub mod internal {
         fn try_augment(
             &self,
             actual_idx: usize,
-            seen: &mut [bool; N],
+            seen: &mut Vec<bool>,
             actual_match: &mut [Option<usize>],
-            expected_match: &mut [Option<usize>; N],
+            expected_match: &mut Vec<Option<usize>>,
         ) -> bool {
-            for expected_idx in 0..N {
+            for expected_idx in 0..self.expected_len {
                 if seen[expected_idx] {
                     continue;
                 }
-                if self.0[actual_idx][expected_idx].is_no_match() {
+                if self.graph[actual_idx][expected_idx].is_no_match() {
                     continue;
                 }
                 // There is an edge between `actual_idx` and `expected_idx`.
@@ -317,15 +330,13 @@ pub mod internal {
 
     /// The list of elements that do not match any element in the corresponding
     /// set.
-    /// These lists are represented as fixed sized bit set to avoid
-    /// allocation.
-    /// TODO(bjacotg) Use BitArr!(for N) once generic_const_exprs is stable.
-    pub(crate) struct UnmatchableElements<const N: usize> {
+    /// TODO - Use BitVec.
+    pub(crate) struct UnmatchableElements {
         unmatchable_actual: Vec<bool>,
-        unmatchable_expected: [bool; N],
+        unmatchable_expected: Vec<bool>,
     }
 
-    impl<const N: usize> UnmatchableElements<N> {
+    impl UnmatchableElements {
         fn has_unmatchable_elements(&self) -> bool {
             self.unmatchable_actual.iter().any(|b| *b)
                 || self.unmatchable_expected.iter().any(|b| *b)
@@ -392,16 +403,23 @@ pub mod internal {
 
     /// The representation of a match between actual and expected.
     /// The value at idx represents to which expected the actual at idx is
-    /// matched with. For example, `BestMatch([Some(0), None, Some(1)])`
-    /// means:
+    /// matched with. For example, `BestMatch::new([Some(0), None, Some(1)],
+    /// ..)` means:
     ///  * The 0th element in actual matches the 0th element in expected.
     ///  * The 1st element in actual does not match.
     ///  * The 2nd element in actual matches the 1st element in expected.
-    pub(crate) struct BestMatch<const N: usize>(Vec<Option<usize>>);
+    pub(crate) struct BestMatch {
+        actual_match: Vec<Option<usize>>,
+        expected_len: usize,
+    }
 
-    impl<const N: usize> BestMatch<N> {
+    impl BestMatch {
+        fn new(actual_match: Vec<Option<usize>>, expected_len: usize) -> BestMatch {
+            BestMatch { actual_match, expected_len }
+        }
+
         pub(crate) fn is_full_match(&self) -> bool {
-            self.0.iter().all(|o| o.is_some())
+            self.actual_match.iter().all(|o| o.is_some())
         }
 
         pub(crate) fn is_subset_match(&self) -> bool {
@@ -413,13 +431,13 @@ pub mod internal {
         }
 
         fn get_matches(&self) -> impl Iterator<Item = (usize, usize)> + '_ {
-            self.0.iter().enumerate().filter_map(|(actual_idx, maybe_expected_idx)| {
+            self.actual_match.iter().enumerate().filter_map(|(actual_idx, maybe_expected_idx)| {
                 maybe_expected_idx.map(|expected_idx| (actual_idx, expected_idx))
             })
         }
 
         fn get_unmatched_actual(&self) -> impl Iterator<Item = usize> + '_ {
-            self.0
+            self.actual_match
                 .iter()
                 .enumerate()
                 .filter(|&(_, o)| o.is_none())
@@ -427,8 +445,10 @@ pub mod internal {
         }
 
         fn get_unmatched_expected(&self) -> Vec<usize> {
-            let matched_expected: HashSet<_> = self.0.iter().flatten().collect();
-            (0..N).filter(|expected_idx| !matched_expected.contains(expected_idx)).collect()
+            let matched_expected: HashSet<_> = self.actual_match.iter().flatten().collect();
+            (0..self.expected_len)
+                .filter(|expected_idx| !matched_expected.contains(expected_idx))
+                .collect()
         }
 
         pub(crate) fn get_explanation<
@@ -438,7 +458,7 @@ pub mod internal {
         >(
             &self,
             actual: ContainerT,
-            expected: &[Box<dyn Matcher<T> + 'a>; N],
+            expected: &[Box<dyn Matcher<T> + 'a>],
             requirements: Requirements,
         ) -> Option<Description> {
             let actual: Vec<_> = actual.into_iter().collect();
