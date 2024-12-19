@@ -56,8 +56,9 @@ use std::ops::Deref;
 /// > Note on memory use: In most cases, this matcher does not allocate memory
 /// > when matching strings. However, it must allocate copies of both the actual
 /// > and expected values when matching strings while
-/// > [`ignoring_ascii_case`][StrMatcherConfigurator::ignoring_ascii_case] is
-/// > set.
+/// > [`ignoring_ascii_case`][StrMatcherConfigurator::ignoring_ascii_case] or
+/// > [`ignoring_unicode_case`][StrMatcherConfigurator::ignoring_unicode_case]
+/// > are set.
 pub fn contains_substring<T>(expected: T) -> StrMatcher<T> {
     StrMatcher {
         configuration: Configuration { mode: MatchMode::Contains, ..Default::default() },
@@ -235,6 +236,25 @@ pub trait StrMatcherConfigurator<ExpectedT> {
     /// case characters outside of the codepoints 0-127 covered by ASCII.
     fn ignoring_ascii_case(self) -> StrMatcher<ExpectedT>;
 
+    /// Configures the matcher to ignore Unicode case when comparing values.
+    ///
+    /// This uses the same rules for case as [`str::to_lowercase`].
+    ///
+    /// ```
+    /// # use googletest::prelude::*;
+    /// # fn should_pass() -> Result<()> {
+    /// verify_that!("ὈΔΥΣΣΕΎΣ", eq("ὀδυσσεύς").ignoring_unicode_case())?;  // Passes
+    /// #     Ok(())
+    /// # }
+    /// # fn should_fail() -> Result<()> {
+    /// verify_that!("secret", eq("비밀").ignoring_unicode_case())?;   // Fails
+    /// #     Ok(())
+    /// # }
+    /// # should_pass().unwrap();
+    /// # should_fail().unwrap_err();
+    /// ```
+    fn ignoring_unicode_case(self) -> StrMatcher<ExpectedT>;
+
     /// Configures the matcher to match only strings which otherwise satisfy the
     /// conditions a number times matched by the matcher `times`.
     ///
@@ -333,6 +353,11 @@ impl<ExpectedT, MatcherT: Into<StrMatcher<ExpectedT>>> StrMatcherConfigurator<Ex
         StrMatcher { configuration: existing.configuration.ignoring_ascii_case(), ..existing }
     }
 
+    fn ignoring_unicode_case(self) -> StrMatcher<ExpectedT> {
+        let existing = self.into();
+        StrMatcher { configuration: existing.configuration.ignoring_unicode_case(), ..existing }
+    }
+
     fn times(self, times: impl Matcher<usize> + 'static) -> StrMatcher<ExpectedT> {
         let existing = self.into();
         if !matches!(existing.configuration.mode, MatchMode::Contains) {
@@ -394,6 +419,7 @@ impl MatchMode {
 enum CasePolicy {
     Respect,
     IgnoreAscii,
+    IgnoreUnicode,
 }
 
 impl Configuration {
@@ -411,12 +437,17 @@ impl Configuration {
             MatchMode::Equals => match self.case_policy {
                 CasePolicy::Respect => expected == actual,
                 CasePolicy::IgnoreAscii => expected.eq_ignore_ascii_case(actual),
+                CasePolicy::IgnoreUnicode => expected.to_lowercase() == actual.to_lowercase(),
             },
             MatchMode::Contains => match self.case_policy {
                 CasePolicy::Respect => self.does_containment_match(actual, expected),
                 CasePolicy::IgnoreAscii => self.does_containment_match(
                     actual.to_ascii_lowercase().as_str(),
                     expected.to_ascii_lowercase().as_str(),
+                ),
+                CasePolicy::IgnoreUnicode => self.does_containment_match(
+                    actual.to_lowercase().as_str(),
+                    expected.to_lowercase().as_str(),
                 ),
             },
             MatchMode::StartsWith => match self.case_policy {
@@ -425,12 +456,18 @@ impl Configuration {
                     actual.len() >= expected.len()
                         && actual[..expected.len()].eq_ignore_ascii_case(expected)
                 }
+                CasePolicy::IgnoreUnicode => {
+                    actual.to_lowercase().starts_with(&expected.to_lowercase())
+                }
             },
             MatchMode::EndsWith => match self.case_policy {
                 CasePolicy::Respect => actual.ends_with(expected),
                 CasePolicy::IgnoreAscii => {
                     actual.len() >= expected.len()
                         && actual[actual.len() - expected.len()..].eq_ignore_ascii_case(expected)
+                }
+                CasePolicy::IgnoreUnicode => {
+                    actual.to_lowercase().ends_with(&expected.to_lowercase())
                 }
             },
         }
@@ -461,6 +498,7 @@ impl Configuration {
         match self.case_policy {
             CasePolicy::Respect => {}
             CasePolicy::IgnoreAscii => addenda.push("ignoring ASCII case".into()),
+            CasePolicy::IgnoreUnicode => addenda.push("ignoring Unicode case".into()),
         }
         if let Some(times) = self.times.as_ref() {
             addenda.push(format!("count {}", times.describe(matcher_result)).into());
@@ -516,6 +554,10 @@ impl Configuration {
             // TODO - b/283448414 : Support StrMatcher with ignore ascii case policy.
             return default_explanation;
         }
+        if matches!(self.case_policy, CasePolicy::IgnoreUnicode) {
+            // TODO - b/283448414 : Support StrMatcher with ignore unicode case policy.
+            return default_explanation;
+        }
         if self.do_strings_match(expected, actual) {
             // TODO - b/283448414 : Consider supporting debug difference if the
             // strings match. This can be useful when a small contains is found
@@ -554,6 +596,10 @@ impl Configuration {
 
     fn ignoring_ascii_case(self) -> Self {
         Self { case_policy: CasePolicy::IgnoreAscii, ..self }
+    }
+
+    fn ignoring_unicode_case(self) -> Self {
+        Self { case_policy: CasePolicy::IgnoreUnicode, ..self }
     }
 
     fn times(self, times: impl Matcher<usize> + 'static) -> Self {
@@ -678,6 +724,12 @@ mod tests {
     }
 
     #[test]
+    fn ignores_unicode_case_when_requested() -> Result<()> {
+        let matcher = StrMatcher::with_default_config("ὈΔΥΣΣΕΎΣ");
+        verify_that!("ὀδυσσεύς", matcher.ignoring_unicode_case())
+    }
+
+    #[test]
     fn allows_ignoring_leading_whitespace_from_eq() -> Result<()> {
         verify_that!("A string", eq(" \n\tA string").ignoring_leading_whitespace())
     }
@@ -698,6 +750,16 @@ mod tests {
     }
 
     #[test]
+    fn allows_ignoring_unicode_case_from_eq() -> Result<()> {
+        verify_that!("ὈΔΥΣΣΕΎΣ", eq("ὀδυσσεύς").ignoring_unicode_case())
+    }
+
+    #[test]
+    fn unicode_case_sensitive_from_eq() -> Result<()> {
+        verify_that!("ὈΔΥΣΣΕΎΣ", not(eq("ὀδυσσεύς")))
+    }
+
+    #[test]
     fn matches_string_containing_expected_value_in_contains_mode() -> Result<()> {
         verify_that!("Some string", contains_substring("str"))
     }
@@ -706,6 +768,12 @@ mod tests {
     fn matches_string_containing_expected_value_in_contains_mode_while_ignoring_ascii_case(
     ) -> Result<()> {
         verify_that!("Some string", contains_substring("STR").ignoring_ascii_case())
+    }
+
+    #[test]
+    fn matches_string_containing_expected_value_in_contains_mode_while_ignoring_unicode_case(
+    ) -> Result<()> {
+        verify_that!("Some σpsilon", contains_substring("Σps").ignoring_unicode_case())
     }
 
     #[test]
@@ -739,8 +807,23 @@ mod tests {
     }
 
     #[test]
-    fn ends_with_does_not_match_short_string_ignoring_ascii_case() -> Result<()> {
+    fn starts_with_does_not_match_short_string_ignoring_ascii_case() -> Result<()> {
         verify_that!("Some", not(starts_with("OTHER").ignoring_ascii_case()))
+    }
+
+    #[test]
+    fn starts_with_matches_string_reference_with_prefix_ignoring_unicode_case() -> Result<()> {
+        verify_that!("비밀 santa", starts_with("비밀").ignoring_unicode_case())
+    }
+
+    #[test]
+    fn starts_with_does_not_match_wrong_prefix_ignoring_unicode_case() -> Result<()> {
+        verify_that!("secret santa", not(starts_with("비밀").ignoring_unicode_case()))
+    }
+
+    #[test]
+    fn starts_with_does_not_match_short_string_ignoring_unicode_case() -> Result<()> {
+        verify_that!("비밀", not(starts_with("秘密").ignoring_unicode_case()))
     }
 
     #[test]
@@ -781,6 +864,21 @@ mod tests {
     #[test]
     fn ends_with_does_not_match_string_with_substring_not_at_end() -> Result<()> {
         verify_that!("Some value", not(ends_with("Some")))
+    }
+
+    #[test]
+    fn ends_with_matches_string_reference_with_suffix_ignoring_unicode_case() -> Result<()> {
+        verify_that!("santa 비밀", ends_with("비밀").ignoring_unicode_case())
+    }
+
+    #[test]
+    fn ends_with_does_not_match_wrong_suffix_ignoring_unicode_case() -> Result<()> {
+        verify_that!("secret santa", not(ends_with("비밀").ignoring_unicode_case()))
+    }
+
+    #[test]
+    fn ends_with_does_not_match_short_string_ignoring_unicode_case() -> Result<()> {
+        verify_that!("비밀", not(ends_with("秘密").ignoring_unicode_case()))
     }
 
     #[test]
