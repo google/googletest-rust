@@ -238,8 +238,8 @@ impl<T> GoogleTestSupport for std::result::Result<T, TestAssertionFailure> {
     }
 }
 
-/// Provides an extension method for converting an arbitrary type into a
-/// [`Result`].
+/// Provides an extension method for converting an arbitrary type into
+/// `googletest`'s [`Result`] type.
 ///
 /// A type can implement this trait to provide an easy way to return immediately
 /// from a test in conjunction with the `?` operator. This is useful for
@@ -260,17 +260,34 @@ impl<T> GoogleTestSupport for std::result::Result<T, TestAssertionFailure> {
 /// fn something_which_can_fail() -> std::result::Result<T, String> { ... }
 /// fn something_which_can_fail_with_option() -> Option<T> { ... }
 /// ```
-pub trait IntoTestResult<T> {
+pub trait IntoTestResult {
+    /// The success type of the test result.
+    type Output;
+
     /// Converts this instance into a [`Result`].
     ///
     /// Typically, the `Self` type is itself an implementation of the
     /// [`std::ops::Try`] trait. This method should then map the `Residual`
     /// variant to a [`TestAssertionFailure`] and leave the `Output` variant
     /// unchanged.
-    fn into_test_result(self) -> Result<T>;
+    fn into_test_result(self) -> Result<Self::Output>;
+
+    /// An alias for `into_test_result` which returns a [`Result`] containing
+    /// either the [`Output`] type or a [`TestAssertionFailure`].
+    fn or_fail(self) -> Result<Self::Output> {
+        self.into_test_result()
+    }
 }
 
-impl<T, E: std::fmt::Debug> IntoTestResult<T> for std::result::Result<T, E> {
+/// An alias for the [`IntoTestResult`] trait which adds the `or_fail` method
+/// to common types such as `Option` or `Result`, allowing them to be converted
+/// into a [`Result`] of either their success type or a
+/// [`TestAssertionFailure`].
+pub type OrFail = IntoTestResult;
+
+impl<T, E: std::fmt::Debug> IntoTestResult for std::result::Result<T, E> {
+    type Output = T;
+
     #[track_caller]
     fn into_test_result(self) -> std::result::Result<T, TestAssertionFailure> {
         match self {
@@ -280,7 +297,9 @@ impl<T, E: std::fmt::Debug> IntoTestResult<T> for std::result::Result<T, E> {
     }
 }
 
-impl<T> IntoTestResult<T> for Option<T> {
+impl<T> IntoTestResult for Option<T> {
+    type Output = T;
+
     #[track_caller]
     fn into_test_result(self) -> std::result::Result<T, TestAssertionFailure> {
         match self {
