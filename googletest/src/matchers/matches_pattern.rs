@@ -490,4 +490,28 @@ mod compile_fail_tests {
     /// verify_that!(actual, matches_pattern!(Foo(eq(&1), eq(&2) )));
     /// ```
     fn _unexhaustive_tuple_struct_field_check_requires_dot_dot() {}
+
+    /// ```compile_fail
+    /// use ::googletest::prelude::*;
+    /// verify_that!(1, matches_pattern!(UndefinedSymbol { }));
+    /// ```
+    fn _should_fail_to_compile_unknown_struct_with_no_fields() {}
+
+    /// ```compile_fail
+    /// use ::googletest::prelude::*;
+    /// verify_that!(1, matches_pattern!(UndefinedSymbol { a: 1 }));
+    /// ```
+    fn _should_fail_to_compile_unknown_struct_with_field() {}
+
+    /// ```compile_fail
+    /// use ::googletest::prelude::*;
+    /// verify_that!(1, matches_pattern!(UndefinedSymbol { .. }));
+    /// ```
+    fn _should_fail_to_compile_unknown_struct_with_dot_dot() {}
+
+    /// ```compile_fail
+    /// use ::googletest::prelude::*;
+    /// verify_that!(1, matches_pattern!(UndefinedSymbol( .. )));
+    /// ```
+    fn _should_fail_to_compile_unknown_tuple_struct_with_dot_dot() {}
 }

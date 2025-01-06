@@ -13,10 +13,12 @@
 // limitations under the License.
 
 use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::{
     parse::{Parse, ParseStream, Parser as _},
-    parse_macro_input, Expr, ExprCall, Pat, Token,
+    parse_macro_input,
+    token::DotDot,
+    Expr, ExprCall, Pat, Token,
 };
 
 /// This is an implementation detail of `googletest::matches_pattern!`. It
@@ -162,7 +164,7 @@ fn parse_tuple_pattern_args(
     struct_name: TokenStream,
     group_content: TokenStream,
 ) -> syn::Result<TokenStream> {
-    let (patterns, non_exhaustive) =
+    let (patterns, dot_dot) =
         parse_list_terminated_pattern::<MaybeTupleFieldPattern>.parse2(group_content)?;
     let field_count = patterns.len();
     let field_patterns = patterns
@@ -181,27 +183,27 @@ fn parse_tuple_pattern_args(
         )
     };
 
-    // Do an exhaustiveness check only if the pattern doesn't end with `..`.
-    if non_exhaustive {
-        Ok(matcher)
-    } else {
-        let empty_fields = std::iter::repeat(quote! { _ }).take(field_count);
-        Ok(quote! {
-            googletest::matchers::__internal_unstable_do_not_depend_on_these::compile_assert_and_match(
-                |actual| {
-                    // Exhaustively check that all field names are specified.
-                    match actual {
-                        #struct_name ( #(#empty_fields),* ) => (),
-                        // The pattern below is unreachable if the type is a struct (as opposed to
-                        // an enum). Since the macro can't know which it is, we always include it
-                        // and just tell the compiler not to complain.
-                        #[allow(unreachable_patterns)]
-                        _ => {},
-                    }
-                },
-                #matcher)
-        })
-    }
+    // Do a match to ensure:
+    // - Fields are exhaustively listed unless the pattern ended with `..`.
+    // - `UNDEFINED_SYMBOL(..)` fails to compile.
+    let empty_fields = std::iter::repeat(quote! { _ })
+        .take(field_count)
+        .chain(dot_dot.map(ToTokens::into_token_stream));
+    Ok(quote! {
+        googletest::matchers::__internal_unstable_do_not_depend_on_these::compile_assert_and_match(
+            |actual| {
+                // Exhaustively check that all field names are specified.
+                match actual {
+                    #struct_name ( #(#empty_fields),* ) => (),
+                    // The pattern below is unreachable if the type is a struct (as opposed to
+                    // an enum). Since the macro can't know which it is, we always include it
+                    // and just tell the compiler not to complain.
+                    #[allow(unreachable_patterns)]
+                    _ => {},
+                }
+            },
+            #matcher)
+    })
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -260,7 +262,7 @@ fn parse_braced_pattern_args(
     struct_name: TokenStream,
     group_content: TokenStream,
 ) -> syn::Result<TokenStream> {
-    let (patterns, non_exhaustive) = parse_list_terminated_pattern.parse2(group_content)?;
+    let (patterns, dot_dot) = parse_list_terminated_pattern.parse2(group_content)?;
     let mut field_names = vec![];
     let field_patterns: Vec<TokenStream> = patterns
         .into_iter()
@@ -286,10 +288,14 @@ fn parse_braced_pattern_args(
         )
     };
 
-    // Do an exhaustiveness check only if the pattern doesn't end with `..` and has
-    // any fields in the pattern. This latter part is required because
+    // Do a match to ensure:
+    // - Fields are exhaustively listed unless the pattern ended with `..` and has
+    //   any fields in the pattern.
+    // - `UNDEFINED_SYMBOL { .. }` fails to compile.
+    //
+    // The requisite that some fields are in the pattern is there because
     // `matches_pattern!` also uses the brace notation for tuple structs when
-    // asserting on method calls. i.e.
+    // asserting on method calls on tuple structs. i.e.
     //
     // ```
     // struct Struct(u32);
@@ -297,7 +303,11 @@ fn parse_braced_pattern_args(
     // matches_pattern!(foo, Struct { bar(): eq(1) })
     // ```
     // and we can't emit an exhaustiveness check based on the `matches_pattern!`.
-    if non_exhaustive || field_names.is_empty() {
+    if field_names.is_empty() && dot_dot.is_none() &&
+        // If there are no fields, then this check means that there are method patterns, and we can
+        // no longer be confident that this is a braced struct rather than a tuple struct.
+        !field_patterns.is_empty()
+    {
         Ok(matcher)
     } else {
         Ok(quote! {
@@ -305,7 +315,7 @@ fn parse_braced_pattern_args(
                 |actual| {
                     // Exhaustively check that all field names are specified.
                     match actual {
-                        #struct_name { #(#field_names: _),* } => {},
+                        #struct_name { #(#field_names: _,)* #dot_dot } => {},
                         // The pattern below is unreachable if the type is a struct (as opposed to
                         // an enum). Since the macro can't know which it is, we always include it
                         // and just tell the compiler not to complain.
@@ -321,19 +331,22 @@ fn parse_braced_pattern_args(
 ////////////////////////////////////////////////////////////////////////////////
 // General-purpose helpers
 
-/// Returns the parsed struct pattern body along with a boolean that indicates
-/// whether the body ended with `..`.
+/// Returns the parsed struct pattern body along with a `..` if it appears at
+/// the end of the body.
 ///
 /// This is like `Punctuated::parse_terminated`, but additionally allows for an
 /// optional `..`, which cannot be followed by a comma.
-fn parse_list_terminated_pattern<T: Parse>(input: ParseStream<'_>) -> syn::Result<(Vec<T>, bool)> {
+fn parse_list_terminated_pattern<T: Parse>(
+    input: ParseStream<'_>,
+) -> syn::Result<(Vec<T>, Option<DotDot>)> {
     let mut patterns = vec![];
     while !input.is_empty() {
         // Check for trailing `..`.
-        if input.parse::<Option<Token![..]>>()?.is_some() {
+        let dot_dot = input.parse::<Option<Token![..]>>()?;
+        if dot_dot.is_some() {
             // Must be at the end of the group content.
             return if input.is_empty() {
-                Ok((patterns, true))
+                Ok((patterns, dot_dot))
             } else {
                 compile_err(input.span(), "`..` must be at the end of the struct pattern")
             };
@@ -346,7 +359,7 @@ fn parse_list_terminated_pattern<T: Parse>(input: ParseStream<'_>) -> syn::Resul
         }
         input.parse::<Token![,]>()?;
     }
-    Ok((patterns, false))
+    Ok((patterns, None))
 }
 
 fn compile_err<T>(span: Span, message: &str) -> syn::Result<T> {

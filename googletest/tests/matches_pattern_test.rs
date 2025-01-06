@@ -52,6 +52,14 @@ fn matches_struct_non_exhaustive() -> Result<()> {
 }
 
 #[test]
+fn matches_braced_struct_with_no_fields() -> Result<()> {
+    #[derive(Debug)]
+    struct AStruct {}
+    let actual = AStruct {};
+    verify_that!(actual, matches_pattern!(AStruct {}))
+}
+
+#[test]
 #[rustfmt::skip]// Otherwise fmt strips the trailing comma
 fn supports_trailing_comma_with_one_field() -> Result<()> {
     #[derive(Debug)]
