@@ -1790,9 +1790,7 @@ mod tests {
         verify_that!(
             output,
             all![
-                contains_substring(
-                    "called `Option::into_test_result()` on a `Option::<()>::None` value"
-                ),
+                contains_substring("called `Option::or_fail()` on a `Option::<()>::None` value"),
                 contains_substring("test_returning_option.rs:23")
             ]
         )

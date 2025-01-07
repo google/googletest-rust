@@ -20,11 +20,11 @@ use proptest::test_runner::{Config, TestRunner};
 #[test]
 fn numbers_are_greater_than_zero() -> Result<()> {
     let mut runner = TestRunner::new(Config::default());
-    runner.run(&(1..100i32), |v| Ok(verify_that!(v, gt(0))?)).into_test_result()
+    runner.run(&(1..100i32), |v| Ok(verify_that!(v, gt(0))?)).or_fail()
 }
 
 #[test]
 fn strings_are_nonempty() -> Result<()> {
     let mut runner = TestRunner::new(Config::default());
-    runner.run(&"[a-zA-Z0-9]+", |v| Ok(verify_that!(v, not(eq("")))?)).into_test_result()
+    runner.run(&"[a-zA-Z0-9]+", |v| Ok(verify_that!(v, not(eq("")))?)).or_fail()
 }

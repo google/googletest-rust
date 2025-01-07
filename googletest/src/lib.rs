@@ -53,7 +53,7 @@ pub mod prelude {
     pub use super::matchers::*;
     pub use super::verify_current_test_outcome;
     pub use super::GoogleTestSupport;
-    pub use super::IntoTestResult;
+    pub use super::OrFail;
     pub use super::Result;
     // Assert macros
     pub use super::{
@@ -238,8 +238,8 @@ impl<T> GoogleTestSupport for std::result::Result<T, TestAssertionFailure> {
     }
 }
 
-/// Provides an extension method for converting an arbitrary type into a
-/// [`Result`].
+/// Provides an extension method for converting an arbitrary type into
+/// `googletest`'s [`Result`] type.
 ///
 /// A type can implement this trait to provide an easy way to return immediately
 /// from a test in conjunction with the `?` operator. This is useful for
@@ -252,27 +252,32 @@ impl<T> GoogleTestSupport for std::result::Result<T, TestAssertionFailure> {
 /// ```ignore
 /// #[test]
 /// fn should_work() -> googletest::Result<()> {
-///     let value = something_which_can_fail().into_test_result()?;
-///     let value = something_which_can_fail_with_option().into_test_result()?;
+///     let value = something_which_can_fail().or_fail()?;
+///     let value = something_which_can_fail_with_option().or_fail()?;
 ///     ...
 /// }
 ///
 /// fn something_which_can_fail() -> std::result::Result<T, String> { ... }
 /// fn something_which_can_fail_with_option() -> Option<T> { ... }
 /// ```
-pub trait IntoTestResult<T> {
-    /// Converts this instance into a [`Result`].
+pub trait OrFail {
+    /// The success type of the test result.
+    type Output;
+
+    /// Converts a value into a [`Result`] containing
+    /// either the [`Self::Output`] type or a [`TestAssertionFailure`].
     ///
-    /// Typically, the `Self` type is itself an implementation of the
-    /// [`std::ops::Try`] trait. This method should then map the `Residual`
-    /// variant to a [`TestAssertionFailure`] and leave the `Output` variant
-    /// unchanged.
-    fn into_test_result(self) -> Result<T>;
+    /// The most frequently used implementations convert
+    /// `Result<T, E>` into `Result<T, TestAssertionFailure>` and
+    /// `Option<T>` into `Result<T, TestAssertionFailure>`.
+    fn or_fail(self) -> Result<Self::Output>;
 }
 
-impl<T, E: std::fmt::Debug> IntoTestResult<T> for std::result::Result<T, E> {
+impl<T, E: std::fmt::Debug> OrFail for std::result::Result<T, E> {
+    type Output = T;
+
     #[track_caller]
-    fn into_test_result(self) -> std::result::Result<T, TestAssertionFailure> {
+    fn or_fail(self) -> std::result::Result<T, TestAssertionFailure> {
         match self {
             Ok(t) => Ok(t),
             Err(e) => Err(TestAssertionFailure::create(format!("{e:?}"))),
@@ -280,13 +285,15 @@ impl<T, E: std::fmt::Debug> IntoTestResult<T> for std::result::Result<T, E> {
     }
 }
 
-impl<T> IntoTestResult<T> for Option<T> {
+impl<T> OrFail for Option<T> {
+    type Output = T;
+
     #[track_caller]
-    fn into_test_result(self) -> std::result::Result<T, TestAssertionFailure> {
+    fn or_fail(self) -> std::result::Result<T, TestAssertionFailure> {
         match self {
             Some(t) => Ok(t),
             None => Err(TestAssertionFailure::create(format!(
-                "called `Option::into_test_result()` on a `Option::<{}>::None` value",
+                "called `Option::or_fail()` on a `Option::<{}>::None` value",
                 std::any::type_name::<T>()
             ))),
         }

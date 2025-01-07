@@ -20,7 +20,7 @@ mod tests {
 
     #[test]
     fn should_fail_due_to_none_in_subroutine() -> Result<()> {
-        returns_option().into_test_result()?;
+        returns_option().or_fail()?;
         Ok(())
     }
 

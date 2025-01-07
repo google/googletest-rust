@@ -475,8 +475,8 @@ fn test_png_image_dimensions() -> googletest::Result<()> {
 ```
 
 If your setup function returns `Option<T>` or `std::result::Result<T, E>` where
-`E: !std::error::Error`, then you can convert these types with `into_test_result()`
-from the `IntoTestResult` extension trait.
+`E: !std::error::Error`, then you can convert these types with `or_fail()`
+from the `OrFail` extension trait.
 
 ```
 # use googletest::prelude::*;
@@ -494,7 +494,7 @@ impl PngImage {
 # */
 fn test_png_image_binary() -> googletest::Result<()> {
   // Arrange
-  let png_image = PngImage::new_from_binary(&PNG_BINARY).into_test_result()?;
+  let png_image = PngImage::new_from_binary(&PNG_BINARY).or_fail()?;
   /* ... */
   # Ok(())
 }
@@ -511,7 +511,7 @@ impl PngImage {
 # */
 fn test_png_from_cache() -> googletest::Result<()> {
   // Arrange
-  let png_image = PngImage::new_from_cache(123).into_test_result()?;
+  let png_image = PngImage::new_from_cache(123).or_fail()?;
   /* ... */
   # Ok(())
 }
@@ -528,6 +528,6 @@ GoogleTest assertion failures into Proptest
 through the `?` operator.
 
 [`and_log_failure()`]: GoogleTestSupport::and_log_failure
-[`into_test_result()`]: IntoTestResult::into_test_result
+[`or_fail()`]: OrFail::or_fail
 [`Matcher`]: matcher::Matcher
 [`MatcherBase`]: matcher::MatcherBase

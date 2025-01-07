@@ -20,7 +20,7 @@ mod tests {
 
     #[test]
     fn should_fail_due_to_error_in_subroutine() -> Result<()> {
-        returns_anyhow_error().into_test_result()?;
+        returns_anyhow_error().or_fail()?;
         Ok(())
     }
 
