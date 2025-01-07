@@ -153,6 +153,7 @@ macro_rules! verify_that {
         }
     };
 }
+pub use verify_that;
 
 /// Asserts that the given predicate applied to the given arguments returns
 /// true.
@@ -245,6 +246,7 @@ macro_rules! verify_pred {
         $crate::assertions::internal::__googletest_macro_verify_pred!($expr)
     };
 }
+pub use verify_pred;
 
 /// Evaluates to a `Result` which contains an `Err` variant with the given test
 /// failure message.
@@ -297,8 +299,9 @@ macro_rules! fail {
         )
     }};
 
-    () => { fail!("Test failed") };
+    () => { $crate::fail!("Test failed") };
 }
+pub use fail;
 
 /// Generates a success. This **does not** make the overall test succeed. A test
 /// is only considered successful if none of its assertions fail during its
@@ -331,9 +334,10 @@ macro_rules! succeed {
     }};
 
     () => {
-        succeed!("Success")
+        $crate::succeed!("Success")
     };
 }
+pub use succeed;
 
 /// Generates a failure marking the test as failed but continue execution.
 ///
@@ -376,6 +380,7 @@ macro_rules! add_failure {
         add_failure!("Failed")
     };
 }
+pub use add_failure;
 
 /// Generates a failure at specified location marking the test as failed but
 /// continue execution.
@@ -424,6 +429,7 @@ macro_rules! add_failure_at {
         add_failure_at!($file, $line, $column, "Failed")
     };
 }
+pub use add_failure_at;
 
 /// Verify if the condition evaluates to true and returns `Result`.
 ///
@@ -456,6 +462,7 @@ macro_rules! verify_true {
         ($condition).check($crate::matchers::eq(true), stringify!($condition))
     }};
 }
+pub use verify_true;
 
 /// Marks test as failed and continue execution if the expression evaluates to
 /// false.
@@ -481,9 +488,10 @@ macro_rules! verify_true {
 macro_rules! expect_true {
     ($condition:expr) => {{
         use $crate::GoogleTestSupport as _;
-        verify_true!($condition).and_log_failure()
+        $crate::verify_true!($condition).and_log_failure()
     }};
 }
+pub use expect_true;
 
 /// Verify if the condition evaluates to false and returns `Result`.
 ///
@@ -516,6 +524,7 @@ macro_rules! verify_false {
         ($condition).check($crate::matchers::eq(false), stringify!($condition))
     }};
 }
+pub use verify_false;
 
 /// Marks test as failed and continue execution if the expression evaluates to
 /// true.
@@ -541,9 +550,10 @@ macro_rules! verify_false {
 macro_rules! expect_false {
     ($condition:expr) => {{
         use $crate::GoogleTestSupport as _;
-        verify_false!($condition).and_log_failure()
+        $crate::verify_false!($condition).and_log_failure()
     }};
 }
+pub use expect_false;
 
 /// Checks whether the second argument is equal to the first argument.
 ///
@@ -580,7 +590,7 @@ macro_rules! expect_false {
 macro_rules! verify_eq {
     // Specialization for ordered sequences of tuples:
     ($actual:expr, [ $( ( $($tuple_elt:expr),* ) ),+ $(,)? ] $(,)?) => {
-        verify_that!(&$actual, [
+        $crate::verify_that!(&$actual, [
             $(
                 // tuple matching
                 (
@@ -594,7 +604,7 @@ macro_rules! verify_eq {
 
     // Specialization for unordered sequences of tuples:
     ($actual:expr, { $( ( $($tuple_elt:expr),* ) ),+ $(,)?} $(,)?) => {
-        verify_that!(&$actual, {
+        $crate::verify_that!(&$actual, {
             $(
                 // tuple matching
                 (
@@ -608,19 +618,20 @@ macro_rules! verify_eq {
 
     // Ordered sequences:
     ($actual:expr, [$($expected:expr),+ $(,)?] $(,)?) => {
-        verify_that!(&$actual, [$($crate::matchers::eq(&$expected)),*])
+        $crate::verify_that!(&$actual, [$($crate::matchers::eq(&$expected)),*])
     };
 
     // Unordered sequences:
     ($actual:expr, {$($expected:expr),+ $(,)?} $(,)?) => {
-        verify_that!(&$actual, {$($crate::matchers::eq(&$expected)),*})
+        $crate::verify_that!(&$actual, {$($crate::matchers::eq(&$expected)),*})
     };
 
     // General case:
     ($actual:expr, $expected:expr $(,)?) => {
-        verify_that!(&$actual, $crate::matchers::eq(&$expected))
+        $crate::verify_that!(&$actual, $crate::matchers::eq(&$expected))
     };
 }
+pub use verify_eq;
 
 /// Marks test as failed and continues execution if the second argument is not
 /// equal to first argument.
@@ -664,35 +675,36 @@ macro_rules! verify_eq {
 macro_rules! expect_eq {
     ($actual:expr, [$($expected:expr),+ $(,)?] $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_eq!($actual, [$($expected),*]).and_log_failure();
+        $crate::verify_eq!($actual, [$($expected),*]).and_log_failure();
     }};
     ($actual:expr, [$($expected:expr),+ $(,)?], $($format_args:expr),* $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_eq!($actual, [$($expected),*])
+        $crate::verify_eq!($actual, [$($expected),*])
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
     }};
     ($actual:expr, {$($expected:expr),+ $(,)?} $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_eq!($actual, {$($expected),*}).and_log_failure();
+        $crate::verify_eq!($actual, {$($expected),*}).and_log_failure();
     }};
     ($actual:expr, {$($expected:expr),+ $(,)?}, $($format_args:expr),* $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_eq!($actual, {$($expected),*})
+        $crate::verify_eq!($actual, {$($expected),*})
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
     }};
     ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_eq!($actual, $expected).and_log_failure();
+        $crate::verify_eq!($actual, $expected).and_log_failure();
     }};
     ($actual:expr, $expected:expr, $($format_args:expr),* $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_eq!($actual, $expected)
+        $crate::verify_eq!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
     }};
 }
+pub use expect_eq;
 
 /// Checks whether the second argument is not equal to the first argument.
 ///
@@ -722,9 +734,10 @@ macro_rules! expect_eq {
 #[macro_export]
 macro_rules! verify_ne {
     ($actual:expr, $expected:expr $(,)?) => {
-        verify_that!(&$actual, $crate::matchers::not($crate::matchers::eq(&$expected)))
+        $crate::verify_that!(&$actual, $crate::matchers::not($crate::matchers::eq(&$expected)))
     };
 }
+pub use verify_ne;
 
 /// Marks test as failed and continues execution if the second argument is
 /// equal to first argument.
@@ -762,15 +775,16 @@ macro_rules! verify_ne {
 macro_rules! expect_ne {
     ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_ne!($actual, $expected)
+        $crate::verify_ne!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
     }};
     ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_ne!($actual, $expected).and_log_failure();
+        $crate::verify_ne!($actual, $expected).and_log_failure();
     }};
 }
+pub use expect_ne;
 
 /// Checks whether the first argument is less than second argument.
 ///
@@ -800,9 +814,10 @@ macro_rules! expect_ne {
 #[macro_export]
 macro_rules! verify_lt {
     ($actual:expr, $expected:expr $(,)?) => {
-        verify_that!($actual, $crate::matchers::lt($expected))
+        $crate::verify_that!($actual, $crate::matchers::lt($expected))
     };
 }
+pub use verify_lt;
 
 /// Marks test as failed and continues execution if the first argument is
 /// greater or equal to second argument.
@@ -840,15 +855,16 @@ macro_rules! verify_lt {
 macro_rules! expect_lt {
     ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_lt!($actual, $expected)
+        $crate::verify_lt!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
     }};
     ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_lt!($actual, $expected).and_log_failure();
+        $crate::verify_lt!($actual, $expected).and_log_failure();
     }};
 }
+pub use expect_lt;
 
 /// Checks whether the first argument is less than or equal to the second
 /// argument.
@@ -879,9 +895,10 @@ macro_rules! expect_lt {
 #[macro_export]
 macro_rules! verify_le {
     ($actual:expr, $expected:expr $(,)?) => {
-        verify_that!($actual, $crate::matchers::le($expected))
+        $crate::verify_that!($actual, $crate::matchers::le($expected))
     };
 }
+pub use verify_le;
 
 /// Marks test as failed and continues execution if the first argument is
 /// greater than the second argument.
@@ -919,15 +936,16 @@ macro_rules! verify_le {
 macro_rules! expect_le {
     ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_le!($actual, $expected)
+        $crate::verify_le!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
     }};
     ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_le!($actual, $expected).and_log_failure();
+        $crate::verify_le!($actual, $expected).and_log_failure();
     }};
 }
+pub use expect_le;
 
 /// Checks whether the first argument is greater than the second argument.
 ///
@@ -957,9 +975,10 @@ macro_rules! expect_le {
 #[macro_export]
 macro_rules! verify_gt {
     ($actual:expr, $expected:expr $(,)?) => {
-        verify_that!($actual, $crate::matchers::gt($expected))
+        $crate::verify_that!($actual, $crate::matchers::gt($expected))
     };
 }
+pub use verify_gt;
 
 /// Marks test as failed and continues execution if the first argument is
 /// not greater than the second argument.
@@ -997,15 +1016,16 @@ macro_rules! verify_gt {
 macro_rules! expect_gt {
     ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_gt!($actual, $expected)
+        $crate::verify_gt!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
     }};
     ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_gt!($actual, $expected).and_log_failure();
+        $crate::verify_gt!($actual, $expected).and_log_failure();
     }};
 }
+pub use expect_gt;
 
 /// Checks whether the first argument is greater than or equal to the second
 /// argument.
@@ -1037,9 +1057,10 @@ macro_rules! expect_gt {
 #[macro_export]
 macro_rules! verify_ge {
     ($actual:expr, $expected:expr $(,)?) => {
-        verify_that!($actual, $crate::matchers::ge($expected))
+        $crate::verify_that!($actual, $crate::matchers::ge($expected))
     };
 }
+pub use verify_ge;
 
 /// Marks test as failed and continues execution if the first argument is
 /// not greater than or equal to the second argument.
@@ -1077,15 +1098,16 @@ macro_rules! verify_ge {
 macro_rules! expect_ge {
     ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_ge!($actual, $expected)
+        $crate::verify_ge!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
     }};
     ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_ge!($actual, $expected).and_log_failure();
+        $crate::verify_ge!($actual, $expected).and_log_failure();
     }};
 }
+pub use expect_ge;
 
 /// Checks whether the float given by first argument is approximately
 /// equal to second argument.
@@ -1124,9 +1146,10 @@ macro_rules! expect_ge {
 #[macro_export]
 macro_rules! verify_float_eq {
     ($actual:expr, $expected:expr $(,)?) => {
-        verify_that!($actual, $crate::matchers::approx_eq($expected))
+        $crate::verify_that!($actual, $crate::matchers::approx_eq($expected))
     };
 }
+pub use verify_float_eq;
 
 /// Marks test as failed and continues execution if the float given by the first
 /// argument is not approximately equal to the float given by the second
@@ -1172,15 +1195,16 @@ macro_rules! verify_float_eq {
 macro_rules! expect_float_eq {
     ($actual:expr, $expected:expr, $($format_args:expr),+ $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_float_eq!($actual, $expected)
+        $crate::verify_float_eq!($actual, $expected)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
     }};
     ($actual:expr, $expected:expr $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_float_eq!($actual, $expected).and_log_failure();
+        $crate::verify_float_eq!($actual, $expected).and_log_failure();
     }};
 }
+pub use expect_float_eq;
 
 /// Checks whether the float given by first argument is equal to second argument
 /// with error tolerance of max_abs_error.
@@ -1212,9 +1236,10 @@ macro_rules! expect_float_eq {
 #[macro_export]
 macro_rules! verify_near {
     ($actual:expr, $expected:expr, $max_abs_error:expr $(,)?) => {
-        verify_that!($actual, $crate::matchers::near($expected, $max_abs_error))
+        $crate::verify_that!($actual, $crate::matchers::near($expected, $max_abs_error))
     };
 }
+pub use verify_near;
 
 /// Marks the test as failed and continues execution if the float given by first
 /// argument is not equal to second argument with error tolerance of
@@ -1253,15 +1278,16 @@ macro_rules! verify_near {
 macro_rules! expect_near {
     ($actual:expr, $expected:expr, $max_abs_error:expr, $($format_args:expr),+ $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_near!($actual, $expected, $max_abs_error)
+        $crate::verify_near!($actual, $expected, $max_abs_error)
             .with_failure_message(|| format!($($format_args),*))
             .and_log_failure();
     }};
     ($actual:expr, $expected:expr, $max_abs_error:expr $(,)?) => {{
         use $crate::GoogleTestSupport as _;
-        verify_near!($actual, $expected, $max_abs_error).and_log_failure();
+        $crate::verify_near!($actual, $expected, $max_abs_error).and_log_failure();
     }};
 }
+pub use expect_near;
 
 /// Matches the given value against the given matcher, panicking if it does not
 /// match.
@@ -1386,6 +1412,7 @@ macro_rules! assert_that {
         }
     };
 }
+pub use assert_that;
 
 /// Asserts that the given predicate applied to the given arguments returns
 /// true, panicking if it does not.
@@ -1408,6 +1435,7 @@ macro_rules! assert_pred {
         }
     };
 }
+pub use assert_pred;
 
 /// Matches the given value against the given matcher, marking the test as
 /// failed but continuing execution if it does not match.
@@ -1495,6 +1523,7 @@ macro_rules! expect_that {
             .and_log_failure()
     };
 }
+pub use expect_that;
 
 /// Asserts that the given predicate applied to the given arguments returns
 /// true, failing the test but continuing execution if not.
@@ -1519,6 +1548,7 @@ macro_rules! expect_pred {
         $crate::verify_pred!($($content)*).and_log_failure();
     }};
 }
+pub use expect_pred;
 
 /// Functions for use only by the procedural macros in this module.
 ///
@@ -1584,17 +1614,22 @@ pub mod internal {
 
 #[cfg(test)]
 mod tests {
-    use crate::prelude::*;
+    use crate::{
+        self as googletest,
+        assertions::{verify_eq, verify_that},
+        matchers::{anything, err},
+        test, Result as TestResult,
+    };
 
     #[test]
-    fn verify_of_hash_maps_with_str_string_matching() -> Result<()> {
+    fn verify_of_hash_maps_with_str_string_matching() -> TestResult<()> {
         let hash_map: std::collections::HashMap<String, String> =
             std::collections::HashMap::from([("a".into(), "A".into()), ("b".into(), "B".into())]);
         verify_eq!(hash_map, {("a", "A"), ("b", "B")})
     }
 
     #[test]
-    fn verify_of_hash_maps_with_ad_hoc_struct() -> Result<()> {
+    fn verify_of_hash_maps_with_ad_hoc_struct() -> TestResult<()> {
         #[derive(PartialEq, Debug)]
         struct Greek(String);
 
@@ -1609,7 +1644,7 @@ mod tests {
     }
 
     #[test]
-    fn verify_of_hash_maps_with_i32s() -> Result<()> {
+    fn verify_of_hash_maps_with_i32s() -> TestResult<()> {
         let hash_map: std::collections::HashMap<i32, i32> =
             std::collections::HashMap::from([(1, 1), (2, 4), (-1, 1), (-3, 9)]);
         verify_eq!(hash_map, {
@@ -1621,13 +1656,13 @@ mod tests {
     }
 
     #[test]
-    fn verify_eq_of_unordered_pairs() -> Result<()> {
+    fn verify_eq_of_unordered_pairs() -> TestResult<()> {
         verify_eq!(vec![(1, 2), (2, 3)], {(1, 2), (2, 3)})?;
         verify_eq!(vec![(1, 2), (2, 3)], {(2, 3), (1, 2)})
     }
 
     #[test]
-    fn verify_eq_of_unordered_structs() -> Result<()> {
+    fn verify_eq_of_unordered_structs() -> TestResult<()> {
         #[derive(PartialEq, Debug)]
         struct P(i32, i32);
 
@@ -1638,12 +1673,12 @@ mod tests {
     }
 
     #[test]
-    fn verify_eq_of_ordered_pairs() -> Result<()> {
+    fn verify_eq_of_ordered_pairs() -> TestResult<()> {
         verify_eq!(vec![(1, 2), (2, 3)], [(1, 2), (2, 3)])
     }
 
     #[test]
-    fn verify_eq_of_ordered_structs() -> Result<()> {
+    fn verify_eq_of_ordered_structs() -> TestResult<()> {
         #[derive(PartialEq, Debug)]
         struct P(i32, i32);
 
@@ -1651,13 +1686,13 @@ mod tests {
     }
 
     #[test]
-    fn verify_eq_of_ordered_pairs_order_matters() -> Result<()> {
-        let result = verify_eq!(vec![(1, 2), (2, 3)], [(2, 3), (1, 2)]);
+    fn verify_eq_of_ordered_pairs_order_matters() -> TestResult<()> {
+        let result = googletest::verify_eq!(vec![(1, 2), (2, 3)], [(2, 3), (1, 2)]);
         verify_that!(result, err(anything()))
     }
 
     #[test]
-    fn verify_eq_of_ordered_structs_order_matters() -> Result<()> {
+    fn verify_eq_of_ordered_structs_order_matters() -> TestResult<()> {
         #[derive(PartialEq, Debug)]
         struct P(i32, i32);
 

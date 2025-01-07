@@ -20,144 +20,147 @@ mod ctor {}
 
 #[cfg(test)]
 mod tests {
-    use googletest::prelude::*;
+    // NOTE: this test module intentionally does not import items from
+    // `googletest` to ensure that the macros do not depend on other items from the
+    // library being imported.
+    use googletest::gtest;
 
     #[gtest]
-    fn verify_that_works() -> Result<()> {
-        verify_that!(2 + 2, eq(4))
+    fn verify_that_works() -> googletest::Result<()> {
+        googletest::verify_that!(2 + 2, googletest::matchers::eq(4))
     }
 
     #[gtest]
-    fn verify_pred_works() -> Result<()> {
+    fn verify_pred_works() -> googletest::Result<()> {
         fn pred() -> bool {
             true
         }
-        verify_pred!(pred())
+        googletest::verify_pred!(pred())
     }
 
     #[gtest]
-    fn fail_works() -> Result<()> {
-        fail!()
+    fn fail_works() -> googletest::Result<()> {
+        googletest::fail!()
     }
 
     #[gtest]
     fn succeed_works() {
-        succeed!();
+        googletest::succeed!();
     }
 
     #[gtest]
     fn add_failure_works() {
-        add_failure!("message");
+        googletest::add_failure!("message");
     }
 
     #[gtest]
     fn add_failure_at_works() {
-        add_failure_at!("hello.rs", 12, 34, "message");
+        googletest::add_failure_at!("hello.rs", 12, 34, "message");
     }
 
     #[gtest]
-    fn verify_true_works() -> Result<()> {
-        verify_true!(true)
+    fn verify_true_works() -> googletest::Result<()> {
+        googletest::verify_true!(true)
     }
 
     #[gtest]
     fn expect_true_works() {
-        expect_true!(true);
+        googletest::expect_true!(true);
     }
 
     #[gtest]
-    fn verify_false_works() -> Result<()> {
-        verify_false!(false)
+    fn verify_false_works() -> googletest::Result<()> {
+        googletest::verify_false!(false)
     }
 
     #[gtest]
     fn expect_false_works() {
-        expect_false!(false);
+        googletest::expect_false!(false);
     }
 
     #[gtest]
-    fn verify_eq_works() -> Result<()> {
-        verify_eq!(2 + 2, 4)
+    fn verify_eq_works() -> googletest::Result<()> {
+        googletest::verify_eq!(2 + 2, 4)
     }
 
     #[gtest]
     fn expect_eq_works() {
-        expect_eq!(2 + 2, 4);
+        googletest::expect_eq!(2 + 2, 4);
     }
 
     #[gtest]
-    fn verify_ne_works() -> Result<()> {
-        verify_ne!(2 + 2, 5)
+    fn verify_ne_works() -> googletest::Result<()> {
+        googletest::verify_ne!(2 + 2, 5)
     }
 
     #[gtest]
     fn expect_ne_works() {
-        expect_ne!(2 + 2, 5);
+        googletest::expect_ne!(2 + 2, 5);
     }
 
     #[gtest]
-    fn verify_lt_works() -> Result<()> {
-        verify_lt!(2 + 2, 5)
+    fn verify_lt_works() -> googletest::Result<()> {
+        googletest::verify_lt!(2 + 2, 5)
     }
 
     #[gtest]
     fn expect_lt_works() {
-        expect_lt!(2 + 2, 5);
+        googletest::expect_lt!(2 + 2, 5);
     }
 
     #[gtest]
-    fn verify_le_works() -> Result<()> {
-        verify_le!(2 + 2, 4)
+    fn verify_le_works() -> googletest::Result<()> {
+        googletest::verify_le!(2 + 2, 4)
     }
 
     #[gtest]
     fn expect_le_works() {
-        expect_le!(2 + 2, 4);
+        googletest::expect_le!(2 + 2, 4);
     }
 
     #[gtest]
-    fn verify_gt_works() -> Result<()> {
-        verify_gt!(2 + 2, 3)
+    fn verify_gt_works() -> googletest::Result<()> {
+        googletest::verify_gt!(2 + 2, 3)
     }
 
     #[gtest]
     fn expect_gt_works() {
-        expect_gt!(2 + 2, 3);
+        googletest::expect_gt!(2 + 2, 3);
     }
 
     #[gtest]
-    fn verify_ge_works() -> Result<()> {
-        verify_ge!(2 + 2, 4)
+    fn verify_ge_works() -> googletest::Result<()> {
+        googletest::verify_ge!(2 + 2, 4)
     }
 
     #[gtest]
     fn expect_ge_works() {
-        expect_ge!(2 + 2, 4);
+        googletest::expect_ge!(2 + 2, 4);
     }
 
     #[gtest]
-    fn verify_float_eq_works() -> Result<()> {
-        verify_float_eq!(1.0, 1.0)
+    fn verify_float_eq_works() -> googletest::Result<()> {
+        googletest::verify_float_eq!(1.0, 1.0)
     }
 
     #[gtest]
     fn expect_float_eq_works() {
-        expect_float_eq!(1.0, 1.0);
+        googletest::expect_float_eq!(1.0, 1.0);
     }
 
     #[gtest]
-    fn verify_near_works() -> Result<()> {
-        verify_near!(42.0, 42.001, 0.1)
+    fn verify_near_works() -> googletest::Result<()> {
+        googletest::verify_near!(42.0, 42.001, 0.1)
     }
 
     #[gtest]
     fn expect_near_works() {
-        expect_near!(42.0, 42.001, 0.1);
+        googletest::expect_near!(42.0, 42.001, 0.1);
     }
 
     #[gtest]
     fn assert_that_works() {
-        assert_that!(2 + 2, eq(4));
+        googletest::assert_that!(2 + 2, googletest::matchers::eq(4));
     }
 
     #[gtest]
@@ -165,12 +168,12 @@ mod tests {
         fn pred() -> bool {
             true
         }
-        assert_pred!(pred());
+        googletest::assert_pred!(pred());
     }
 
     #[gtest]
     fn expect_that_works() {
-        expect_that!(2 + 2, eq(4));
+        googletest::expect_that!(2 + 2, googletest::matchers::eq(4));
     }
 
     #[gtest]
@@ -178,6 +181,6 @@ mod tests {
         fn pred() -> bool {
             true
         }
-        expect_pred!(pred());
+        googletest::expect_pred!(pred());
     }
 }
