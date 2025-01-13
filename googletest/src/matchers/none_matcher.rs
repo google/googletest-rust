@@ -68,6 +68,7 @@ impl<'a, T: Debug> Matcher<&'a Option<T>> for NoneMatcher {
 mod tests {
     use crate::matcher::MatcherResult;
     use crate::prelude::*;
+    use crate::Result;
 
     #[test]
     fn none_matches_option_with_none() -> Result<()> {

@@ -28,7 +28,7 @@ fn build_text<T: Display>(mut collection: impl Iterator<Item = T>) -> String {
 }
 
 #[test]
-fn colors_suppressed_when_both_no_color_and_force_color_are_set() -> Result<()> {
+fn colors_suppressed_when_both_no_color_and_force_color_are_set() -> googletest::Result<()> {
     std::env::set_var("NO_COLOR", "1");
     std::env::set_var("FORCE_COLOR", "1");
 

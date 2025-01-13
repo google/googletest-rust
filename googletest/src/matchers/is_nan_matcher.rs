@@ -40,6 +40,7 @@ impl<T: Float + Debug + Copy> Matcher<T> for IsNanMatcher {
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
+    use crate::Result;
 
     #[test]
     fn matches_f32_nan() -> Result<()> {

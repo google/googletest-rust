@@ -284,6 +284,7 @@ impl<T: Clone> Path<T> {
 mod tests {
     use super::*;
     use crate::prelude::*;
+    use crate::Result;
     use quickcheck::{quickcheck, Arbitrary, TestResult};
 
     #[test]

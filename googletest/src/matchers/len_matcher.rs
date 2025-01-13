@@ -89,6 +89,7 @@ mod tests {
     use crate::description::Description;
     use crate::matcher::MatcherResult;
     use crate::prelude::*;
+    use crate::Result;
     use indoc::indoc;
     use std::collections::{
         BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque,

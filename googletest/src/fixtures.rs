@@ -144,6 +144,7 @@ mod tests {
     use crate as googletest;
     use crate::prelude::*;
     use crate::test;
+    use crate::Result;
 
     #[test]
     fn fixture_no_fixture() -> Result<()> {

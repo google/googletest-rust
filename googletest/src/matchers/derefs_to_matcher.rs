@@ -63,6 +63,7 @@ mod tests {
     use std::rc::Rc;
 
     use crate::prelude::*;
+    use crate::Result;
     use indoc::indoc;
 
     #[test]

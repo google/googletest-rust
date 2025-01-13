@@ -278,6 +278,7 @@ enum Decoration {
 mod tests {
     use super::{Block, Fragment, List};
     use crate::prelude::*;
+    use crate::Result;
     use indoc::indoc;
 
     #[test]

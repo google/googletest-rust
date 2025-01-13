@@ -25,7 +25,7 @@ mod write_expr_value {
     }
 
     #[test]
-    fn test_with_debug_value_references() -> Result<()> {
+    fn test_with_debug_value_references() -> googletest::Result<()> {
         #[derive(Debug)]
         struct Foo;
         let mut val = Foo;
@@ -40,7 +40,7 @@ mod write_expr_value {
     }
 
     #[test]
-    fn test_with_non_debug_value_references() -> Result<()> {
+    fn test_with_non_debug_value_references() -> googletest::Result<()> {
         struct Foo;
         let mut val = Foo;
 

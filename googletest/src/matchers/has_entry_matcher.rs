@@ -114,6 +114,7 @@ impl<'a, KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<&'a ValueT>>
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
+    use crate::Result;
     use indoc::indoc;
     use std::collections::HashMap;
 

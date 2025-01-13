@@ -198,6 +198,7 @@ impl<T: Debug + Float + Copy> Matcher<T> for NearMatcher<T> {
 mod tests {
     use crate::matcher::MatcherResult;
     use crate::prelude::*;
+    use crate::Result;
 
     #[test]
     fn matches_value_inside_range() -> Result<()> {

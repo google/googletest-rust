@@ -119,6 +119,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
+    use crate::Result;
     use indoc::indoc;
     use std::collections::HashSet;
 

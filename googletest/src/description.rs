@@ -260,6 +260,7 @@ impl<T: Into<Cow<'static, str>>> From<T> for Description {
 mod tests {
     use super::Description;
     use crate::prelude::*;
+    use crate::Result;
     use indoc::indoc;
 
     #[test]

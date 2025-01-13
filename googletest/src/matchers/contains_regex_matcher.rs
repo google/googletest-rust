@@ -82,6 +82,7 @@ impl<ActualT: AsRef<str> + Debug + Copy> Matcher<ActualT> for ContainsRegexMatch
 mod tests {
     use crate::matcher::MatcherResult;
     use crate::prelude::*;
+    use crate::Result;
 
     #[test]
     fn contains_regex_matches_string_reference_with_pattern() -> Result<()> {

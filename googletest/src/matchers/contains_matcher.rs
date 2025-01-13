@@ -159,6 +159,7 @@ impl<InnerMatcherT> ContainsMatcher<InnerMatcherT> {
 mod tests {
     use crate::matcher::MatcherResult;
     use crate::prelude::*;
+    use crate::Result;
 
     #[test]
     fn contains_matches_singleton_slice_with_value() -> Result<()> {

@@ -138,6 +138,7 @@ fn to_display_output(string: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
+    use crate::Result;
     use indoc::indoc;
 
     #[test]

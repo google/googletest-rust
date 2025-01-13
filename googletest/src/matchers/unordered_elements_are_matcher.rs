@@ -392,13 +392,14 @@ pub mod internal {
 
 #[cfg(test)]
 mod tests {
+    use crate as googletest;
     use crate::matcher::MatcherResult;
     use crate::prelude::*;
     use indoc::indoc;
     use std::collections::HashMap;
 
     #[test]
-    fn has_correct_description_for_map() -> Result<()> {
+    fn has_correct_description_for_map() -> googletest::Result<()> {
         // UnorderedElementsAreMatcher maintains references to the matchers, so the
         // constituent matchers must live longer. Inside a verify_that! macro, the
         // compiler takes care of that, but when the matcher is created separately,
@@ -429,7 +430,7 @@ mod tests {
     }
 
     #[test]
-    fn unordered_elements_are_description_no_full_match_with_map() -> Result<()> {
+    fn unordered_elements_are_description_no_full_match_with_map() -> googletest::Result<()> {
         // UnorderedElementsAreMatcher maintains references to the matchers, so the
         // constituent matchers must live longer. Inside a verify_that! macro, the
         // compiler takes care of that, but when the matcher is created separately,

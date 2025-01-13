@@ -67,6 +67,7 @@ impl<T: Debug + Display + Copy, InnerMatcher: for<'a> Matcher<&'a str>> Matcher<
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
+    use crate::Result;
     use indoc::indoc;
     use std::fmt::{Debug, Display, Error, Formatter};
 

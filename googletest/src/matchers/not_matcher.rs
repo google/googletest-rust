@@ -67,6 +67,7 @@ impl<T: Debug + Copy, InnerMatcherT: Matcher<T>> Matcher<T> for NotMatcher<Inner
 mod tests {
     use crate::matcher::MatcherResult;
     use crate::prelude::*;
+    use crate::Result;
     use indoc::indoc;
 
     #[test]

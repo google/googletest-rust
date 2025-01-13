@@ -1,5 +1,6 @@
 mod verify_pred {
     use googletest::prelude::*;
+    use googletest::Result;
     use indoc::indoc;
 
     #[test]

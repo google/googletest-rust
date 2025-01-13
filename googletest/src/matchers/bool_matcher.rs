@@ -69,6 +69,7 @@ impl<'a> Matcher<&'a bool> for BoolMatcher {
 mod tests {
     use super::*;
     use crate::prelude::*;
+    use crate::Result;
 
     #[test]
     fn match_value() -> Result<()> {

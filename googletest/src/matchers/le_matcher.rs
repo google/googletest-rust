@@ -102,6 +102,7 @@ impl<ActualT: Debug + PartialOrd<ExpectedT> + Copy, ExpectedT: Debug> Matcher<Ac
 mod tests {
     use crate::matcher::MatcherResult;
     use crate::prelude::*;
+    use crate::Result;
     use indoc::indoc;
     use std::ffi::OsString;
 

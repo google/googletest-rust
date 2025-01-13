@@ -109,6 +109,7 @@ impl<'a, T: Debug, InnerMatcherT: Matcher<&'a T>> Matcher<&'a Option<T>>
 mod tests {
     use crate::matcher::MatcherResult;
     use crate::prelude::*;
+    use crate::Result;
     use indoc::indoc;
 
     #[test]

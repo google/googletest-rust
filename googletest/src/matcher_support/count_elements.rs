@@ -30,9 +30,9 @@ pub(crate) fn count_elements<ContainerT: IntoIterator>(value: ContainerT) -> usi
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
     use crate::prelude::*;
+    use crate::Result;
 
     #[test]
     fn count_elements_vec() -> Result<()> {

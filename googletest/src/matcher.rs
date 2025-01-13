@@ -310,6 +310,7 @@ impl<T: Debug + Copy, M: Matcher<T>> Matcher<T> for &M {
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
+    use crate::Result;
 
     #[test]
     fn ref_matchers_can_be_reused() -> Result<()> {

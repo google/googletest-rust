@@ -433,7 +433,7 @@ impl SummaryBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{matcher_support::edit_distance::Mode, prelude::*};
+    use crate::{matcher_support::edit_distance::Mode, prelude::*, Result};
     use indoc::indoc;
     use std::fmt::Write;
 

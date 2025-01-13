@@ -255,6 +255,7 @@ where
 mod tests {
     use crate::matcher::MatcherResult;
     use crate::prelude::*;
+    use crate::Result;
     use indoc::indoc;
     use std::collections::HashSet;
 
