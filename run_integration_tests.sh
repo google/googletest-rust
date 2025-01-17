@@ -24,6 +24,7 @@ set -e
 
 INTEGRATION_TEST_BINARIES=(
   "integration_tests"
+  "always_fails"
   "assert_predicate_with_failure"
   "assertion_failure_in_subroutine"
   "assertion_failures_with_short_structured_actual_values"
