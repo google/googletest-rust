@@ -744,6 +744,41 @@ mod tests {
     }
 
     #[gtest]
+    fn always_fails_test_always_fails() -> Result<()> {
+        let status = run_external_process("always_fails").status()?;
+
+        verify_that!(status.success(), eq(false))
+    }
+
+    #[gtest]
+    fn always_fails_test_respects_sharding() -> Result<()> {
+        fn execute_test(shard: u64, total_shards: u64) -> Result<bool> {
+            let status_file = tempfile::tempdir()?.path().join("shard_status_file");
+            let gtest_total_shards = format!("{total_shards}");
+            let gtest_shard_index = format!("{shard}");
+
+            let success = run_external_process("always_fails")
+                .env("GTEST_TOTAL_SHARDS", gtest_total_shards)
+                .env("GTEST_SHARD_INDEX", gtest_shard_index)
+                .env("GTEST_SHARD_STATUS_FILE", &status_file)
+                .status()?
+                .success();
+
+            verify_that!(status_file.exists(), eq(true))?;
+            Ok(success)
+        }
+
+        // The test case should only run in one shard.
+        let results = [execute_test(0, 3)?, execute_test(1, 3)?, execute_test(2, 3)?];
+        let successes = results.iter().filter(|b| **b).count();
+        let failures = results.iter().filter(|b| !**b).count();
+
+        expect_that!(successes, eq(2));
+        expect_that!(failures, eq(1));
+        Ok(())
+    }
+
+    #[gtest]
     fn verify_true_when_true_returns_ok() {
         assert!(verify_true!("test" == "test").is_ok())
     }

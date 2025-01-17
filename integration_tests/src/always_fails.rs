@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![doc(hidden)]
+fn main() {}
 
-pub(crate) mod description_renderer;
-pub mod test_outcome;
-pub mod test_sharding;
+#[cfg(test)]
+mod tests {
+    use googletest::prelude::*;
+
+    #[gtest]
+    fn always_fails() -> Result<()> {
+        verify_that!(2, eq(3))
+    }
+}
