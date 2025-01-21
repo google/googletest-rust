@@ -76,6 +76,18 @@ pub fn gtest(
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let ItemFn { attrs, sig, block, .. } = parse_macro_input!(input as ItemFn);
+    let test_case_hash: u64 = {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        let mut h = DefaultHasher::new();
+
+        // Only consider attrs and name for stability. Changing the function body should
+        // not affect the test case distribution.
+        attrs.hash(&mut h);
+        sig.ident.hash(&mut h);
+        h.finish()
+    };
+
     let (outer_return_type, trailer) = if attrs
         .iter()
         .any(|attr| attr.path().is_ident("should_panic"))
@@ -168,10 +180,14 @@ pub fn gtest(
         #(#attrs)*
         #outer_sig -> #outer_return_type {
             #maybe_closure
-            use googletest::internal::test_outcome::TestOutcome;
-            TestOutcome::init_current_test_outcome();
-            let result: #invocation_result_type = #invocation;
-            TestOutcome::close_current_test_outcome(#result)
+            if googletest::internal::test_sharding::test_should_run(#test_case_hash) {
+                use googletest::internal::test_outcome::TestOutcome;
+                TestOutcome::init_current_test_outcome();
+                let result: #invocation_result_type = #invocation;
+                TestOutcome::close_current_test_outcome(#result)
+            } else {
+                Ok(())
+            }
             #trailer
         }
     };
@@ -184,6 +200,7 @@ pub fn gtest(
             #function
         }
     };
+
     output.into()
 }
 
