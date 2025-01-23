@@ -1939,6 +1939,16 @@ mod tests {
         verify_that!(output, contains_substring("should panic"))
     }
 
+    #[gtest]
+    fn should_fail_when_failing_test_matches() -> Result<()> {
+        verify_that!(execute_filtered_test("always_fails", "fails")?, is_false())
+    }
+
+    #[gtest]
+    fn should_pass_when_failing_test_mismatch() -> Result<()> {
+        verify_that!(execute_filtered_test("always_fails", "filter_should_mismatch")?, is_true())
+    }
+
     #[::core::prelude::v1::test]
     #[should_panic]
     fn should_panic_when_expect_that_runs_without_attribute_macro_after_another_test() {
@@ -2034,5 +2044,15 @@ mod tests {
 
         verify_that!(status_file.exists(), eq(true))?;
         Ok(success)
+    }
+
+    fn execute_filtered_test(
+        process: &'static str,
+        testbridge_test_only: &'static str,
+    ) -> Result<bool> {
+        Ok(run_external_process(process)
+            .env("TESTBRIDGE_TEST_ONLY", testbridge_test_only)
+            .status()?
+            .success())
     }
 }
