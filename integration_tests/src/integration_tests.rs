@@ -752,30 +752,76 @@ mod tests {
 
     #[gtest]
     fn always_fails_test_respects_sharding() -> Result<()> {
-        fn execute_test(shard: u64, total_shards: u64) -> Result<bool> {
-            let status_file = tempfile::tempdir()?.path().join("shard_status_file");
-            let gtest_total_shards = format!("{total_shards}");
-            let gtest_shard_index = format!("{shard}");
-
-            let success = run_external_process("always_fails")
-                .env("GTEST_TOTAL_SHARDS", gtest_total_shards)
-                .env("GTEST_SHARD_INDEX", gtest_shard_index)
-                .env("GTEST_SHARD_STATUS_FILE", &status_file)
-                .status()?
-                .success();
-
-            verify_that!(status_file.exists(), eq(true))?;
-            Ok(success)
-        }
-
-        // The test case should only run in one shard.
-        let results = [execute_test(0, 3)?, execute_test(1, 3)?, execute_test(2, 3)?];
+        // The test case should only run and fail in one shard.
+        let results = [
+            execute_sharded_test("always_fails", 0, 3)?,
+            execute_sharded_test("always_fails", 1, 3)?,
+            execute_sharded_test("always_fails", 2, 3)?,
+        ];
         let successes = results.iter().filter(|b| **b).count();
         let failures = results.iter().filter(|b| !**b).count();
 
         expect_that!(successes, eq(2));
         expect_that!(failures, eq(1));
         Ok(())
+    }
+
+    #[gtest]
+    fn always_panics_test_always_fails() -> Result<()> {
+        let status = run_external_process("always_panics").status()?;
+
+        verify_that!(status.success(), eq(false))
+    }
+
+    #[gtest]
+    fn always_panics_test_respects_sharding() -> Result<()> {
+        // The test case should only run and fail in one shard.
+        let results = [
+            execute_sharded_test("always_panics", 0, 3)?,
+            execute_sharded_test("always_panics", 1, 3)?,
+            execute_sharded_test("always_panics", 2, 3)?,
+        ];
+        let successes = results.iter().filter(|b| **b).count();
+        let failures = results.iter().filter(|b| !**b).count();
+
+        expect_that!(successes, eq(2));
+        expect_that!(failures, eq(1));
+        Ok(())
+    }
+
+    #[gtest]
+    fn expect_panic_test_always_succeeds() -> Result<()> {
+        let status = run_external_process("expect_panic").status()?;
+
+        verify_that!(status.success(), is_true())
+    }
+
+    #[gtest]
+    fn expect_panic_test_respects_sharding() -> Result<()> {
+        let results = [
+            execute_sharded_test("expect_panic", 0, 3)?,
+            execute_sharded_test("expect_panic", 1, 3)?,
+            execute_sharded_test("expect_panic", 2, 3)?,
+        ];
+        verify_that!(results.iter().all(|b| *b), is_true())
+    }
+
+    #[gtest]
+    fn expect_panic_with_expected_test_always_succeeds() -> Result<()> {
+        let status = run_external_process("expect_panic_with_expected").status()?;
+
+        verify_that!(status.success(), is_true())
+    }
+
+    #[gtest]
+    fn expect_panic_with_expected_test_respects_sharding() -> Result<()> {
+        let results = [
+            execute_sharded_test("expect_panic_with_expected", 0, 3)?,
+            execute_sharded_test("expect_panic_with_expected", 1, 3)?,
+            execute_sharded_test("expect_panic_with_expected", 2, 3)?,
+        ];
+
+        verify_that!(results.iter().all(|b| *b), is_true())
     }
 
     #[gtest]
@@ -1967,5 +2013,21 @@ mod tests {
             std::env::var("CARGO_TARGET_DIR").unwrap_or_else(|_| "target".into())
         );
         Command::new(command_path)
+    }
+
+    fn execute_sharded_test(process: &'static str, shard: u64, total_shards: u64) -> Result<bool> {
+        let status_file = tempfile::tempdir()?.path().join("shard_status_file");
+        let gtest_total_shards = format!("{total_shards}");
+        let gtest_shard_index = format!("{shard}");
+
+        let success = run_external_process(process)
+            .env("GTEST_TOTAL_SHARDS", gtest_total_shards)
+            .env("GTEST_SHARD_INDEX", gtest_shard_index)
+            .env("GTEST_SHARD_STATUS_FILE", &status_file)
+            .status()?
+            .success();
+
+        verify_that!(status_file.exists(), eq(true))?;
+        Ok(success)
     }
 }
