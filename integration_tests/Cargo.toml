@@ -47,6 +47,21 @@ path = "src/always_fails.rs"
 test = false
 
 [[bin]]
+name = "always_panics"
+path = "src/always_panics.rs"
+test = false
+
+[[bin]]
+name = "expect_panic"
+path = "src/expect_panic.rs"
+test = false
+
+[[bin]]
+name = "expect_panic_with_expected"
+path = "src/expect_panic_with_expected.rs"
+test = false
+
+[[bin]]
 name = "assert_predicate_with_failure"
 path = "src/assert_predicate_with_failure.rs"
 test = false

@@ -14,8 +14,8 @@
 
 use quote::quote;
 use syn::{
-    parse_macro_input, punctuated::Punctuated, spanned::Spanned, Attribute, DeriveInput, FnArg,
-    ItemFn, PatType, ReturnType, Signature, Type,
+    parse_macro_input, punctuated::Punctuated, spanned::Spanned, Attribute, DeriveInput, Expr,
+    ExprLit, FnArg, ItemFn, Lit, MetaNameValue, PatType, ReturnType, Signature, Type,
 };
 
 /// Marks a test to be run by the Google Rust test runner.
@@ -88,17 +88,26 @@ pub fn gtest(
         h.finish()
     };
 
-    let (outer_return_type, trailer) = if attrs
+    let (skipped_test_result, outer_return_type, trailer) = attrs
         .iter()
-        .any(|attr| attr.path().is_ident("should_panic"))
-    {
-        (quote! { () }, quote! { .unwrap(); })
-    } else {
+        .find(|attr| attr.path().is_ident("should_panic"))
+        .map(|attr| {
+            let error_message = extract_should_panic_expected(attr).unwrap_or("".to_string());
+            (
+                quote! {
+                    {
+                        panic!("{}", #error_message);
+                    }
+                },
+                quote! { () },
+                quote! { .unwrap(); }
+            )})
+        .unwrap_or_else(||
         (
+            quote! {Ok(())},
             quote! { ::std::result::Result<(), googletest::internal::test_outcome::TestFailure> },
             quote! {},
-        )
-    };
+        ));
 
     let is_rstest_enabled = is_rstest_enabled(&attrs);
     let outer_sig = {
@@ -186,7 +195,7 @@ pub fn gtest(
                 let result: #invocation_result_type = #invocation;
                 TestOutcome::close_current_test_outcome(#result)
             } else {
-                Ok(())
+                #skipped_test_result
             }
             #trailer
         }
@@ -202,6 +211,22 @@ pub fn gtest(
     };
 
     output.into()
+}
+
+/// Extract the optional "expected" string literal from a `should_panic`
+/// attribute.
+fn extract_should_panic_expected(attr: &Attribute) -> Option<String> {
+    let Ok(name_value) = attr.parse_args::<MetaNameValue>() else {
+        return None;
+    };
+    match name_value.value {
+        Expr::Lit(ExprLit { lit: Lit::Str(expected), .. })
+            if name_value.path.is_ident("expected") =>
+        {
+            Some(expected.value())
+        }
+        _ => None,
+    }
 }
 
 /// Alias for [`googletest::gtest`].
