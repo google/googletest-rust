@@ -105,7 +105,7 @@ pub fn gtest(
         .unwrap_or_else(||
         (
             quote! {Ok(())},
-            quote! { ::std::result::Result<(), googletest::internal::test_outcome::TestFailure> },
+            quote! { ::core::result::Result<(), googletest::internal::test_outcome::TestFailure> },
             quote! {},
         ));
 
