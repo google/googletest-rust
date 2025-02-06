@@ -16,7 +16,7 @@ fn main() {}
 
 // Shadow important modules that the macros use.
 mod std {}
-mod ctor {}
+mod core {}
 
 #[cfg(test)]
 mod tests {
