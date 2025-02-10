@@ -90,6 +90,7 @@ INTEGRATION_TEST_BINARIES=(
   "passing_test_with_should_panic"
   "simple_assertion_failure"
   "simple_assertion_failure_with_assert_that"
+  "simple_assertion_with_log"
   "test_returning_anyhow_error"
   "test_returning_string_error"
   "test_returning_option"
