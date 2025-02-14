@@ -142,6 +142,8 @@ The following matchers are provided in GoogleTest Rust:
 | [`has_entry`]        | A [`HashMap`] containing a given key whose value the argument matches.   |
 | [`is_contained_in!`] | A container each of whose elements is matched by some given matcher.     |
 | [`is_nan`]           | A floating point number which is NaN.                                    |
+| [`is_finite`]        | A floating point number which is neither infinite nor NaN.               |
+| [`is_infinite`]      | A floating point number which is positive or negative infinity.          |
 | [`le`]               | A [`PartialOrd`] value less than or equal to the given value.            |
 | [`len`]              | A container whose number of elements the argument matches.               |
 | [`lt`]               | A [`PartialOrd`] value strictly less than the given value.               |
