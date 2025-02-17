@@ -4,6 +4,7 @@
 [![docs.rs][docs-badge]][docs-url]
 [![Apache licensed][license-badge]][license-url]
 [![Build Status][actions-badge]][actions-url]
+[![OpenSSF Best Practices][openssf-badge]][openssf-url]
 
 [crates-badge]: https://img.shields.io/crates/v/googletest.svg
 [crates-url]: https://crates.io/crates/googletest
@@ -13,6 +14,8 @@
 [license-url]: https://github.com/google/googletest-rust/blob/main/LICENSE
 [actions-badge]: https://github.com/google/googletest-rust/workflows/CI/badge.svg
 [actions-url]: https://github.com/google/googletest-rust/actions?query=workflow%3ACI+branch%3Amain
+[openssf-badge]: https://www.bestpractices.dev/projects/10037/badge
+[openssf-url]: https://www.bestpractices.dev/projects/10037
 
 This library brings the rich assertion types of Google's C++ testing library
 [GoogleTest](https://github.com/google/googletest) to Rust. It provides:
