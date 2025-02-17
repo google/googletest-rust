@@ -239,7 +239,7 @@ fn extract_should_panic_expected(attr: &Attribute) -> Option<String> {
 ///
 /// ```ignore
 /// #[rstest]
-/// #[gtest]
+/// #[googletest::test]
 /// fn rstest_with_googletest() -> Result<()> {
 ///   verify_that!(1, eq(1))
 /// }
