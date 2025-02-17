@@ -234,7 +234,7 @@ impl<'a> FromIterator<edit_distance::Edit<&'a str>> for BufferedSummary<'a> {
     }
 }
 
-impl<'a> Display for BufferedSummary<'a> {
+impl Display for BufferedSummary<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if !matches!(self.buffer, Buffer::Empty) {
             panic!("Buffer is not empty. This is a bug in gtest_rust.")
@@ -307,7 +307,7 @@ impl<'a> Buffer<'a> {
     }
 }
 
-impl<'a> Default for Buffer<'a> {
+impl Default for Buffer<'_> {
     fn default() -> Self {
         Self::Empty
     }

@@ -344,8 +344,8 @@ pub mod internal {
     // least one expected element and vice versa.
     // 3. `UnorderedElementsAreMatcher` verifies that a perfect matching exists
     // using Ford-Fulkerson.
-    impl<'a, T: Debug + Copy, ContainerT: Debug + Copy, const N: usize> Matcher<ContainerT>
-        for UnorderedElementsAreMatcher<'a, T, N>
+    impl<T: Debug + Copy, ContainerT: Debug + Copy, const N: usize> Matcher<ContainerT>
+        for UnorderedElementsAreMatcher<'_, T, N>
     where
         ContainerT: IntoIterator<Item = T>,
     {
