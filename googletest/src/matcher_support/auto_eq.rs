@@ -50,7 +50,7 @@ pub mod internal {
 
     pub struct Wrapper<T>(pub T);
 
-    impl<'a, T: MatcherBase> Wrapper<&'a T> {
+    impl<T: MatcherBase> Wrapper<&'_ T> {
         #[inline]
         pub fn kind(&self) -> MatcherTag {
             MatcherTag

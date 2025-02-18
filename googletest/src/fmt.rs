@@ -28,7 +28,7 @@ pub mod internal {
     /// Used for autoref specialization to conditionally
     /// render only values that implement `Debug`. See also
     /// [`FormatNonDebugFallback`].
-    impl<'a, T: Debug + ?Sized> FormatWrapper<'a, T> {
+    impl<T: Debug + ?Sized> FormatWrapper<'_, T> {
         #[track_caller]
         pub fn __googletest_write_expr_value(&self, output: &mut dyn Write, expr_label: &str) {
             write!(output, "\n  {} = {:?},", expr_label, self.0)
@@ -45,7 +45,7 @@ pub mod internal {
         fn __googletest_write_expr_value(&self, output: &mut dyn Write, expr_label: &str);
     }
 
-    impl<'a, T: ?Sized> FormatNonDebugFallback for FormatWrapper<'a, T> {
+    impl<T: ?Sized> FormatNonDebugFallback for FormatWrapper<'_, T> {
         #[track_caller]
         fn __googletest_write_expr_value(&self, output: &mut dyn Write, expr_label: &str) {
             write!(output, "\n  {} does not implement Debug,", expr_label)
