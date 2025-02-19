@@ -2012,7 +2012,12 @@ mod tests {
             "./{}/debug/{name}",
             std::env::var("CARGO_TARGET_DIR").unwrap_or_else(|_| "target".into())
         );
-        Command::new(command_path)
+        let mut command = Command::new(command_path);
+        // For test hermeticity, clear the env.  Integration testing
+        // depends on implicit output capturing (RUST_TEST_NOCAPTURE
+        // should be unset or set to "0").
+        command.env_clear();
+        command
     }
 
     fn execute_sharded_test(process: &'static str, shard: u64, total_shards: u64) -> Result<bool> {
