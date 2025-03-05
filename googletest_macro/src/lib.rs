@@ -77,6 +77,8 @@ pub fn gtest(
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let ItemFn { mut attrs, sig, block, .. } = parse_macro_input!(input as ItemFn);
+
+    let sig_ident = &sig.ident;
     let test_case_hash: u64 = {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
@@ -85,7 +87,7 @@ pub fn gtest(
         // Only consider attrs and name for stability. Changing the function body should
         // not affect the test case distribution.
         attrs.hash(&mut h);
-        sig.ident.hash(&mut h);
+        sig_ident.hash(&mut h);
         h.finish()
     };
 
@@ -196,7 +198,9 @@ pub fn gtest(
         #(#attrs)*
         #outer_sig -> #outer_return_type {
             #maybe_closure
-            if googletest::internal::test_sharding::test_should_run(#test_case_hash) {
+            if !googletest::internal::test_filter::test_should_run(concat!(module_path!(), "::", stringify!(#sig_ident))) {
+                #skipped_test_result
+            } else if googletest::internal::test_sharding::test_should_run(#test_case_hash) {
                 use googletest::internal::test_outcome::TestOutcome;
                 TestOutcome::init_current_test_outcome();
                 let result: #invocation_result_type = #invocation;
