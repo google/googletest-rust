@@ -15,5 +15,6 @@
 #![doc(hidden)]
 
 pub(crate) mod description_renderer;
+pub mod glob;
 pub mod test_outcome;
 pub mod test_sharding;
