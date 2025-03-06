@@ -1941,7 +1941,7 @@ mod tests {
 
     #[gtest]
     fn should_fail_when_failing_test_matches() -> Result<()> {
-        verify_that!(execute_filtered_test("always_fails", "fails")?, is_false())
+        verify_that!(execute_filtered_test("always_fails", "*fails*")?, is_false())
     }
 
     #[gtest]

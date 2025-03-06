@@ -5,8 +5,7 @@
 //!
 //! * TESTBRIDGE_TEST_ONLY: string passed from --test_filter
 //!
-//! We interpret it as a colon-separated list of glob patterns, with
-//! implicit `*` around each pattern to act as a "contains" match.  If
+//! We interpret it as a colon-separated list of glob patterns.  If
 //! any pattern in the list succeeds, the filter passes.
 use crate::internal::glob::{is_glob_pattern, Pattern};
 use std::sync::OnceLock;
@@ -37,10 +36,10 @@ impl TestFilter for AcceptAll {
     }
 }
 
-struct Contains(String);
-impl TestFilter for Contains {
+struct Equals(String);
+impl TestFilter for Equals {
     fn filter(&self, test_name: &str) -> bool {
-        test_name.contains(&self.0)
+        test_name == self.0
     }
 }
 
@@ -52,13 +51,13 @@ impl TestFilter for Matches {
 }
 
 struct Collection {
-    contains: Box<[Contains]>,
+    equals: Box<[Equals]>,
     matches: Box<[Matches]>,
 }
 
 impl TestFilter for Collection {
     fn filter(&self, test_name: &str) -> bool {
-        self.contains.iter().any(|f| f.filter(test_name))
+        self.equals.iter().any(|f| f.filter(test_name))
             || self.matches.iter().any(|f| f.filter(test_name))
     }
 }
@@ -67,11 +66,8 @@ fn get_test_filter(testbridge_test_only: &str) -> Collection {
     let (with_globs, literals): (Vec<_>, Vec<_>) =
         testbridge_test_only.split(':').partition(|s| is_glob_pattern(s));
     Collection {
-        contains: literals.into_iter().map(|s| Contains(s.to_string())).collect(),
-        matches: with_globs
-            .into_iter()
-            .map(|s| Matches(Pattern::new(format!("*{}*", s))))
-            .collect(),
+        equals: literals.into_iter().map(|s| Equals(s.to_string())).collect(),
+        matches: with_globs.into_iter().map(|s| Matches(Pattern::new(s.to_string()))).collect(),
     }
 }
 
@@ -90,17 +86,17 @@ mod tests {
     }
 
     #[test]
-    fn empty_filter_accepts_all() -> Result<()> {
+    fn empty_filter_accepts_only_empty() -> Result<()> {
         let filter = get_test_filter("");
 
         verify_that!(filter.filter(""), is_true())?;
-        verify_that!(filter.filter("abcdefg"), is_true())?;
+        verify_that!(filter.filter("abcdefg"), is_false())?;
         Ok(())
     }
 
     #[test]
     fn simple_literal_filter() -> Result<()> {
-        let filter = get_test_filter("magic");
+        let filter = get_test_filter("*magic*");
 
         verify_that!(filter.filter("this_is_magic"), is_true())?;
         verify_that!(filter.filter(""), is_false())?;
@@ -119,7 +115,6 @@ mod tests {
         verify_that!(filter.filter("a b"), is_true())?;
         verify_that!(filter.filter("b"), is_false())?;
         verify_that!(filter.filter("b a"), is_false())?;
-        verify_that!(filter.filter("The letter a comes before b and then c"), is_true())?;
         Ok(())
     }
 
@@ -143,11 +138,22 @@ mod tests {
 
         verify_that!(filter.filter(""), is_false())?;
         verify_that!(filter.filter("a"), is_true())?;
-        verify_that!(filter.filter("ab"), is_true())?;
-        verify_that!(filter.filter("a b"), is_true())?;
+        verify_that!(filter.filter("ab"), is_false())?;
+        verify_that!(filter.filter("a b"), is_false())?;
         verify_that!(filter.filter("b"), is_true())?;
-        verify_that!(filter.filter("b a"), is_true())?;
+        verify_that!(filter.filter("b a"), is_false())?;
         verify_that!(filter.filter("c"), is_false())?;
+        Ok(())
+    }
+
+    #[test]
+    fn collection_with_globs() -> Result<()> {
+        let filter = get_test_filter("*test1*:*test2*");
+
+        verify_that!(filter.filter(""), is_false())?;
+        verify_that!(filter.filter("this is test1"), is_true())?;
+        verify_that!(filter.filter("and test2 is it"), is_true())?;
+        verify_that!(filter.filter("but test3 is not"), is_false())?;
         Ok(())
     }
 }
