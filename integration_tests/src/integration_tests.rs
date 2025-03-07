@@ -1940,13 +1940,36 @@ mod tests {
     }
 
     #[gtest]
-    fn should_fail_when_failing_test_matches() -> Result<()> {
+    fn should_fail_on_always_fails_when_filter_is_empty() -> Result<()> {
+        verify_that!(execute_filtered_test("always_fails", "")?, is_false())
+    }
+
+    #[gtest]
+    fn should_fail_when_failing_test_matches_exactly() -> Result<()> {
+        verify_that!(
+            execute_filtered_test("always_fails", "always_fails::tests::this_always_fails")?,
+            is_false()
+        )
+    }
+
+    #[gtest]
+    fn should_fail_when_failing_test_matches_with_globs() -> Result<()> {
         verify_that!(execute_filtered_test("always_fails", "*fails*")?, is_false())
     }
 
     #[gtest]
-    fn should_pass_when_failing_test_mismatch() -> Result<()> {
+    fn should_pass_when_failing_test_mismatches_no_implicit_contains() -> Result<()> {
+        verify_that!(execute_filtered_test("always_fails", "fails")?, is_true())
+    }
+
+    #[gtest]
+    fn should_pass_when_failing_test_mismatches_obviously() -> Result<()> {
         verify_that!(execute_filtered_test("always_fails", "filter_should_mismatch")?, is_true())
+    }
+
+    #[gtest]
+    fn should_pass_when_failing_test_excluded() -> Result<()> {
+        verify_that!(execute_filtered_test("always_fails", "-*::this_always_fails")?, is_true())
     }
 
     #[::core::prelude::v1::test]

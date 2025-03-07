@@ -19,7 +19,7 @@ mod tests {
     use googletest::prelude::*;
 
     #[gtest]
-    fn always_fails() -> Result<()> {
+    fn this_always_fails() -> Result<()> {
         verify_that!(2, eq(3))
     }
 }
