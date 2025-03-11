@@ -32,7 +32,7 @@ googletest = { path = "../googletest", version = "0.14.0", features = ["anyhow"]
 anyhow = "1"
 indoc = "2"
 rstest = "0.25"
-rustversion = "1.0.19"
+rustversion = "1.0.20"
 tempfile = "3.17.0"
 tokio = { version = "1.44", features = ["time", "macros", "rt"] }
 
