@@ -1412,8 +1412,21 @@ pub use assert_that;
 /// operator.
 #[macro_export]
 macro_rules! assert_pred {
-    ($($content:tt)*) => {
-        match $crate::verify_pred!($($content)*) {
+    ($content:expr $(,)?) => {
+        match $crate::verify_pred!($content) {
+            Ok(_) => {}
+            Err(e) => {
+                // The extra newline before the assertion failure message makes the failure a
+                // bit easier to read when there's some generic boilerplate from the panic.
+                panic!("\n{}", e);
+            }
+        }
+    };
+
+    // w/ format args
+    ($content:expr $(,)?, $($format_args:expr),* $(,)?) => {
+        match $crate::verify_pred!($content)
+            .with_failure_message(|| format!($($format_args),*)) {
             Ok(_) => {}
             Err(e) => {
                 // The extra newline before the assertion failure message makes the failure a
@@ -1525,9 +1538,15 @@ pub use expect_that;
 /// ```
 #[macro_export]
 macro_rules! expect_pred {
-    ($($content:tt)*) => {{
-        $crate::GoogleTestSupport::and_log_failure($crate::verify_pred!($($content)*));
+    ($content:expr $(,)?) => {{
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_pred!($content));
     }};
+    // w/ format args
+    ($content:expr $(,)?, $($format_args:expr),* $(,)?) => {
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_pred!($content)
+            .with_failure_message(|| format!($($format_args),*))
+            )
+    };
 }
 pub use expect_pred;
 

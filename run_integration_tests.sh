@@ -103,6 +103,8 @@ INTEGRATION_TEST_BINARIES=(
   "expect_panic_with_expected"
   "expect_false_macro_on_true_condition_with_format_args"
   "expect_true_macro_on_false_condition_with_format_args"
+  "assert_pred_macro_on_assertion_failure_with_format_args"
+  "expect_pred_macro_on_assertion_failure_with_format_args"
 )
 
 cargo build
