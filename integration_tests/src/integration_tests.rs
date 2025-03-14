@@ -2025,6 +2025,26 @@ mod tests {
         )
     }
 
+    #[gtest]
+    fn expect_false_macro_on_true_condition_with_format_args_logs_error_when_handled() -> Result<()>
+    {
+        let output = run_external_process_in_tests_directory(
+            "expect_false_macro_on_true_condition_with_format_args",
+        )?;
+
+        verify_that!(output, contains_substring(indoc! {"expected false: extra information"}))
+    }
+
+    #[gtest]
+    fn expect_true_macro_on_false_condition_with_format_args_logs_error_when_handled() -> Result<()>
+    {
+        let output = run_external_process_in_tests_directory(
+            "expect_true_macro_on_false_condition_with_format_args",
+        )?;
+
+        verify_that!(output, contains_substring(indoc! {"expected true: extra information"}))
+    }
+
     fn run_external_process_in_tests_directory_with_args(
         name: &'static str,
         args: &[&'static str],

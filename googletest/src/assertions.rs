@@ -489,6 +489,11 @@ macro_rules! expect_true {
     ($condition:expr) => {{
         $crate::GoogleTestSupport::and_log_failure($crate::verify_true!($condition))
     }};
+    ($condition:expr, $($format_args:expr),* $(,)?) => {{
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_true!($condition)
+            .with_failure_message(|| format!($($format_args),*))
+            );
+    }};
 }
 pub use expect_true;
 
@@ -549,6 +554,11 @@ pub use verify_false;
 macro_rules! expect_false {
     ($condition:expr) => {{
         $crate::GoogleTestSupport::and_log_failure(($crate::verify_false!($condition)))
+    }};
+    ($condition:expr, $($format_args:expr),* $(,)?) => {{
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_false!($condition)
+            .with_failure_message(|| format!($($format_args),*))
+            );
     }};
 }
 pub use expect_false;

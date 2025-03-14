@@ -430,3 +430,13 @@ test = false
 name = "abbreviated_stringify_macro"
 path = "src/abbreviated_stringify_macro.rs"
 test = false
+
+[[bin]]
+name = "expect_false_macro_on_true_condition_with_format_args"
+path = "src/expect_false_macro_on_true_condition_with_format_args.rs"
+test = false
+
+[[bin]]
+name = "expect_true_macro_on_false_condition_with_format_args"
+path = "src/expect_true_macro_on_false_condition_with_format_args.rs"
+test = false
