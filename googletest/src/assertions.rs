@@ -484,6 +484,29 @@ pub use verify_true;
 ///     println!("This will print");
 /// }
 /// ```
+///
+/// One may optionally add arguments which will be formatted and appended to a
+/// failure message. For example:
+///
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[gtest]
+/// fn should_fail() {
+///     let extra_information = "Some additional information";
+///     expect_true!(false, "Test failed. Extra information: {extra_information}.");
+/// }
+/// ```
+///
+/// The output is as follows:
+///
+/// ```text
+/// Value of: false
+/// Expected: is equal to true
+/// Actual: false,
+///   which isn't equal to true
+/// Test failed. Extra information: Some additional information.
+/// ```
 #[macro_export]
 macro_rules! expect_true {
     ($condition:expr) => {{
@@ -549,6 +572,29 @@ pub use verify_false;
 ///     expect_false!(2 + 2 == 4);
 ///     println!("This will print");
 /// }
+/// ```
+///
+/// One may optionally add arguments which will be formatted and appended to a
+/// failure message. For example:
+///
+/// ``` ignore
+/// use googletest::prelude::*;
+///
+/// #[gtest]
+/// fn should_fail() {
+///     let extra_information = "Some additional information";
+///     expect_false!(true, "Test failed. Extra information: {extra_information}.");
+/// }
+/// ```
+///
+/// The output is as follows:
+///
+/// ```text
+/// Value of: true
+/// Expected: is equal to false
+/// Actual: true,
+///   which isn't equal to false
+/// Test failed. Extra information: Some additional information.
 /// ```
 #[macro_export]
 macro_rules! expect_false {
@@ -1405,6 +1451,26 @@ pub use assert_that;
 /// Asserts that the given predicate applied to the given arguments returns
 /// true, panicking if it does not.
 ///
+/// One may optionally add arguments which will be formatted and appended to a
+/// failure message. For example:
+///
+/// ```should_panic
+/// use googletest::prelude::*;
+///
+/// #[gtest]
+/// fn should_fail() {
+///     let extra_information = "Some additional information";
+///     assert_pred!(1 == 2, "Test failed. Extra information: {extra_information}.");
+/// }
+/// ```
+///
+/// The output is as follows:
+///
+/// ```text
+/// 1 == 2 was false with
+/// Test failed. Extra information: Some additional information.
+/// ```
+///
 /// **Note for users of [GoogleTest for C++](http://google.github.io/googletest/):**
 /// This differs from the `ASSERT_PRED*` family of macros in that it panics
 /// rather than triggering an early return from the invoking function. To get
@@ -1536,6 +1602,26 @@ pub use expect_that;
 /// ```ignore
 /// verify_pred!(predicate(...)).and_log_failure()
 /// ```
+///
+/// One may optionally add arguments which will be formatted and appended to a
+/// failure message. For example:
+///
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[gtest]
+/// fn should_fail() {
+///     let extra_information = "Some additional information";
+///     expect_pred!(1 == 2, "Test failed. Extra information: {extra_information}.");
+/// }
+/// ```
+///
+/// The output is as follows:
+///
+/// ```text
+/// 1 == 2 was false with
+/// Test failed. Extra information: Some additional information.
+/// ```
 #[macro_export]
 macro_rules! expect_pred {
     ($content:expr $(,)?) => {{
@@ -1549,6 +1635,123 @@ macro_rules! expect_pred {
     };
 }
 pub use expect_pred;
+
+/// Matches the given expr Result against the Result::Ok(anything()) matcher,
+/// marking the test as failed but continuing execution if it does not match.
+///
+/// This is a *non-fatal* assertion: the test continues
+/// execution in the event of assertion failure.
+///
+/// This can only be invoked inside tests with the
+/// [`gtest`][crate::gtest] attribute. The assertion must
+/// occur in the same thread as that running the test itself.
+///
+/// Invoking this macro is equivalent to using
+/// [`and_log_failure`](crate::GoogleTestSupport::and_log_failure) as follows:
+///
+/// ```ignore
+/// verify_that!(actual, ok(anything())).and_log_failure()
+/// ```
+///
+/// One may optionally add arguments which will be formatted and appended to a
+/// failure message. For example:
+///
+/// ```
+/// # use googletest::prelude::*;
+/// # fn should_fail() -> std::result::Result<(), googletest::internal::test_outcome::TestFailure> {
+/// # googletest::internal::test_outcome::TestOutcome::init_current_test_outcome();
+/// let extra_information = "Some additional information";
+/// expect_ok!(Err::<&str, _>("An error"), "Test failed. Extra information: {extra_information}.");
+/// # googletest::internal::test_outcome::TestOutcome::close_current_test_outcome::<&str>(Ok(()))
+/// # }
+/// # should_fail().unwrap_err();
+/// ```
+///
+/// This is output as follows:
+///
+/// ```text
+/// Value of: Err::<&str, _>("An error")
+/// Expected: is a success containing a value, which is anything
+/// Actual: Err("An error"),
+///  which is an error
+/// Test failed. Extra information: Some additional information.
+/// ```
+#[macro_export]
+macro_rules! expect_ok {
+    ($actual:expr $(,)?) => {{
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_that!($actual, $crate::matchers::ok(anything())));
+    }};
+    // w/ format args
+    ($actual:expr, $($format_args:expr),* $(,)?) => {{
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_that!($actual, $crate::matchers::ok(anything()))
+            .with_failure_message(|| format!($($format_args),*))
+            );
+    }};
+}
+pub use expect_ok;
+
+/// Matches the given expr Result against the Result::Ok(anything()) matcher,
+/// panicking if it does not match.
+///
+/// ```should_panic
+/// # use googletest::prelude::*;
+/// # fn should_fail() {
+/// assert_ok!(Err::<&str, _>("An error"));  // Fails and panics.
+/// # }
+/// # should_fail();
+/// ```
+///
+/// This is analogous to assertions in most Rust test libraries, where a failed
+/// assertion causes a panic.
+///
+/// One may optionally add arguments which will be formatted and appended to a
+/// failure message. For example:
+///
+/// ```should_panic
+/// # use googletest::prelude::*;
+/// # fn should_fail() {
+/// let extra_information = "Some additional information";
+/// assert_ok!(Err::<&str, _>("An error"), "Test failed. Extra information: {extra_information}.");
+/// # }
+/// # should_fail();
+/// ```
+///
+/// This is output as follows:
+///
+/// ```text
+/// Value of: Err::<&str, _>("An error")
+/// Expected: is a success containing a value, which is anything
+/// Actual: Err("An error"),
+///  which is an error
+/// Test failed. Extra information: Some additional information.
+/// ```
+#[macro_export]
+macro_rules! assert_ok {
+    ($actual:expr $(,)?) => {
+        match $crate::verify_that!($actual, $crate::matchers::ok(anything())) {
+            Ok(_) => {}
+            Err(e) => {
+                // The extra newline before the assertion failure message makes the failure a
+                // bit easier to read when there's some generic boilerplate from the panic.
+                panic!("\n{}", e);
+            }
+        }
+    };
+    // w/ format args
+    ($actual:expr, $($format_args:expr), * $(,)?) => {
+        match $crate::verify_that!($actual, $crate::matchers::ok(anything()))
+            .with_failure_message(|| format!($($format_args),*))
+        {
+            Ok(_) => {}
+            Err(e) => {
+                // The extra newline before the assertion failure message makes the failure a
+                // bit easier to read when there's some generic boilerplate from the panic.
+                panic!("\n{}", e);
+            }
+        }
+    };
+}
+pub use assert_ok;
 
 /// Functions for use only by the procedural macros in this module.
 ///
