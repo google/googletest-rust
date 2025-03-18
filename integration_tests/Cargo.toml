@@ -450,3 +450,23 @@ test = false
 name = "expect_pred_macro_on_assertion_failure_with_format_args"
 path = "src/expect_pred_macro_on_assertion_failure_with_format_args.rs"
 test = false
+
+[[bin]]
+name = "expect_ok_when_error_marks_failed"
+path = "src/expect_ok_when_error_marks_failed.rs"
+test = false
+
+[[bin]]
+name = "expect_ok_when_error_supports_custom_error_message"
+path = "src/expect_ok_when_error_supports_custom_error_message.rs"
+test = false
+
+[[bin]]
+name = "assert_ok_when_error_marks_failed"
+path = "src/assert_ok_when_error_marks_failed.rs"
+test = false
+
+[[bin]]
+name = "assert_ok_when_error_supports_custom_error_message"
+path = "src/assert_ok_when_error_supports_custom_error_message.rs"
+test = false
