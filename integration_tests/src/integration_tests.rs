@@ -2065,6 +2065,80 @@ mod tests {
         verify_that!(output, contains_substring("assertion failed: extra information"))
     }
 
+    #[gtest]
+    fn expect_ok_should_pass() {
+        expect_ok!(Ok::<_, ()>("Some value"));
+    }
+
+    #[gtest]
+    fn expect_ok_supports_trailing_comma() {
+        expect_ok!(Ok::<_, ()>("Some value"),);
+    }
+
+    #[gtest]
+    fn expect_ok_allows_multiple_invocations() {
+        expect_ok!(Ok::<_, ()>("Some value"));
+        expect_ok!(Ok::<_, ()>(1));
+    }
+
+    #[gtest]
+    fn expect_ok_when_error_marks_failed() -> Result<()> {
+        let output = run_external_process_in_tests_directory("expect_ok_when_error_marks_failed")?;
+
+        verify_that!(
+            output,
+            contains_substring(indoc! {r#"
+                Value of: Err::<&str, _>("An error")
+                Expected: is a success containing a value, which is anything
+                Actual: Err("An error"),
+                  which is an error
+            "#})
+        )
+    }
+
+    #[gtest]
+    fn expect_ok_when_error_supports_custom_error_message() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "expect_ok_when_error_supports_custom_error_message",
+        )?;
+
+        verify_that!(output, contains_substring("expected success: extra information."))
+    }
+
+    #[gtest]
+    fn assert_ok_should_pass() {
+        assert_ok!(Ok::<_, ()>("Some value"));
+    }
+
+    #[gtest]
+    fn assert_ok_supports_trailing_comma() {
+        assert_ok!(Ok::<_, ()>("Some value"),);
+    }
+
+    #[gtest]
+    fn assert_ok_when_error_marks_failed() -> Result<()> {
+        let output = run_external_process_in_tests_directory("assert_ok_when_error_marks_failed")?;
+
+        verify_that!(
+            output,
+            contains_substring(indoc! {r#"
+                Value of: Err::<&str, _>("An error")
+                Expected: is a success containing a value, which is anything
+                Actual: Err("An error"),
+                  which is an error
+            "#})
+        )
+    }
+
+    #[gtest]
+    fn assert_ok_when_error_supports_custom_error_message() -> Result<()> {
+        let output = run_external_process_in_tests_directory(
+            "assert_ok_when_error_supports_custom_error_message",
+        )?;
+
+        verify_that!(output, contains_substring("expected success: extra information."))
+    }
+
     fn run_external_process_in_tests_directory_with_args(
         name: &'static str,
         args: &[&'static str],
