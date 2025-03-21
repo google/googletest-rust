@@ -105,6 +105,10 @@ INTEGRATION_TEST_BINARIES=(
   "expect_true_macro_on_false_condition_with_format_args"
   "assert_pred_macro_on_assertion_failure_with_format_args"
   "expect_pred_macro_on_assertion_failure_with_format_args"
+  "assert_ok_when_error_marks_failed"
+  "assert_ok_when_error_supports_custom_error_message"
+  "expect_ok_when_error_marks_failed"
+  "expect_ok_when_error_supports_custom_error_message"
 )
 
 cargo build
