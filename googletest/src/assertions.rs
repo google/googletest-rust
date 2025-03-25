@@ -484,6 +484,29 @@ pub use verify_true;
 ///     println!("This will print");
 /// }
 /// ```
+///
+/// One may optionally add arguments which will be formatted and appended to a
+/// failure message. For example:
+///
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[gtest]
+/// fn should_fail() {
+///     let extra_information = "Some additional information";
+///     expect_true!(false, "Test failed. Extra information: {extra_information}.");
+/// }
+/// ```
+///
+/// The output is as follows:
+///
+/// ```text
+/// Value of: false
+/// Expected: is equal to true
+/// Actual: false,
+///   which isn't equal to true
+/// Test failed. Extra information: Some additional information.
+/// ```
 #[macro_export]
 macro_rules! expect_true {
     ($condition:expr) => {{
@@ -549,6 +572,29 @@ pub use verify_false;
 ///     expect_false!(2 + 2 == 4);
 ///     println!("This will print");
 /// }
+/// ```
+///
+/// One may optionally add arguments which will be formatted and appended to a
+/// failure message. For example:
+///
+/// ``` ignore
+/// use googletest::prelude::*;
+///
+/// #[gtest]
+/// fn should_fail() {
+///     let extra_information = "Some additional information";
+///     expect_false!(true, "Test failed. Extra information: {extra_information}.");
+/// }
+/// ```
+///
+/// The output is as follows:
+///
+/// ```text
+/// Value of: true
+/// Expected: is equal to false
+/// Actual: true,
+///   which isn't equal to false
+/// Test failed. Extra information: Some additional information.
 /// ```
 #[macro_export]
 macro_rules! expect_false {
@@ -1405,6 +1451,25 @@ pub use assert_that;
 /// Asserts that the given predicate applied to the given arguments returns
 /// true, panicking if it does not.
 ///
+/// One may optionally add arguments which will be formatted and appended to a
+/// failure message. For example:
+///
+/// ```should_panic
+/// # use googletest::prelude::*;
+/// # fn should_fail() {
+///     let extra_information = "Some additional information";
+///     assert_pred!(1 == 2, "Test failed. Extra information: {extra_information}.");
+/// # }
+/// # should_fail();
+/// ```
+///
+/// The output is as follows:
+///
+/// ```text
+/// 1 == 2 was false with
+/// Test failed. Extra information: Some additional information.
+/// ```
+///
 /// **Note for users of [GoogleTest for C++](http://google.github.io/googletest/):**
 /// This differs from the `ASSERT_PRED*` family of macros in that it panics
 /// rather than triggering an early return from the invoking function. To get
@@ -1535,6 +1600,26 @@ pub use expect_that;
 ///
 /// ```ignore
 /// verify_pred!(predicate(...)).and_log_failure()
+/// ```
+///
+/// One may optionally add arguments which will be formatted and appended to a
+/// failure message. For example:
+///
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[gtest]
+/// fn should_fail() {
+///     let extra_information = "Some additional information";
+///     expect_pred!(1 == 2, "Test failed. Extra information: {extra_information}.");
+/// }
+/// ```
+///
+/// The output is as follows:
+///
+/// ```text
+/// 1 == 2 was false with
+/// Test failed. Extra information: Some additional information.
 /// ```
 #[macro_export]
 macro_rules! expect_pred {
