@@ -16,7 +16,7 @@ use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
 use quote::{quote, ToTokens};
 use syn::{
     parse::{Parse, ParseStream, Parser as _},
-    parse_macro_input,
+    parse_macro_input, parse_quote,
     token::DotDot,
     Expr, ExprCall, Pat, Token,
 };
@@ -131,7 +131,9 @@ fn into_match_pattern_expr(stream: TokenStream) -> syn::Result<TokenStream> {
     Pat::parse_multi.parse2(stream.clone())?;
     Ok(quote! {
         googletest::matchers::__internal_unstable_do_not_depend_on_these::pattern_only(
-            |v| matches!(v, #stream),
+            |v| {
+                matches!(v, #stream)
+            },
             concat!("is ", stringify!(#stream)),
             concat!("is not ", stringify!(#stream)))
     })
@@ -140,8 +142,7 @@ fn into_match_pattern_expr(stream: TokenStream) -> syn::Result<TokenStream> {
 ////////////////////////////////////////////////////////////////////////////////
 // Parse tuple struct patterns
 
-/// Each part in a tuple matcher pattern that's between the commas. When `None`,
-/// it represents `_` which matches anything.
+/// Each part in a tuple matcher pattern that's between the commas.
 struct MaybeTupleFieldPattern(Option<TupleFieldPattern>);
 
 struct TupleFieldPattern {
@@ -152,7 +153,7 @@ struct TupleFieldPattern {
 impl Parse for MaybeTupleFieldPattern {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let pattern = match input.parse::<Option<Token![_]>>()? {
-            Some(_) => None,
+            Some(_) => Some(TupleFieldPattern { ref_token: None, matcher: parse_quote!(_) }),
             None => Some(TupleFieldPattern { ref_token: input.parse()?, matcher: input.parse()? }),
         };
         Ok(MaybeTupleFieldPattern(pattern))
@@ -173,7 +174,13 @@ fn parse_tuple_pattern_args(
         .filter_map(|(index, maybe_pattern)| maybe_pattern.0.map(|pattern| (index, pattern)))
         .map(|(index, TupleFieldPattern { ref_token, matcher })| {
             let index = syn::Index::from(index);
-            quote! { googletest::matchers::field!(#struct_name.#index, #ref_token #matcher) }
+            // `_` matches anything, so we can use anything as the matcher.
+            let matcher_to_use = if matches!(syn::parse2::<Expr>(quote! {#matcher}), Ok(parsed_matcher) if parsed_matcher == parse_quote!(_)) {
+                quote! { googletest::matchers::anything() }
+            } else {
+                quote! { #matcher }
+            };
+            quote! { googletest::matchers::field!(#struct_name.#index, #ref_token #matcher_to_use) }
         });
 
     let matcher = quote! {
