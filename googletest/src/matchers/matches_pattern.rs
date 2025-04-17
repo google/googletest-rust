@@ -268,6 +268,17 @@
 /// # should_fail().unwrap_err();
 /// ```
 ///
+/// When matching against enums like `Option`, the `matches_pattern!` macro now
+/// correctly handles patterns like `Some(_)` and `Some(value)`.
+/// For example:
+///
+/// ```
+/// # use googletest::prelude::*;
+/// let result: Option<i8> = None;
+/// verify_that!(result, matches_pattern!(Some(_))).is_err(); // Fails
+/// verify_that!(result, matches_pattern!(Some(123))).is_err(); // Fails
+/// ```
+
 /// This macro does not support plain (non-struct) tuples. But it should not be
 /// necessary as tuple of matchers are matchers of tuple. In other words, if
 /// `MatcherU: Matcher<U>` and `MatcherT: Matcher<T>`, then `(MatcherU,

@@ -494,7 +494,7 @@ fn matches_tuple_struct_with_two_fields_and_trailing_comma() -> Result<()> {
 
 #[test]
 fn matches_tuple_struct_with_interleaved_underscore() -> Result<()> {
-    #[derive(Debug)]
+    #[derive(Debug, Copy, Clone)]
     struct NonCopy;
     #[derive(Debug)]
     struct AStruct(u32, NonCopy, u32);
@@ -1869,4 +1869,48 @@ fn matches_struct_auto_eq() -> Result<()> {
         AStruct { int: 123, string: "123".into(), option: Some(123) },
         matches_pattern!(&AStruct { int: 123, string: ref "123", option: Some(123) })
     )
+}
+
+#[test]
+fn matches_enum_none_with_wildcard() -> Result<()> {
+    let result: Option<i8> = None;
+    let result = verify_that!(result, matches_pattern!(Some(_)));
+
+    const EXPECTED: &str = indoc!(
+        "
+        Expected: is Some which has field `0`, which is anything
+        Actual: None,
+          which has the wrong enum variant `None`
+        "
+    );
+
+    verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
+}
+
+#[test]
+fn matches_enum_none_with_value() -> Result<()> {
+    let result: Option<i8> = None;
+    let result = verify_that!(result, matches_pattern!(Some(123)));
+
+    const EXPECTED: &str = indoc!(
+        "
+        Expected: is Some which has field `0`, which is equal to 123
+        Actual: None,
+          which has the wrong enum variant `None`
+        "
+    );
+
+    verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
+}
+
+#[test]
+fn matches_enum_none_with_none() -> Result<()> {
+    let result: Option<i8> = None;
+    verify_that!(result, matches_pattern!(None))
+}
+
+#[test]
+fn matches_value_with_wildcard() -> Result<()> {
+    let result: Option<i8> = Some(123);
+    verify_that!(result, matches_pattern!(Some(_)))
 }
