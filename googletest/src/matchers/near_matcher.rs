@@ -17,7 +17,7 @@ use crate::{
     matcher::{Matcher, MatcherBase, MatcherResult},
 };
 use num_traits::{Float, FloatConst};
-use std::fmt::Debug;
+use std::{borrow::Borrow, fmt::Debug};
 
 /// Matches a value equal within `max_abs_error` of `expected`.
 ///
@@ -168,13 +168,13 @@ impl<T: Debug> NearMatcher<T> {
     }
 }
 
-impl<T: Debug + Float + Copy> Matcher<T> for NearMatcher<T> {
+impl<T: Borrow<F> + Debug + Copy, F: Debug + Float> Matcher<T> for NearMatcher<F> {
     fn matches(&self, actual: T) -> MatcherResult {
-        if self.nans_are_equal && self.expected.is_nan() && actual.is_nan() {
+        if self.nans_are_equal && self.expected.is_nan() && actual.borrow().is_nan() {
             return MatcherResult::Match;
         }
 
-        let delta = actual - self.expected;
+        let delta = *actual.borrow() - self.expected;
         if delta >= -self.max_abs_error && delta <= self.max_abs_error {
             MatcherResult::Match
         } else {
@@ -346,5 +346,18 @@ mod tests {
     #[test]
     fn approx_eq_does_not_match_distant_number() -> Result<()> {
         verify_that!(0.0f64, not(approx_eq(1.0f64)))
+    }
+
+    #[test]
+    fn approx_eq_supports_ref() -> Result<()> {
+        verify_that!(&0.0f64, approx_eq(0.0f64))
+    }
+
+    #[test]
+    fn approx_eq_supports_container_matchers() -> Result<()> {
+        verify_that!(
+            vec![1., 2., 3.],
+            unordered_elements_are![approx_eq(2.), approx_eq(3.), approx_eq(1.)]
+        )
     }
 }
