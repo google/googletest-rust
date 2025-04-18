@@ -186,8 +186,7 @@ fn parse_tuple_pattern_args(
     // Do a match to ensure:
     // - Fields are exhaustively listed unless the pattern ended with `..`.
     // - `UNDEFINED_SYMBOL(..)` fails to compile.
-    let empty_fields = std::iter::repeat(quote! { _ })
-        .take(field_count)
+    let empty_fields = std::iter::repeat_n(quote! { _ }, field_count)
         .chain(dot_dot.map(ToTokens::into_token_stream));
     Ok(quote! {
         googletest::matchers::__internal_unstable_do_not_depend_on_these::compile_assert_and_match(
