@@ -246,7 +246,8 @@
 /// #    .unwrap();
 /// ```
 ///
-/// One can also match enum values:
+/// The macro also allows matching on specific enum values and supports wildcard
+/// patterns like `MyEnum::Case(_)`.
 ///
 /// ```
 /// # use googletest::prelude::*;
@@ -260,11 +261,16 @@
 /// verify_that!(MyEnum::A(123), matches_pattern!(&MyEnum::A(eq(123))))?; // Passes
 /// #     Ok(())
 /// # }
+/// # fn should_pass_with_wildcard() -> Result<()> {
+/// verify_that!(MyEnum::A(123), matches_pattern!(MyEnum::A(_)))?; // Passes
+/// #     Ok(())
+/// # }
 /// # fn should_fail() -> Result<()> {
 /// verify_that!(MyEnum::B, matches_pattern!(&MyEnum::A(eq(123))))?; // Fails - wrong enum variant
 /// #     Ok(())
 /// # }
 /// # should_pass().unwrap();
+/// # should_pass_with_wildcard().unwrap();
 /// # should_fail().unwrap_err();
 /// ```
 ///

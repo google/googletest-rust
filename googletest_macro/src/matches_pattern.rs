@@ -167,43 +167,70 @@ fn parse_tuple_pattern_args(
     let (patterns, dot_dot) =
         parse_list_terminated_pattern::<MaybeTupleFieldPattern>.parse2(group_content)?;
     let field_count = patterns.len();
-    let field_patterns = patterns
+    let field_patterns: Vec<_> = patterns
         .into_iter()
         .enumerate()
         .filter_map(|(index, maybe_pattern)| maybe_pattern.0.map(|pattern| (index, pattern)))
         .map(|(index, TupleFieldPattern { ref_token, matcher })| {
             let index = syn::Index::from(index);
             quote! { googletest::matchers::field!(#struct_name.#index, #ref_token #matcher) }
-        });
+        })
+        .collect();
 
-    let matcher = quote! {
-        googletest::matchers::__internal_unstable_do_not_depend_on_these::is(
-            stringify!(#struct_name),
-            all!( #(#field_patterns),* )
-        )
-    };
+    if field_patterns.is_empty() {
+        // It is possible that the logic above didn't generate any field matchers
+        // (e.g., for patterns like `Some(_)`).
+        // In this case we verify that the enum has the correct case, but don't
+        // verify the payload.
+        #[allow(clippy::manual_repeat_n)]
+        // `repeat_n` is not available on the Rust MSRV that we support in OSS
+        let ignored_fields = std::iter::repeat(quote! { _ })
+            .take(field_count)
+            .chain(dot_dot.map(ToTokens::into_token_stream));
+        let full_pattern = quote! { #struct_name ( #(#ignored_fields),* ) };
 
-    // Do a match to ensure:
-    // - Fields are exhaustively listed unless the pattern ended with `..`.
-    // - `UNDEFINED_SYMBOL(..)` fails to compile.
-    let empty_fields = std::iter::repeat(quote! { _ })
-        .take(field_count)
-        .chain(dot_dot.map(ToTokens::into_token_stream));
-    Ok(quote! {
-        googletest::matchers::__internal_unstable_do_not_depend_on_these::compile_assert_and_match(
-            |actual| {
-                // Exhaustively check that all field names are specified.
-                match actual {
-                    #struct_name ( #(#empty_fields),* ) => (),
-                    // The pattern below is unreachable if the type is a struct (as opposed to
-                    // an enum). Since the macro can't know which it is, we always include it
-                    // and just tell the compiler not to complain.
-                    #[allow(unreachable_patterns)]
-                    _ => {},
-                }
-            },
-            #matcher)
-    })
+        Ok(quote! {
+            googletest::matchers::__internal_unstable_do_not_depend_on_these::pattern_only(
+                |actual| { matches!(actual, #full_pattern) },
+                concat!("is ", stringify!(#full_pattern)),
+                concat!("is not ", stringify!(#full_pattern))
+            )
+        })
+    } else {
+        // We have created at least one field matcher. Each field matcher will verify
+        // not only its part of the payload, but also that the enum has the
+        // correct case.
+        let matcher = quote! {
+            googletest::matchers::__internal_unstable_do_not_depend_on_these::is(
+                stringify!(#struct_name),
+                all!( #(#field_patterns),* )
+            )
+        };
+
+        // Do a match to ensure:
+        // - Fields are exhaustively listed unless the pattern ended with `..`.
+        // - `UNDEFINED_SYMBOL(..)` fails to compile.
+        #[allow(clippy::manual_repeat_n)]
+        // `repeat_n` is not available on the Rust MSRV that we support in OSS
+        let empty_fields = std::iter::repeat(quote! { _ })
+            .take(field_count)
+            .chain(dot_dot.map(ToTokens::into_token_stream));
+        Ok(quote! {
+            googletest::matchers::__internal_unstable_do_not_depend_on_these::compile_assert_and_match(
+                |actual| {
+                    // Exhaustively check that all field names are specified.
+                    match actual {
+                        #struct_name ( #(#empty_fields),* ) => (),
+                        // The pattern below is unreachable if the type is a struct (as opposed to
+                        // an enum). Since the macro can't know which it is, we always include it
+                        // and just tell the compiler not to complain.
+                        #[allow(unreachable_patterns)]
+                        _ => {},
+                    }
+                },
+                #matcher)
+        })
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
