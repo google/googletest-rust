@@ -308,50 +308,69 @@ fn parse_braced_pattern_args(
         })
         .collect();
 
-    let matcher = quote! {
-        googletest::matchers::__internal_unstable_do_not_depend_on_these::is(
-            stringify!(#struct_name),
-            all!(#(#field_patterns),* )
-        )
-    };
+    if field_patterns.is_empty() {
+        // It is possible that the logic above didn't generate any field matchers
+        // (e.g., for patterns like `AnEnum::Foo { a_field : _ }`).
+        // In this case we verify that the enum has the correct case, but don't
+        // verify the payload.
+        let full_pattern = quote! { #struct_name { #(#field_names: _,)* #dot_dot}};
 
-    // Do a match to ensure:
-    // - Fields are exhaustively listed unless the pattern ended with `..` and has
-    //   any fields in the pattern.
-    // - `UNDEFINED_SYMBOL { .. }` fails to compile.
-    //
-    // The requisite that some fields are in the pattern is there because
-    // `matches_pattern!` also uses the brace notation for tuple structs when
-    // asserting on method calls on tuple structs. i.e.
-    //
-    // ```
-    // struct Struct(u32);
-    // ...
-    // matches_pattern!(foo, Struct { bar(): eq(1) })
-    // ```
-    // and we can't emit an exhaustiveness check based on the `matches_pattern!`.
-    if field_names.is_empty() && dot_dot.is_none() &&
-        // If there are no fields, then this check means that there are method patterns, and we can
-        // no longer be confident that this is a braced struct rather than a tuple struct.
-        !field_patterns.is_empty()
-    {
-        Ok(matcher)
-    } else {
         Ok(quote! {
-            googletest::matchers::__internal_unstable_do_not_depend_on_these::compile_assert_and_match(
-                |actual| {
-                    // Exhaustively check that all field names are specified.
-                    match actual {
-                        #struct_name { #(#field_names: _,)* #dot_dot } => {},
-                        // The pattern below is unreachable if the type is a struct (as opposed to
-                        // an enum). Since the macro can't know which it is, we always include it
-                        // and just tell the compiler not to complain.
-                        #[allow(unreachable_patterns)]
-                        _ => {},
-                    }
-                },
-                #matcher)
+            googletest::matchers::__internal_unstable_do_not_depend_on_these::pattern_only(
+                |actual| { matches!(actual, #full_pattern) },
+                concat!("is ", stringify!(#full_pattern)),
+                concat!("is not ", stringify!(#full_pattern))
+            )
         })
+    } else {
+        // We have created at least one field matcher. Each field matcher will verify
+        // not only its part of the payload, but also that the enum has the
+        // correct case.
+        let matcher = quote! {
+            googletest::matchers::__internal_unstable_do_not_depend_on_these::is(
+                stringify!(#struct_name),
+                all!(#(#field_patterns),* )
+            )
+        };
+
+        // Do a match to ensure:
+        // - Fields are exhaustively listed unless the pattern ended with `..` and has
+        //   any fields in the pattern.
+        // - `UNDEFINED_SYMBOL { .. }` fails to compile.
+        //
+        // The requisite that some fields are in the pattern is there because
+        // `matches_pattern!` also uses the brace notation for tuple structs when
+        // asserting on method calls on tuple structs. i.e.
+        //
+        // ```
+        // struct Struct(u32);
+        // ...
+        // matches_pattern!(foo, Struct { bar(): eq(1) })
+        // ```
+        // and we can't emit an exhaustiveness check based on the `matches_pattern!`.
+        if field_names.is_empty() && dot_dot.is_none() &&
+            // If there are no fields, then this check means that there are method patterns, and we can
+            // no longer be confident that this is a braced struct rather than a tuple struct.
+            !field_patterns.is_empty()
+        {
+            Ok(matcher)
+        } else {
+            Ok(quote! {
+                googletest::matchers::__internal_unstable_do_not_depend_on_these::compile_assert_and_match(
+                    |actual| {
+                        // Exhaustively check that all field names are specified.
+                        match actual {
+                            #struct_name { #(#field_names: _,)* #dot_dot } => {},
+                            // The pattern below is unreachable if the type is a struct (as opposed to
+                            // an enum). Since the macro can't know which it is, we always include it
+                            // and just tell the compiler not to complain.
+                            #[allow(unreachable_patterns)]
+                            _ => {},
+                        }
+                    },
+                    #matcher)
+            })
+        }
     }
 }
 

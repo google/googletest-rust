@@ -574,6 +574,110 @@ fn matches_enum_struct_non_exhaustive() -> Result<()> {
 }
 
 #[test]
+fn matches_enum_struct_with_all_non_exhaustive_fields() -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    enum AnEnum {
+        Variant1 { a: u32, b: u32 },
+        Variant2 { c: u32, d: u32 },
+    }
+    let actual: AnEnum = AnEnum::Variant1 { a: 123, b: 234 };
+    verify_that!(actual, matches_pattern!(&AnEnum::Variant1 { .. }))
+}
+
+#[test]
+fn has_failure_when_wrong_enum_struct_variant_is_matched_with_all_non_exhaustive_fields(
+) -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    enum AnEnum {
+        Variant1 { a: u32, b: u32 },
+        Variant2 { c: u32, d: u32 },
+    }
+    let actual: AnEnum = AnEnum::Variant1 { a: 123, b: 234 };
+
+    let result = verify_that!(actual, matches_pattern!(&AnEnum::Variant2 { .. }));
+
+    const EXPECTED: &str = indoc!(
+        "
+        Expected: is & AnEnum :: Variant2 { .. }
+        Actual: Variant1 { a: 123, b: 234 },
+          which is not & AnEnum :: Variant2 { .. }
+        "
+    );
+    verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
+}
+
+#[test]
+fn matches_enum_struct_with_all_wildcard_fields() -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    enum AnEnum {
+        Variant1 { a: u32, b: u32 },
+        Variant2 { c: u32, d: u32 },
+    }
+    let actual: AnEnum = AnEnum::Variant1 { a: 123, b: 234 };
+    verify_that!(actual, matches_pattern!(&AnEnum::Variant1 { a: _, b: _ }))
+}
+
+#[test]
+fn has_failure_when_wrong_enum_struct_variant_is_matched_with_all_wildcard_fields() -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    enum AnEnum {
+        Variant1 { a: u32, b: u32 },
+        Variant2 { c: u32, d: u32 },
+    }
+    let actual: AnEnum = AnEnum::Variant1 { a: 123, b: 234 };
+
+    let result = verify_that!(actual, matches_pattern!(&AnEnum::Variant2 { c: _, d: _ }));
+
+    const EXPECTED: &str = indoc!(
+        "
+        Expected: is & AnEnum :: Variant2 { c : _, d : _, }
+        Actual: Variant1 { a: 123, b: 234 },
+          which is not & AnEnum :: Variant2 { c : _, d : _, }
+        "
+    );
+    verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
+}
+
+#[test]
+fn matches_enum_struct_non_exhaustive_with_wildcard_fields() -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    enum AnEnum {
+        Variant1 { a: u32, b: u32 },
+        Variant2 { c: u32, d: u32 },
+    }
+    let actual: AnEnum = AnEnum::Variant1 { a: 123, b: 234 };
+    verify_that!(actual, matches_pattern!(&AnEnum::Variant1 { a: _, .. }))
+}
+
+#[test]
+fn has_failure_when_wrong_enum_struct_variant_is_matched_non_exhaustive_with_wildcard_fields(
+) -> Result<()> {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    enum AnEnum {
+        Variant1 { a: u32, b: u32 },
+        Variant2 { c: u32, d: u32 },
+    }
+    let actual: AnEnum = AnEnum::Variant1 { a: 123, b: 234 };
+
+    let result = verify_that!(actual, matches_pattern!(&AnEnum::Variant2 { c: _, .. }));
+
+    const EXPECTED: &str = indoc!(
+        "
+        Expected: is & AnEnum :: Variant2 { c : _, .. }
+        Actual: Variant1 { a: 123, b: 234 },
+          which is not & AnEnum :: Variant2 { c : _, .. }
+        "
+    );
+    verify_that!(result, err(displays_as(contains_substring(EXPECTED))))
+}
+
+#[test]
 fn matches_enum_struct_exhaustive_with_multiple_variants() -> Result<()> {
     #[allow(dead_code)]
     #[derive(Debug)]
