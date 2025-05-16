@@ -181,8 +181,8 @@ enum Location {
 impl Display for Location {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Location::Real(l) => write!(f, "{}", l),
-            Location::Fake { file, line, column } => write!(f, "{}:{}:{}", file, line, column),
+            Location::Real(l) => write!(f, "{l}"),
+            Location::Fake { file, line, column } => write!(f, "{file}:{line}:{column}"),
         }
     }
 }
@@ -210,7 +210,7 @@ impl TestAssertionFailure {
 
     pub(crate) fn log(&self) {
         TestOutcome::fail_current_test();
-        println!("{}", self);
+        println!("{self}");
     }
 }
 
@@ -218,7 +218,7 @@ impl Display for TestAssertionFailure {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         writeln!(f, "{}", self.description)?;
         if let Some(custom_message) = &self.custom_message {
-            writeln!(f, "{}", custom_message)?;
+            writeln!(f, "{custom_message}")?;
         }
         writeln!(f, "  at {}", self.location)
     }

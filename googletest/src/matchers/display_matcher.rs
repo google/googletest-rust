@@ -95,7 +95,7 @@ mod tests {
         }
         impl Display for Struct {
             fn fmt(&self, f: &mut Formatter<'_>) -> std::result::Result<(), Error> {
-                write!(f, "{:?}", self)
+                write!(f, "{self:?}")
             }
         }
         verify_that!(Struct { a: 123, b: 321 }, displays_as(eq("Struct { a: 123, b: 321 }")))?;

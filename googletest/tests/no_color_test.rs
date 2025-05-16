@@ -22,7 +22,7 @@ fn build_text<T: Display>(mut collection: impl Iterator<Item = T>) -> String {
     write!(&mut text, "{}", collection.next().expect("Provided collection without elements"))
         .unwrap();
     for item in collection {
-        write!(&mut text, "\n{}", item).unwrap();
+        write!(&mut text, "\n{item}").unwrap();
     }
     text
 }

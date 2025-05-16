@@ -48,7 +48,7 @@ pub mod internal {
     impl<T: ?Sized> FormatNonDebugFallback for FormatWrapper<'_, T> {
         #[track_caller]
         fn __googletest_write_expr_value(&self, output: &mut dyn Write, expr_label: &str) {
-            write!(output, "\n  {} does not implement Debug,", expr_label)
+            write!(output, "\n  {expr_label} does not implement Debug,")
                 .expect("Formatting to String should never fail");
         }
     }

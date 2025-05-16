@@ -48,17 +48,17 @@ pub mod internal {
         ) -> Option<Description> {
             let actual_size = count_elements(actual);
             match self {
-                Requirements::PerfectMatch if actual_size != expected_size => Some(
-                    format!("which has size {} (expected {})", actual_size, expected_size).into(),
-                ),
+                Requirements::PerfectMatch if actual_size != expected_size => {
+                    Some(format!("which has size {actual_size} (expected {expected_size})").into())
+                }
 
                 Requirements::Superset if actual_size < expected_size => Some(
-                    format!("which has size {} (expected at least {})", actual_size, expected_size)
+                    format!("which has size {actual_size} (expected at least {expected_size})")
                         .into(),
                 ),
 
                 Requirements::Subset if actual_size > expected_size => Some(
-                    format!("which has size {} (expected at most {})", actual_size, expected_size)
+                    format!("which has size {actual_size} (expected at most {expected_size})")
                         .into(),
                 ),
 
@@ -342,13 +342,13 @@ pub mod internal {
             let unmatchable_actual = self.unmatchable_actual();
             let actual_idx = unmatchable_actual
                 .iter()
-                .map(|idx| format!("#{}", idx))
+                .map(|idx| format!("#{idx}"))
                 .collect::<Vec<_>>()
                 .join(", ");
             let unmatchable_expected = self.unmatchable_expected();
             let expected_idx = unmatchable_expected
                 .iter()
-                .map(|idx| format!("#{}", idx))
+                .map(|idx| format!("#{idx}"))
                 .collect::<Vec<_>>()
                 .join(", ");
             match (unmatchable_actual.len(), unmatchable_expected.len()) {

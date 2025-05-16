@@ -244,7 +244,7 @@ where
             .nested(
                 self.expected
                     .into_iter()
-                    .map(|element| format!("{:?}", element))
+                    .map(|element| format!("{element:?}"))
                     .collect::<Description>()
                     .bullet_list(),
             )

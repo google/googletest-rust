@@ -106,7 +106,7 @@ where
     fn explain_match(&self, actual: ContainerT) -> Description {
         let count = self.count_matches(actual);
         match (count, &self.count) {
-            (_, Some(_)) => format!("which contains {} matching elements", count).into(),
+            (_, Some(_)) => format!("which contains {count} matching elements").into(),
             (0, None) => "which does not contain a matching element".into(),
             (_, None) => "which contains a matching element".into(),
         }
