@@ -204,7 +204,7 @@ checksum = "a8d1add55171497b4705a648c6b583acafb01d58050a51727785f0b2c8e0a2b2"
 
 [[package]]
 name = "googletest"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "anyhow",
  "googletest_macro",
@@ -218,7 +218,7 @@ dependencies = [
 
 [[package]]
 name = "googletest_macro"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -249,7 +249,7 @@ checksum = "f4c7245a08504955605670dbf141fceab975f15ca21570696aebe9d2e71576bd"
 
 [[package]]
 name = "integration_tests"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "anyhow",
  "googletest",
