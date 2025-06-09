@@ -34,7 +34,7 @@ authors = [
 googletest_macro = { path = "../googletest_macro", version = "0.14.1" }
 anyhow = { version = "1", optional = true }
 num-traits = "0.2.17"
-proptest = { version = "1.2.0", optional = true }
+proptest = { version = "1.7.0", optional = true }
 regex = "1.11.1"
 rustversion = "1.0.21"
 
