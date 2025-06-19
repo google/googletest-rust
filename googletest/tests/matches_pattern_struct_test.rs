@@ -1194,3 +1194,20 @@ fn matches_struct_with_a_method_taking_two_parameters_ret_ref_and_field() -> Res
         matches_pattern!(&AStruct { get_field_ref(2, 3): eq(&1), another_field: eq(123), .. })
     )
 }
+
+#[test]
+fn matches_with_fully_qualified_struct_path() -> Result<()> {
+    // Ensure that the macro expands to the fully-qualified struct path.
+    mod googletest {}
+
+    let value = ::googletest::internal::test_data::TestStruct { value: 10 };
+    verify_that!(
+        value,
+        matches_pattern!(
+            &::googletest::internal::test_data::TestStruct {
+                 value: eq(10),
+                 get_value(): eq(10)
+            }
+        )
+    )
+}

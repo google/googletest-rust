@@ -112,6 +112,27 @@ fn does_not_match_struct_with_non_matching_property() -> Result<()> {
 }
 
 #[test]
+fn supports_fully_qualified_struct_path() -> Result<()> {
+    // Ensure that the macro expands to the fully-qualified struct path.
+    mod googletest {}
+
+    let value = ::googletest::internal::test_data::TestStruct { value: 10 };
+    verify_that!(
+        value,
+        property!(::googletest::internal::test_data::TestStruct.get_value(), eq(&10))
+    )?;
+    verify_that!(
+        value,
+        property!(&::googletest::internal::test_data::TestStruct.get_value(), eq(10))
+    )?;
+    verify_that!(
+        value,
+        property!(&::googletest::internal::test_data::TestStruct.get_value(), ref eq(&10))
+    )?;
+    Ok(())
+}
+
+#[test]
 fn describes_itself_in_matching_case() -> Result<()> {
     verify_that!(
         property!(&SomeStruct.get_property(), eq(1)).describe(MatcherResult::Match),

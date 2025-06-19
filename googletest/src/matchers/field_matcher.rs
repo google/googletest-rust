@@ -197,40 +197,41 @@ macro_rules! __field {
 #[macro_export]
 macro_rules! field_internal {
     (&$($t:ident)::+.$field:tt, ref $m:expr) => {{
-        $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher(
-            |o: &_| {
-                match o {
-                    &$($t)::* {$field: ref value, .. } => Some(value),
-                    // The pattern below is unreachable if the type is a struct (as opposed to an
-                    // enum). Since the macro can't know which it is, we always include it and just
-                    // tell the compiler not to complain.
-                    #[allow(unreachable_patterns)]
-                    _ => None,
-                }
-            },
-            &stringify!($field),
-            $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($m))
+        $crate::field_internal!(@internal
+            [&_] [&$($t)::*]
+            [$field] [ref] [$m])
     }};
     (&$($t:ident)::+.$field:tt, $m:expr) => {{
-        $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher(
-            |o: &&_| {
-                match o {
-                    &$($t)::* {$field: value, .. } => Some(value),
-                    // The pattern below is unreachable if the type is a struct (as opposed to an
-                    // enum). Since the macro can't know which it is, we always include it and just
-                    // tell the compiler not to complain.
-                    #[allow(unreachable_patterns)]
-                    _ => None,
-                }
-            },
-            &stringify!($field),
-            $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($m))
+        $crate::field_internal!(@internal
+            [&&_] [&$($t)::*]
+            [$field] [] [$m])
     }};
     ($($t:ident)::+.$field:tt, $m:expr) => {{
+        $crate::field_internal!(@internal
+            [&_] [$($t)::*]
+            [$field] [] [$m])
+    }};
+    (& :: $($t:ident)::+.$field:tt, ref $m:expr) => {{
+        $crate::field_internal!(@internal
+            [&_] [&::$($t)::*]
+            [$field] [ref] [$m])
+    }};
+    (& :: $($t:ident)::+.$field:tt, $m:expr) => {{
+        $crate::field_internal!(@internal
+            [&&_] [&::$($t)::*]
+            [$field] [] [$m])
+    }};
+    (:: $($t:ident)::+.$field:tt, $m:expr) => {{
+        $crate::field_internal!(@internal
+            [&_] [::$($t)::*]
+            [$field] [] [$m])
+    }};
+
+    (@internal [$struct_ty:ty] [$($field_prefix:tt)*] [$field:tt] [$($ref:tt)?] [$m:expr]) => {{
         $crate::matchers::__internal_unstable_do_not_depend_on_these::field_matcher(
-            |o: &_| {
+            |o: $struct_ty| {
                 match o {
-                    $($t)::* {$field: value, .. } => Some(value),
+                    $($field_prefix)* {$field: $($ref)* value, .. } => Some(value),
                     // The pattern below is unreachable if the type is a struct (as opposed to an
                     // enum). Since the macro can't know which it is, we always include it and just
                     // tell the compiler not to complain.
@@ -240,7 +241,8 @@ macro_rules! field_internal {
             },
             &stringify!($field),
             $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($m))
-    }};
+
+    }}
 }
 
 /// Functions for use only by the declarative macros in this module.
