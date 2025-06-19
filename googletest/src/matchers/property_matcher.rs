@@ -176,67 +176,82 @@ macro_rules! __property {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! property_internal {
+    (& $($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
+        .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
+        ref $m:expr) => {{
+        $crate::property_internal!(@self_arg
+            struct_type:   [&$($t)::+ $(  <$($t_ty_args),*>)*]
+            method_prefix: [ $($t)::+ $(::<$($t_ty_args),*>)*]
+            [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
+    }};
+    ($($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
+        .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
+        ref $m:expr) => {{
+        $crate::property_internal!(@self_arg
+            struct_type:   [$($t)::+ $(  <$($t_ty_args),*>)*]
+            method_prefix: [$($t)::+ $(::<$($t_ty_args),*>)*]
+            [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
+    }};
+    (& ::$($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
+        .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
+        ref $m:expr) => {{
+        $crate::property_internal!(@self_arg
+            struct_type:   [&::$($t)::+ $(  <$($t_ty_args),*>)*]
+            method_prefix: [ ::$($t)::+ $(::<$($t_ty_args),*>)*]
+            [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
+    }};
+    (::$($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
+        .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
+        ref $m:expr) => {{
+        $crate::property_internal!(@self_arg
+            struct_type:   [::$($t)::+ $(  <$($t_ty_args),*>)*]
+            method_prefix: [::$($t)::+ $(::<$($t_ty_args),*>)*]
+            [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
+    }};
 
-    (& $($t:ident)::+.$method:tt($($argument:expr),* $(,)?), ref $m:expr) => {{
-        $crate::property_internal!(@self_arg
-            struct_type:   [&$($t)::+]
-            method_prefix: [ $($t)::+]
-            [$method] [$($argument),*] [$m])
-    }};
-    ($($t:ident)::+.$method:tt($($argument:expr),* $(,)?), ref $m:expr) => {{
-        $crate::property_internal!(@self_arg
-            struct_type:   [$($t)::+]
-            method_prefix: [$($t)::+]
-            [$method] [$($argument),*] [$m])
-    }};
-    (& ::$($t:ident)::+.$method:tt($($argument:expr),* $(,)?), ref $m:expr) => {{
-        $crate::property_internal!(@self_arg
-            struct_type:   [&::$($t)::+]
-            method_prefix: [ ::$($t)::+]
-            [$method] [$($argument),*] [$m])
-    }};
-    (::$($t:ident)::+.$method:tt($($argument:expr),* $(,)?), ref $m:expr) => {{
-        $crate::property_internal!(@self_arg
-            struct_type:   [::$($t)::+]
-            method_prefix: [::$($t)::+]
-            [$method] [$($argument),*] [$m])
-    }};
-
-    (& $($t:ident)::+.$method:tt($($argument:expr),* $(,)?), $m:expr) => {{
+    (& $($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
+        .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
+        $m:expr) => {{
         $crate::property_internal!(@self_dot
-            struct_type: [&&$($t)::+]
-            [$method] [$($argument),*] [$m])
+            struct_type: [&&$($t)::+ $(<$($t_ty_args),*>)*]
+            [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
     }};
-    ($($t:ident)::+.$method:tt($($argument:expr),* $(,)?), $m:expr) => {{
+    ($($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
+        .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
+        $m:expr) => {{
         $crate::property_internal!(@self_dot
-            struct_type: [&$($t)::+]
-            [$method] [$($argument),*] [$m])
+            struct_type: [&$($t)::+ $(<$($t_ty_args),*>)*]
+            [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
     }};
-    (& ::$($t:ident)::+.$method:tt($($argument:expr),* $(,)?), $m:expr) => {{
+    (& ::$($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
+        .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
+        $m:expr) => {{
         $crate::property_internal!(@self_dot
-            struct_type: [&&::$($t)::+]
-            [$method] [$($argument),*] [$m])
+            struct_type: [&&::$($t)::+ $(<$($t_ty_args),*>)*]
+            [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
     }};
-    (::$($t:ident)::+.$method:tt($($argument:expr),* $(,)?), $m:expr) => {{
+    (::$($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
+        .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
+        $m:expr) => {{
         $crate::property_internal!(@self_dot
-            struct_type: [&::$($t)::+]
-            [$method] [$($argument),*] [$m])
+            struct_type: [&::$($t)::+ $(<$($t_ty_args),*>)*]
+            [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
     }};
 
     (@self_arg struct_type: [$struct_ty:ty]
                method_prefix: [$($method_prefix:tt)+]
-               [$method:tt] [$($argument:expr),*] [$m:expr]) => {{
+               [$($method:tt)*] [$($argument:expr),*] [$m:expr]) => {{
         $crate::matchers::__internal_unstable_do_not_depend_on_these::property_ref_matcher(
-            |o: $struct_ty| $($method_prefix)*::$method (o, $($argument),*),
-            &stringify!($method($($argument),*)),
+            |o: $struct_ty| $($method_prefix)*::$($method)* (o, $($argument),*),
+            &stringify!($($method)* ($($argument),*)),
             $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($m))
     }};
 
     (@self_dot struct_type: [$struct_ty:ty]
-               [$method:tt] [$($argument:expr),*] [$m:expr]) => {{
+               [$($method:tt)*] [$($argument:expr),*] [$m:expr]) => {{
         $crate::matchers::__internal_unstable_do_not_depend_on_these::property_matcher(
-            |o: $struct_ty| o.$method ($($argument),*),
-            &stringify!($method($($argument),*)),
+            |o: $struct_ty| o.$($method)* ($($argument),*),
+            &stringify!($($method)* ($($argument),*)),
             $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($m))
     }};
 }

@@ -1211,3 +1211,40 @@ fn matches_with_fully_qualified_struct_path() -> Result<()> {
         )
     )
 }
+
+#[test]
+fn matches_with_explicit_type_parameters() -> Result<()> {
+    #[derive(Debug)]
+    struct AStruct<T> {
+        field: T,
+    }
+
+    impl<T: Copy> AStruct<T> {
+        fn get_default<U: Default>(&self) -> U {
+            Default::default()
+        }
+    }
+
+    let actual = AStruct::<i32> { field: 1 };
+    verify_that!(
+        actual,
+        matches_pattern!(&AStruct::<i32> { field: eq(1), get_default::<i16>(): eq(0) })
+    )
+}
+
+#[test]
+fn matches_with_fully_qualified_generic_struct_path() -> Result<()> {
+    // Ensure that the macro expands to the fully-qualified struct path.
+    mod googletest {}
+
+    let value = ::googletest::internal::test_data::GenericTestStruct { value: 10 };
+    verify_that!(
+        value,
+        matches_pattern!(
+            &::googletest::internal::test_data::GenericTestStruct::<i16> {
+                 value: eq(10),
+                 get_value::<i16>(20): eq(20)
+            }
+        )
+    )
+}

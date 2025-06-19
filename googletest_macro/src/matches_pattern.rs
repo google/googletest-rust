@@ -244,7 +244,9 @@ enum FieldOrMethod {
 impl Parse for FieldOrMethod {
     /// Parses the field name or method call along with the `:` that follows it.
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let value = if input.peek2(Token![:]) {
+        // If the ident is followed by a single `:` and not a `::`, then it's a field
+        // match and not a method call match.
+        let value = if input.peek2(Token![:]) && !input.peek2(Token![::]) {
             input.parse().map(FieldOrMethod::Field)
         } else {
             input.parse().map(FieldOrMethod::Method)

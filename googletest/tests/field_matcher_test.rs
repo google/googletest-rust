@@ -275,3 +275,40 @@ fn supports_fully_qualified_struct_path() -> Result<()> {
     verify_that!(value, field!(::googletest::internal::test_data::TestStruct.value, eq(&10)))?;
     Ok(())
 }
+
+#[test]
+fn supports_generic_struct() -> Result<()> {
+    #[derive(Debug)]
+    struct Struct<S, T> {
+        #[allow(dead_code)] // The property1 field is used only for adding the type parameter.
+        property1: S,
+        property2: T,
+    }
+
+    let value = Struct { property1: 1, property2: 10 };
+    verify_that!(&value, field!(&Struct::<i32, u32>.property2, ref eq(&10)))?;
+    verify_that!(value, field!(&Struct::<i32, u32>.property2, eq(10)))?;
+    verify_that!(value, field!(Struct::<i32, u32>.property2, eq(&10)))?;
+    Ok(())
+}
+
+#[test]
+fn supports_fully_qualified_generic_struct() -> Result<()> {
+    // Ensure that the macro expands to the fully-qualified struct path.
+    mod googletest {}
+
+    let value = ::googletest::internal::test_data::GenericTestStruct { value: 10 };
+    verify_that!(
+        &value,
+        field!(&::googletest::internal::test_data::GenericTestStruct::<i32>.value, ref eq(&10))
+    )?;
+    verify_that!(
+        value,
+        field!(&::googletest::internal::test_data::GenericTestStruct::<i32>.value, eq(10))
+    )?;
+    verify_that!(
+        value,
+        field!(::googletest::internal::test_data::GenericTestStruct::<i32>.value, eq(&10))
+    )?;
+    Ok(())
+}

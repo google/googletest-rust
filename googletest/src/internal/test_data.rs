@@ -13,3 +13,17 @@ impl TestStruct {
         self.value
     }
 }
+
+#[doc(hidden)]
+#[derive(Debug)]
+pub struct GenericTestStruct<T> {
+    #[doc(hidden)]
+    pub value: T,
+}
+
+impl<T> GenericTestStruct<T> {
+    #[doc(hidden)]
+    pub fn get_value<U>(&self, a: U) -> U {
+        a
+    }
+}

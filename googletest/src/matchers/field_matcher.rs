@@ -196,34 +196,34 @@ macro_rules! __field {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! field_internal {
-    (&$($t:ident)::+.$field:tt, ref $m:expr) => {{
+    (&$($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)? .$field:tt, ref $m:expr) => {{
         $crate::field_internal!(@internal
-            [&_] [&$($t)::*]
+            [&_] [&$($t)::* $(::<$($t_ty_args),*>)*]
             [$field] [ref] [$m])
     }};
-    (&$($t:ident)::+.$field:tt, $m:expr) => {{
+    (&$($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)? .$field:tt, $m:expr) => {{
         $crate::field_internal!(@internal
-            [&&_] [&$($t)::*]
+            [&&_] [&$($t)::* $(::<$($t_ty_args),*>)*]
             [$field] [] [$m])
     }};
-    ($($t:ident)::+.$field:tt, $m:expr) => {{
+    ($($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)? .$field:tt, $m:expr) => {{
         $crate::field_internal!(@internal
-            [&_] [$($t)::*]
+            [&_] [$($t)::* $(::<$($t_ty_args),*>)*]
             [$field] [] [$m])
     }};
-    (& :: $($t:ident)::+.$field:tt, ref $m:expr) => {{
+    (& :: $($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)? .$field:tt, ref $m:expr) => {{
         $crate::field_internal!(@internal
-            [&_] [&::$($t)::*]
+            [&_] [&::$($t)::* $(::<$($t_ty_args),*>)*]
             [$field] [ref] [$m])
     }};
-    (& :: $($t:ident)::+.$field:tt, $m:expr) => {{
+    (& :: $($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)? .$field:tt, $m:expr) => {{
         $crate::field_internal!(@internal
-            [&&_] [&::$($t)::*]
+            [&&_] [&::$($t)::* $(::<$($t_ty_args),*>)*]
             [$field] [] [$m])
     }};
-    (:: $($t:ident)::+.$field:tt, $m:expr) => {{
+    (:: $($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)? .$field:tt, $m:expr) => {{
         $crate::field_internal!(@internal
-            [&_] [::$($t)::*]
+            [&_] [::$($t)::* $(::<$($t_ty_args),*>)*]
             [$field] [] [$m])
     }};
 
