@@ -176,67 +176,48 @@ macro_rules! __property {
 #[doc(hidden)]
 #[macro_export]
 macro_rules! property_internal {
-    (& $($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
+    // `ref` variant.
+    (
+        // The 3 cases of `$(& $($_amp:literal)?)?` -> `$(& $($_amp)*)*`
+        // 1. outer group captures nothing => expansion produces nothing
+        // 2. outer group captures just `&` => expansion produces `&`
+        // 3. outer group captures `& <literal>` => disallowed by `@assert_empty` subrule invocation
+        //
+        // `$_amp:literal` works only because the following `$t:ident` or `::` can't be captured by
+        // it.
+        $(& $($_amp:literal)?)? // Optional `&`'s presence is implicitly captured by `_amp`.
+        $(:: $($_cs:literal)?)? // Optional `::`'s presence is implicitly captured by `_cs`.
+        $($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
         .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
-        ref $m:expr) => {{
-        $crate::property_internal!(@self_arg
-            struct_type:   [&$($t)::+ $(  <$($t_ty_args),*>)*]
-            method_prefix: [ $($t)::+ $(::<$($t_ty_args),*>)*]
-            [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
-    }};
-    ($($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
-        .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
-        ref $m:expr) => {{
-        $crate::property_internal!(@self_arg
-            struct_type:   [$($t)::+ $(  <$($t_ty_args),*>)*]
-            method_prefix: [$($t)::+ $(::<$($t_ty_args),*>)*]
-            [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
-    }};
-    (& ::$($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
-        .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
-        ref $m:expr) => {{
-        $crate::property_internal!(@self_arg
-            struct_type:   [&::$($t)::+ $(  <$($t_ty_args),*>)*]
-            method_prefix: [ ::$($t)::+ $(::<$($t_ty_args),*>)*]
-            [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
-    }};
-    (::$($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
-        .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
-        ref $m:expr) => {{
-        $crate::property_internal!(@self_arg
-            struct_type:   [::$($t)::+ $(  <$($t_ty_args),*>)*]
-            method_prefix: [::$($t)::+ $(::<$($t_ty_args),*>)*]
+        ref $m:expr
+    ) => {{
+        $crate::property_internal!(@assert_empty $($($_amp)*)* $($($_cs)*)*);
+        $crate::property_internal!(
+            @self_arg
+            struct_type:   [$(& $($_amp)*)*  $(:: $($_cs)*)*  $($t)::+ $(  <$($t_ty_args),*>)*]
+            method_prefix: [                 $(:: $($_cs)*)*  $($t)::+ $(::<$($t_ty_args),*>)*]
             [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
     }};
 
-    (& $($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
+    // Non-`ref` variant.
+    (
+        // See comment on previous variant above.
+        $(& $($_amp:literal)?)? // Optional `&`'s presence is implicitly captured by `_amp`.
+        $(:: $($_cs:literal)?)? // Optional `::`'s presence is implicitly captured by `_cs`.
+        $($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
         .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
         $m:expr) => {{
-        $crate::property_internal!(@self_dot
-            struct_type: [&&$($t)::+ $(<$($t_ty_args),*>)*]
+        $crate::property_internal!(@assert_empty $($($_amp)*)* $($($_cs)*)*);
+        $crate::property_internal!(
+            @self_dot
+            struct_type: [$(& $($_amp)*)*  $(:: $($_cs)*)*  $($t)::+ $(<$($t_ty_args),*>)*]
             [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
     }};
-    ($($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
-        .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
-        $m:expr) => {{
-        $crate::property_internal!(@self_dot
-            struct_type: [&$($t)::+ $(<$($t_ty_args),*>)*]
-            [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
-    }};
-    (& ::$($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
-        .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
-        $m:expr) => {{
-        $crate::property_internal!(@self_dot
-            struct_type: [&&::$($t)::+ $(<$($t_ty_args),*>)*]
-            [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
-    }};
-    (::$($t:ident)::+ $(::<$($t_ty_args:ty),* $(,)?>)?
-        .$method:tt $(::<$($m_ty_args:ty),* $(,)?>)? ($($argument:expr),* $(,)?),
-        $m:expr) => {{
-        $crate::property_internal!(@self_dot
-            struct_type: [&::$($t)::+ $(<$($t_ty_args),*>)*]
-            [$method $(::<$($m_ty_args),*>)*] [$($argument),*] [$m])
-    }};
+
+    (@assert_empty) => {};
+    (@assert_empty $($l:literal)+) => {
+        compile_error!("property! argument must start with an optional `&` followed by a path")
+    };
 
     (@self_arg struct_type: [$struct_ty:ty]
                method_prefix: [$($method_prefix:tt)+]
@@ -250,7 +231,7 @@ macro_rules! property_internal {
     (@self_dot struct_type: [$struct_ty:ty]
                [$($method:tt)*] [$($argument:expr),*] [$m:expr]) => {{
         $crate::matchers::__internal_unstable_do_not_depend_on_these::property_matcher(
-            |o: $struct_ty| o.$($method)* ($($argument),*),
+            |o: &$struct_ty| o.$($method)* ($($argument),*),
             &stringify!($($method)* ($($argument),*)),
             $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($m))
     }};
