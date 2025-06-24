@@ -1656,7 +1656,7 @@ pub mod internal {
     /// # use googletest::prelude::*;
     /// # fn would_not_compile_without_autoref() -> Result<()> {
     /// let not_copyable = vec![1,2,3];
-    /// verify_that!(not_copyable, empty())?;
+    /// verify_that!(not_copyable, is_empty())?;
     /// # Ok(())
     /// # }
     /// ```
