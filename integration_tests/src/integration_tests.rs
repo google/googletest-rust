@@ -2002,6 +2002,9 @@ mod tests {
                 contains_substring("test tests::expect_false_works ... ok"),
                 contains_substring("test tests::verify_eq_works ... ok"),
                 contains_substring("test tests::expect_eq_works ... ok"),
+                contains_substring(
+                    "test tests::expect_eq_with_message_compiles_without_trait_imports ... ok"
+                ),
                 contains_substring("test tests::verify_ne_works ... ok"),
                 contains_substring("test tests::expect_ne_works ... ok"),
                 contains_substring("test tests::verify_lt_works ... ok"),
@@ -2020,7 +2023,7 @@ mod tests {
                 contains_substring("test tests::assert_pred_works ... ok"),
                 contains_substring("test tests::expect_that_works ... ok"),
                 contains_substring("test tests::expect_pred_works ... ok"),
-                contains_substring("test result: FAILED. 27 passed; 3 failed;")
+                contains_substring("test result: FAILED. 28 passed; 3 failed;")
             )
         )
     }

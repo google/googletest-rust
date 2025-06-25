@@ -89,6 +89,11 @@ mod tests {
     }
 
     #[gtest]
+    fn expect_eq_with_message_compiles_without_trait_imports() {
+        googletest::expect_eq!(1, 1, "Some message.");
+    }
+
+    #[gtest]
     fn verify_ne_works() -> googletest::Result<()> {
         googletest::verify_ne!(2 + 2, 5)
     }

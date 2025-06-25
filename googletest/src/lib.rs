@@ -148,6 +148,31 @@ pub trait GoogleTestSupport {
     /// ```
     fn and_log_failure(self);
 
+    /// If `self` is a `Result::Err`, writes to `stdout` with a failure report
+    /// and the message returned by `provider`.
+    ///
+    /// This is equivalent to combining [`GoogleTestSupport::and_log_failure`]
+    /// with a call to [`GoogleTestSupport::with_failure_message`].
+    ///
+    /// Example:
+    ///
+    /// ```
+    /// # use googletest::GoogleTestSupport;
+    /// # use googletest::assertions::verify_eq;
+    /// # use googletest::internal::test_outcome::TestOutcome;
+    /// # TestOutcome::init_current_test_outcome();
+    /// let actual = 0;
+    /// verify_eq!(actual, 42)
+    ///    .and_log_failure_with_message(|| format!("Actual {} was wrong!", actual));
+    /// # TestOutcome::close_current_test_outcome::<&str>(Ok(())).unwrap_err();
+    /// ```
+    fn and_log_failure_with_message(self, provider: impl FnOnce() -> String)
+    where
+        Self: Sized,
+    {
+        self.with_failure_message(provider).and_log_failure();
+    }
+
     /// Adds `message` to the logged failure message if `self` is a
     /// `Result::Err`. Otherwise, does nothing.
     ///
