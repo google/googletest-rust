@@ -70,7 +70,7 @@ pub use contains_regex_matcher::contains_regex;
 pub use derefs_to_matcher::derefs_to;
 pub use display_matcher::displays_as;
 pub use each_matcher::each;
-pub use empty_matcher::{empty, is_empty};
+pub use empty_matcher::is_empty;
 pub use eq_matcher::{eq, EqMatcher};
 pub use err_matcher::err;
 pub use ge_matcher::ge;

@@ -42,12 +42,6 @@ pub fn is_empty() -> EmptyMatcher {
     EmptyMatcher
 }
 
-/// This is deprecated. Use `is_empty()` instead.
-#[deprecated(since = "0.14.1", note = "Use `is_empty()` instead.")]
-pub fn empty() -> EmptyMatcher {
-    EmptyMatcher
-}
-
 #[derive(MatcherBase)]
 pub struct EmptyMatcher;
 
