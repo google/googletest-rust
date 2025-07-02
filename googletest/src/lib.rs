@@ -91,7 +91,7 @@ use internal::test_outcome::{TestAssertionFailure, TestOutcome};
 /// of the (fatal) assertion failure which generated this result. Non-fatal
 /// assertion failures, which log the failure and report the test as having
 /// failed but allow it to continue running, are not encoded in this type.
-pub type Result<T> = std::result::Result<T, TestAssertionFailure>;
+pub type Result<T, E = TestAssertionFailure> = std::result::Result<T, E>;
 
 /// Returns a [`Result`] corresponding to the outcome of the currently running
 /// test.
