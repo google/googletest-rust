@@ -123,7 +123,7 @@ pub fn gtest(
     };
 
     let (output_type, result) = match sig.output {
-        ReturnType::Default => (None, quote! {googletest::Result::Ok(())}),
+        ReturnType::Default => (None, quote! {googletest::Result::<()>::Ok(())}),
         ReturnType::Type(_, ref ty) => (Some(quote! {#ty}), quote! {result}),
     };
 
