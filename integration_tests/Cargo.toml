@@ -34,7 +34,7 @@ indoc = "2"
 rstest = "0.26"
 rustversion = "1.0.21"
 tempfile = "3.20.0"
-tokio = { version = "1.46", features = ["time", "macros", "rt"] }
+tokio = { version = "1.47", features = ["time", "macros", "rt"] }
 
 [[bin]]
 name = "integration_tests"
