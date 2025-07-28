@@ -31,7 +31,7 @@ authors = [
 googletest = { path = "../googletest", version = "0.14.2", features = ["anyhow"] }
 anyhow = "1"
 indoc = "2"
-rstest = "0.25"
+rstest = "0.26"
 rustversion = "1.0.21"
 tempfile = "3.20.0"
 tokio = { version = "1.46", features = ["time", "macros", "rt"] }
