@@ -36,7 +36,8 @@ pub trait Fixture: Sized {
     ///
     /// This method is called by the test harness before the test case
     /// If this method returns an `Err(...)`, then the test case is not
-    /// evaluated and only the fixtures previously set up are torn down.
+    /// evaluated, automatically fails, and only the fixtures previously
+    /// set up are torn down.
     fn set_up() -> crate::Result<Self>;
 
     /// Clean up method for the fixture.
@@ -109,7 +110,7 @@ pub trait StaticFixture: Sized + Sync + Send {
     ///
     /// This method is called by the test harness before the first test case
     /// using this fixture. If this method returns an `Err(...)`, then every
-    /// test cases using this fixture are not evaluated.
+    /// test case using this fixture is not evaluated and automatically fails.
     fn set_up_once() -> crate::Result<Self>;
 }
 
@@ -259,4 +260,20 @@ mod tests {
 
     #[test]
     fn static_fixture_two_different_static_fixtures(_: &&OnlyOnce, _: &&AnotherStaticFixture) {}
+
+    struct FailingFixture;
+
+    impl Fixture for FailingFixture {
+        fn set_up() -> crate::Result<Self> {
+            Err(googletest::TestAssertionFailure::create("sad fixture".into()))
+        }
+
+        fn tear_down(self) -> crate::Result<()> {
+            unreachable!();
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "See failure output above")]
+    fn failing_fixture_causes_test_failure(_: &FailingFixture) {}
 }

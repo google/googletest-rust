@@ -122,12 +122,12 @@ pub fn gtest(
         outer_sig
     };
 
-    let (output_type, result) = match sig.output {
-        ReturnType::Default => (None, quote! {googletest::Result::Ok(())}),
-        ReturnType::Type(_, ref ty) => (Some(quote! {#ty}), quote! {result}),
+    let output_type = match sig.output {
+        ReturnType::Default => None,
+        ReturnType::Type(_, ref ty) => Some(quote! {#ty}),
     };
 
-    let (maybe_closure, invocation, invocation_result_type) =
+    let (maybe_closure, result, invocation, invocation_result_type) =
         match (sig.asyncness.is_some(), is_rstest_enabled) {
             (true, false) if !sig.inputs.is_empty() => {
                 // TODO add support for fixtures in async tests.
@@ -145,6 +145,10 @@ pub fn gtest(
                     // Async closures are still unstable (see https://github.com/rust-lang/rust/issues/62290),
                     // so we can't use the same solution as the sync case below.
                     quote! {},
+                    match output_type {
+                        Some(_) => quote! {result},
+                        None => quote! {googletest::Result::Ok(())},
+                    },
                     quote! {
                         async { #block }.await
                     },
@@ -166,6 +170,7 @@ pub fn gtest(
                             #closure_body
                         };
                     },
+                    quote! {result},
                     quote! {
                         test()
                     },
@@ -180,6 +185,10 @@ pub fn gtest(
                         let test = move || {
                             #block
                         };
+                    },
+                    match output_type {
+                        Some(_) => quote! {result},
+                        None => quote! {googletest::Result::Ok(())},
                     },
                     quote! {
                         test()
