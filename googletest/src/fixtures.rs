@@ -35,16 +35,17 @@ pub trait Fixture: Sized {
     /// Factory method of the `Fixture`.
     ///
     /// This method is called by the test harness before the test case
-    /// If this method returns an `Err(...)`, then the test case is not
-    /// evaluated, automatically fails, and only the fixtures previously
-    /// set up are torn down.
+    /// that uses this fixture. If this method returns an `Err(...)`,
+    /// then the test case is not evaluated, automatically fails, and
+    /// only the fixtures previously set up are torn down.
     fn set_up() -> crate::Result<Self>;
 
     /// Clean up method for the fixture.
     ///
-    /// This method is called by the test harness after the test case.
-    /// If the `Fixture` has been set up, the test harness will call this
-    /// method, even if the test case failed or panicked.
+    /// This method is called by the test harness after the test case
+    /// that uses this fixture. If the `Fixture` has been set up, the
+    /// test harness will call this method, even if the test case failed
+    /// or panicked.
     fn tear_down(self) -> crate::Result<()>;
 }
 
@@ -63,9 +64,10 @@ pub trait Fixture: Sized {
 pub trait ConsumableFixture: Sized {
     /// Factory method of the `ConsumableFixture`.
     ///
-    /// This method is called by the test harness before the test case.
-    /// If this method returns an `Err(...)`, then the test case is not
-    /// evaluated.
+    /// This method is called by the test harness before the test case
+    /// that uses this fixture. If this method returns an `Err(...)`,
+    /// then the test case is not evaluated, automatically fails, and
+    /// only the fixtures previously set up are torn down.
     fn set_up() -> crate::Result<Self>;
 }
 
