@@ -272,13 +272,7 @@ fn is_test_attribute(attr: &Attribute) -> bool {
 }
 
 fn is_rstest_enabled(attributes: &[Attribute]) -> bool {
-    for attr in attributes {
-        if matches!(attr.path().segments.last(), Some(last_segment) if last_segment.ident == "rstest")
-        {
-            return true;
-        }
-    }
-    false
+    attributes.iter().any(|attr| matches!(attr.path().segments.last(), Some(last_segment) if last_segment.ident == "rstest"))
 }
 
 struct Fixture {
