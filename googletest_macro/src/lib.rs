@@ -428,7 +428,7 @@ pub fn __abbreviated_stringify(input: proc_macro::TokenStream) -> proc_macro::To
     .into()
 }
 
-fn abbreviated_string(target: &str) -> Result<std::borrow::Cow<str>, &'static str> {
+fn abbreviated_string(target: &str) -> Result<std::borrow::Cow<'_, str>, &'static str> {
     use std::borrow::Cow;
     match target.rsplit_once(',') {
         None => Err("Expect a `max_length` argument, but got none"),
