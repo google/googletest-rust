@@ -34,6 +34,10 @@
 /// or output.** The resulting `Result` must be handled as described above to
 /// cause the test to be recorded as a failure.
 ///
+/// Note that unlike [`expect_that!`], this macro may be invoked in tests
+/// without the [`gtest`][crate::gtest] attribute and also from other threads
+/// (provided that `and_log_failure` is not called).
+///
 /// Example:
 /// ```
 /// # use googletest::prelude::*;
@@ -1361,6 +1365,9 @@ pub use expect_near;
 ///   at ...
 /// Test failed. Extra information: Some additional information.
 /// ```
+///
+/// Note that unlike [`expect_that!`], this macro may be invoked in tests
+/// without the [`gtest`][crate::gtest] attribute and also from other threads.
 ///
 /// **Note for users of [GoogleTest for C++](http://google.github.io/googletest/):**
 /// This differs from the `ASSERT_THAT` macro in that it panics rather

@@ -523,6 +523,13 @@ fn test_png_from_cache() -> googletest::Result<()> {
 ```
 
 
+## Multi-threaded tests
+
+Due to internal use of thread-local storage, the `expect_*` family of macros
+should only be invoked from the same thread as that running the test itself.
+`verify_*` and `assert_*` macros on the other hand may be called from other
+threads.
+
 ## Integrations with other crates
 
 GoogleTest Rust includes integrations with the
