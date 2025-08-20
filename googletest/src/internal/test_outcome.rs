@@ -236,7 +236,21 @@ impl Debug for TestAssertionFailure {
 impl<T: std::error::Error> From<T> for TestAssertionFailure {
     #[track_caller]
     fn from(value: T) -> Self {
-        TestAssertionFailure::create(format!("{value}"))
+        // print the full error chain, not just the first error.
+        let mut description = String::new();
+        description.push_str(&format!("Error: {value}\n"));
+        let mut source = value.source();
+        if source.is_some() {
+            description.push_str("\nCaused by:");
+            let mut i = 1;
+            while let Some(e) = source {
+                description.push_str(&format!("\n{i}: {e}"));
+                source = e.source();
+                i += 1;
+            }
+        }
+
+        TestAssertionFailure::create(description)
     }
 }
 
@@ -244,5 +258,36 @@ impl<T: std::error::Error> From<T> for TestAssertionFailure {
 impl From<TestAssertionFailure> for proptest::test_runner::TestCaseError {
     fn from(value: TestAssertionFailure) -> Self {
         proptest::test_runner::TestCaseError::Fail(format!("{value}").into())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::internal::test_outcome::TestAssertionFailure;
+    use std::fmt::{Debug, Display, Formatter};
+
+    #[test]
+    fn error_chain_from_error() {
+        #[derive(Debug)]
+        struct CustomError {
+            message: String,
+            source: Option<Box<CustomError>>,
+        }
+        impl Display for CustomError {
+            fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+                f.write_str(&self.message)
+            }
+        }
+        impl std::error::Error for CustomError {
+            fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+                self.source.as_ref().map(|e| e.as_ref() as _)
+            }
+        }
+
+        let source1 = CustomError { message: "test1".to_string(), source: None };
+        let source2 = CustomError { message: "test2".to_string(), source: Some(source1.into()) };
+        let error = CustomError { message: "test3".to_string(), source: Some(source2.into()) };
+        let assertion_failure = TestAssertionFailure::from(error);
+        assert_eq!(assertion_failure.description, "Error: test3\n\nCaused by:\n1: test2\n2: test1");
     }
 }
