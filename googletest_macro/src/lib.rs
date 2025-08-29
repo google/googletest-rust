@@ -147,7 +147,7 @@ pub fn gtest(
                     quote! {},
                     match output_type {
                         Some(_) => quote! {result},
-                        None => quote! {googletest::Result::Ok(())},
+                        None => quote! {googletest::Result::<()>::Ok(())},
                     },
                     quote! {
                         async { #block }.await
@@ -188,7 +188,7 @@ pub fn gtest(
                     },
                     match output_type {
                         Some(_) => quote! {result},
-                        None => quote! {googletest::Result::Ok(())},
+                        None => quote! {googletest::Result::<()>::Ok(())},
                     },
                     quote! {
                         test()
