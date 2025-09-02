@@ -126,77 +126,38 @@ pub fn gtest(
         ReturnType::Default => None,
         ReturnType::Type(_, ref ty) => Some(quote! {#ty}),
     };
-
-    let (maybe_closure, result, invocation, invocation_result_type) =
-        match (sig.asyncness.is_some(), is_rstest_enabled) {
-            (true, false) if !sig.inputs.is_empty() => {
-                // TODO add support for fixtures in async tests.
-                return syn::Error::new(
-                sig.span(),
-                "Googletest does not currently support fixture with async. Consider using rstest",
-            )
-            .into_compile_error()
-            .into();
-            }
-            (true, _) => {
-                (
-                    // In the async case, the ? operator returns from the *block* rather than the
-                    // surrounding function. So we just put the test content in an async block.
-                    // Async closures are still unstable (see https://github.com/rust-lang/rust/issues/62290),
-                    // so we can't use the same solution as the sync case below.
-                    quote! {},
-                    match output_type {
-                        Some(_) => quote! {result},
-                        None => quote! {googletest::Result::<()>::Ok(())},
-                    },
-                    quote! {
-                        async { #block }.await
-                    },
-                    output_type.unwrap_or_else(|| quote! {()}),
-                )
-            }
-            (false, false) => {
-                let closure_body = match closure_body(&sig) {
-                    Ok(body) => body,
-                    Err(e) => return e.into_compile_error().into(),
-                };
-
-                (
-                    // In the sync case, the ? operator returns from the surrounding function. So
-                    // we redeclare the original test function internally.
-                    quote! {
-                        #sig { #block }
-                        let test = move || {
-                            #closure_body
-                        };
-                    },
-                    quote! {result},
-                    quote! {
-                        test()
-                    },
-                    output_type.unwrap_or_else(|| quote! {googletest::Result<()>}),
-                )
-            }
-            (false, true) => {
-                (
-                    // Rstest may refer in block to its fixtures. Hence, we only wrap it in a
-                    // closure to capture them.
-                    quote! {
-                        let test = move || {
-                            #block
-                        };
-                    },
-                    match output_type {
-                        Some(_) => quote! {result},
-                        None => quote! {googletest::Result::<()>::Ok(())},
-                    },
-                    quote! {
-                        test()
-                    },
-                    output_type.unwrap_or_else(|| quote! {()}),
-                )
-            }
+    let is_async = sig.asyncness.is_some();
+    let maybe_async = is_async.then(|| quote! { async });
+    let maybe_await = is_async.then(|| quote! { .await });
+    let invocation = if is_rstest_enabled {
+        // Rstest may refer in block to its fixtures. Hence, we only wrap it in a
+        // closure to capture them.
+        let result_type = output_type.clone().unwrap_or_else(|| quote! {()});
+        let mut invocation = quote! {
+            (#maybe_async move || -> #result_type {
+                #block
+            })() #maybe_await
         };
+        if output_type.is_none() {
+            invocation = quote! { { let () = #invocation; googletest::Result::<()>::Ok(()) } };
+        }
+        invocation
+    } else {
+        let closure_body = match closure_body(&sig) {
+            Ok(body) => body,
+            Err(e) => return e.into_compile_error().into(),
+        };
+
+        // In the sync case, the ? operator returns from the surrounding function. So
+        // we redeclare the original test function internally.
+        let result_type = output_type.unwrap_or_else(|| quote! {googletest::Result<()>});
+        quote! {
+            (#maybe_async move || -> #result_type {
+                #sig { #block }
+                #closure_body
+            })() #maybe_await
+        }
+    };
     if !attrs.iter().any(is_test_attribute) && !is_rstest_enabled {
         let test_attr: Attribute = parse_quote! {
             #[::core::prelude::v1::test]
@@ -206,14 +167,12 @@ pub fn gtest(
     let function = quote! {
         #(#attrs)*
         #outer_sig -> #outer_return_type {
-            #maybe_closure
             if !googletest::internal::test_filter::test_should_run(concat!(module_path!(), "::", stringify!(#sig_ident))) {
                 #skipped_test_result
             } else if googletest::internal::test_sharding::test_should_run(#test_case_hash) {
                 use googletest::internal::test_outcome::TestOutcome;
                 TestOutcome::init_current_test_outcome();
-                let result: #invocation_result_type = #invocation;
-                TestOutcome::close_current_test_outcome(#result)
+                TestOutcome::close_current_test_outcome(#invocation)
             } else {
                 #skipped_test_result
             }
@@ -275,11 +234,16 @@ fn is_rstest_enabled(attributes: &[Attribute]) -> bool {
     attributes.iter().any(|attr| matches!(attr.path().segments.last(), Some(last_segment) if last_segment.ident == "rstest"))
 }
 
+enum FixtureKind {
+    Consumable,
+    MutableRef,
+    SharedRef,
+}
+
 struct Fixture {
     identifier: syn::Ident,
     ty: Box<syn::Type>,
-    consumable: bool,
-    mutability: Option<syn::token::Mut>,
+    kind: FixtureKind,
 }
 
 impl Fixture {
@@ -289,10 +253,13 @@ impl Fixture {
             Type::Reference(reference) => Ok(Self {
                 identifier,
                 ty: reference.elem.clone(),
-                consumable: false,
-                mutability: reference.mutability,
+                kind: if reference.mutability.is_some() {
+                    FixtureKind::MutableRef
+                } else {
+                    FixtureKind::SharedRef
+                },
             }),
-            Type::Path(..) => Ok(Self { identifier, ty, consumable: true, mutability: None }),
+            Type::Path(..) => Ok(Self { identifier, ty, kind: FixtureKind::Consumable }),
             _ => Err(syn::Error::new(
                 ty.span(),
                 "Unexpected fixture type. Only references (&T or &mut T) and paths (T) are supported.",
@@ -300,35 +267,32 @@ impl Fixture {
         }
     }
 
-    fn parameter(&self) -> proc_macro2::TokenStream {
-        let Self { identifier, mutability, consumable, .. } = self;
-        if *consumable {
-            quote!(#identifier)
-        } else {
-            quote!(& #mutability #identifier)
-        }
-    }
-
     fn wrap_call(&self, inner_call: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
-        let Self { identifier, mutability, ty, consumable } = self;
-        if *consumable {
-            quote!(
+        let Self { identifier, ty, kind } = self;
+        let ref_method = match kind {
+            FixtureKind::Consumable => {
+                return quote! {
+                    #[allow(non_snake_case)]
+                    let #identifier = <#ty as googletest::fixtures::ConsumableFixture>::set_up()?;
+                    { #inner_call }
+                };
+            }
+            FixtureKind::MutableRef => quote! { .as_mut() },
+            FixtureKind::SharedRef => quote! { .as_ref() },
+        };
+        quote! { {
+            #[allow(non_snake_case, unused_mut)]
+            let mut #identifier =
+                googletest::__internal_macro_support::FixtureTearDownOnDrop::new(
+                    <#ty as googletest::fixtures::Fixture>::set_up()?);
+            let result = {
                 #[allow(non_snake_case)]
-                let #identifier = <#ty as googletest::fixtures::ConsumableFixture>::set_up()?;
-                (||{#inner_call})()
-            )
-        } else {
-            quote!(
-                #[allow(non_snake_case)]
-                let #mutability #identifier = <#ty as googletest::fixtures::Fixture>::set_up()?;
-                let result = std::panic::catch_unwind(|| {#inner_call});
-                let tear_down_result = googletest::fixtures::Fixture::tear_down(#identifier);
-                match result {
-                    Ok(result) => result.and(tear_down_result),
-                    Err(panic_error) => std::panic::resume_unwind(panic_error)
-                }
-            )
-        }
+                let #identifier = #identifier #ref_method;
+                #inner_call
+            };
+            #identifier.tear_down()?;
+            result
+        } }
     }
 }
 
@@ -349,15 +313,19 @@ fn closure_body(signature: &Signature) -> syn::Result<proc_macro2::TokenStream> 
         .collect::<syn::Result<Vec<Fixture>>>()?;
 
     let mut block = {
-        let parameters = input_types.iter().map(Fixture::parameter);
+        let parameters = input_types.iter().map(|fixture| &fixture.identifier);
 
         let test_name = &signature.ident;
-        match signature.output {
-            ReturnType::Default => {
-                quote!({#test_name(#(#parameters, )*); googletest::Result::Ok(())})
-            }
-            ReturnType::Type(_, _) => quote!(#test_name(#(#parameters, )*)),
+        let mut invocation = quote! {
+            #test_name(#(#parameters, )*)
+        };
+        if signature.asyncness.is_some() {
+            invocation = quote! { #invocation.await };
         }
+        if let ReturnType::Default = signature.output {
+            invocation = quote! { { let () = #invocation; googletest::Result::Ok(()) } };
+        }
+        invocation
     };
 
     for fixture in input_types.iter().rev() {

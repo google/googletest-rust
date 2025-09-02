@@ -93,7 +93,7 @@ jobs:
     name: test (no default features) / ubuntu / ${{ matrix.toolchain }}
     strategy:
       matrix:
-        toolchain: [stable, 1.70.0]
+        toolchain: [stable, 1.85.0]
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Install ${{ matrix.toolchain }}
@@ -108,7 +108,7 @@ jobs:
     name: integration-test / ubuntu / ${{ matrix.toolchain }}
     strategy:
       matrix:
-        toolchain: [stable, 1.70.0, nightly, beta]
+        toolchain: [stable, 1.85.0, nightly, beta]
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Install ${{ matrix.toolchain }}

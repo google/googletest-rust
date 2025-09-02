@@ -24,7 +24,7 @@ use std::{
 /// test function.
 ///
 /// ```ignore
-/// strct MyFixture { ... }
+/// struct MyFixture { ... }
 ///
 /// impl Fixture for MyFixture { ... }
 ///
@@ -54,7 +54,7 @@ pub trait Fixture: Sized {
 /// a test function.
 ///
 /// ```ignore
-/// strct MyFixture { ... }
+/// struct MyFixture { ... }
 ///
 /// impl ConsumableFixture for MyFixture { ... }
 ///
@@ -100,7 +100,7 @@ impl<T> DerefMut for FixtureOf<T> {
 /// argument to a test function.
 ///
 /// ```ignore
-/// strct MyFixture{ ... }
+/// struct MyFixture{ ... }
 ///
 /// impl StaticFixture for MyFixture { ... }
 ///
@@ -214,20 +214,38 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "Whoooops")]
-    fn fixture_teardown_called_even_if_test_fail(_: &PanickyFixture) {
-        panic!("Test failed");
+    fn fixture_teardown_called_even_if_test_fail(_: &PanickyFixture) -> Result<()> {
+        Err(googletest::TestAssertionFailure::create("It must fail!".into()))
     }
 
-    struct FailingTearDown;
+    struct AbortIfNotTornDownFixture {
+        has_been_torn_down: bool,
+    }
 
-    impl Fixture for FailingTearDown {
+    impl Fixture for AbortIfNotTornDownFixture {
         fn set_up() -> crate::Result<Self> {
-            Ok(Self)
+            Ok(Self { has_been_torn_down: false })
         }
+        fn tear_down(mut self) -> crate::Result<()> {
+            self.has_been_torn_down = true;
+            Ok(())
+        }
+    }
 
-        fn tear_down(self) -> crate::Result<()> {
-            Err(googletest::TestAssertionFailure::create("It must fail!".into()))
+    impl Drop for AbortIfNotTornDownFixture {
+        fn drop(&mut self) {
+            if !self.has_been_torn_down {
+                eprintln!("AbortIfNotTornDownFixture was not torn down");
+                std::process::abort();
+            }
         }
+    }
+
+    #[test]
+    #[should_panic(expected = "simple_fail")]
+    fn fixture_torn_down_after_test_panics(f: &AbortIfNotTornDownFixture) {
+        expect_that!(f.has_been_torn_down, eq(false));
+        panic!("simple_fail");
     }
 
     struct OnlyOnce;
@@ -263,9 +281,9 @@ mod tests {
     #[test]
     fn static_fixture_two_different_static_fixtures(_: &&OnlyOnce, _: &&AnotherStaticFixture) {}
 
-    struct FailingFixture;
+    struct FailingSetUp;
 
-    impl Fixture for FailingFixture {
+    impl Fixture for FailingSetUp {
         fn set_up() -> crate::Result<Self> {
             Err(googletest::TestAssertionFailure::create("sad fixture".into()))
         }
@@ -277,5 +295,23 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "See failure output above")]
-    fn failing_fixture_causes_test_failure(_: &FailingFixture) {}
+    fn failing_fixture_causes_test_failure(_: &FailingSetUp) {
+        unreachable!()
+    }
+
+    struct FailingTearDown;
+
+    impl Fixture for FailingTearDown {
+        fn set_up() -> crate::Result<Self> {
+            Ok(Self)
+        }
+
+        fn tear_down(self) -> crate::Result<()> {
+            Err(googletest::TestAssertionFailure::create("It must fail!".into()))
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "See failure output above")]
+    fn failing_teardown_causes_test_failure(_: &FailingTearDown) {}
 }

@@ -1842,7 +1842,10 @@ mod tests {
     #[gtest]
     fn async_test_with_google_test_runs_correctly() -> Result<()> {
         let output = run_external_process_in_tests_directory("async_test_with_expect_that")?;
-
+        expect_that!(
+            output,
+            contains_substring("tests::async_test_with_no_output ... ok").times(eq(1))
+        );
         expect_that!(
             output,
             contains_substring("tests::async_test_failure_with_non_fatal_assertion ... FAILED")
@@ -1852,6 +1855,14 @@ mod tests {
             output,
             contains_substring("tests::async_test_failure_with_fatal_assertion ... FAILED")
                 .times(eq(1))
+        );
+        expect_that!(
+            output,
+            contains_substring("tests::async_test_with_ok_fixture ... ok").times(eq(1))
+        );
+        expect_that!(
+            output,
+            contains_substring("tests::async_test_with_err_fixture ... FAILED").times(eq(1))
         );
         expect_that!(output, contains_substring("Expected: is equal to 3"));
         verify_that!(output, contains_substring("Expected: is equal to 4"))
