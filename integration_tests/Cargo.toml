@@ -33,7 +33,7 @@ anyhow = "1"
 indoc = "2"
 rstest = "0.26"
 rustversion = "1.0.22"
-tempfile = "3.21.0"
+tempfile = "3.22.0"
 tokio = { version = "1.47", features = ["time", "macros", "rt"] }
 
 [[bin]]
