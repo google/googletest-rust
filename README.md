@@ -274,6 +274,11 @@ fn rstest_works_with_google_test(#[case] value: u32) -> Result<()> {
 Make sure to put `#[gtest]` *before* `#[rstest]`. Otherwise the
 annotated test will run twice, since both macros will attempt to register a test
 with the Rust test harness.
+Note that in google3, when `#[rstest]` is used, `init_google` is *not*
+automatically called. If you wish to use any features that work only after
+`init_google` has been called (e.g., logging), you must explicitly call
+`googletest::internal_google::lazy_init_google()`.
+<!-- copybara:end -->
 
 The macro also works together with
 [async tests with Tokio](https://docs.rs/tokio/latest/tokio/attr.gtest.html) in
