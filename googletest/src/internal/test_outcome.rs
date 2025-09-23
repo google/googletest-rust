@@ -14,6 +14,8 @@
 
 use std::cell::{RefCell, RefMut};
 use std::fmt::{Debug, Display, Error, Formatter};
+use std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering};
+use std::sync::Arc;
 use std::thread_local;
 
 /// The outcome hitherto of running a test.
@@ -23,16 +25,45 @@ use std::thread_local;
 ///
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
-pub enum TestOutcome {
-    /// The test ran or is currently running and no assertions have failed.
-    Success,
-    /// The test ran or is currently running and at least one assertion has
-    /// failed.
-    Failure,
+pub struct TestOutcome {
+    is_success: AtomicBool,
+}
+
+impl Default for TestOutcome {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl TestOutcome {
+    pub fn new() -> Self {
+        Self { is_success: AtomicBool::new(true) }
+    }
+    pub fn fail(&self) {
+        self.is_success.store(false, AtomicOrdering::Relaxed)
+    }
+    #[must_use]
+    pub fn is_success(&self) -> bool {
+        self.is_success.load(AtomicOrdering::Relaxed)
+    }
+    #[must_use]
+    pub fn is_failed(&self) -> bool {
+        self.is_success.load(AtomicOrdering::Relaxed)
+    }
 }
 
 thread_local! {
-    static CURRENT_TEST_OUTCOME: RefCell<Option<TestOutcome>> = const { RefCell::new(None) };
+    // Whether or not the current test has failed.
+    //
+    // If inside a `#[gtest]` function, this value will initially be set to a new `TestOutcome`.
+    // Upon assertion failure (e.g. `expect_that!` failing), the `TestOutcome` will be updated to
+    // indicate failure.
+    //
+    // The `Arc` is used to share the `TestOutcome` across threads that have been spawned by the
+    // `#[gtest]` function, which can then set it to fail upon an assertion failure in a thread.
+    static CURRENT_TEST_OUTCOME: RefCell<Option<Arc<TestOutcome>>> = const { RefCell::new(None) };
+    #[cfg(feature = "unstable_thread_spawn_hook")]
+    static HAS_SET_SPAWN_HOOK: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 }
 
 impl TestOutcome {
@@ -44,8 +75,26 @@ impl TestOutcome {
     #[doc(hidden)]
     pub fn init_current_test_outcome() {
         Self::with_current_test_outcome(|mut current_test_outcome| {
-            *current_test_outcome = Some(TestOutcome::Success);
-        })
+            *current_test_outcome = Some(Arc::new(TestOutcome::new()));
+        });
+
+        #[cfg(feature = "unstable_thread_spawn_hook")]
+        if !HAS_SET_SPAWN_HOOK.get() {
+            // Ensure that the spawn hook is only set once so that we don't accumulate spawn
+            // hooks for threads that run multiple tests.
+            HAS_SET_SPAWN_HOOK.set(true);
+            std::thread::add_spawn_hook(|_thread| {
+                let outcome: Option<Arc<TestOutcome>> =
+                    Self::with_current_test_outcome(|current_test_outcome| {
+                        current_test_outcome.clone()
+                    });
+                move || {
+                    Self::with_current_test_outcome(|mut current_test_outcome| {
+                        *current_test_outcome = outcome;
+                    });
+                }
+            })
+        }
     }
 
     /// Evaluates the current test's [`TestOutcome`], producing a suitable
@@ -62,23 +111,21 @@ impl TestOutcome {
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
     pub fn close_current_test_outcome<E: Display>(
-        inner_result: Result<(), E>,
+        test_return_value: Result<(), E>,
     ) -> Result<(), TestFailure> {
-        TestOutcome::with_current_test_outcome(|mut outcome| {
-            let outer_result = match &*outcome {
-                Some(TestOutcome::Success) => match inner_result {
-                    Ok(()) => Ok(()),
-                    Err(_) => Err(TestFailure),
-                },
-                Some(TestOutcome::Failure) => Err(TestFailure),
-                None => {
-                    panic!("No test context found. This indicates a bug in GoogleTest.")
-                }
+        TestOutcome::with_current_test_outcome(|mut outcome_arc| {
+            let Some(outcome) = outcome_arc.as_ref() else {
+                panic!("No test context found. This indicates a bug in GoogleTest.")
             };
-            if let Err(fatal_assertion_failure) = inner_result {
+            let outer_result = if outcome.is_success() && test_return_value.is_ok() {
+                Ok(())
+            } else {
+                Err(TestFailure)
+            };
+            if let Err(fatal_assertion_failure) = test_return_value {
                 println!("{fatal_assertion_failure}");
             }
-            *outcome = None;
+            *outcome_arc = None;
             outer_result
         })
     }
@@ -88,12 +135,14 @@ impl TestOutcome {
     #[track_caller]
     pub(crate) fn get_current_test_outcome() -> Result<(), TestAssertionFailure> {
         TestOutcome::with_current_test_outcome(|mut outcome| {
-            let outcome = outcome
+            let is_success = outcome
                 .as_mut()
-                .expect("No test context found. This indicates a bug in GoogleTest.");
-            match outcome {
-                TestOutcome::Success => Ok(()),
-                TestOutcome::Failure => Err(TestAssertionFailure::create("Test failed".into())),
+                .expect("No test context found. This indicates a bug in GoogleTest.")
+                .is_success();
+            if is_success {
+                Ok(())
+            } else {
+                Err(TestAssertionFailure::create("Test failed".into()))
             }
         })
     }
@@ -101,10 +150,10 @@ impl TestOutcome {
     /// Records that the currently running test has failed.
     fn fail_current_test() {
         TestOutcome::with_current_test_outcome(|mut outcome| {
-            let outcome = outcome
+            outcome
                 .as_mut()
-                .expect("No test context found. This indicates a bug in GoogleTest.");
-            *outcome = TestOutcome::Failure;
+                .expect("No test context found. This indicates a bug in GoogleTest.")
+                .fail();
         })
     }
 
@@ -112,7 +161,9 @@ impl TestOutcome {
     ///
     /// This is primarily intended for use by assertion macros like
     /// `expect_that!`.
-    fn with_current_test_outcome<T>(action: impl FnOnce(RefMut<Option<TestOutcome>>) -> T) -> T {
+    fn with_current_test_outcome<T>(
+        action: impl FnOnce(RefMut<Option<Arc<TestOutcome>>>) -> T,
+    ) -> T {
         CURRENT_TEST_OUTCOME.with(|current_test_outcome| action(current_test_outcome.borrow_mut()))
     }
 
