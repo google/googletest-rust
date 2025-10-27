@@ -156,6 +156,8 @@ impl std::fmt::Display for TestFailure {
 /// A report that a single test assertion failed.
 ///
 /// **For internal use only. API stablility is not guaranteed!**
+///
+/// See pub type Result in googletest/src/lib.rs for the public alias.
 #[doc(hidden)]
 #[derive(Clone)]
 pub struct TestAssertionFailure {
