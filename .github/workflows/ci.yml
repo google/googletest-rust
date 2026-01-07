@@ -37,7 +37,7 @@ jobs:
       - name: cargo clippy
         uses: actions-rs/clippy-check@b5b5f21f4797c02da247df37026fcd0a5024aa4d # v1.0.7
         with:
-          args: --all-targets --all-features
+          args: --all-targets --features all_stable_features
           token: ${{ secrets.GITHUB_TOKEN }}
 
   test-latest-deps:
@@ -55,14 +55,29 @@ jobs:
       - name: cargo update
         run: cargo update
       - name: cargo test --locked
-        run: cargo test --locked --all-features
+        run: cargo test --locked --features all_stable_features
 
   test:
     runs-on: ubuntu-latest
     name: test / ubuntu / ${{ matrix.toolchain }}
     strategy:
       matrix:
-        toolchain: [stable, nightly, beta]
+        toolchain: [stable, beta]
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Install ${{ matrix.toolchain }}
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - name: cargo test --locked
+        run: cargo test --locked --features all_stable_features
+
+  test-nightly:
+    runs-on: ubuntu-latest
+    name: test / ubuntu / ${{ matrix.toolchain }}
+    strategy:
+      matrix:
+        toolchain: nightly
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Install ${{ matrix.toolchain }}

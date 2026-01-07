@@ -41,3 +41,10 @@ rustversion = "1.0.22"
 [dev-dependencies]
 indoc = "2"
 quickcheck = "1.0.3"
+
+[features]
+# Enables use of the nightly-only `thread_spawn_hook` for capturing test
+# failures in spawned threads.
+unstable_thread_spawn_hook = []
+# A group like `--all-features`, but excluding nightly-only features.
+all_stable_features = ["anyhow", "proptest"]

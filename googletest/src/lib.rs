@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#![cfg_attr(feature = "unstable_thread_spawn_hook", feature(thread_spawn_hook))]
 #![doc = include_str!("../crate_docs.md")]
 
 extern crate googletest_macro;
