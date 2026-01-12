@@ -125,7 +125,7 @@ impl<F: StaticFixture + 'static> Fixture for &'static F {
         let any =
             map.entry(TypeId::of::<F>()).or_insert_with(|| Box::leak(Box::new(F::set_up_once())));
         match any.downcast_ref::<crate::Result<F>>() {
-            Some(Ok(ref fixture)) => Ok(fixture),
+            Some(Ok(fixture)) => Ok(fixture),
             Some(Err(e)) => Err(e.clone()),
             None => panic!("Downcast failed. This is a bug in GoogleTest Rust"),
         }
