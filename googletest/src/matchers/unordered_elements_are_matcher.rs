@@ -110,7 +110,7 @@ macro_rules! __unordered_elements_are {
     ($(,)?) => {{
         $crate::matchers::__internal_unstable_do_not_depend_on_these::
         UnorderedElementsAreMatcher::new(
-            [],
+            (),
             $crate::matchers::__internal_unstable_do_not_depend_on_these::
             Requirements::PerfectMatch)
     }};
@@ -118,11 +118,11 @@ macro_rules! __unordered_elements_are {
     ($($matcher:expr),* $(,)?) => {{
         $crate::matchers::__internal_unstable_do_not_depend_on_these::
         UnorderedElementsAreMatcher::new(
-            [$(Box::new(
+            ($(
                 $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!(
                     $matcher
                 )
-            )),*],
+            ,)*),
             $crate::matchers::__internal_unstable_do_not_depend_on_these::
             Requirements::PerfectMatch)
     }};
@@ -202,18 +202,18 @@ macro_rules! __contains_each {
     ($(,)?) => {{
         $crate::matchers::__internal_unstable_do_not_depend_on_these::
         UnorderedElementsAreMatcher::new(
-            [],
+            (),
             $crate::matchers::__internal_unstable_do_not_depend_on_these::Requirements::Superset)
     }};
 
     ($($matcher:expr),* $(,)?) => {{
         $crate::matchers::__internal_unstable_do_not_depend_on_these::
         UnorderedElementsAreMatcher::new(
-            [$(Box::new(
+            ($(
                 $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!(
                     $matcher
                 )
-            )),*],
+            ,)*),
             $crate::matchers::__internal_unstable_do_not_depend_on_these::Requirements::Superset)
     }}
 }
@@ -293,17 +293,17 @@ macro_rules! __is_contained_in {
     ($(,)?) => {{
         $crate::matchers::__internal_unstable_do_not_depend_on_these::
         UnorderedElementsAreMatcher::new(
-            [], $crate::matchers::__internal_unstable_do_not_depend_on_these::Requirements::Subset)
+            (), $crate::matchers::__internal_unstable_do_not_depend_on_these::Requirements::Subset)
     }};
 
     ($($matcher:expr),* $(,)?) => {{
         $crate::matchers::__internal_unstable_do_not_depend_on_these::
         UnorderedElementsAreMatcher::new(
-            [$(Box::new(
+            ($(
                 $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!(
                     $matcher
                 )
-            )),*],
+            ,)*),
             $crate::matchers::__internal_unstable_do_not_depend_on_these::Requirements::Subset)
     }}
 }
@@ -318,20 +318,109 @@ pub mod internal {
     use crate::matcher_support::match_matrix::internal::{MatchMatrix, Requirements};
     use std::fmt::Debug;
 
+    /// A trait for a tuple of matchers.
+    pub trait MatcherTuple<T: Debug + Copy> {
+        /// Turn the tuple into a vector of matchers.
+        fn to_matchers(&self) -> Vec<Box<dyn Matcher<T> + '_>>;
+    }
+
+    // Base case, no matchers.
+    impl<T: Debug + Copy> MatcherTuple<T> for () {
+        fn to_matchers(&self) -> Vec<Box<dyn Matcher<T> + '_>> {
+            vec![]
+        }
+    }
+
+    // A macro for generating a MatcherTuple implementation for a given number
+    // of matchers.
+    macro_rules! matcher_tuple_n {
+        // Given list of (field_number, matcher) pairs, generate a MatcherTuple
+        // implementation.
+        ($([$field_number:tt, $matcher_type:ident]),*) => {
+            impl<T: Debug + Copy, $($matcher_type: Matcher<T>),*> MatcherTuple<T>
+            for ($($matcher_type,)*) {
+                // Our implementation of to_matchers just converts our tuple into a vector of
+                // matchers by expanding self.0, self.1, etc.
+                fn to_matchers(&self) -> Vec<Box<dyn Matcher<T> + '_>> {
+                    vec![$(Box::new(&self.$field_number)),*]
+                }
+            }
+        };
+    }
+
+    matcher_tuple_n!([0, M0]);
+    matcher_tuple_n!([0, M0], [1, M1]);
+    matcher_tuple_n!([0, M0], [1, M1], [2, M2]);
+    matcher_tuple_n!([0, M0], [1, M1], [2, M2], [3, M3]);
+    matcher_tuple_n!([0, M0], [1, M1], [2, M2], [3, M3], [4, M4]);
+    matcher_tuple_n!([0, M0], [1, M1], [2, M2], [3, M3], [4, M4], [5, M5]);
+    matcher_tuple_n!([0, M0], [1, M1], [2, M2], [3, M3], [4, M4], [5, M5], [6, M6]);
+    matcher_tuple_n!([0, M0], [1, M1], [2, M2], [3, M3], [4, M4], [5, M5], [6, M6], [7, M7]);
+    matcher_tuple_n!(
+        [0, M0],
+        [1, M1],
+        [2, M2],
+        [3, M3],
+        [4, M4],
+        [5, M5],
+        [6, M6],
+        [7, M7],
+        [8, M8]
+    );
+    matcher_tuple_n!(
+        [0, M0],
+        [1, M1],
+        [2, M2],
+        [3, M3],
+        [4, M4],
+        [5, M5],
+        [6, M6],
+        [7, M7],
+        [8, M8],
+        [9, M9]
+    );
+    matcher_tuple_n!(
+        [0, M0],
+        [1, M1],
+        [2, M2],
+        [3, M3],
+        [4, M4],
+        [5, M5],
+        [6, M6],
+        [7, M7],
+        [8, M8],
+        [9, M9],
+        [10, M10]
+    );
+    matcher_tuple_n!(
+        [0, M0],
+        [1, M1],
+        [2, M2],
+        [3, M3],
+        [4, M4],
+        [5, M5],
+        [6, M6],
+        [7, M7],
+        [8, M8],
+        [9, M9],
+        [10, M10],
+        [11, M11]
+    );
+
     /// This struct is meant to be used only through the
     /// `unordered_elements_are![...]` macro.
     ///
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
     #[derive(MatcherBase)]
-    pub struct UnorderedElementsAreMatcher<'a, T: Debug + Copy, const N: usize> {
-        elements: [Box<dyn Matcher<T> + 'a>; N],
+    pub struct UnorderedElementsAreMatcher<M> {
+        matchers: M,
         requirements: Requirements,
     }
 
-    impl<'a, T: Debug + Copy, const N: usize> UnorderedElementsAreMatcher<'a, T, N> {
-        pub fn new(elements: [Box<dyn Matcher<T> + 'a>; N], requirements: Requirements) -> Self {
-            Self { elements, requirements }
+    impl<M> UnorderedElementsAreMatcher<M> {
+        pub fn new(matchers: M, requirements: Requirements) -> Self {
+            Self { matchers, requirements }
         }
     }
 
@@ -344,24 +433,27 @@ pub mod internal {
     // least one expected element and vice versa.
     // 3. `UnorderedElementsAreMatcher` verifies that a perfect matching exists
     // using Ford-Fulkerson.
-    impl<T: Debug + Copy, ContainerT: Debug + Copy, const N: usize> Matcher<ContainerT>
-        for UnorderedElementsAreMatcher<'_, T, N>
+    impl<T: Debug + Copy, ContainerT: Debug + Copy, M> Matcher<ContainerT>
+        for UnorderedElementsAreMatcher<M>
     where
         ContainerT: IntoIterator<Item = T>,
+        M: MatcherTuple<T>,
     {
         fn matches(&self, actual: ContainerT) -> MatcherResult {
-            let match_matrix = MatchMatrix::generate(actual, &self.elements);
+            let matchers = self.matchers.to_matchers();
+            let match_matrix = MatchMatrix::generate(actual, &matchers);
             match_matrix.is_match_for(self.requirements).into()
         }
 
         fn explain_match(&self, actual: ContainerT) -> Description {
+            let matchers = self.matchers.to_matchers();
             if let Some(size_mismatch_explanation) =
-                self.requirements.explain_size_mismatch(actual, N)
+                self.requirements.explain_size_mismatch(actual, matchers.len())
             {
                 return size_mismatch_explanation;
             }
 
-            let match_matrix = MatchMatrix::generate(actual, &self.elements);
+            let match_matrix = MatchMatrix::generate(actual, &matchers);
             if let Some(unmatchable_explanation) =
                 match_matrix.explain_unmatchable(self.requirements)
             {
@@ -370,15 +462,16 @@ pub mod internal {
 
             let best_match = match_matrix.find_best_match();
             best_match
-                .get_explanation(actual, &self.elements, self.requirements)
+                .get_explanation(actual, &matchers, self.requirements)
                 .unwrap_or("whose elements all match".into())
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> Description {
+            let matchers = self.matchers.to_matchers();
             format!(
                 "{} elements matching in any order:\n{}",
                 if matcher_result.into() { "contains" } else { "doesn't contain" },
-                self.elements
+                matchers
                     .iter()
                     .map(|matcher| matcher.describe(MatcherResult::Match))
                     .collect::<Description>()
@@ -393,10 +486,11 @@ pub mod internal {
 #[cfg(test)]
 mod tests {
     use crate as googletest;
+    use crate::description::Description;
     use crate::matcher::MatcherResult;
     use crate::prelude::*;
     use indoc::indoc;
-    use std::collections::HashMap;
+    use std::collections::{HashMap, HashSet};
 
     #[test]
     fn has_correct_description_for_map() -> googletest::Result<()> {
@@ -457,5 +551,59 @@ mod tests {
                 ))
             ]
         )
+    }
+
+    // This test verifies that unordered_elements_are can be used as the inner
+    // matcher of another matcher, where the inner matcher is given a reference
+    // to a local variable. If unordered_elements_are stores its matchers in a
+    // Vec with the same type and lifetimes then this fails to compile.
+    #[test]
+    fn works_with_inner_matcher_that_modifies_the_input() -> googletest::Result<()> {
+        // A custom matcher that applies an operation to the input hashmap (filtering
+        // out any keys present in `to_filter`) and then applies the inner
+        // matcher to the modified input.
+        fn matches_filtered<'a, M>(
+            to_filter: &'a HashSet<i32>,
+            inner: M,
+        ) -> impl Matcher<&'a HashSet<i32>>
+        where
+            M: for<'b> Matcher<&'b HashSet<i32>>,
+        {
+            #[derive(MatcherBase)]
+            struct FilteredMatcher<'a, M> {
+                to_filter: &'a HashSet<i32>,
+                inner: M,
+            }
+
+            impl<'a, M> Matcher<&'a HashSet<i32>> for FilteredMatcher<'a, M>
+            where
+                M: for<'b> Matcher<&'b HashSet<i32>>,
+            {
+                fn matches(&self, actual: &'a HashSet<i32>) -> MatcherResult {
+                    let filtered: HashSet<i32> =
+                        actual.iter().filter(|k| !self.to_filter.contains(k)).cloned().collect();
+                    self.inner.matches(&filtered)
+                }
+
+                fn describe(&self, matcher_result: MatcherResult) -> Description {
+                    self.inner.describe(matcher_result)
+                }
+
+                fn explain_match(&self, actual: &'a HashSet<i32>) -> Description {
+                    let filtered: HashSet<i32> =
+                        actual.iter().filter(|k| !self.to_filter.contains(k)).cloned().collect();
+                    self.inner.explain_match(&filtered)
+                }
+            }
+
+            FilteredMatcher { to_filter, inner }
+        }
+
+        let before: HashSet<i32> = HashSet::from([1]);
+        let after: HashSet<i32> = HashSet::from([1, 2]);
+
+        verify_that!(&after, matches_filtered(&before, unordered_elements_are![eq(&2)]))?;
+
+        Ok(())
     }
 }
