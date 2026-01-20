@@ -36,6 +36,9 @@ rustversion = "1.0.22"
 tempfile = "3.24.0"
 tokio = { version = "1.49", features = ["time", "macros", "rt"] }
 
+[features]
+unstable_thread_spawn_hook=["googletest/unstable_thread_spawn_hook"]
+
 [[bin]]
 name = "integration_tests"
 path = "src/integration_tests.rs"
@@ -130,6 +133,12 @@ test = false
 name = "add_failure_macro_causes_failure_but_continues_execution"
 path = "src/add_failure_macro_causes_failure_but_continues_execution.rs"
 test = false
+
+[[bin]]
+name = "add_failure_in_new_thread_fails_test"
+path = "src/add_failure_in_new_thread_fails_test.rs"
+test=false
+required-features=["unstable_thread_spawn_hook"]
 
 [[bin]]
 name = "add_failure_macro_allows_empty_message"

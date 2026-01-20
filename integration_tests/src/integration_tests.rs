@@ -645,6 +645,15 @@ mod tests {
         verify_that!(output, contains_regex("Success message with argument: An argument"))
     }
 
+    #[cfg(feature = "unstable_thread_spawn_hook")]
+    #[gtest]
+    fn add_failure_in_new_thread_fails_test() -> Result<()> {
+        let output =
+            run_external_process_in_tests_directory("add_failure_in_new_thread_fails_test")?;
+        expect_that!(output, contains_regex("test should_fail ... FAILED"));
+        Ok(())
+    }
+
     #[gtest]
     fn add_failure_macro_causes_failure_but_continues_execution() -> Result<()> {
         let output = run_external_process_in_tests_directory(
