@@ -26,7 +26,7 @@ authors = [
 ]
 
 [dependencies]
-quote = "1.0.43"
+quote = "1.0.44"
 syn = {version = "2.0.114", features = ["full", "extra-traits"]}
 proc-macro2 = "1.0.103"
 
