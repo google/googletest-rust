@@ -14,6 +14,7 @@
 
 use std::cell::{RefCell, RefMut};
 use std::fmt::{Debug, Display, Error, Formatter};
+use std::sync::OnceLock;
 use std::thread_local;
 
 /// The outcome hitherto of running a test.
@@ -164,7 +165,7 @@ pub struct TestAssertionFailure {
     /// A human-readable formatted string describing the error.
     pub description: String,
     pub custom_message: Option<String>,
-    location: Location,
+    pub location: Location,
 }
 
 /// A code location.
@@ -175,9 +176,27 @@ pub struct TestAssertionFailure {
 /// **For internal use only. API stablility is not guaranteed!**
 #[doc(hidden)]
 #[derive(Clone)]
-enum Location {
+pub enum Location {
     Real(&'static std::panic::Location<'static>),
     Fake { file: &'static str, line: u32, column: u32 },
+}
+
+impl Location {
+    /// Returns the file name of the location.
+    pub fn file(&self) -> &'static str {
+        match self {
+            Location::Real(l) => l.file(),
+            Location::Fake { file, .. } => file,
+        }
+    }
+
+    /// Returns the line number of the location.
+    pub fn line(&self) -> u32 {
+        match self {
+            Location::Real(l) => l.line(),
+            Location::Fake { line, .. } => *line,
+        }
+    }
 }
 
 impl Display for Location {
@@ -188,6 +207,10 @@ impl Display for Location {
         }
     }
 }
+
+/// A hook to capture non fatal test failures. This is a global static, and it
+/// is initialized exactly once.
+pub static FAILURE_REPORTER_HOOK: OnceLock<fn(&TestAssertionFailure)> = OnceLock::new();
 
 impl TestAssertionFailure {
     /// Creates a new instance with the given `description`.
@@ -212,6 +235,9 @@ impl TestAssertionFailure {
 
     pub(crate) fn log(&self) {
         TestOutcome::fail_current_test();
+        if let Some(capture_fn) = FAILURE_REPORTER_HOOK.get() {
+            capture_fn(self);
+        }
         println!("{self}");
     }
 }
