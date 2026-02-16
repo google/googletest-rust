@@ -14,6 +14,7 @@
 
 use std::cell::{RefCell, RefMut};
 use std::fmt::{Debug, Display, Error, Formatter};
+use std::sync::OnceLock;
 use std::thread_local;
 
 /// The outcome hitherto of running a test.
@@ -189,6 +190,20 @@ impl Display for Location {
     }
 }
 
+/// A hook to capture non fatal test failures. This is a global static, and it
+/// is initialized exactly once.
+#[doc(hidden)]
+static FAILURE_REPORTER_HOOK: OnceLock<fn(&TestAssertionFailure)> = OnceLock::new();
+
+/// Initializes the failure reporter hook.
+///
+/// This is a global static, and it is initialized at most once.
+/// If the hook is already set, this will panic.
+#[doc(hidden)]
+pub fn set_failure_reporter_hook_if_not_set(capture_fn: fn(&TestAssertionFailure)) {
+    FAILURE_REPORTER_HOOK.set(capture_fn).expect("Failed to set failure reporter hook");
+}
+
 impl TestAssertionFailure {
     /// Creates a new instance with the given `description`.
     ///
@@ -212,7 +227,26 @@ impl TestAssertionFailure {
 
     pub(crate) fn log(&self) {
         TestOutcome::fail_current_test();
+        if let Some(capture_fn) = FAILURE_REPORTER_HOOK.get() {
+            capture_fn(self);
+        }
         println!("{self}");
+    }
+
+    /// Returns the file name of the location.
+    pub fn file(&self) -> &'static str {
+        match self.location {
+            Location::Real(l) => l.file(),
+            Location::Fake { file, .. } => file,
+        }
+    }
+
+    /// Returns the line number of the location.
+    pub fn line(&self) -> u32 {
+        match self.location {
+            Location::Real(l) => l.line(),
+            Location::Fake { line, .. } => line,
+        }
     }
 }
 
