@@ -197,11 +197,12 @@ static FAILURE_REPORTER_HOOK: OnceLock<fn(&TestAssertionFailure)> = OnceLock::ne
 
 /// Initializes the failure reporter hook.
 ///
-/// This is a global static, and it is initialized at most once.
-/// If the hook is already set, this will panic.
+/// This is a global static, and it is initialized at most once and returns true
+/// if the initialization was successful.
+/// If the hook is already set, this will do nothing and return false.
 #[doc(hidden)]
-pub fn set_failure_reporter_hook_if_not_set(capture_fn: fn(&TestAssertionFailure)) {
-    FAILURE_REPORTER_HOOK.set(capture_fn).expect("Failed to set failure reporter hook");
+pub fn set_failure_reporter_hook_if_not_set(capture_fn: fn(&TestAssertionFailure)) -> bool {
+    FAILURE_REPORTER_HOOK.set(capture_fn).is_ok()
 }
 
 impl TestAssertionFailure {
