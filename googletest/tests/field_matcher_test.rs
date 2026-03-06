@@ -88,7 +88,8 @@ fn shows_correct_failure_message_for_wrong_struct_entry() -> Result<()> {
     }
     let value = AStruct { a: vec![1] };
 
-    let result = verify_that!(value, field!(&AStruct.a, ref container_eq([])));
+    let arr: [u32; 0] = [];
+    let result = verify_that!(value, field!(&AStruct.a, ref container_eq(arr)));
 
     verify_that!(
         result,
