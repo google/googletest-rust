@@ -40,6 +40,10 @@ impl<T: Debug + Display + Copy, InnerMatcher: for<'a> Matcher<&'a str>> Matcher<
         self.inner.matches(&format!("{actual}"))
     }
 
+    fn print_actual(&self, actual: T) -> String {
+        crate::matcher::format_actual(actual)
+    }
+
     fn explain_match(&self, actual: T) -> Description {
         format!(
             "which displays as {:?} {}",

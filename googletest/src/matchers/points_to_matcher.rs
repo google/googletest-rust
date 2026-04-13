@@ -14,7 +14,6 @@
 
 use crate::description::Description;
 use crate::matcher::{Matcher, MatcherBase, MatcherResult};
-use std::fmt::Debug;
 
 /// Matches a reference pointing to a value matched by the [`Matcher`]
 /// `expected`.
@@ -42,13 +41,15 @@ pub struct PointsToMatcher<MatcherT> {
     expected: MatcherT,
 }
 
-impl<'a, ExpectedT, MatcherT> Matcher<&'a ExpectedT> for PointsToMatcher<MatcherT>
-where
-    ExpectedT: Debug + Copy,
-    MatcherT: Matcher<ExpectedT>,
+impl<'a, ExpectedT: Copy, MatcherT: Matcher<ExpectedT>> Matcher<&'a ExpectedT>
+    for PointsToMatcher<MatcherT>
 {
     fn matches(&self, actual: &'a ExpectedT) -> MatcherResult {
         self.expected.matches(*actual)
+    }
+
+    fn print_actual(&self, actual: &'a ExpectedT) -> String {
+        self.expected.print_actual(*actual)
     }
 
     fn explain_match(&self, actual: &'a ExpectedT) -> Description {

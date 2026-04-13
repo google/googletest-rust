@@ -51,6 +51,10 @@ impl Matcher<bool> for BoolMatcher {
         self.matches(actual)
     }
 
+    fn print_actual(&self, actual: bool) -> String {
+        crate::matcher::format_actual(actual)
+    }
+
     fn describe(&self, matcher_result: MatcherResult) -> Description {
         self.describe(matcher_result)
     }
@@ -60,6 +64,11 @@ impl<'a> Matcher<&'a bool> for BoolMatcher {
     fn matches(&self, actual: &'a bool) -> MatcherResult {
         self.matches(*actual)
     }
+
+    fn print_actual(&self, actual: &'a bool) -> String {
+        crate::matcher::format_actual(actual)
+    }
+
     fn describe(&self, matcher_result: MatcherResult) -> Description {
         self.describe(matcher_result)
     }
@@ -96,5 +105,11 @@ mod tests {
         assert_eq!(is_true().describe(MatcherResult::NoMatch).to_string(), "is false");
         assert_eq!(is_false().describe(MatcherResult::Match).to_string(), "is false");
         assert_eq!(is_false().describe(MatcherResult::NoMatch).to_string(), "is true");
+    }
+
+    #[test]
+    fn print_actual() {
+        assert_eq!(is_true().print_actual(true), "true");
+        assert_eq!(is_true().print_actual(false), "false");
     }
 }

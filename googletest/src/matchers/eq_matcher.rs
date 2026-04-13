@@ -88,6 +88,10 @@ impl<T: Debug, A: Debug + Copy + PartialEq<T>> Matcher<A> for EqMatcher<T> {
         (actual == self.expected).into()
     }
 
+    fn print_actual(&self, actual: A) -> String {
+        crate::matcher::format_actual(actual)
+    }
+
     fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => format!("is equal to {:?}", self.expected).into(),

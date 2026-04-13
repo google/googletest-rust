@@ -19,7 +19,6 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherBase, MatcherResult},
 };
-use std::fmt::Debug;
 
 /// Matcher created by [`Matcher::or`] and [`any!`].
 ///
@@ -47,12 +46,16 @@ impl<M1, M2> DisjunctionMatcher<M1, M2> {
     }
 }
 
-impl<T: Debug + Copy, M1: Matcher<T>, M2: Matcher<T>> Matcher<T> for DisjunctionMatcher<M1, M2> {
+impl<T: Copy, M1: Matcher<T>, M2: Matcher<T>> Matcher<T> for DisjunctionMatcher<M1, M2> {
     fn matches(&self, actual: T) -> MatcherResult {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::NoMatch, MatcherResult::NoMatch) => MatcherResult::NoMatch,
             _ => MatcherResult::Match,
         }
+    }
+
+    fn print_actual(&self, actual: T) -> String {
+        self.m1.print_actual(actual)
     }
 
     fn explain_match(&self, actual: T) -> Description {
@@ -127,7 +130,7 @@ mod tests {
                 Expected: has at least one of the following properties:
                   * never matches
                   * never matches
-                Actual: 1,
+                Actual: [anything],
                   * which is anything
                   * which is anything
                 "

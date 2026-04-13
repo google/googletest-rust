@@ -1673,7 +1673,7 @@ pub mod internal {
     /// # }
     /// ```
     /// See [Method Lookup](https://rustc-dev-guide.rust-lang.org/method-lookup.html)
-    pub trait Subject: Copy + Debug {
+    pub trait Subject: Copy {
         /// Checks whether the matcher `expected` matches the `Subject `self`,
         /// adding a test failure report if it does not match.
         ///
@@ -1697,7 +1697,7 @@ pub mod internal {
         }
     }
 
-    impl<T: Copy + Debug> Subject for T {}
+    impl<T: Copy> Subject for T {}
 
     /// Creates a failure at specified location.
     ///

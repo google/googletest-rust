@@ -80,6 +80,10 @@ where
         (actual == &self.expected).into()
     }
 
+    fn print_actual(&self, actual: ActualContainerT) -> String {
+        crate::matcher::format_actual(actual)
+    }
+
     fn explain_match(&self, actual: ActualContainerT) -> Description {
         build_explanation(self.get_missing_items(actual), self.get_unexpected_items(actual)).into()
     }
@@ -189,6 +193,10 @@ where
         (match_matrix.is_match_for(Requirements::Subset)
             && match_matrix.is_match_for(Requirements::Superset))
         .into()
+    }
+
+    fn print_actual(&self, actual: ActualContainerT) -> String {
+        crate::matcher::format_actual(actual)
     }
 
     fn explain_match(&self, actual: ActualContainerT) -> Description {

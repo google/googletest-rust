@@ -70,6 +70,10 @@ impl<T: Debug + Copy + AsRef<str>, E: Matcher<usize>> Matcher<T> for CharLenMatc
         self.expected.matches(actual.as_ref().chars().count())
     }
 
+    fn print_actual(&self, actual: T) -> String {
+        crate::matcher::format_actual(actual)
+    }
+
     fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => format!(

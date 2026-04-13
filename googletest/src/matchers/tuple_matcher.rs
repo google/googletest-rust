@@ -25,7 +25,6 @@ pub mod internal {
         description::Description,
         matcher::{Matcher, MatcherBase, MatcherResult},
     };
-    use std::fmt::Debug;
 
     impl MatcherBase for () {}
 
@@ -34,6 +33,10 @@ pub mod internal {
     impl Matcher<()> for () {
         fn matches(&self, _: ()) -> MatcherResult {
             MatcherResult::Match
+        }
+
+        fn print_actual(&self, _: ()) -> String {
+            "()".to_string()
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -49,6 +52,10 @@ pub mod internal {
             MatcherResult::Match
         }
 
+        fn print_actual(&self, _: &()) -> String {
+            <Self as Matcher<()>>::print_actual(self, ())
+        }
+
         fn describe(&self, matcher_result: MatcherResult) -> Description {
             <Self as Matcher<()>>::describe(self, matcher_result)
         }
@@ -62,7 +69,7 @@ pub mod internal {
         ($([$field_number:tt, $matcher_type:ident, $field_type:ident]),*) => {
             impl<$($matcher_type: MatcherBase),*> MatcherBase for ($($matcher_type,)*){}
 
-            impl<$($field_type: Debug + Copy, $matcher_type: Matcher<$field_type>),*>
+            impl<$($field_type: Copy, $matcher_type: Matcher<$field_type>),*>
                 Matcher<($($field_type,)*)> for ($($matcher_type,)*)
             {
                 fn matches(&self, actual:  ($($field_type,)*)) -> MatcherResult {
@@ -75,6 +82,12 @@ pub mod internal {
                     MatcherResult::Match
                 }
 
+                fn print_actual(&self, actual: ($($field_type,)*)) -> String {
+                    let mut elements = Vec::new();
+                    $(elements.push(self.$field_number.print_actual(actual.$field_number));)*
+                    format!("({})", elements.join(", "))
+                }
+
                 fn explain_match(&self, actual:  ($($field_type,)*)) -> Description  {
                     let mut explanation = Description::new().text("which").nested(
                         self.describe(self.matches(actual)));
@@ -82,8 +95,8 @@ pub mod internal {
                         MatcherResult::Match => {},
                         MatcherResult::NoMatch => {
                             explanation = explanation
-                                .text(format!(concat!("Element #", $field_number, " is {:?},"),
-                                    actual.$field_number))
+                                .text(format!(concat!("Element #", $field_number, " is {},"),
+                                    self.$field_number.print_actual(actual.$field_number)))
                                 .nested(self.$field_number.explain_match(actual.$field_number));
                         }
                     })*
@@ -109,7 +122,7 @@ pub mod internal {
                     }
                 }
             }
-            impl<'a, $($field_type: Debug, $matcher_type: Matcher<&'a $field_type>),*>
+            impl<'a, $($field_type, $matcher_type: Matcher<&'a $field_type>),*>
                 Matcher<&'a ($($field_type,)*)> for ($($matcher_type,)*)
             {
                 fn matches(&self, actual:  &'a ($($field_type,)*)) -> MatcherResult {
@@ -120,6 +133,12 @@ pub mod internal {
                         }
                     })*
                     MatcherResult::Match
+                }
+
+                fn print_actual(&self, actual: &'a ($($field_type,)*)) -> String {
+                    let mut elements = Vec::new();
+                    $(elements.push(self.$field_number.print_actual(&actual.$field_number));)*
+                    format!("({})", elements.join(", "))
                 }
 
                 fn explain_match(&self, actual:  &'a ($($field_type,)*)) -> Description  {
@@ -136,8 +155,8 @@ pub mod internal {
                                     concat!(
                                         "Element #",
                                         $field_number,
-                                        " is {:?},"),
-                                        actual.$field_number))
+                                        " is {},"),
+                                        self.$field_number.print_actual(&actual.$field_number)))
                                 .nested(self.$field_number.explain_match(&actual.$field_number));
                         }
                     })*

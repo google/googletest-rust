@@ -42,11 +42,15 @@ pub struct DerefsTo<InnerT> {
 impl<'a, ActualT, ExpectedT, Inner> Matcher<&'a ActualT> for DerefsTo<Inner>
 where
     ActualT: Deref<Target = ExpectedT> + Debug,
-    ExpectedT: Copy + Debug + 'a,
+    ExpectedT: Copy + 'a,
     Inner: Matcher<&'a ExpectedT>,
 {
     fn matches(&self, actual: &'a ActualT) -> MatcherResult {
         self.inner.matches(actual.deref())
+    }
+
+    fn print_actual(&self, actual: &'a ActualT) -> String {
+        crate::matcher::format_actual(actual)
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {

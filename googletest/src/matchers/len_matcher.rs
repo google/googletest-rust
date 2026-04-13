@@ -65,6 +65,10 @@ where
         self.expected.matches(count_elements(actual))
     }
 
+    fn print_actual(&self, actual: T) -> String {
+        crate::matcher::format_actual(actual)
+    }
+
     fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => {

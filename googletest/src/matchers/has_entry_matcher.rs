@@ -78,12 +78,16 @@ impl<'a, KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<&'a ValueT>>
         }
     }
 
+    fn print_actual(&self, actual: &'a HashMap<KeyT, ValueT>) -> String {
+        crate::matcher::format_actual(actual)
+    }
+
     fn explain_match(&self, actual: &'a HashMap<KeyT, ValueT>) -> Description {
         if let Some(value) = actual.get(&self.key) {
             format!(
-                "which contains key {:?}, but is mapped to value {:#?}, {}",
+                "which contains key {:?}, but is mapped to value {}, {}",
                 self.key,
-                value,
+                self.inner.print_actual(value),
                 self.inner.explain_match(value)
             )
             .into()

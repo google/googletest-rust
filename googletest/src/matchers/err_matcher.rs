@@ -47,11 +47,18 @@ pub struct ErrMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
 }
 
-impl<T: Debug + Copy, E: Debug + Copy, InnerMatcherT: Matcher<E>> Matcher<std::result::Result<T, E>>
+impl<T: Debug + Copy, E: Copy, InnerMatcherT: Matcher<E>> Matcher<std::result::Result<T, E>>
     for ErrMatcher<InnerMatcherT>
 {
     fn matches(&self, actual: std::result::Result<T, E>) -> MatcherResult {
         actual.err().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
+    }
+
+    fn print_actual(&self, actual: std::result::Result<T, E>) -> String {
+        match actual {
+            Ok(v) => format!("Ok({v:?})"),
+            Err(e) => format!("Err({})", self.inner.print_actual(e)),
+        }
     }
 
     fn explain_match(&self, actual: std::result::Result<T, E>) -> Description {
@@ -77,11 +84,18 @@ impl<T: Debug + Copy, E: Debug + Copy, InnerMatcherT: Matcher<E>> Matcher<std::r
     }
 }
 
-impl<'a, T: Debug, E: Debug, InnerMatcherT: Matcher<&'a E>> Matcher<&'a std::result::Result<T, E>>
+impl<'a, T: Debug, E, InnerMatcherT: Matcher<&'a E>> Matcher<&'a std::result::Result<T, E>>
     for ErrMatcher<InnerMatcherT>
 {
     fn matches(&self, actual: &'a std::result::Result<T, E>) -> MatcherResult {
         actual.as_ref().err().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
+    }
+
+    fn print_actual(&self, actual: &'a std::result::Result<T, E>) -> String {
+        match actual {
+            Ok(v) => format!("Ok({v:?})"),
+            Err(e) => format!("Err({})", self.inner.print_actual(e)),
+        }
     }
 
     fn explain_match(&self, actual: &'a std::result::Result<T, E>) -> Description {

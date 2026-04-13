@@ -16,7 +16,6 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherBase, MatcherResult},
 };
-use std::fmt::Debug;
 
 /// Matches anything. This matcher always succeeds.
 ///
@@ -39,9 +38,13 @@ pub fn anything() -> Anything {
 #[derive(MatcherBase)]
 pub struct Anything;
 
-impl<T: Debug + Copy> Matcher<T> for Anything {
+impl<T: Copy> Matcher<T> for Anything {
     fn matches(&self, _: T) -> MatcherResult {
         MatcherResult::Match
+    }
+
+    fn print_actual(&self, _: T) -> String {
+        "[anything]".to_string()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
