@@ -1709,11 +1709,120 @@ pub mod internal {
     }
 }
 
+/// Asserts that `expr` causes the process to exit, with the exit status matching
+/// `code_matcher` and captured stderr output matching `output_matcher`.
+///
+/// Evaluates to `Result::Ok(())` if satisfied and `Result::Err` otherwise.
+///
+/// Note that this macro captures ONLY the `stderr` of the subprocess for matching
+/// against `output_matcher`, matching GoogleTest's C++ behavior.
+///
+/// Example:
+/// ```
+/// # use googletest::prelude::*;
+/// # fn should_pass() -> Result<()> {
+/// # /* Must be run inside a #[gtest] context
+/// verify_exit!(std::process::exit(1), exited_with_code(1), contains_substring(""))?;
+/// # */
+/// # Ok(())
+/// # }
+/// ```
+#[macro_export]
+macro_rules! verify_exit {
+    ($expr:expr, $code_matcher:expr, $output_matcher:expr $(,)?) => {{
+        use $crate::internal::death_tests;
+        match death_tests::should_run_death_test_expr() {
+            death_tests::DeathTestRole::Execute => {
+                let _sentinel = death_tests::DeathTestSentinel;
+                #[allow(unreachable_code)]
+                #[allow(clippy::diverging_sub_expression)]
+                {
+                    let _ = { $expr };
+                    // Drop guard handles notifying parent that process did not die.
+                    // It runs at end of scope unless explicit exit happens.
+                    $crate::Result::Ok(())
+                }
+            }
+            death_tests::DeathTestRole::Oversee => {
+                death_tests::oversee_death_test(stringify!($expr), &$code_matcher, &$output_matcher)
+            }
+            death_tests::DeathTestRole::Skip => $crate::Result::Ok(()),
+        }
+    }};
+}
+pub use verify_exit;
+
+/// Like [`verify_exit!`], but logs the failure and continues execution.
+///
+/// Example:
+/// ```
+/// # use googletest::prelude::*;
+/// # /* Must be run inside a #[gtest] context
+/// #[gtest]
+/// fn test() {
+///     expect_exit!(std::process::exit(1), exited_with_code(1), contains_substring(""));
+/// }
+/// # */
+/// ```
+#[macro_export]
+macro_rules! expect_exit {
+    ($expr:expr, $code_matcher:expr, $output_matcher:expr $(,)?) => {
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_exit!(
+            $expr,
+            $code_matcher,
+            $output_matcher
+        ))
+    };
+}
+pub use expect_exit;
+
+/// Asserts that `expr` causes the process to die (exit unsuccessfully), with
+/// captured stderr output matching `output_matcher`.
+///
+/// Evaluates to `Result::Ok(())` if satisfied and `Result::Err` otherwise.
+///
+/// Example:
+/// ```
+/// # use googletest::prelude::*;
+/// # fn should_pass() -> Result<()> {
+/// # /* Must be run inside a #[gtest] context
+/// verify_death!(std::process::exit(1), contains_substring(""))?;
+/// # */
+/// # Ok(())
+/// # }
+/// ```
+#[macro_export]
+macro_rules! verify_death {
+    ($expr:expr, $output_matcher:expr $(,)?) => {
+        $crate::verify_exit!($expr, $crate::matchers::died(), $output_matcher)
+    };
+}
+pub use verify_death;
+
+/// Like [`verify_death!`], but logs the failure and continues execution.
+///
+/// Example:
+/// ```
+/// # use googletest::prelude::*;
+/// # /* Must be run inside a #[gtest] context
+/// #[gtest]
+/// fn test() {
+///     expect_death!(std::process::exit(1), contains_substring(""));
+/// }
+/// # */
+/// ```
+#[macro_export]
+macro_rules! expect_death {
+    ($expr:expr, $output_matcher:expr $(,)?) => {
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_death!($expr, $output_matcher))
+    };
+}
+pub use expect_death;
+
 #[cfg(test)]
 mod tests {
     use crate::{
         self as googletest,
-        assertions::{verify_eq, verify_that},
         matchers::{anything, err},
         test, Result as TestResult,
     };

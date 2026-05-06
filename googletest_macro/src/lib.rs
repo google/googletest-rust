@@ -172,6 +172,7 @@ pub fn gtest(
             } else if googletest::internal::test_sharding::test_should_run(#test_case_hash) {
                 use googletest::internal::test_outcome::TestOutcome;
                 TestOutcome::init_current_test_outcome();
+                googletest::internal::death_tests::set_current_test_name(concat!(module_path!(), "::", stringify!(#sig_ident)));
                 TestOutcome::close_current_test_outcome(#invocation)
             } else {
                 #skipped_test_result
