@@ -119,6 +119,10 @@ impl TestOutcome {
 
     /// Ensure that there is a test context present and panic if there is not.
     pub(crate) fn ensure_test_context_present() {
+        if FAILURE_REPORTER_HOOK.get().is_some() {
+            // Bypassed because an external runner hook is registered.
+            return;
+        }
         TestOutcome::with_current_test_outcome(|outcome| {
             outcome.as_ref().expect(
                 "
@@ -227,11 +231,12 @@ impl TestAssertionFailure {
     }
 
     pub(crate) fn log(&self) {
-        TestOutcome::fail_current_test();
+        println!("{self}");
         if let Some(capture_fn) = FAILURE_REPORTER_HOOK.get() {
             capture_fn(self);
+            return;
         }
-        println!("{self}");
+        TestOutcome::fail_current_test();
     }
 
     /// Returns the file name of the location.
