@@ -14,6 +14,7 @@
 
 #![doc(hidden)]
 
+pub mod death_tests;
 pub(crate) mod description_renderer;
 pub mod glob;
 pub mod test_data;

@@ -57,11 +57,11 @@ pub mod prelude {
     pub use super::Result;
     // Assert macros
     pub use super::{
-        add_failure, add_failure_at, assert_pred, assert_that, expect_eq, expect_false,
-        expect_float_eq, expect_ge, expect_gt, expect_le, expect_lt, expect_ne, expect_near,
-        expect_pred, expect_that, expect_true, fail, succeed, verify_eq, verify_false,
-        verify_float_eq, verify_ge, verify_gt, verify_le, verify_lt, verify_ne, verify_near,
-        verify_pred, verify_that, verify_true,
+        add_failure, add_failure_at, assert_pred, assert_that, expect_death, expect_eq,
+        expect_exit, expect_false, expect_float_eq, expect_ge, expect_gt, expect_le, expect_lt,
+        expect_ne, expect_near, expect_pred, expect_that, expect_true, fail, succeed, verify_death,
+        verify_eq, verify_exit, verify_false, verify_float_eq, verify_ge, verify_gt, verify_le,
+        verify_lt, verify_ne, verify_near, verify_pred, verify_that, verify_true,
     };
 }
 
