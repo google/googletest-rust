@@ -44,6 +44,33 @@ impl TestOutcome {
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
     pub fn init_current_test_outcome() {
+        static INSTALL_HOOK: OnceLock<()> = OnceLock::new();
+        INSTALL_HOOK.get_or_init(|| {
+            let prev_hook = std::panic::take_hook();
+            std::panic::set_hook(Box::new(move |info| {
+                let traces = crate::internal::scoped_trace::get_scoped_traces();
+                if !traces.is_empty() {
+                    #[cfg(test)]
+                    {
+                        use crate::internal::scoped_trace::test_helpers::*;
+                        let use_capture = USE_CAPTURE_HOOK.with(|v| v.get());
+                        if use_capture {
+                            let _ = CAPTURED_TRACES_IN_HOOK
+                                .with(|v| v.try_borrow_mut().map(|mut b| *b = traces.clone()));
+                            prev_hook(info);
+                            return;
+                        }
+                    }
+
+                    eprintln!("Google Test trace:");
+                    for trace in traces.iter().rev() {
+                        eprintln!("  {}:{}: {}", trace.file, trace.line, trace.message);
+                    }
+                }
+                prev_hook(info);
+            }));
+        });
+
         Self::with_current_test_outcome(|mut current_test_outcome| {
             *current_test_outcome = Some(TestOutcome::Success);
         })
@@ -169,6 +196,7 @@ pub struct TestAssertionFailure {
     /// A human-readable formatted string describing the error.
     pub description: String,
     pub custom_message: Option<String>,
+    pub traces: Vec<crate::internal::scoped_trace::TraceInfo>,
     location: Location,
 }
 
@@ -218,6 +246,7 @@ impl TestAssertionFailure {
         Self {
             description,
             custom_message: None,
+            traces: crate::internal::scoped_trace::get_scoped_traces(),
             location: Location::Real(std::panic::Location::caller()),
         }
     }
@@ -261,6 +290,12 @@ impl Display for TestAssertionFailure {
         writeln!(f, "{}", self.description)?;
         if let Some(custom_message) = &self.custom_message {
             writeln!(f, "{custom_message}")?;
+        }
+        if !self.traces.is_empty() {
+            writeln!(f, "Google Test trace:")?;
+            for trace in self.traces.iter().rev() {
+                writeln!(f, "  {}:{}: {}", trace.file, trace.line, trace.message)?;
+            }
         }
         writeln!(f, "  at {}", self.location)
     }

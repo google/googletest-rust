@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#![doc(hidden)]
+use googletest::internal::test_outcome::TestOutcome;
+use googletest::prelude::*;
 
-pub(crate) mod description_renderer;
-pub mod glob;
-pub mod scoped_trace;
-pub mod test_data;
-pub mod test_filter;
-pub mod test_outcome;
-pub mod test_sharding;
+fn main() {
+    // Initialize the panic hook to capture and print scoped traces on panic.
+    TestOutcome::init_current_test_outcome();
+
+    scoped_trace!("Outer trace");
+    {
+        scoped_trace!("Inner trace");
+        panic!("Intentional panic");
+    }
+}

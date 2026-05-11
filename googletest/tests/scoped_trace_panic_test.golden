@@ -1,0 +1,3 @@
+Google Test trace:
+  scoped_trace_panic_test.rs:24: Inner trace
+  scoped_trace_panic_test.rs:22: Outer trace

@@ -51,6 +51,7 @@ pub mod prelude {
     pub use super::gtest;
     pub use super::matcher::{Matcher, MatcherBase};
     pub use super::matchers::*;
+    pub use super::scoped_trace;
     pub use super::verify_current_test_outcome;
     pub use super::GoogleTestSupport;
     pub use super::OrFail;
@@ -62,6 +63,18 @@ pub mod prelude {
         expect_ne, expect_near, expect_pred, expect_that, expect_true, fail, succeed, verify_eq,
         verify_false, verify_float_eq, verify_ge, verify_gt, verify_le, verify_lt, verify_ne,
         verify_near, verify_pred, verify_that, verify_true,
+    };
+}
+
+/// Causes a trace to be included in every test failure message generated
+/// by code in the current scope.
+#[macro_export]
+macro_rules! scoped_trace {
+    ($($arg:tt)*) => {
+        #[allow(clippy::shadow_same, clippy::shadow_unrelated)]
+        let _gtest_trace_guard = $crate::internal::scoped_trace::ScopedTraceGuard::new(
+            format!($($arg)*),
+        );
     };
 }
 
