@@ -128,7 +128,6 @@ pub fn gtest(
     };
     let is_async = sig.asyncness.is_some();
     let maybe_async = is_async.then(|| quote! { async });
-    let maybe_await = is_async.then(|| quote! { .await });
     let invocation = if is_rstest_enabled {
         // Rstest may refer in block to its fixtures. Hence, we only wrap it in a
         // closure to capture them.
@@ -136,10 +135,14 @@ pub fn gtest(
         let mut invocation = quote! {
             (#maybe_async move || -> #result_type {
                 #block
-            })() #maybe_await
+            })()
         };
         if output_type.is_none() {
-            invocation = quote! { { let () = #invocation; googletest::Result::<()>::Ok(()) } };
+            if is_async {
+                invocation = quote! { async move { let () = #invocation.await; googletest::Result::<()>::Ok(()) } };
+            } else {
+                invocation = quote! { { let () = #invocation; googletest::Result::<()>::Ok(()) } };
+            }
         }
         invocation
     } else {
@@ -155,8 +158,18 @@ pub fn gtest(
             (#maybe_async move || -> #result_type {
                 #sig { #block }
                 #closure_body
-            })() #maybe_await
+            })()
         }
+    };
+
+    let invocation = if is_async {
+        quote! {
+            ::googletest::internal::scoped_trace::InstrumentedFuture::new(
+                #invocation
+            ).await
+        }
+    } else {
+        quote! { #invocation }
     };
     if !attrs.iter().any(is_test_attribute) && !is_rstest_enabled {
         let test_attr: Attribute = parse_quote! {
@@ -373,7 +386,7 @@ pub fn __googletest_macro_verify_pred(input: proc_macro::TokenStream) -> proc_ma
 /// Stringifies its argument (like `stringify!()` from the standard library) but
 /// limits the output to a provided maximum length.
 ///
-/// The input is a tuple of `target` and `max_length` seprated by a comma.
+/// The input is a tuple of `target` and `max_length` separated by a comma.
 /// The `max_length` is the maximum number of characters to include in the
 /// abbreviated string. For example:
 ///
