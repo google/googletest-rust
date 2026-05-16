@@ -396,12 +396,16 @@ pub mod internal {
         matcher: M,
     }
 
-    impl<'a, T: Debug, M> Matcher<&'a T> for CompileAssertAndMatch<T, M>
+    impl<'a, T, M> Matcher<&'a T> for CompileAssertAndMatch<T, M>
     where
         M: Matcher<&'a T>,
     {
         fn matches(&self, actual: &'a T) -> crate::matcher::MatcherResult {
             self.matcher.matches(actual)
+        }
+
+        fn print_actual(&self, actual: &'a T) -> String {
+            self.matcher.print_actual(actual)
         }
 
         fn describe(
@@ -416,12 +420,16 @@ pub mod internal {
         }
     }
 
-    impl<T: Debug + Copy, M> Matcher<T> for CompileAssertAndMatch<T, M>
+    impl<T: Copy, M> Matcher<T> for CompileAssertAndMatch<T, M>
     where
         M: Matcher<T>,
     {
         fn matches(&self, actual: T) -> crate::matcher::MatcherResult {
             self.matcher.matches(actual)
+        }
+
+        fn print_actual(&self, actual: T) -> String {
+            self.matcher.print_actual(actual)
         }
 
         fn describe(

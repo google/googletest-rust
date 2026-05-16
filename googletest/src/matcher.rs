@@ -14,6 +14,7 @@
 
 //! The components required to implement matchers.
 
+use crate::debug_or_string;
 use crate::description::Description;
 use crate::internal::test_outcome::TestAssertionFailure;
 use crate::matchers::__internal_unstable_do_not_depend_on_these::ConjunctionMatcher;
@@ -35,7 +36,7 @@ use std::fmt::Debug;
 // `ActualT` requires `Copy` so that `actual` could be passed to `matches` and
 // if it fails passed to `explain_match`. We can relax this constraint later by
 // requiring only `Clone`.
-pub trait Matcher<ActualT: Debug + Copy>: MatcherBase {
+pub trait Matcher<ActualT: Copy>: MatcherBase {
     /// Returns whether the condition matches the datum `actual`.
     ///
     /// The trait implementation defines what it means to "match". Often the
@@ -43,6 +44,11 @@ pub trait Matcher<ActualT: Debug + Copy>: MatcherBase {
     /// `eq` matches when its stored expected value is equal (in the sense of
     /// the `==` operator) to the value `actual`.
     fn matches(&self, actual: ActualT) -> MatcherResult;
+
+    /// Formats the actual value.
+    fn print_actual(&self, actual: ActualT) -> String {
+        debug_or_string!(actual, "[no debug]")
+    }
 
     /// Returns a description of `self` or a negative description if
     /// `matcher_result` is `DoesNotMatch`.
@@ -223,23 +229,27 @@ pub trait MatcherBase {
 /// pretty-printed. Otherwise, it will have normal debug output formatting.
 const PRETTY_PRINT_LENGTH_THRESHOLD: usize = 60;
 
+pub(crate) fn format_actual<T: Debug>(actual: T) -> String {
+    let actual_formatted = format!("{actual:?}");
+    if actual_formatted.len() > PRETTY_PRINT_LENGTH_THRESHOLD {
+        format!("{actual:#?}")
+    } else {
+        actual_formatted
+    }
+}
+
 /// Constructs a [`TestAssertionFailure`] reporting that the given `matcher`
 /// does not match the value `actual`.
 ///
 /// The parameter `actual_expr` contains the expression which was evaluated to
 /// obtain `actual`.
 #[track_caller]
-pub(crate) fn create_assertion_failure<T: Debug + Copy>(
+pub(crate) fn create_assertion_failure<T: Copy>(
     matcher: &impl Matcher<T>,
     actual: T,
     actual_expr: &'static str,
 ) -> TestAssertionFailure {
-    let actual_formatted = format!("{actual:?}");
-    let actual_formatted = if actual_formatted.len() > PRETTY_PRINT_LENGTH_THRESHOLD {
-        format!("{actual:#?}")
-    } else {
-        actual_formatted
-    };
+    let actual_formatted = matcher.print_actual(actual);
     TestAssertionFailure::create(format!(
         "\
 Value of: {actual_expr}
@@ -292,9 +302,13 @@ impl MatcherResult {
 
 impl<M: ?Sized + MatcherBase> MatcherBase for &M {}
 
-impl<T: Debug + Copy, M: Matcher<T>> Matcher<T> for &M {
+impl<T: Copy, M: Matcher<T>> Matcher<T> for &M {
     fn matches(&self, actual: T) -> MatcherResult {
         (*self).matches(actual)
+    }
+
+    fn print_actual(&self, actual: T) -> String {
+        (*self).print_actual(actual)
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {

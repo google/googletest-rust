@@ -16,7 +16,6 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherBase, MatcherResult},
 };
-use std::fmt::Debug;
 
 /// Matches the actual value exactly when the inner matcher does _not_ match.
 ///
@@ -42,12 +41,16 @@ pub struct NotMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
 }
 
-impl<T: Debug + Copy, InnerMatcherT: Matcher<T>> Matcher<T> for NotMatcher<InnerMatcherT> {
+impl<T: Copy, InnerMatcherT: Matcher<T>> Matcher<T> for NotMatcher<InnerMatcherT> {
     fn matches(&self, actual: T) -> MatcherResult {
         match self.inner.matches(actual) {
             MatcherResult::Match => MatcherResult::NoMatch,
             MatcherResult::NoMatch => MatcherResult::Match,
         }
+    }
+
+    fn print_actual(&self, actual: T) -> String {
+        self.inner.print_actual(actual)
     }
 
     fn explain_match(&self, actual: T) -> Description {

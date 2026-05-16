@@ -267,7 +267,7 @@ pub mod internal {
 
     impl<InnerT, OuterT, MatcherT> Matcher<OuterT> for PropertyMatcher<OuterT, InnerT, MatcherT>
     where
-        InnerT: Debug + Copy,
+        InnerT: Copy,
         OuterT: Debug + Copy,
         MatcherT: Matcher<InnerT>,
     {
@@ -287,9 +287,9 @@ pub mod internal {
         fn explain_match(&self, actual: OuterT) -> Description {
             let actual_inner = (self.extractor)(&actual);
             format!(
-                "whose property `{}` is `{:#?}`, {}",
+                "whose property `{}` is {}, {}",
                 self.property_desc,
-                actual_inner,
+                self.inner.print_actual(actual_inner),
                 self.inner.explain_match(actual_inner)
             )
             .into()
@@ -298,7 +298,7 @@ pub mod internal {
 
     impl<'a, InnerT, OuterT, MatcherT> Matcher<&'a OuterT> for PropertyMatcher<OuterT, InnerT, MatcherT>
     where
-        InnerT: Debug,
+        InnerT: 'a,
         OuterT: Debug,
         MatcherT: for<'b> Matcher<&'b InnerT>,
     {
@@ -318,9 +318,9 @@ pub mod internal {
         fn explain_match(&self, actual: &'a OuterT) -> Description {
             let actual_inner = (self.extractor)(actual);
             format!(
-                "whose property `{}` is `{:#?}`, {}",
+                "whose property `{}` is {}, {}",
                 self.property_desc,
-                actual_inner,
+                self.inner.print_actual(&actual_inner),
                 self.inner.explain_match(&actual_inner)
             )
             .into()
@@ -336,7 +336,7 @@ pub mod internal {
     ) -> PropertyRefMatcher<ExtractorT, MatcherT>
     where
         OuterT: Debug,
-        InnerT: Debug,
+        InnerT: 'static,
         MatcherT: for<'a> Matcher<&'a InnerT>,
         ExtractorT: Fn(OuterT) -> InnerT,
     {
@@ -351,7 +351,7 @@ pub mod internal {
     }
 
     impl<
-            InnerT: Debug,
+            InnerT: 'static,
             OuterT: Debug + Copy,
             MatcherT: for<'a> Matcher<&'a InnerT>,
             ExtractorT: Fn(OuterT) -> InnerT,
@@ -373,9 +373,9 @@ pub mod internal {
         fn explain_match(&self, actual: OuterT) -> Description {
             let actual_inner = (self.extractor)(actual);
             format!(
-                "whose property `{}` is `{:#?}`, {}",
+                "whose property `{}` is {}, {}",
                 self.property_desc,
-                actual_inner,
+                self.inner.print_actual(&actual_inner),
                 self.inner.explain_match(&actual_inner)
             )
             .into()

@@ -14,7 +14,6 @@
 
 use crate::description::Description;
 use crate::matcher::{Matcher, MatcherBase, MatcherResult};
-use std::fmt::Debug;
 
 /// Matches an `Option` containing `None`.
 ///
@@ -38,9 +37,13 @@ pub fn none() -> NoneMatcher {
 #[derive(MatcherBase)]
 pub struct NoneMatcher;
 
-impl<T: Debug + Copy> Matcher<Option<T>> for NoneMatcher {
+impl<T: Copy> Matcher<Option<T>> for NoneMatcher {
     fn matches(&self, actual: Option<T>) -> MatcherResult {
         actual.is_none().into()
+    }
+
+    fn print_actual(&self, _actual: Option<T>) -> String {
+        "None".to_string()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -51,9 +54,13 @@ impl<T: Debug + Copy> Matcher<Option<T>> for NoneMatcher {
     }
 }
 
-impl<'a, T: Debug> Matcher<&'a Option<T>> for NoneMatcher {
+impl<'a, T> Matcher<&'a Option<T>> for NoneMatcher {
     fn matches(&self, actual: &'a Option<T>) -> MatcherResult {
         actual.is_none().into()
+    }
+
+    fn print_actual(&self, _actual: &'a Option<T>) -> String {
+        "None".to_string()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {

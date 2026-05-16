@@ -18,7 +18,6 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherBase, MatcherResult},
 };
-use std::fmt::Debug;
 
 /// Matches precisely values matched by `inner`.
 ///
@@ -35,11 +34,15 @@ pub struct IsMatcher<'a, InnerMatcherT> {
     inner: InnerMatcherT,
 }
 
-impl<ActualT: Debug + Copy, InnerMatcherT: Matcher<ActualT>> Matcher<ActualT>
+impl<ActualT: Copy, InnerMatcherT: Matcher<ActualT>> Matcher<ActualT>
     for IsMatcher<'_, InnerMatcherT>
 {
     fn matches(&self, actual: ActualT) -> MatcherResult {
         self.inner.matches(actual)
+    }
+
+    fn print_actual(&self, actual: ActualT) -> String {
+        self.inner.print_actual(actual)
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {

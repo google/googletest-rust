@@ -95,6 +95,10 @@ where
         MatcherResult::Match
     }
 
+    fn print_actual(&self, actual: ActualT) -> String {
+        crate::matcher::format_actual(actual)
+    }
+
     fn explain_match(&self, actual: ActualT) -> Description {
         let unexpected_elements = actual
             .into_iter()

@@ -19,7 +19,6 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherBase, MatcherResult},
 };
-use std::fmt::Debug;
 
 /// Matcher created by [`Matcher::and`] and [`all!`].
 ///
@@ -53,12 +52,16 @@ impl<M1, M2> ConjunctionMatcher<M1, M2> {
     }
 }
 
-impl<T: Debug + Copy, M1: Matcher<T>, M2: Matcher<T>> Matcher<T> for ConjunctionMatcher<M1, M2> {
+impl<T: Copy, M1: Matcher<T>, M2: Matcher<T>> Matcher<T> for ConjunctionMatcher<M1, M2> {
     fn matches(&self, actual: T) -> MatcherResult {
         match (self.m1.matches(actual), self.m2.matches(actual)) {
             (MatcherResult::Match, MatcherResult::Match) => MatcherResult::Match,
             _ => MatcherResult::NoMatch,
         }
+    }
+
+    fn print_actual(&self, actual: T) -> String {
+        self.m1.print_actual(actual)
     }
 
     fn explain_match(&self, actual: T) -> Description {
@@ -123,7 +126,7 @@ mod tests {
                 Expected: has all the following properties:
                   * is anything
                   * never matches
-                Actual: 1,
+                Actual: [anything],
                   which is anything
                 "
             ))))
@@ -141,7 +144,7 @@ mod tests {
                     Expected: has all the following properties:
                       * never matches
                       * is anything
-                    Actual: 1,
+                    Actual: [anything],
                       which is anything
                 "
             ))))
@@ -159,7 +162,7 @@ mod tests {
                 Expected: has all the following properties:
                   * never matches
                   * never matches
-                Actual: 1,
+                Actual: [anything],
                   * which is anything
                   * which is anything
                 "
@@ -184,7 +187,7 @@ mod tests {
                   * is anything
                   * never matches
                   * is anything
-                Actual: 1,
+                Actual: [anything],
                   * which is anything
                   * which is anything
                 "

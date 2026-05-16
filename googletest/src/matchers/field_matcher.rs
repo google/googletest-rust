@@ -284,8 +284,8 @@ pub mod internal {
         inner: InnerMatcher,
     }
 
-    impl<'a, OuterT: Debug + 'a, InnerT: Debug + 'a, InnerMatcher: Matcher<&'a InnerT>>
-        Matcher<&'a OuterT> for FieldMatcher<OuterT, InnerT, InnerMatcher>
+    impl<'a, OuterT: Debug + 'a, InnerT: 'a, InnerMatcher: Matcher<&'a InnerT>> Matcher<&'a OuterT>
+        for FieldMatcher<OuterT, InnerT, InnerMatcher>
     {
         fn matches(&self, actual: &'a OuterT) -> MatcherResult {
             if let Some(value) = (self.field_accessor)(actual) {
@@ -304,7 +304,7 @@ pub mod internal {
                 )
                 .into()
             } else {
-                let formatted_actual_value = format!("{actual:?}");
+                let formatted_actual_value = self.print_actual(actual);
                 let without_fields = formatted_actual_value.split('(').next().unwrap_or("");
                 let without_fields = without_fields.split('{').next().unwrap_or("").trim_end();
                 format!("which has the wrong enum variant `{without_fields}`").into()
@@ -321,7 +321,7 @@ pub mod internal {
         }
     }
 
-    impl<OuterT: Debug + Copy, InnerT: Debug + Copy, InnerMatcher: Matcher<InnerT>> Matcher<OuterT>
+    impl<OuterT: Debug + Copy, InnerT: Copy, InnerMatcher: Matcher<InnerT>> Matcher<OuterT>
         for FieldMatcher<OuterT, InnerT, InnerMatcher>
     {
         fn matches(&self, actual: OuterT) -> MatcherResult {
@@ -341,7 +341,7 @@ pub mod internal {
                 )
                 .into()
             } else {
-                let formatted_actual_value = format!("{actual:?}");
+                let formatted_actual_value = self.print_actual(actual);
                 let without_fields = formatted_actual_value.split('(').next().unwrap_or("");
                 let without_fields = without_fields.split('{').next().unwrap_or("").trim_end();
                 format!("which has the wrong enum variant `{without_fields}`").into()

@@ -20,6 +20,7 @@
 
 mod auto_eq;
 pub(crate) mod count_elements;
+pub(crate) mod debug_or_string;
 pub(crate) mod edit_distance;
 pub(crate) mod match_matrix;
 pub(crate) mod summarize_diff;

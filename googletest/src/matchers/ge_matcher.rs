@@ -90,6 +90,10 @@ impl<ActualT: Debug + PartialOrd<ExpectedT> + Copy, ExpectedT: Debug> Matcher<Ac
         (actual >= self.expected).into()
     }
 
+    fn print_actual(&self, actual: ActualT) -> String {
+        crate::matcher::format_actual(actual)
+    }
+
     fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => {

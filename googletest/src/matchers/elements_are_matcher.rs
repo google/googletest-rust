@@ -111,11 +111,11 @@ pub mod internal {
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
     #[derive(MatcherBase)]
-    pub struct ElementsAre<'a, T: Debug + Copy> {
+    pub struct ElementsAre<'a, T: Copy> {
         elements: Vec<Box<dyn Matcher<T> + 'a>>,
     }
 
-    impl<'a, T: Debug + Copy> ElementsAre<'a, T> {
+    impl<'a, T: Copy> ElementsAre<'a, T> {
         /// Factory only intended for use in the macro `elements_are!`.
         ///
         /// **For internal use only. API stablility is not guaranteed!**
@@ -125,7 +125,7 @@ pub mod internal {
         }
     }
 
-    impl<T: Debug + Copy, ContainerT: Debug + Copy> Matcher<ContainerT> for ElementsAre<'_, T>
+    impl<T: Copy, ContainerT: Debug + Copy> Matcher<ContainerT> for ElementsAre<'_, T>
     where
         ContainerT: IntoIterator<Item = T>,
     {
@@ -149,7 +149,11 @@ pub mod internal {
             let mut mismatches = Vec::new();
             for (idx, (a, e)) in zipped_iterator.by_ref().enumerate() {
                 if e.matches(a).is_no_match() {
-                    mismatches.push(format!("element #{idx} is {a:?}, {}", e.explain_match(a)));
+                    mismatches.push(format!(
+                        "element #{idx} is {}, {}",
+                        e.print_actual(a),
+                        e.explain_match(a)
+                    ));
                 }
             }
             if mismatches.is_empty() {

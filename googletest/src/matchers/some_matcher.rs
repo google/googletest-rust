@@ -16,7 +16,6 @@ use crate::{
     description::Description,
     matcher::{Matcher, MatcherBase, MatcherResult},
 };
-use std::fmt::Debug;
 
 /// Matches an `Option` containing a value matched by `inner`.
 ///
@@ -47,9 +46,16 @@ pub struct SomeMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
 }
 
-impl<T: Debug + Copy, InnerMatcherT: Matcher<T>> Matcher<Option<T>> for SomeMatcher<InnerMatcherT> {
+impl<T: Copy, InnerMatcherT: Matcher<T>> Matcher<Option<T>> for SomeMatcher<InnerMatcherT> {
     fn matches(&self, actual: Option<T>) -> MatcherResult {
         actual.map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
+    }
+
+    fn print_actual(&self, actual: Option<T>) -> String {
+        match actual {
+            Some(v) => format!("Some({})", self.inner.print_actual(v)),
+            None => "None".to_string(),
+        }
     }
 
     fn explain_match(&self, actual: Option<T>) -> Description {
@@ -75,11 +81,16 @@ impl<T: Debug + Copy, InnerMatcherT: Matcher<T>> Matcher<Option<T>> for SomeMatc
     }
 }
 
-impl<'a, T: Debug, InnerMatcherT: Matcher<&'a T>> Matcher<&'a Option<T>>
-    for SomeMatcher<InnerMatcherT>
-{
+impl<'a, T, InnerMatcherT: Matcher<&'a T>> Matcher<&'a Option<T>> for SomeMatcher<InnerMatcherT> {
     fn matches(&self, actual: &'a Option<T>) -> MatcherResult {
         actual.as_ref().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
+    }
+
+    fn print_actual(&self, actual: &'a Option<T>) -> String {
+        match actual {
+            Some(v) => format!("Some({})", self.inner.print_actual(v)),
+            None => "None".to_string(),
+        }
     }
 
     fn explain_match(&self, actual: &'a Option<T>) -> Description {

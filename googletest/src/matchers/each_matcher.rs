@@ -58,8 +58,7 @@ pub struct EachMatcher<MatcherT> {
     inner: MatcherT,
 }
 
-impl<ElementT: Debug + Copy, ActualT: Debug + Copy, MatcherT> Matcher<ActualT>
-    for EachMatcher<MatcherT>
+impl<ElementT: Copy, ActualT: Debug + Copy, MatcherT> Matcher<ActualT> for EachMatcher<MatcherT>
 where
     ActualT: IntoIterator<Item = ElementT>,
     MatcherT: Matcher<ElementT>,
@@ -71,6 +70,10 @@ where
             }
         }
         MatcherResult::Match
+    }
+
+    fn print_actual(&self, actual: ActualT) -> String {
+        crate::matcher::format_actual(actual)
     }
 
     fn explain_match(&self, actual: ActualT) -> Description {
@@ -86,7 +89,11 @@ where
         }
         if non_matching_elements.len() == 1 {
             let (idx, element, explanation) = non_matching_elements.remove(0);
-            return format!("whose element #{idx} is {element:?}, {explanation}").into();
+            return format!(
+                "whose element #{idx} is {}, {explanation}",
+                self.inner.print_actual(element)
+            )
+            .into();
         }
 
         let failed_indexes = non_matching_elements
@@ -96,7 +103,9 @@ where
             .join(", ");
         let element_explanations = non_matching_elements
             .iter()
-            .map(|&(_, element, ref explanation)| format!("{element:?}, {explanation}"))
+            .map(|&(_, element, ref explanation)| {
+                format!("{}, {explanation}", self.inner.print_actual(element))
+            })
             .collect::<Description>()
             .indent();
         format!("whose elements {failed_indexes} don't match\n{element_explanations}").into()

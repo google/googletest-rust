@@ -100,11 +100,15 @@ pub mod internal {
         callable_description: &'static str,
     }
 
-    impl<I: Copy + Debug, T: Debug + Copy, CallableT: Fn(I) -> T, InnerMatcherT: Matcher<T>>
-        Matcher<I> for ResultOfMatcher<CallableT, InnerMatcherT>
+    impl<I: Copy + Debug, T: Copy, CallableT: Fn(I) -> T, InnerMatcherT: Matcher<T>> Matcher<I>
+        for ResultOfMatcher<CallableT, InnerMatcherT>
     {
         fn matches(&self, actual: I) -> MatcherResult {
             self.inner_matcher.matches((self.callable)(actual))
+        }
+
+        fn print_actual(&self, actual: I) -> String {
+            crate::matcher::format_actual(actual)
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -116,7 +120,10 @@ pub mod internal {
         fn explain_match(&self, actual: I) -> Description {
             let actual_result = (self.callable)(actual);
             Description::new()
-                .text(format!("which, results into {actual_result:?}",))
+                .text(format!(
+                    "which, results into {}",
+                    self.inner_matcher.print_actual(actual_result)
+                ))
                 .nested(self.describe(self.matches(actual)))
         }
     }
@@ -135,15 +142,15 @@ pub mod internal {
         callable_description: &'static str,
     }
 
-    impl<
-            I: Copy + Debug,
-            T: Debug,
-            Callable: Fn(I) -> T,
-            InnerMatcherT: for<'a> Matcher<&'a T>,
-        > Matcher<I> for ResultOfRefMatcher<Callable, InnerMatcherT>
+    impl<I: Copy + Debug, T, Callable: Fn(I) -> T, InnerMatcherT: for<'a> Matcher<&'a T>> Matcher<I>
+        for ResultOfRefMatcher<Callable, InnerMatcherT>
     {
         fn matches(&self, actual: I) -> MatcherResult {
             self.inner_matcher.matches(&(self.callable)(actual))
+        }
+
+        fn print_actual(&self, actual: I) -> String {
+            crate::matcher::format_actual(actual)
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -155,7 +162,10 @@ pub mod internal {
         fn explain_match(&self, actual: I) -> Description {
             let actual_result = (self.callable)(actual);
             Description::new()
-                .text(format!("which, results into {actual_result:?}",))
+                .text(format!(
+                    "which, results into {}",
+                    self.inner_matcher.print_actual(&actual_result)
+                ))
                 .nested(self.describe(self.matches(actual)))
         }
     }

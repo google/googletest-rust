@@ -47,6 +47,10 @@ impl<T: Debug, A: Debug + Copy + PartialEq<T>> Matcher<A> for NEMatcher<T> {
         (actual != self.expected).into()
     }
 
+    fn print_actual(&self, actual: A) -> String {
+        crate::matcher::format_actual(actual)
+    }
+
     fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => format!("is not equal to {:?}", self.expected).into(),

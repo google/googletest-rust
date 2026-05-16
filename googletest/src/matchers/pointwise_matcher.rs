@@ -165,7 +165,7 @@ pub mod internal {
         }
     }
 
-    impl<T: Debug + Copy, MatcherT: Matcher<T>, ContainerT: Copy + Debug> Matcher<ContainerT>
+    impl<T: Copy, MatcherT: Matcher<T>, ContainerT: Copy + Debug> Matcher<ContainerT>
         for PointwiseMatcher<MatcherT>
     where
         ContainerT: IntoIterator<Item = T>,
@@ -193,7 +193,11 @@ pub mod internal {
             let mut mismatches = Vec::new();
             for (idx, (a, e)) in zipped_iterator.by_ref().enumerate() {
                 if e.matches(a).is_no_match() {
-                    mismatches.push(format!("element #{idx} is {a:?}, {}", e.explain_match(a)));
+                    mismatches.push(format!(
+                        "element #{idx} is {}, {}",
+                        e.print_actual(a),
+                        e.explain_match(a)
+                    ));
                 }
             }
             if mismatches.is_empty() {

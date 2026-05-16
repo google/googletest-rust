@@ -85,7 +85,7 @@ impl<InnerMatcherT> ContainsMatcher<InnerMatcherT> {
 //  because val is dropped before matcher but the trait bound requires that
 //  the argument to matches outlive the matcher. It works fine if one defines
 //  val before matcher.
-impl<T: Debug + Copy, InnerMatcherT: Matcher<T>, ContainerT: Debug + Copy> Matcher<ContainerT>
+impl<T: Copy, InnerMatcherT: Matcher<T>, ContainerT: Debug + Copy> Matcher<ContainerT>
     for ContainsMatcher<InnerMatcherT>
 where
     ContainerT: IntoIterator<Item = T>,
@@ -140,7 +140,7 @@ where
 }
 
 impl<InnerMatcherT> ContainsMatcher<InnerMatcherT> {
-    fn count_matches<T: Debug + Copy, ContainerT>(&self, actual: ContainerT) -> usize
+    fn count_matches<T: Copy, ContainerT>(&self, actual: ContainerT) -> usize
     where
         ContainerT: IntoIterator<Item = T>,
         InnerMatcherT: Matcher<T>,
