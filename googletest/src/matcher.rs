@@ -45,7 +45,7 @@ pub trait Matcher<ActualT: Debug + Copy>: MatcherBase {
     fn matches(&self, actual: ActualT) -> MatcherResult;
 
     /// Returns a description of `self` or a negative description if
-    /// `matcher_result` is `DoesNotMatch`.
+    /// `matcher_result` is `NoMatch`.
     ///
     /// The function should print a verb phrase that describes the property a
     /// value matching, respectively not matching, this matcher should have.
@@ -70,13 +70,14 @@ pub trait Matcher<ActualT: Debug + Copy>: MatcherBase {
     /// ```ignore
     /// fn describe(&self, matcher_result: MatcherResult) -> Description {
     ///     match matcher_result {
-    ///         MatcherResult::Matches => {
+    ///         MatcherResult::Match => {
     ///             Description::new()
     ///                 .text("has a value which")
-    ///                 .nested(self.inner.describe(MatcherResult::Matches))
+    ///                 .nested(self.inner.describe(MatcherResult::Match))
     ///       // Inner matcher: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///         }
-    ///         MatcherResult::DoesNotMatch => {...} // Similar to the above
+    ///
+    ///         MatcherResult::NoMatch => {...} // Similar to the above
     ///     }
     /// }
     /// ```
