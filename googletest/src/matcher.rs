@@ -44,8 +44,9 @@ pub trait Matcher<ActualT: Debug + Copy>: MatcherBase {
     /// the `==` operator) to the value `actual`.
     fn matches(&self, actual: ActualT) -> MatcherResult;
 
-    /// Returns a description of `self` or a negative description if
-    /// `matcher_result` is `NoMatch`.
+    /// Returns a description of `self` according to the supplied matching
+    /// sense: a positive description if `sense` is `Match`, and a negative
+    /// description if it's `NoMatch`.
     ///
     /// The function should print a verb phrase that describes the property a
     /// value matching, respectively not matching, this matcher should have.
@@ -68,16 +69,19 @@ pub trait Matcher<ActualT: Debug + Copy>: MatcherBase {
     /// [`some`][crate::matchers::some] implements `describe` as follows:
     ///
     /// ```ignore
-    /// fn describe(&self, matcher_result: MatcherResult) -> Description {
-    ///     match matcher_result {
+    /// fn describe(&self, sense: MatcherResult) -> Description {
+    ///     match sense {
     ///         MatcherResult::Match => {
     ///             Description::new()
     ///                 .text("has a value which")
     ///                 .nested(self.inner.describe(MatcherResult::Match))
     ///       // Inner matcher: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     ///         }
-    ///
-    ///         MatcherResult::NoMatch => {...} // Similar to the above
+    ///         MatcherResult::NoMatch => {
+    ///             Description::new()
+    ///                 .text("is None or has a value which")
+    ///                 .nested(self.inner.describe(MatcherResult::NoMatch))
+    ///         }
     ///     }
     /// }
     /// ```
@@ -89,7 +93,7 @@ pub trait Matcher<ActualT: Debug + Copy>: MatcherBase {
     /// output of `explain_match` is always used adjectivally to describe the
     /// actual value, while `describe` is used in contexts where a relative
     /// clause would not make sense.
-    fn describe(&self, matcher_result: MatcherResult) -> Description;
+    fn describe(&self, sense: MatcherResult) -> Description;
 
     /// Prepares a [`String`] describing how the expected value
     /// encoded in this instance matches or does not match the given value
