@@ -52,6 +52,33 @@ use std::ops::Deref;
 /// # should_pass_2().unwrap();
 /// ```
 ///
+/// # Regular Expression Syntax
+///
+/// The regular expression syntax matches that of the
+/// [`regex` crate](https://docs.rs/regex). This is a linear-time regular
+/// expression engine which does not support lookarounds or backreferences.
+///
+/// For details on the supported syntax, see the
+/// [regex crate documentation](https://docs.rs/regex/latest/regex/#syntax).
+///
+/// Note that `matches_regex` automatically wraps the pattern with `^` and `$`
+/// to ensure it matches the entire string.
+///
+/// ## Multi-line matching
+///
+/// If you want to match a multi-line string where `.` matches newlines, use
+/// the `(?s)` flag (e.g., `(?s)begin.*end`).
+///
+/// Avoid using the `(?m)` flag (multi-line mode) with `matches_regex`, as it
+/// redefines `^` and `$` to match line boundaries. Because `matches_regex`
+/// wraps your pattern in `^...$` and uses `is_match` internally, enabling
+/// `(?m)` will cause the matcher to succeed if *any* single line matches the
+/// pattern, rather than requiring the entire string to match. If you want to
+/// match a pattern against individual lines of a multi-line string, use
+/// [`contains_regex`][crate::matchers::contains_regex] with `(?m)` instead.
+///
+/// # Panics
+///
 /// Panics if the given `pattern` is not a syntactically valid regular
 /// expression.
 // N.B. This returns the concrete type rather than an impl Matcher so that it
