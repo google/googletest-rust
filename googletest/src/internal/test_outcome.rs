@@ -285,6 +285,14 @@ impl TestAssertionFailure {
     }
 }
 
+impl Drop for TestAssertionFailure {
+    fn drop(&mut self) {
+        if FAILURE_REPORTER_HOOK.get().is_some() {
+            self.log();
+        }
+    }
+}
+
 impl Display for TestAssertionFailure {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         writeln!(f, "{}", self.description)?;
