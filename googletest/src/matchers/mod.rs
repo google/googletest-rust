@@ -54,6 +54,7 @@ mod points_to_matcher;
 mod pointwise_matcher;
 mod predicate_matcher;
 mod property_matcher;
+mod ptr_eq_matcher;
 mod result_of_matcher;
 mod some_matcher;
 mod str_matcher;
@@ -92,6 +93,7 @@ pub use not_matcher::not;
 pub use ok_matcher::ok;
 pub use points_to_matcher::points_to;
 pub use predicate_matcher::{predicate, PredicateMatcher};
+pub use ptr_eq_matcher::{ptr_eq, PtrEqMatcher};
 pub use some_matcher::some;
 pub use str_matcher::{
     contains_substring, ends_with, starts_with, StrMatcher, StrMatcherConfigurator,
