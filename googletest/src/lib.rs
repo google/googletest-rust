@@ -73,7 +73,7 @@ macro_rules! scoped_trace {
     ($($arg:tt)*) => {
         #[allow(clippy::shadow_same, clippy::shadow_unrelated)]
         let _gtest_trace_guard = $crate::internal::scoped_trace::ScopedTraceGuard::new(
-            format!($($arg)*),
+            ::core::format!($($arg)*),
         );
     };
 }
