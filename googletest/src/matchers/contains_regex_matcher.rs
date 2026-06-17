@@ -44,6 +44,21 @@ use std::ops::Deref;
 /// # should_pass_2().unwrap();
 /// ```
 ///
+/// # Regular Expression Syntax
+///
+/// The regular expression syntax matches that of the
+/// [`regex` crate](https://docs.rs/regex). This is a linear-time regular
+/// expression engine which does not support lookarounds or backreferences.
+///
+/// To enable multi-line matching (where `^` and `$` match line boundaries
+/// instead of the start and end of the entire input), prefix the pattern with
+/// `(?m)`.
+///
+/// For details on the supported syntax, see the
+/// [regex crate documentation](https://docs.rs/regex/latest/regex/#syntax).
+///
+/// # Panics
+///
 /// Panics if the given `pattern` is not a syntactically valid regular
 /// expression.
 #[track_caller]
