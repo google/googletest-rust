@@ -877,6 +877,113 @@ macro_rules! expect_eq {
 }
 pub use expect_eq;
 
+/// Verify if the given result evaluates to Ok(_) and returns `Result`.
+///
+/// Evaluates to `Result::Ok(())` if the result is Ok and
+/// `Result::Err(TestAssertionFailure)` if it evaluates to Err. The caller
+/// must then decide how to handle the `Err` variant. It has a few options:
+///   * Abort the current function with the `?` operator. This requires that the
+///     function return a suitable `Result`.
+///   * Log the failure and continue by calling the method `and_log_failure`.
+///
+/// Of course, one can also use all other standard methods on `Result`.
+///
+/// **Invoking this macro by itself does not cause a test failure to be recorded
+/// or output.** The resulting `Result` must be handled as described above to
+/// cause the test to be recorded as a failure.
+///
+/// Example:
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[test]
+/// fn should_fail() -> Result<()> {
+///     verify_ok!(Err("Oops"))
+/// }
+/// ```
+#[macro_export]
+macro_rules! verify_ok {
+    ($actual:expr) => {
+        $crate::verify_that!($actual, $crate::matchers::ok($crate::matchers::anything()))
+    };
+}
+pub use verify_ok;
+
+/// Marks test as failed and continue execution if the expression evaluates to
+/// Err.
+///
+/// This is a **non-fatal** failure. The test continues execution even after the
+/// macro execution.
+///
+/// This can only be invoked inside tests with the
+/// [`gtest`][crate::gtest] attribute. The failure must be generated
+/// in the same thread as that running the test itself.
+///
+/// Example:
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[gtest]
+/// fn should_fail() {
+///     expect_ok!(Err("Oops"));
+///     println!("This will print");
+/// }
+/// ```
+///
+/// One may optionally add arguments which will be formatted and appended to a
+/// failure message.
+#[macro_export]
+macro_rules! expect_ok {
+    ($actual:expr) => {{
+        $crate::GoogleTestSupport::and_log_failure(($crate::verify_ok!($actual)))
+    }};
+    ($actual:expr, $($format_args:expr),* $(,)?) => {{
+        $crate::GoogleTestSupport::and_log_failure_with_message(
+            $crate::verify_ok!($actual),
+            || format!($($format_args),*))
+    }};
+}
+pub use expect_ok;
+
+/// Marks the test as failed and panics if the given value is an `Err`.
+///
+/// This is a *fatal* assertion: the test panics
+/// in the event of assertion failure.
+///
+/// This can only be invoked inside tests with the
+/// [`gtest`][crate::gtest] attribute. The assertion must
+/// occur in the same thread as that running the test itself.
+///
+/// Example:
+/// ```ignore
+/// use googletest::prelude::*;
+///
+/// #[gtest]
+/// fn should_fail() {
+///     assert_ok!(Err("Oops")); // panic!
+/// }
+/// ```
+///
+/// One may optionally add arguments which will be formatted and appended to a
+/// failure message.
+#[macro_export]
+macro_rules! assert_ok {
+    ($actual:expr) => {
+        if let Err(e) = $crate::verify_ok!($actual) {
+            panic!("\n{}", e);
+        }
+    };
+    ($actual:expr, $($format_args:expr),* $(,)?) => {
+        if let Err(e) = $crate::GoogleTestSupport::with_failure_message(
+            $crate::verify_ok!($actual),
+            || format!($($format_args),*))
+        {
+            panic!("\n{}", e);
+        }
+    };
+}
+pub use assert_ok;
+
 /// Checks whether the second argument is not equal to the first argument.
 ///
 /// Evaluates to `Result::Ok(())` if they are not equal and
