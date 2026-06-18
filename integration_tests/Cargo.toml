@@ -450,3 +450,8 @@ test = false
 name = "expect_pred_macro_on_assertion_failure_with_format_args"
 path = "src/expect_pred_macro_on_assertion_failure_with_format_args.rs"
 test = false
+
+[[bin]]
+name = "test_returning_custom_error"
+path = "src/test_returning_custom_error.rs"
+test = false
