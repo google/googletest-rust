@@ -81,6 +81,7 @@ macro_rules! scoped_trace {
 pub use googletest_macro::gtest;
 pub use googletest_macro::test;
 
+pub use internal::scoped_trace::InstrumentedFuture;
 use internal::test_outcome::{TestAssertionFailure, TestOutcome};
 
 /// A `Result` whose `Err` variant indicates a test failure.
