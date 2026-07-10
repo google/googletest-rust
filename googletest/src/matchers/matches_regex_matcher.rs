@@ -18,11 +18,19 @@ use regex::Regex;
 use std::fmt::Debug;
 use std::ops::Deref;
 
-/// Matches a string the entirety of which which matches the given regular
+/// Matches a string the entirety of which matches the given regular
 /// expression.
 ///
 /// This is similar to [`contains_regex`][crate::matchers::contains_regex],
 /// except that the match must cover the whole string and not a substring.
+///
+/// # Regular Expression Syntax
+///
+/// Like [`contains_regex`][crate::matchers::contains_regex], this matcher
+/// uses the Rust [`regex`](https://docs.rs/regex) crate, supporting **RE2
+/// syntax**.
+/// For a full syntax reference, see the
+/// [RE2 Syntax Wiki](https://github.com/google/re2/wiki/Syntax).
 ///
 /// Both the actual value and the expected regular expression may be either a
 /// `String` or a string reference.
