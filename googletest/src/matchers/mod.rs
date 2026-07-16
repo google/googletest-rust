@@ -43,6 +43,7 @@ mod is_nan_matcher;
 mod le_matcher;
 mod len_matcher;
 mod lt_matcher;
+mod match_positions_matcher;
 mod matches_pattern;
 mod matches_regex_matcher;
 mod ne_matcher;
@@ -85,6 +86,10 @@ pub use is_nan_matcher::is_nan;
 pub use le_matcher::le;
 pub use len_matcher::len;
 pub use lt_matcher::lt;
+pub use match_positions_matcher::{
+    regex_positions, substring_positions, Positions, RegexPositionsMatcher,
+    SubstringPositionsMatcher,
+};
 pub use matches_regex_matcher::matches_regex;
 pub use ne_matcher::ne;
 pub use near_matcher::{approx_eq, near, NearMatcher};

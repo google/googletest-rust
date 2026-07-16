@@ -67,11 +67,13 @@ use std::ops::Deref;
 // compiler treats it as a Matcher<str> only and the code
 //   verify_that!("Some value".to_string(), matches_regex(".*value"))?;
 // doesn't compile.
+#[track_caller]
 pub fn matches_regex<PatternT: Deref<Target = str>>(
     pattern: PatternT,
 ) -> MatchesRegexMatcher<PatternT> {
     let adjusted_pattern = format!("^{}$", pattern.deref());
-    let regex = Regex::new(adjusted_pattern.as_str()).unwrap();
+    let regex = Regex::new(adjusted_pattern.as_str())
+        .expect("pattern should be a valid regular expression");
     MatchesRegexMatcher { regex, pattern, _adjusted_pattern: adjusted_pattern }
 }
 
@@ -207,5 +209,11 @@ mod tests {
             Matcher::<&str>::describe(&matcher, MatcherResult::Match),
             displays_as(eq("matches the regular expression \"\\n\""))
         )
+    }
+
+    #[test]
+    #[should_panic(expected = "pattern should be a valid regular expression")]
+    fn matches_regex_panics_on_invalid_regex() {
+        let _ = matches_regex("(");
     }
 }
