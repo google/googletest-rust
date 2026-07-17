@@ -126,31 +126,30 @@
 macro_rules! verify_that {
     // specialized to sequences:
     ($actual:expr, [$($expecteds:expr),+ $(,)?]) => {
-        {
-            use $crate::assertions::internal::Subject as _;
-            $actual.check(
-                $crate::matchers::elements_are![$($expecteds),+],
-                stringify!($actual),
-            )
-        }
+        $crate::verify_that!(
+            $actual,
+            $crate::matchers::elements_are![$($expecteds),+]
+        )
     };
 
     // specialized to unordered sequences:
     ($actual:expr, {$($expecteds:expr),+ $(,)?}) => {
-        {
-            use $crate::assertions::internal::Subject as  _;
-            $actual.check(
-                $crate::matchers::unordered_elements_are![$($expecteds),+],
-                stringify!($actual),
-            )
-        }
+        $crate::verify_that!(
+            $actual,
+            $crate::matchers::unordered_elements_are![$($expecteds),+]
+        )
     };
 
     // general case:
     ($actual:expr, $expected:expr $(,)?) => {
         {
-            use $crate::assertions::internal::Subject as  _;
-            $actual.check(
+            #[allow(unused_imports)]
+            use $crate::assertions::internal::{
+                Priority0Subject as _, Priority1Subject as _, Priority2Subject as _,
+                Priority3Subject as _, Priority4Subject as _, Priority5Subject as _,
+                Subject as _, Tag1, Tag2, Tag3, Tag4, Tag5, Tag6,
+            };
+            Tag1(&$actual).into_subject().check(
                 $expected,
                 stringify!($actual),
             )
@@ -1885,6 +1884,167 @@ pub mod internal {
     use std::fmt::Debug;
 
     pub use ::googletest_macro::__googletest_macro_verify_pred;
+    use ref_cast::RefCast;
+
+    #[derive(Clone, Copy, RefCast)]
+    #[repr(transparent)]
+    pub struct Tag1<T: ?Sized>(pub T);
+
+    #[derive(Clone, Copy, RefCast)]
+    #[repr(transparent)]
+    pub struct Tag2<T: ?Sized>(pub T);
+
+    #[derive(Clone, Copy, RefCast)]
+    #[repr(transparent)]
+    pub struct Tag3<T: ?Sized>(pub T);
+
+    #[derive(Clone, Copy, RefCast)]
+    #[repr(transparent)]
+    pub struct Tag4<T: ?Sized>(pub T);
+
+    #[derive(Clone, Copy, RefCast)]
+    #[repr(transparent)]
+    pub struct Tag5<T: ?Sized>(pub T);
+
+    #[derive(Clone, Copy, RefCast)]
+    #[repr(transparent)]
+    pub struct Tag6<T: ?Sized>(pub T);
+
+    impl<T: ?Sized> std::ops::Deref for Tag1<T> {
+        type Target = Tag2<T>;
+        #[inline]
+        fn deref(&self) -> &Self::Target {
+            ref_cast::RefCast::ref_cast(&self.0)
+        }
+    }
+
+    impl<T: ?Sized> std::ops::Deref for Tag2<T> {
+        type Target = Tag3<T>;
+        #[inline]
+        fn deref(&self) -> &Self::Target {
+            ref_cast::RefCast::ref_cast(&self.0)
+        }
+    }
+
+    impl<T: ?Sized> std::ops::Deref for Tag3<T> {
+        type Target = Tag4<T>;
+        #[inline]
+        fn deref(&self) -> &Self::Target {
+            ref_cast::RefCast::ref_cast(&self.0)
+        }
+    }
+
+    impl<T: ?Sized> std::ops::Deref for Tag4<T> {
+        type Target = Tag5<T>;
+        #[inline]
+        fn deref(&self) -> &Self::Target {
+            ref_cast::RefCast::ref_cast(&self.0)
+        }
+    }
+
+    impl<T: ?Sized> std::ops::Deref for Tag5<T> {
+        type Target = Tag6<T>;
+        #[inline]
+        fn deref(&self) -> &Self::Target {
+            ref_cast::RefCast::ref_cast(&self.0)
+        }
+    }
+
+    /// Priority 0: Copy types implementing IntoIterator (e.g. Countdown, arrays).
+    ///
+    /// **For internal use only. API stability is not guaranteed!**
+    pub trait Priority0Subject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<T: Copy + IntoIterator> Priority0Subject for Tag1<&T> {
+        type Output = T;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            *self.0
+        }
+    }
+
+    /// Priority 1: Non-Copy Iterators auto-collected into Vec<I::Item>.
+    ///
+    /// **For internal use only. API stability is not guaranteed!**
+    pub trait Priority1Subject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<I: Clone + Iterator> Priority1Subject for &Tag2<&I> {
+        type Output = Vec<I::Item>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            (*self.0).clone().collect()
+        }
+    }
+
+    /// Priority 2: Double reference &&'a U (strips outer reference layer to return &'a U).
+    ///
+    /// **For internal use only. API stability is not guaranteed!**
+    pub trait Priority2Subject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<'a, U: ?Sized> Priority2Subject for &'a Tag3<&&'a U> {
+        type Output = &'a U;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            &**self.0
+        }
+    }
+
+    /// Priority 3: Single reference to a slice `&'a [T]` (returns `&'a [T]`).
+    ///
+    /// **For internal use only. API stability is not guaranteed!**
+    pub trait Priority3Subject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<'a, T> Priority3Subject for &'a Tag4<&'a [T]> {
+        type Output = &'a [T];
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            self.0
+        }
+    }
+
+    /// Priority 4: Copy values &'a U where U: Copy (returns U by value).
+    ///
+    /// **For internal use only. API stability is not guaranteed!**
+    pub trait Priority4Subject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<U: Copy> Priority4Subject for &Tag5<&U> {
+        type Output = U;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            *self.0
+        }
+    }
+
+    /// Priority 5: Non-Copy fallback &'a U (returns &'a U by reference).
+    ///
+    /// **For internal use only. API stability is not guaranteed!**
+    pub trait Priority5Subject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<'a, U: ?Sized> Priority5Subject for &'a Tag6<&'a U> {
+        type Output = &'a U;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            self.0
+        }
+    }
 
     /// Extension trait to perform autoref through method lookup in the
     /// assertion macros. With this trait, the subject can be either a value

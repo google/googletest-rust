@@ -464,3 +464,14 @@ fn contains_each_with_auto_eq() -> Result<()> {
 fn is_contained_in_with_auto_eq() -> Result<()> {
     verify_that!(vec![3, 4, 2], is_contained_in![&1, &2, &3, &4])
 }
+
+#[test]
+fn unordered_elements_are_matches_repeat_n_iterator() -> Result<()> {
+    verify_that!(std::iter::repeat_n("taco", 2), unordered_elements_are![&"taco", &"taco"])
+}
+
+#[test]
+fn unordered_elements_are_matches_slice_iter() -> Result<()> {
+    let slice = ["apple", "banana"];
+    verify_that!(slice.iter(), unordered_elements_are![&&"banana", &&"apple"])
+}
