@@ -39,6 +39,28 @@
 /// #    .unwrap();
 /// ```
 ///
+/// In [`verify_that!`], [`assert_that!`][crate::assert_that] and
+/// [`expect_that!`][crate::expect_that], the actual value can also be an
+/// [`Iterator`], such as `vector.iter()` or the result of `map` or `filter`.
+/// The iterator must be finite and implement [`Clone`]: the assertion collects
+/// a clone of it into a [`Vec`] with [`Iterator::collect`] and matches against
+/// a reference to that `Vec`, so the iterator itself is not advanced. Only the
+/// actual value is collected, not iterators nested inside it, for example in a
+/// struct field.
+///
+/// As with a `&Vec`, the element matchers receive references to the items. For
+/// example, the items of `vector.iter()` are `&i32`, so they are matched with
+/// `eq(&&1)`:
+///
+/// ```
+/// # use googletest::prelude::*;
+/// let vector = vec![1, 2, 3];
+/// verify_that!(vector.iter().map(|x| x * 10), elements_are![eq(&10), eq(&20), eq(&30)])
+/// #    .unwrap();
+/// verify_that!(vector.iter(), elements_are![eq(&&1), eq(&&2), eq(&&3)])
+/// #    .unwrap();
+/// ```
+///
 /// This can also be omitted in [`verify_that!`] macros and replaced with square
 /// brackets.
 ///
@@ -79,6 +101,7 @@
 /// [`unordered_elements_are!`][crate::matchers::unordered_elements_are]
 /// instead.
 ///
+/// [`Clone`]: std::clone::Clone
 /// [`IntoIterator`]: std::iter::IntoIterator
 /// [`Iterator`]: std::iter::Iterator
 /// [`Iterator::collect`]: std::iter::Iterator::collect

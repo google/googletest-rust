@@ -46,6 +46,20 @@
 /// The actual value must be a container such as a `&Vec`, an array, or a
 /// slice. More precisely, the actual value must implement [`IntoIterator`].
 ///
+/// In [`verify_that!`], [`assert_that!`][crate::assert_that] and
+/// [`expect_that!`][crate::expect_that], the actual value can also be a finite
+/// [`Iterator`] that implements [`Clone`]. The assertion collects a clone of it
+/// into a [`Vec`] with [`Iterator::collect`] and matches against a reference to
+/// that `Vec`, so the iterator itself is not advanced. See
+/// [`elements_are!`][crate::matchers::elements_are] for details.
+///
+/// ```
+/// # use googletest::prelude::*;
+/// let vector = vec![1, 2, 3];
+/// verify_that!(vector.iter().map(|x| x * 10), unordered_elements_are![eq(&30), eq(&10), eq(&20)])
+/// #     .unwrap();
+/// ```
+///
 /// This can also be omitted in [`verify_that!`] macros and replaced with curly
 /// brackets.
 ///
@@ -100,6 +114,7 @@
 ///    including which matchers did not have corresponding unique elements in
 ///    the container and which container elements had no corresponding matchers.
 ///
+/// [`Clone`]: std::clone::Clone
 /// [`IntoIterator`]: std::iter::IntoIterator
 /// [`Iterator`]: std::iter::Iterator
 /// [`Iterator::collect`]: std::iter::Iterator::collect
