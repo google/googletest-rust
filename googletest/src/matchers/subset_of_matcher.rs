@@ -67,6 +67,22 @@ use std::fmt::Debug;
 /// # should_pass().unwrap();
 /// ```
 ///
+/// Using variables of standard library collections requires matching item
+/// reference types:
+///
+/// ```
+/// # use googletest::prelude::*;
+/// # fn should_pass() -> Result<()> {
+/// let set_x = vec![1, 2, 3];
+/// let set_y = vec![2, 3];
+///
+/// // Borrow the elements of the expected container to match reference types
+/// let expected: Vec<&i32> = set_x.iter().collect();
+/// verify_that!(set_y, subset_of(expected))?;
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// ```
 /// A note on performance: This matcher uses a naive algorithm with a worst-case
 /// runtime proportional to the *product* of the sizes of the actual and
 /// expected containers as well as the time to check equality of each pair of
