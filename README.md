@@ -350,7 +350,7 @@ displayed, we recommend setting those variables in the personal
 
 ## Contributing Changes
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute
+Please read [CONTRIBUTING.md](https://github.com/google/googletest-rust/blob/main/CONTRIBUTING.md) for details on how to contribute
 to this project.
 
 [`and_log_failure()`]: https://docs.rs/googletest/*/googletest/trait.GoogleTestSupport.html#tymethod.and_log_failure
