@@ -2,18 +2,19 @@ A rich test assertion library for Rust.
 
 This library provides:
 
- * A framework for writing matchers which can be combined to make a wide
-   range of assertions on data,
- * A rich set of matchers, and
- * A new set of test assertion macros.
+*   A framework for writing matchers which can be combined to make a wide range
+    of assertions on data,
+*   A rich set of matchers, and
+*   A new set of test assertion macros.
+
 ## Learning resources
 
-If you're just getting started with `googletest`, consider going through
-the first chapter of
+If you're just getting started with `googletest`, consider going through the
+first chapter of
 ["Advanced testing for Rust applications"](https://github.com/mainmatter/rust-advanced-testing-workshop),
 a self-guided Rust course: it provides a guided introduction to the library,
-with exercises to help you get comfortable with `googletest` macros,
-its matchers and its overall philosophy.
+with exercises to help you get comfortable with `googletest` macros, its
+matchers and its overall philosophy.
 
 ## Assertions and matchers
 
@@ -23,17 +24,17 @@ matching, and so on.
 
 To make an assertion using a matcher, GoogleTest offers three macros:
 
- * [`assert_that!`] panics if the assertion fails, aborting the test.
- * [`expect_that!`] logs an assertion failure, marking the test as having
-   failed, but allows the test to continue running (called a _non-fatal
-   assertion_). It requires the use of the [`gtest`]
-   attribute macro on the test itself.
- * [`verify_that!`] has no side effects and evaluates to a [`Result`] whose
-   `Err` variant describes the assertion failure, if there is one. In
-   combination with the
-   [`?` operator](https://doc.rust-lang.org/reference/expressions/operator-expr.html#the-question-mark-operator),
-   this can be used to abort the test on assertion failure without panicking. It
-   is also the building block for the other two macros above.
+*   [`assert_that!`] panics if the assertion fails, aborting the test.
+*   [`expect_that!`] logs an assertion failure, marking the test as having
+    failed, but allows the test to continue running (called a *non-fatal
+    assertion*). It requires the use of the [`gtest`] attribute macro on the
+    test itself.
+*   [`verify_that!`] has no side effects and evaluates to a [`Result`] whose
+    `Err` variant describes the assertion failure, if there is one. In
+    combination with the
+    [`?` operator](https://doc.rust-lang.org/reference/expressions/operator-expr.html#the-question-mark-operator),
+    this can be used to abort the test on assertion failure without panicking.
+    It is also the building block for the other two macros above.
 
 For example:
 
@@ -116,52 +117,86 @@ fn strictly_between_9_and_11() {
 
 The following matchers are provided in GoogleTest Rust:
 
-| Matcher              | What it matches                                                          |
-|----------------------|--------------------------------------------------------------------------|
-| [`all!`]             | Anything matched by all given matchers.                                  |
-| [`any!`]             | Anything matched by at least one of the given matchers.                  |
-| [`anything`]         | Any input.                                                               |
-| [`approx_eq`]        | A floating point number within a standard tolerance of the argument.     |
-| [`char_count`]       | A string with a Unicode scalar count matching the argument.              |
-| [`container_eq`]     | Same as [`eq`], but for containers (with a better mismatch description). |
-| [`contains`]         | A container containing an element matched by the given matcher.          |
-| [`contains_each!`]   | A container containing distinct elements each of the arguments match.    |
-| [`contains_regex`]   | A string containing a substring matching the given regular expression.   |
-| [`contains_substring`] | A string containing the given substring.                               |
-| [`derefs_to`]        | A [`Deref`] which `deref()`s to a value that the argument matches.       |
-| [`displays_as`]      | A [`Display`] value whose formatted string is matched by the argument.   |
-| [`each`]             | A container all of whose elements the given argument matches.            |
-| [`elements_are!`]    | A container whose elements the arguments match, in order.                |
-| [`ends_with`]        | A string ending with the given suffix.                                   |
-| [`eq`]               | A value equal to the argument, in the sense of the [`PartialEq`] trait.  |
-| [`err`]              | A [`Result`][std::result::Result] containing an `Err` variant the argument matches. |
-| [`field!`]           | A struct or enum with a given field whose value the argument matches.    |
-| [`ge`]               | A [`PartialOrd`] value greater than or equal to the given value.         |
-| [`gt`]               | A [`PartialOrd`] value strictly greater than the given value.            |
-| [`has_entry`]        | A [`HashMap`] containing a given key whose value the argument matches.   |
-| [`is_contained_in!`] | A container each of whose elements is matched by some given matcher.     |
-| [`is_empty`]         | An empty collection.                                                     |
-| [`is_finite`]        | A floating point number which is neither infinite nor NaN.               |
-| [`is_infinite`]      | A floating point number which is positive or negative infinity.          |
-| [`is_nan`]           | A floating point number which is NaN.                                    |
-| [`le`]               | A [`PartialOrd`] value less than or equal to the given value.            |
-| [`len`]              | A container whose number of elements the argument matches.               |
-| [`lt`]               | A [`PartialOrd`] value strictly less than the given value.               |
-| [`matches_pattern!`] | A struct or enum whose fields are matched according to the arguments.    |
-| [`matches_regex`]    | A string matched by the given regular expression.                        |
-| [`near`]             | A floating point number within a given tolerance of the argument.        |
-| [`none`]             | An [`Option`] containing `None`.                                         |
-| [`not`]              | Any value the argument does not match.                                   |
-| [`ok`]               | A [`Result`][std::result::Result] containing an `Ok` variant the argument matches. |
-| [`pat!`]             | Alias for [`matches_pattern!`].                                          |
-| [`points_to`]        | A reference `&` which points to a value that the argument matches.       |
-| [`pointwise!`]       | A container whose contents the arguments match in a pointwise fashion.   |
-| [`predicate`]        | A value on which the given predicate returns true.                       |
-| [`some`]             | An [`Option`] containing `Some` whose value the argument matches.        |
-| [`starts_with`]      | A string starting with the given prefix.                                 |
-| [`subset_of`]        | A container all of whose elements are contained in the argument.         |
-| [`superset_of`]      | A container containing all elements of the argument.                     |
-| [`unordered_elements_are!`] | A container whose elements the arguments match, in any order.     |
+| Matcher                     | What it matches                                |
+| --------------------------- | ---------------------------------------------- |
+| [`all!`]                    | Anything matched by all given matchers.        |
+| [`any!`]                    | Anything matched by at least one of the given  |
+:                             : matchers.                                      :
+| [`anything`]                | Any input.                                     |
+| [`approx_eq`]               | A floating point number within a standard      |
+:                             : tolerance of the argument.                     :
+| [`char_count`]              | A string with a Unicode scalar count matching  |
+:                             : the argument.                                  :
+| [`container_eq`]            | Same as [`eq`], but for containers (with a     |
+:                             : better mismatch description).                  :
+| [`contains`]                | A container containing an element matched by   |
+:                             : the given matcher.                             :
+| [`contains_each!`]          | A container containing distinct elements each  |
+:                             : of the arguments match.                        :
+| [`contains_regex`]          | A string containing a substring matching the   |
+:                             : given regular expression.                      :
+| [`contains_substring`]      | A string containing the given substring.       |
+| [`derefs_to`]               | A [`Deref`] which `deref()`s to a value that   |
+:                             : the argument matches.                          :
+| [`displays_as`]             | A [`Display`] value whose formatted string is  |
+:                             : matched by the argument.                       :
+| [`each`]                    | A container all of whose elements the given    |
+:                             : argument matches.                              :
+| [`elements_are!`]           | A container whose elements the arguments       |
+:                             : match, in order.                               :
+| [`ends_with`]               | A string ending with the given suffix.         |
+| [`eq`]                      | A value equal to the argument, in the sense of |
+:                             : the [`PartialEq`] trait.                       :
+| [`err`]                     | A [`Result`][std::result::Result] containing   |
+:                             : an `Err` variant the argument matches.         :
+| [`field!`]                  | A struct or enum with a given field whose      |
+:                             : value the argument matches.                    :
+| [`ge`]                      | A [`PartialOrd`] value greater than or equal   |
+:                             : to the given value.                            :
+| [`gt`]                      | A [`PartialOrd`] value strictly greater than   |
+:                             : the given value.                               :
+| [`has_entry`]               | A [`HashMap`] containing a given key whose     |
+:                             : value the argument matches.                    :
+| [`is_contained_in!`]        | A container each of whose elements is matched  |
+:                             : by some given matcher.                         :
+| [`is_empty`]                | An empty collection.                           |
+| [`is_finite`]               | A floating point number which is neither       |
+:                             : infinite nor NaN.                              :
+| [`is_infinite`]             | A floating point number which is positive or   |
+:                             : negative infinity.                             :
+| [`is_nan`]                  | A floating point number which is NaN.          |
+| [`le`]                      | A [`PartialOrd`] value less than or equal to   |
+:                             : the given value.                               :
+| [`len`]                     | A container whose number of elements the       |
+:                             : argument matches.                              :
+| [`lt`]                      | A [`PartialOrd`] value strictly less than the  |
+:                             : given value.                                   :
+| [`matches_pattern!`]        | A struct or enum whose fields are matched      |
+:                             : according to the arguments.                    :
+| [`matches_regex`]           | A string matched by the given regular          |
+:                             : expression.                                    :
+| [`near`]                    | A floating point number within a given         |
+:                             : tolerance of the argument.                     :
+| [`none`]                    | An [`Option`] containing `None`.               |
+| [`not`]                     | Any value the argument does not match.         |
+| [`ok`]                      | A [`Result`][std::result::Result] containing   |
+:                             : an `Ok` variant the argument matches.          :
+| [`pat!`]                    | Alias for [`matches_pattern!`].                |
+| [`points_to`]               | A reference `&` which points to a value that   |
+:                             : the argument matches.                          :
+| [`pointwise!`]              | A container whose contents the arguments match |
+:                             : in a pointwise fashion.                        :
+| [`predicate`]               | A value on which the given predicate returns   |
+:                             : true.                                          :
+| [`some`]                    | An [`Option`] containing `Some` whose value    |
+:                             : the argument matches.                          :
+| [`starts_with`]             | A string starting with the given prefix.       |
+| [`subset_of`]               | A container all of whose elements are          |
+:                             : contained in the argument.                     :
+| [`superset_of`]             | A container containing all elements of the     |
+:                             : argument.                                      :
+| [`unordered_elements_are!`] | A container whose elements the arguments       |
+:                             : match, in any order.                           :
 
 [`all!`]: matchers::all
 [`any!`]: matchers::any
@@ -216,9 +251,9 @@ The following matchers are provided in GoogleTest Rust:
 
 ## Writing matchers
 
-One can extend the library by writing additional matchers. To do so, create
-a struct holding the matcher's data and have it implement the traits
-[`Matcher`] and  [`MatcherBase`]:
+One can extend the library by writing additional matchers. To do so, create a
+struct holding the matcher's data and have it implement the traits [`Matcher`]
+and [`MatcherBase`]:
 
 ```no_run
 use googletest::{description::Description, matcher::{Matcher, MatcherBase, MatcherResult}};
@@ -251,9 +286,9 @@ impl<T: PartialEq + Debug + Copy> Matcher<T> for MyEqMatcher<T> {
 }
 ```
 
- It is recommended to expose a function which constructs the matcher:
+It is recommended to expose a function which constructs the matcher:
 
- ```no_run
+```no_run
  # use googletest::{description::Description, matcher::{Matcher, MatcherBase, MatcherResult}};
  # use std::fmt::Debug;
  # #[derive(MatcherBase)]
@@ -285,9 +320,9 @@ impl<T: PartialEq + Debug + Copy> Matcher<T> for MyEqMatcher<T> {
  pub fn eq_my_way<T: PartialEq + Debug + Copy>(expected: T) -> impl Matcher<T> {
     MyEqMatcher { expected }
  }
- ```
+```
 
- The new matcher can then be used in the assertion macros:
+The new matcher can then be used in the assertion macros:
 
 ```
 # use googletest::prelude::*;
@@ -337,9 +372,8 @@ fn should_be_equal_by_my_definition() {
 ## Non-fatal assertions
 
 Using non-fatal assertions, a single test is able to log multiple assertion
-failures. Any single assertion failure causes the test to be considered
-having failed, but execution continues until the test completes or otherwise
-aborts.
+failures. Any single assertion failure causes the test to be considered having
+failed, but execution continues until the test completes or otherwise aborts.
 
 To make a non-fatal assertion, use the macro [`expect_that!`]. The test must
 also be marked with [`gtest`] instead of the Rust-standard `#[test]`.
@@ -390,9 +424,9 @@ fn failing_fatal_assertion_after_non_fatal_assertion() -> Result<()> {
 ## Predicate assertions
 
 The macro [`verify_pred!`] provides predicate assertions analogous to
-GoogleTest's `EXPECT_PRED` family of macros. Wrap an invocation of a
-predicate in a `verify_pred!` invocation to turn that into a test assertion
-which passes precisely when the predicate returns `true`:
+GoogleTest's `EXPECT_PRED` family of macros. Wrap an invocation of a predicate
+in a `verify_pred!` invocation to turn that into a test assertion which passes
+precisely when the predicate returns `true`:
 
 ```
 # use googletest::prelude::*;
@@ -409,8 +443,8 @@ verify_pred!(stuff_is_correct(x, y))?;
 # run_test().unwrap_err();
 ```
 
-The assertion failure message shows the arguments and the values to which
-they evaluate:
+The assertion failure message shows the arguments and the values to which they
+evaluate:
 
 ```text
 stuff_is_correct(x, y) was false with
@@ -424,10 +458,9 @@ predicaticate assertion.
 
 ## Unconditionally generating a test failure
 
-The macro [`fail!`] unconditionally evaluates to a `Result` indicating a
-test failure. It can be used analogously to [`verify_that!`] and
-[`verify_pred!`] to cause a test to fail, with an optional formatted
-message:
+The macro [`fail!`] unconditionally evaluates to a `Result` indicating a test
+failure. It can be used analogously to [`verify_that!`] and [`verify_pred!`] to
+cause a test to fail, with an optional formatted message:
 
 ```
 # use googletest::prelude::*;
@@ -440,15 +473,28 @@ fn always_fails() -> Result<()> {
 # always_fails().unwrap_err();
 ```
 
+## Death tests
+
+GoogleTest Rust provides macros to assert that an expression terminates the
+current process:
+
+*   [`verify_exit!`] and [`expect_exit!`] assert that an expression terminates
+    the process with an exit status matching a given matcher and stderr matching
+    a string matcher.
+*   [`verify_death!`] and [`expect_death!`] assert that an expression causes the
+    process to die (exiting unsuccessfully, either with a non-zero exit code or
+    by a signal), with stderr matching a string matcher.
+
 ## Conversion from `Result::Err` and `Option::None`
 
-To simplify error management during a test arrangement, [`Result<T>`]
-provides a few conversion utilities.
+To simplify error management during a test arrangement, [`Result<T>`] provides a
+few conversion utilities.
 
-If your setup function returns `std::result::Result<T, E>` where `E: std::error::Error`,
-the `std::result::Result<T, E>` can simply be handled with the `?` operator. If an `Err(e)`
-is returned, the test will report a failure at the line where the `?` operator has been
-applied (or the lowest caller without `#[track_caller]`).
+If your setup function returns `std::result::Result<T, E>` where `E:
+std::error::Error`, the `std::result::Result<T, E>` can simply be handled with
+the `?` operator. If an `Err(e)` is returned, the test will report a failure at
+the line where the `?` operator has been applied (or the lowest caller without
+`#[track_caller]`).
 
 ```
 # use googletest::prelude::*;
@@ -479,8 +525,8 @@ fn test_png_image_dimensions() -> googletest::Result<()> {
 ```
 
 If your setup function returns `Option<T>` or `std::result::Result<T, E>` where
-`E: !std::error::Error`, then you can convert these types with `or_fail()`
-from the `OrFail` extension trait.
+`E: !std::error::Error`, then you can convert these types with `or_fail()` from
+the `OrFail` extension trait.
 
 ```
 # use googletest::prelude::*;
@@ -521,7 +567,6 @@ fn test_png_from_cache() -> googletest::Result<()> {
 }
 # test_png_from_cache().unwrap_err();
 ```
-
 
 ## Multi-threaded tests
 
