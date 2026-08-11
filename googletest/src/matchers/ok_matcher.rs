@@ -96,18 +96,12 @@ impl<'a, T: Debug, E: Debug, InnerMatcherT: Matcher<&'a T>> Matcher<&'a std::res
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
-        match matcher_result {
-            MatcherResult::Match => format!(
-                "is a success containing a value, which {}",
-                self.inner.describe(MatcherResult::Match)
-            )
-            .into(),
-            MatcherResult::NoMatch => format!(
-                "is an error or a success containing a value, which {}",
-                self.inner.describe(MatcherResult::NoMatch)
-            )
-            .into(),
-        }
+        let subject = match matcher_result {
+            MatcherResult::Match => "is a success",
+            MatcherResult::NoMatch => "is an error or a success",
+        };
+        format!("{} containing a value, which {}", subject, self.inner.describe(matcher_result))
+            .into()
     }
 }
 
