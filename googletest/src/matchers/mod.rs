@@ -76,7 +76,7 @@ pub use each_matcher::each;
 pub use empty_matcher::is_empty;
 pub use eq_matcher::{eq, EqMatcher};
 pub use err_matcher::err;
-pub use exit_status_matcher::exited_with_code;
+pub use exit_status_matcher::{died, exited_with_code};
 pub use ge_matcher::ge;
 pub use gt_matcher::gt;
 pub use has_entry_matcher::has_entry;

@@ -112,7 +112,7 @@ pub fn oversee_death_test<StatusM, OutputM>(
     output_matcher: &OutputM,
 ) -> crate::Result<()>
 where
-    for<'a> StatusM: Matcher<&'a ExitStatus>,
+    StatusM: Matcher<ExitStatus>,
     for<'a> OutputM: Matcher<&'a str>,
 {
     let test_name = CURRENT_TEST_NAME.with(|n| n.borrow().clone()).ok_or_else(|| {
@@ -161,7 +161,7 @@ where
     }
 
     // Verify the exit status
-    match status_matcher.matches(&output.status) {
+    match status_matcher.matches(output.status) {
         crate::matcher::MatcherResult::Match => {
             // Status matched. Now check the output.
             match output_matcher.matches(&raw_stderr) {

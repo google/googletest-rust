@@ -68,17 +68,20 @@ macro_rules! __any {
         $crate::matchers::not($crate::matchers::anything())
     }} ;
     ($matcher:expr $(,)?) => {{
-        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
-        auto_eq!($matcher)
+        $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($matcher)
     }};
     ($head:expr, $head2:expr $(,)?) => {{
-        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
-        $crate::matchers::__internal_unstable_do_not_depend_on_these::DisjunctionMatcher::new(auto_eq!($head), auto_eq!($head2))
+        $crate::matchers::__internal_unstable_do_not_depend_on_these::DisjunctionMatcher::new(
+            $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($head),
+            $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($head2),
+        )
     }};
     ($head:expr, $head2:expr, $($tail:expr),+ $(,)?) => {{
-        use $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq;
         $crate::__any![
-            $crate::matchers::__internal_unstable_do_not_depend_on_these::DisjunctionMatcher::new(auto_eq!($head), auto_eq!($head2)),
+            $crate::matchers::__internal_unstable_do_not_depend_on_these::DisjunctionMatcher::new(
+                $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($head),
+                $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($head2),
+            ),
             $($tail),+
         ]
     }}

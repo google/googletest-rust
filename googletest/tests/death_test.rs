@@ -16,22 +16,22 @@ use googletest::prelude::*;
 use std::process::exit;
 
 #[gtest]
-fn test_expect_exit_success() -> Result<()> {
+fn test_verify_exit_success() -> Result<()> {
     verify_exit!(exit(0), exited_with_code(0), anything())
 }
 
 #[gtest]
-fn test_expect_exit_macro_success() {
+fn test_expect_exit_success() {
     expect_exit!(exit(0), exited_with_code(0), anything());
 }
 
 #[gtest]
-fn test_expect_exit_failure_code() -> Result<()> {
+fn test_verify_exit_failure_code() -> Result<()> {
     verify_exit!(exit(42), exited_with_code(42), anything())
 }
 
 #[gtest]
-fn test_expect_exit_with_output() -> Result<()> {
+fn test_verify_exit_with_output() -> Result<()> {
     verify_exit!(
         {
             eprintln!("Fatal error encountered!");
@@ -43,14 +43,14 @@ fn test_expect_exit_with_output() -> Result<()> {
 }
 
 #[gtest]
-fn test_expect_exit_multiple() -> Result<()> {
+fn test_verify_exit_multiple() -> Result<()> {
     verify_exit!(exit(1), exited_with_code(1), anything())?;
     verify_exit!(exit(2), exited_with_code(2), anything())?;
     Ok(())
 }
 
 #[gtest]
-fn test_expect_exit_fails_when_lived() -> Result<()> {
+fn test_verify_exit_fails_when_lived() -> Result<()> {
     // We test that verify_exit fails when the code doesn't die.
     // We can verify that verify_exit itself returns an Err!
     let res = verify_exit!(
@@ -64,7 +64,7 @@ fn test_expect_exit_fails_when_lived() -> Result<()> {
 }
 
 #[gtest]
-fn test_expect_exit_fails_wrong_code() -> Result<()> {
+fn test_verify_exit_fails_wrong_code() -> Result<()> {
     let res = verify_exit!(exit(1), exited_with_code(0), anything());
     verify_that!(res, err(displays_as(contains_substring("exit status did not match"))))
 }
@@ -93,4 +93,44 @@ fn test_death_test_does_not_run_other_tests_in_child() -> Result<()> {
 #[gtest]
 fn test_another_normal_test_that_should_not_run_in_death_test_child() {
     eprintln!("___DEATH_TEST_SPOILER_ALERT_2___");
+}
+
+#[gtest]
+fn test_verify_death_success() -> Result<()> {
+    verify_death!(exit(1), anything())
+}
+
+#[gtest]
+fn test_expect_death_success() {
+    expect_death!(exit(1), anything());
+}
+
+#[gtest]
+fn test_verify_death_failure_when_lived() -> Result<()> {
+    let res = verify_death!(
+        {
+            // Does nothing, returns normally
+        },
+        anything()
+    );
+    verify_that!(res, err(displays_as(contains_substring("Death test failed to die"))))
+}
+
+#[gtest]
+fn test_verify_death_failure_when_exited_successfully() -> Result<()> {
+    let res = verify_death!(exit(0), anything());
+    verify_that!(res, err(displays_as(contains_substring("exit status did not match"))))
+}
+
+#[gtest]
+fn test_verify_exit_with_custom_message() -> Result<()> {
+    let res =
+        verify_exit!(exit(1), exited_with_code(0), anything(), "custom failure message: {}", 42);
+    verify_that!(res, err(displays_as(contains_substring("custom failure message: 42"))))
+}
+
+#[gtest]
+fn test_verify_death_with_custom_message() -> Result<()> {
+    let res = verify_death!(exit(0), anything(), "custom death message: {}", 42);
+    verify_that!(res, err(displays_as(contains_substring("custom death message: 42"))))
 }
