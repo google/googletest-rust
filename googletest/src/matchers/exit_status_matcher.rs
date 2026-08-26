@@ -42,39 +42,53 @@ pub struct ExitedWithCodeMatcher {
     expected: i32,
 }
 
-impl ExitedWithCodeMatcher {
-    fn matches_impl(&self, actual: ExitStatus) -> MatcherResult {
-        match actual.code() {
-            Some(c) if c == self.expected => MatcherResult::Match,
-            _ => MatcherResult::NoMatch,
-        }
+/// Matches an [`ExitStatus`] which corresponds to a process that did not exit
+/// successfully (either a non-zero exit code or terminated by a signal).
+///
+/// ```
+/// # use googletest::prelude::*;
+/// # use std::process::Command;
+/// # fn run_command() -> std::process::ExitStatus { Command::new("false").status().unwrap() }
+/// # fn should_pass() -> Result<()> {
+/// verify_that!(run_command(), died())?;
+/// # Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// ```
+pub fn died() -> DiedMatcher {
+    DiedMatcher
+}
+
+/// A matcher for `ExitStatus` checking if it corresponds to a failed execution.
+#[derive(MatcherBase)]
+pub struct DiedMatcher;
+
+impl Matcher<ExitStatus> for DiedMatcher {
+    fn matches(&self, actual: ExitStatus) -> MatcherResult {
+        (!actual.success()).into()
     }
 
-    fn describe_impl(&self, matcher_result: MatcherResult) -> Description {
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
-            MatcherResult::Match => format!("exited with code {}", self.expected).into(),
-            MatcherResult::NoMatch => format!("did not exit with code {}", self.expected).into(),
+            MatcherResult::Match => "died (non-zero exit code or signaled)".into(),
+            MatcherResult::NoMatch => "did not die (exited successfully with code 0)".into(),
         }
     }
 }
 
 impl Matcher<ExitStatus> for ExitedWithCodeMatcher {
     fn matches(&self, actual: ExitStatus) -> MatcherResult {
-        self.matches_impl(actual)
+        match actual.code() {
+            Some(c) if c == self.expected => MatcherResult::Match,
+            _ => MatcherResult::NoMatch,
+        }
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
-        self.describe_impl(matcher_result)
-    }
-}
-
-impl Matcher<&ExitStatus> for ExitedWithCodeMatcher {
-    fn matches(&self, actual: &ExitStatus) -> MatcherResult {
-        self.matches_impl(*actual)
-    }
-
-    fn describe(&self, matcher_result: MatcherResult) -> Description {
-        self.describe_impl(matcher_result)
+        match matcher_result {
+            MatcherResult::Match => format!("exited with code {}", self.expected).into(),
+            MatcherResult::NoMatch => format!("did not exit with code {}", self.expected).into(),
+        }
     }
 }
 
@@ -86,20 +100,20 @@ mod tests {
     use std::process::Command;
 
     #[gtest]
-    fn exited_with_code_matches_by_value() -> Result<()> {
+    fn exited_with_code_matches() -> Result<()> {
         let status = Command::new("true").status().unwrap();
         verify_that!(status, exited_with_code(0))
-    }
-
-    #[gtest]
-    fn exited_with_code_matches_by_ref() -> Result<()> {
-        let status = Command::new("true").status().unwrap();
-        verify_that!(&status, exited_with_code(0))
     }
 
     #[gtest]
     fn exited_with_code_does_not_match_wrong_code() -> Result<()> {
         let status = Command::new("true").status().unwrap();
         verify_that!(status, not(exited_with_code(1)))
+    }
+
+    #[gtest]
+    fn died_matches() -> Result<()> {
+        let status = Command::new("false").status().unwrap();
+        verify_that!(status, died())
     }
 }

@@ -1999,6 +1999,12 @@ macro_rules! verify_exit {
             death_tests::DeathTestRole::Skip => $crate::Result::Ok(()),
         }
     }};
+    ($expr:expr, $code_matcher:expr, $output_matcher:expr, $($format_args:expr),* $(,)?) => {
+        $crate::GoogleTestSupport::with_failure_message(
+            $crate::verify_exit!($expr, $code_matcher, $output_matcher),
+            || format!($($format_args),*),
+        )
+    };
 }
 pub use verify_exit;
 
@@ -2026,8 +2032,69 @@ macro_rules! expect_exit {
             $output_matcher
         ))
     };
+    ($expr:expr, $code_matcher:expr, $output_matcher:expr, $($format_args:expr),* $(,)?) => {
+        $crate::GoogleTestSupport::and_log_failure_with_message(
+            $crate::verify_exit!($expr, $code_matcher, $output_matcher),
+            || format!($($format_args),*),
+        )
+    };
 }
 pub use expect_exit;
+
+/// Asserts that `expr` causes the process to die (exit unsuccessfully), with
+/// captured stderr output matching `output_matcher`.
+///
+/// Evaluates to `Result::Ok(())` if satisfied and `Result::Err` otherwise.
+///
+/// Example:
+/// ```
+/// # use googletest::prelude::*;
+/// # fn should_pass() -> Result<()> {
+/// # /* Must be run inside a #[gtest] context
+/// verify_death!(std::process::exit(1), anything())?;
+/// # */
+/// # Ok(())
+/// # }
+/// ```
+#[macro_export]
+macro_rules! verify_death {
+    ($expr:expr, $output_matcher:expr $(,)?) => {
+        $crate::verify_exit!($expr, $crate::matchers::died(), $output_matcher)
+    };
+    ($expr:expr, $output_matcher:expr, $($format_args:expr),* $(,)?) => {
+        $crate::verify_exit!($expr, $crate::matchers::died(), $output_matcher, $($format_args),*)
+    };
+}
+pub use verify_death;
+
+/// Like [`verify_death!`], but logs the failure and continues execution.
+///
+/// Refer to the documentation on [`verify_exit!`] for details on how setup
+/// execution, spawned threads, and nested death tests are handled.
+///
+/// Example:
+/// ```
+/// # use googletest::prelude::*;
+/// # /* Must be run inside a #[gtest] context
+/// #[gtest]
+/// fn test() {
+///     expect_death!(std::process::exit(1), anything());
+/// }
+/// # */
+/// ```
+#[macro_export]
+macro_rules! expect_death {
+    ($expr:expr, $output_matcher:expr $(,)?) => {
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_death!($expr, $output_matcher))
+    };
+    ($expr:expr, $output_matcher:expr, $($format_args:expr),* $(,)?) => {
+        $crate::GoogleTestSupport::and_log_failure_with_message(
+            $crate::verify_death!($expr, $output_matcher),
+            || format!($($format_args),*),
+        )
+    };
+}
+pub use expect_death;
 
 #[cfg(test)]
 mod tests {
