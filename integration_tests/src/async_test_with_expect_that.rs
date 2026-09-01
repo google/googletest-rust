@@ -75,4 +75,54 @@ mod tests {
         f.0 = 6;
         Ok(())
     }
+
+    #[gtest]
+    #[tokio::test]
+    async fn async_test_with_scoped_trace() -> Result<()> {
+        scoped_trace!("Outer trace");
+        brief_sleep().await;
+        {
+            scoped_trace!("Inner trace");
+            brief_sleep().await;
+            let traces = googletest::internal::scoped_trace::get_scoped_traces();
+            verify_eq!(traces.len(), 2)?;
+            verify_eq!(traces[0].message, "Outer trace")?;
+            verify_eq!(traces[1].message, "Inner trace")?;
+        }
+        brief_sleep().await;
+        let traces = googletest::internal::scoped_trace::get_scoped_traces();
+        verify_eq!(traces.len(), 1)?;
+        verify_eq!(traces[0].message, "Outer trace")?;
+        Ok(())
+    }
+
+    fn sync_subroutine_with_trace() {
+        scoped_trace!("Sync subroutine trace");
+        let traces = googletest::internal::scoped_trace::get_scoped_traces();
+        assert!(traces.iter().any(|t| t.message == "Sync subroutine trace"));
+    }
+
+    #[gtest]
+    #[tokio::test]
+    async fn async_test_mixed_scoped_trace() -> Result<()> {
+        scoped_trace!("Outer async trace");
+        brief_sleep().await;
+
+        sync_subroutine_with_trace();
+
+        {
+            scoped_trace!("Inner async trace");
+            brief_sleep().await;
+            let traces = googletest::internal::scoped_trace::get_scoped_traces();
+            verify_eq!(traces.len(), 2)?;
+            verify_eq!(traces[0].message, "Outer async trace")?;
+            verify_eq!(traces[1].message, "Inner async trace")?;
+        }
+
+        brief_sleep().await;
+        let traces = googletest::internal::scoped_trace::get_scoped_traces();
+        verify_eq!(traces.len(), 1)?;
+        verify_eq!(traces[0].message, "Outer async trace")?;
+        Ok(())
+    }
 }

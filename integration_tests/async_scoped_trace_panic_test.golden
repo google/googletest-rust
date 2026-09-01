@@ -1,0 +1,3 @@
+Google Test trace:
+  async_scoped_trace_panic_test.rs:4: Sync trace message
+  async_scoped_trace_panic_test.rs:14: Outer async trace message
