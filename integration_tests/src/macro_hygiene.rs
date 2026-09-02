@@ -21,8 +21,8 @@ mod core {}
 #[cfg(test)]
 mod tests {
     // NOTE: this test module intentionally does not import items from
-    // `googletest` to ensure that the macros do not depend on other items from the
-    // library being imported.
+    // `googletest` to ensure that the macros do not depend on other items from
+    // the library being imported.
     use googletest::gtest;
 
     #[gtest]

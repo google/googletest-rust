@@ -22,10 +22,37 @@ thread_local! {
     static DEATH_TEST_COUNT: Cell<usize> = const { Cell::new(0) };
 }
 
-/// Stores the name of the current test. Called by `#[gtest]`.
-pub fn set_current_test_name(name: &str) {
+/// A drop guard that resets the current test name and death test count when dropped.
+#[must_use = "the test name is reset when the guard is dropped"]
+pub struct CurrentTestNameGuard {
+    _phantom: std::marker::PhantomData<*mut ()>,
+}
+
+impl Drop for CurrentTestNameGuard {
+    fn drop(&mut self) {
+        reset_current_test_name();
+    }
+}
+
+/// Clears the name of the current test and resets the death test count.
+pub fn reset_current_test_name() {
+    CURRENT_TEST_NAME.with(|n| *n.borrow_mut() = None);
+    DEATH_TEST_COUNT.with(|c| c.set(0));
+}
+
+/// Returns the name of the current test, if one is currently running.
+pub fn current_test_name() -> Option<String> {
+    CURRENT_TEST_NAME.with(|n| n.borrow().clone())
+}
+
+/// Stores the name of the current test. Called by `#[gtest]` and test runners.
+///
+/// Returns a [`CurrentTestNameGuard`] that resets the test name when dropped.
+#[must_use = "the test name is reset when the guard is dropped"]
+pub fn set_current_test_name(name: &str) -> CurrentTestNameGuard {
     CURRENT_TEST_NAME.with(|n| *n.borrow_mut() = Some(name.to_string()));
     DEATH_TEST_COUNT.with(|c| c.set(0));
+    CurrentTestNameGuard { _phantom: std::marker::PhantomData }
 }
 
 fn increment_death_test_count() -> usize {
@@ -115,7 +142,7 @@ where
     StatusM: Matcher<ExitStatus>,
     for<'a> OutputM: Matcher<&'a str>,
 {
-    let test_name = CURRENT_TEST_NAME.with(|n| n.borrow().clone()).ok_or_else(|| {
+    let test_name = current_test_name().ok_or_else(|| {
         TestAssertionFailure::create(
             "Could not determine current test name. Did you annotate the test with `#[gtest]`?"
                 .to_string(),
@@ -134,7 +161,7 @@ where
     let child = Command::new(exe)
         .env("TESTBRIDGE_TEST_ONLY", &test_name)
         .env(INTERNAL_DEATH_TEST_INDEX_VAR, index.to_string())
-        .arg("--nocapture")
+        .env("RUST_TEST_NOCAPTURE", "1")
         .stdin(Stdio::null())
         .stdout(Stdio::null()) // Suppress harness output
         .stderr(Stdio::piped())
@@ -191,5 +218,31 @@ where
             }
             Err(TestAssertionFailure::create(msg))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_name_guard_clears_on_drop() {
+        assert_eq!(current_test_name(), None);
+        {
+            let _guard = set_current_test_name("test_name_guard_clears_on_drop");
+            assert_eq!(current_test_name().as_deref(), Some("test_name_guard_clears_on_drop"));
+        }
+        assert_eq!(current_test_name(), None);
+    }
+
+    #[test]
+    fn test_name_guard_clears_on_panic() {
+        assert_eq!(current_test_name(), None);
+        let _ = std::panic::catch_unwind(|| {
+            let _guard = set_current_test_name("panicking_test");
+            assert_eq!(current_test_name().as_deref(), Some("panicking_test"));
+            panic!("test panic");
+        });
+        assert_eq!(current_test_name(), None);
     }
 }
