@@ -22,7 +22,6 @@ jobs:
     name: clippy / ${{ matrix.toolchain }}
     permissions:
       contents: read
-      checks: write
     strategy:
       fail-fast: false
       matrix:
@@ -35,10 +34,9 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
       - name: cargo clippy
-        uses: actions-rs/clippy-check@b5b5f21f4797c02da247df37026fcd0a5024aa4d # v1.0.7
+        uses: clechasseur/rs-clippy-check@20f338ad6648dedb921c00b023bc30c971ab9ed7 # v6.0.7
         with:
           args: --all-targets --all-features
-          token: ${{ secrets.GITHUB_TOKEN }}
 
   test-latest-deps:
     runs-on: ubuntu-latest
