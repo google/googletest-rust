@@ -1,7 +1,6 @@
 # GoogleTest Rust
 
-[![crates.io][crates-badge]][crates-url]
-[![docs.rs][docs-badge]][docs-url]
+[![crates.io][crates-badge]][crates-url] [![docs.rs][docs-badge]][docs-url]
 [![Apache licensed][license-badge]][license-url]
 [![Build Status][actions-badge]][actions-url]
 [![OpenSSF Best Practices][openssf-badge]][openssf-url]
@@ -20,13 +19,13 @@
 This library brings the rich assertion types of Google's C++ testing library
 [GoogleTest](https://github.com/google/googletest) to Rust. It provides:
 
- * A framework for writing matchers which can be combined to make a wide range
-   of assertions on data,
- * A rich set of matchers providing similar functionality to those included in
-   [GoogleTest](https://google.github.io/googletest/reference/matchers.html),
-   and
- * A new set of assertion macros offering similar functionality to those of
-   [GoogleTest](https://google.github.io/googletest/primer.html#assertions).
+*   A framework for writing matchers which can be combined to make a wide range
+    of assertions on data,
+*   A rich set of matchers providing similar functionality to those included in
+    [GoogleTest](https://google.github.io/googletest/reference/matchers.html),
+    and
+*   A new set of assertion macros offering similar functionality to those of
+    [GoogleTest](https://google.github.io/googletest/primer.html#assertions).
 
 **The minimum supported Rust version is 1.85**.
 
@@ -39,12 +38,12 @@ This library brings the rich assertion types of Google's C++ testing library
 
 ## Learning resources
 
-If you're just getting started with `googletest`, consider going through
-the first chapter of
+If you're just getting started with `googletest`, consider going through the
+first chapter of
 ["Advanced testing for Rust applications"](https://github.com/mainmatter/rust-advanced-testing-workshop),
 a self-guided Rust course: it provides a guided introduction to the library,
-with exercises to help you get comfortable with `googletest` macros,
-its matchers and its overall philosophy.
+with exercises to help you get comfortable with `googletest` macros, its
+matchers and its overall philosophy.
 
 ## Assertions and matchers
 
@@ -54,17 +53,17 @@ matching, and so on.
 
 To make an assertion using a matcher, GoogleTest offers three macros:
 
- * [`assert_that!`] panics if the assertion fails, aborting the test.
- * [`expect_that!`] logs an assertion failure, marking the test as having
-   failed, but allows the test to continue running (called a _non-fatal
-   assertion_). It requires the use of the [`gtest`] attribute macro
-   on the test itself.
- * [`verify_that!`] has no side effects and evaluates to a [`Result<()>`] whose
-   `Err` variant describes the assertion failure, if there is one. In
-   combination with the
-   [`?` operator](https://doc.rust-lang.org/reference/expressions/operator-expr.html#the-question-mark-operator),
-   this can be used to abort the test on assertion failure without panicking. It
-   is also the building block for the other two macros above.
+*   [`assert_that!`] panics if the assertion fails, aborting the test.
+*   [`expect_that!`] logs an assertion failure, marking the test as having
+    failed, but allows the test to continue running (called a *non-fatal
+    assertion*). It requires the use of the [`gtest`] attribute macro on the
+    test itself.
+*   [`verify_that!`] has no side effects and evaluates to a [`Result<()>`] whose
+    `Err` variant describes the assertion failure, if there is one. In
+    combination with the
+    [`?` operator](https://doc.rust-lang.org/reference/expressions/operator-expr.html#the-question-mark-operator),
+    this can be used to abort the test on assertion failure without panicking.
+    It is also the building block for the other two macros above.
 
 For example:
 
@@ -101,9 +100,9 @@ fn simple_assertion() -> Result<()> {
 
 This library includes a rich set of matchers, covering:
 
- * Equality, numeric inequality, and approximate equality;
- * Strings and regular expressions;
- * Containers and set-theoretic matching.
+*   Equality, numeric inequality, and approximate equality;
+*   Strings and regular expressions;
+*   Containers and set-theoretic matching.
 
 Matchers are composable:
 
@@ -256,9 +255,9 @@ fn failing_fatal_assertion_after_non_fatal_assertion() -> Result<()> {
 
 ### Interoperability
 
-You can use the `#[gtest]` macro together with many other libraries
-such as [rstest](https://crates.io/crates/rstest). Just apply both attribute
-macros to the test:
+You can use the `#[gtest]` macro together with many other libraries such as
+[rstest](https://crates.io/crates/rstest). Just apply both attribute macros to
+the test:
 
 ```rust
 #[gtest]
@@ -271,9 +270,9 @@ fn rstest_works_with_google_test(#[case] value: u32) -> Result<()> {
 }
 ```
 
-Make sure to put `#[gtest]` *before* `#[rstest]`. Otherwise the
-annotated test will run twice, since both macros will attempt to register a test
-with the Rust test harness.
+Make sure to put `#[gtest]` *before* `#[rstest]`. Otherwise the annotated test
+will run twice, since both macros will attempt to register a test with the Rust
+test harness.
 
 The macro also works together with
 [async tests with Tokio](https://docs.rs/tokio/latest/tokio/attr.gtest.html) in
@@ -334,6 +333,18 @@ fn always_fails() -> Result<()> {
 }
 ```
 
+## Death tests
+
+GoogleTest Rust provides macros to assert that an expression terminates the
+current process:
+
+*   [`verify_exit!`] and [`expect_exit!`] assert that an expression terminates
+    the process with an exit status matching a given matcher and stderr matching
+    a string matcher.
+*   [`verify_death!`] and [`expect_death!`] assert that an expression causes the
+    process to die (exiting unsuccessfully, either with a non-zero exit code or
+    by a signal), with stderr matching a string matcher.
+
 ## Configuration
 
 This library is configurable through environment variables. Since the
@@ -343,10 +354,10 @@ displayed, we recommend setting those variables in the personal
 
 ### Configuration variable list
 
-| Variable name | Description                                             |
-| ------------- | ------------------------------------------------------- |
-| NO_COLOR      | Disables colored output. See <https://no-color.org/>.   |
-| FORCE_COLOR   | Forces colors even when the output is piped to a file.  |
+Variable name | Description
+------------- | ------------------------------------------------------
+NO_COLOR      | Disables colored output. See <https://no-color.org/>.
+FORCE_COLOR   | Forces colors even when the output is piped to a file.
 
 ## Contributing Changes
 
@@ -355,11 +366,15 @@ to this project.
 
 [`and_log_failure()`]: https://docs.rs/googletest/*/googletest/trait.GoogleTestSupport.html#tymethod.and_log_failure
 [`assert_that!`]: https://docs.rs/googletest/*/googletest/macro.assert_that.html
+[`expect_death!`]: https://docs.rs/googletest/*/googletest/macro.expect_death.html
+[`expect_exit!`]: https://docs.rs/googletest/*/googletest/macro.expect_exit.html
 [`expect_pred!`]: https://docs.rs/googletest/*/googletest/macro.expect_pred.html
 [`expect_that!`]: https://docs.rs/googletest/*/googletest/macro.expect_that.html
 [`fail!`]: https://docs.rs/googletest/*/googletest/macro.fail.html
 [`gtest`]: https://docs.rs/googletest/*/googletest/attr.gtest.html
 [`matches_pattern!`]: https://docs.rs/googletest/*/googletest/macro.matches_pattern.html
+[`verify_death!`]: https://docs.rs/googletest/*/googletest/macro.verify_death.html
+[`verify_exit!`]: https://docs.rs/googletest/*/googletest/macro.verify_exit.html
 [`verify_pred!`]: https://docs.rs/googletest/*/googletest/macro.verify_pred.html
 [`verify_that!`]: https://docs.rs/googletest/*/googletest/macro.verify_that.html
 [`Describe`]: https://docs.rs/googletest/*/googletest/matcher/trait.Describe.html
