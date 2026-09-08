@@ -24,6 +24,7 @@ static TEST_FILTER: OnceLock<Box<dyn TestFilter + Send + Sync>> = OnceLock::new(
 pub fn test_should_run(test_name: &str) -> bool {
     let test_filter = TEST_FILTER.get_or_init(|| {
         if let Ok(testbridge_test_only) = std::env::var("TESTBRIDGE_TEST_ONLY") {
+            eprintln!("Note: Google Test filter = {}", testbridge_test_only);
             Box::new(get_test_filter(&testbridge_test_only))
         } else {
             Box::new(AcceptAll)
