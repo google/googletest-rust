@@ -1876,6 +1876,13 @@ mod tests {
     }
 
     #[gtest]
+    fn test_assertion_failure_chain_from_error() -> Result<()> {
+        let output = run_external_process_in_tests_directory("test_returning_custom_error")?;
+
+        verify_that!(output, contains_substring("Error: test3\n\nCaused by:\n1: test2\n2: test1"))
+    }
+
+    #[gtest]
     fn test_can_return_option_generated_error() -> Result<()> {
         let output = run_external_process_in_tests_directory("test_returning_option")?;
 
