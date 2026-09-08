@@ -304,6 +304,7 @@ macro_rules! __matches_pattern {
 macro_rules! matches_pattern_internal {
     ($($tt:tt)*) => {
         {
+            #[allow(clippy::unnecessary_self_imports)]
             use $crate::{self as googletest};
             #[allow(unused)]
             use $crate::matchers::{all, field, property};
