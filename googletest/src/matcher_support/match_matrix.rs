@@ -174,33 +174,37 @@ pub mod internal {
         //
         // Uses the well-known Ford-Fulkerson max flow method to find a maximum
         // bipartite matching. Flow is considered to be from actual to expected.
-        // There is an implicit source node that is connected to all of the actual
-        // nodes, and an implicit sink node that is connected to all of the
-        // expected nodes. All edges have unit capacity.
+        // There is an implicit source node that is connected to all of the
+        // actual nodes, and an implicit sink node that is connected to
+        // all of the expected nodes. All edges have unit capacity.
         //
         // Neither the flow graph nor the residual flow graph are represented
-        // explicitly. Instead, they are implied by the information in `self.graph` and
-        // the local `actual_match : vec![Option<usize>; self.expected_len]` whose
-        // elements are initialized to `None`. This represents the initial state
+        // explicitly. Instead, they are implied by the information in
+        // `self.graph` and the local `actual_match :
+        // vec![Option<usize>; self.expected_len]` whose elements are
+        // initialized to `None`. This represents the initial state
         // of the algorithm, where the flow graph is empty, and the residual
         // flow graph has the following edges:
         //   - An edge from source to each actual element node
         //   - An edge from each expected element node to sink
-        //   - An edge from each actual element node to each expected element node, if
-        //     the actual element matches the expected element, i.e.
+        //   - An edge from each actual element node to each expected element
+        //     node, if the actual element matches the expected element, i.e.
         //     `matches!(self.graph[actual_id][expected_id], Matches)`
         //
-        // When the `try_augment(...)` method adds a flow, it sets `actual_match[l] =
-        // Some(r)` for some nodes l and r. This induces the following changes:
-        //   - The edges (source, l), (l, r), and (r, sink) are added to the flow graph.
+        // When the `try_augment(...)` method adds a flow, it sets
+        // `actual_match[l] = Some(r)` for some nodes l and r. This
+        // induces the following changes:
+        //   - The edges (source, l), (l, r), and (r, sink) are added to the
+        //     flow graph.
         //   - The same three edges are removed from the residual flow graph.
-        //   - The reverse edges (l, source), (r, l), and (sink, r) are added to the
-        //     residual flow graph, which is a directional graph representing unused
-        //     flow capacity.
+        //   - The reverse edges (l, source), (r, l), and (sink, r) are added to
+        //     the residual flow graph, which is a directional graph
+        //     representing unused flow capacity.
         //
-        // When the method augments a flow (changing `actual_match[l]` from `Some(r1)`
-        // to `Some(r2)`), this can be thought of as "undoing" the above steps
-        // with respect to r1 and "redoing" them with respect to r2.
+        // When the method augments a flow (changing `actual_match[l]` from
+        // `Some(r1)` to `Some(r2)`), this can be thought of as
+        // "undoing" the above steps with respect to r1 and "redoing"
+        // them with respect to r2.
         //
         // It bears repeating that the flow graph and residual flow graph are
         // never represented explicitly, but can be derived by looking at the
@@ -212,10 +216,10 @@ pub mod internal {
         // edges entering or leaving the expected elements nodes of the flow or
         // residual flow graphs. The following invariants are maintained:
         //
-        // actual_match[a] == None or expected_match[actual_match[a].unwrap()] ==
-        // Some(a)
-        // expected_match[r] == None or actual_match[expected_match[e].unwrap()] ==
-        // Some(e)
+        // actual_match[a] == None or expected_match[actual_match[a].unwrap()]
+        // == Some(a)
+        // expected_match[r] == None or actual_match[expected_match[e].unwrap()]
+        // == Some(e)
         //
         // | [ source ]                                                              |
         // |   |||                                                                   |
@@ -230,26 +234,28 @@ pub mod internal {
         // |                                                               [ sink ]  |
         //
         // See Also:
-        //   [1] Cormen, et al (2001). "Section 26.2: The Ford-Fulkerson method".
-        //       "Introduction to Algorithms (Second ed.)", pp. 651-664.
-        //   [2] "Ford-Fulkerson algorithm", Wikipedia,
+        //   [1] Cormen, et al (2001). "Section 26.2: The Ford-Fulkerson
+        //       method". "Introduction to Algorithms (Second ed.)", pp.
+        //       651-664. [2] "Ford-Fulkerson algorithm", Wikipedia,
         //       'http://en.wikipedia.org/wiki/Ford%E2%80%93Fulkerson_algorithm'
         pub(crate) fn find_best_match(&self) -> BestMatch {
             let mut actual_match = vec![None; self.graph.len()];
             let mut expected_match: Vec<Option<usize>> = vec![None; self.expected_len];
-            // Searches the residual flow graph for a path from each actual node to
-            // the sink in the residual flow graph, and if one is found, add this path
-            // to the graph.
+            // Searches the residual flow graph for a path from each actual node
+            // to the sink in the residual flow graph, and if one is
+            // found, add this path to the graph.
             // It's okay to search through the actual nodes once. The
-            // edge from the implicit source node to each previously-visited actual
-            // node will have flow if that actual node has any path to the sink
-            // whatsoever. Subsequent augmentations can only add flow to the
-            // network, and cannot take away that previous flow unit from the source.
+            // edge from the implicit source node to each previously-visited
+            // actual node will have flow if that actual node has
+            // any path to the sink whatsoever. Subsequent
+            // augmentations can only add flow to the network, and
+            // cannot take away that previous flow unit from the source.
             // Since the source-to-actual edge can only carry one flow unit (or,
-            // each actual element can be matched to only one expected element), there is no
-            // need to visit the actual nodes more than once looking for
-            // augmented paths. The flow is known to be possible or impossible
-            // by looking at the node once.
+            // each actual element can be matched to only one expected element),
+            // there is no need to visit the actual nodes more than
+            // once looking for augmented paths. The flow is known
+            // to be possible or impossible by looking at the node
+            // once.
             for actual_idx in 0..self.graph.len() {
                 assert!(actual_match[actual_idx].is_none());
                 let mut seen = vec![false; self.expected_len];
@@ -258,23 +264,24 @@ pub mod internal {
             BestMatch::new(actual_match, self.expected_len)
         }
 
-        // Perform a depth-first search from actual node `actual_idx` to the sink by
-        // searching for an unassigned expected node. If a path is found, flow
-        // is added to the network by linking the actual and expected vector elements
-        // corresponding each segment of the path. Returns true if a path to
-        // sink was found, which means that a unit of flow was added to the
-        // network. The 'seen' array elements correspond to expected nodes and are
+        // Perform a depth-first search from actual node `actual_idx` to the
+        // sink by searching for an unassigned expected node. If a path
+        // is found, flow is added to the network by linking the actual
+        // and expected vector elements corresponding each segment of
+        // the path. Returns true if a path to sink was found, which
+        // means that a unit of flow was added to the network. The
+        // 'seen' array elements correspond to expected nodes and are
         // marked to eliminate cycles from the search.
         //
         // Actual nodes will only be explored at most once because they
         // are accessible from at most one expected node in the residual flow
         // graph.
         //
-        // Note that `actual_match[actual_idx]` is the only element of `actual_match`
-        // that `try_augment(...)` will potentially transition from `None` to
-        // `Some(...)`. Any other `actual_match` element holding `None` before
-        // `try_augment(...)` will be holding it when `try_augment(...)`
-        // returns.
+        // Note that `actual_match[actual_idx]` is the only element of
+        // `actual_match` that `try_augment(...)` will potentially
+        // transition from `None` to `Some(...)`. Any other
+        // `actual_match` element holding `None` before `try_augment(...
+        // )` will be holding it when `try_augment(...)` returns.
         //
         fn try_augment(
             &self,
@@ -295,9 +302,10 @@ pub mod internal {
                 // Next a search is performed to determine whether
                 // this edge is a dead end or leads to the sink.
                 //
-                // `expected_match[expected_idx].is_none()` means that there is residual flow
-                // from expected node at index expected_idx to the sink, so we
-                // can use that to finish this flow path and return success.
+                // `expected_match[expected_idx].is_none()` means that there is
+                // residual flow from expected node at index
+                // expected_idx to the sink, so we can use that
+                // to finish this flow path and return success.
                 //
                 // Otherwise, we look for a residual flow starting from
                 // `expected_match[expected_idx].unwrap()` by calling
@@ -311,9 +319,10 @@ pub mod internal {
                         expected_match,
                     )
                 {
-                    // We found a residual flow from source to sink. We thus need to add the new
-                    // edge to the current flow.
-                    // Note: this also remove the potential flow that existed by overwriting the
+                    // We found a residual flow from source to sink. We thus
+                    // need to add the new edge to the
+                    // current flow. Note: this also remove
+                    // the potential flow that existed by overwriting the
                     // value in the `expected_match` and `actual_match`.
                     expected_match[expected_idx] = Some(actual_idx);
                     actual_match[actual_idx] = Some(expected_idx);

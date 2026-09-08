@@ -254,8 +254,8 @@ mod verify_pred {
             })))
         )?;
 
-        // `a` and `&mut c` should still be accessible after the test despite not being
-        // `Copy`.
+        // `a` and `&mut c` should still be accessible after the test despite
+        // not being `Copy`.
         let _ = a.b(&mut c);
 
         Ok(())
@@ -277,8 +277,9 @@ mod verify_pred {
             }
         }
 
-        // Macro to to avoid the inconsistency in how `;` and `&mut` are printed between
-        // Rust versions when printing out the stringified version of the block.
+        // Macro to to avoid the inconsistency in how `;` and `&mut` are printed
+        // between Rust versions when printing out the stringified
+        // version of the block.
         macro_rules! block_a {
             () => {{
                 c += 10;

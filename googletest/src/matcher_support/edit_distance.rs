@@ -136,8 +136,9 @@ pub(crate) fn edit_list<T: PartialEq + Copy>(
                 // last iteration.
                 (Some(path_k_minus_1), Some(path_k_plus_1)) => {
                     // This decides whether the algorithm prefers to add an edit
-                    // from the actual or from the expected when the rows differ. We
-                    // alternate so that the elements of differing blocks
+                    // from the actual or from the expected when the rows
+                    // differ. We alternate so that the
+                    // elements of differing blocks
                     // interleave rather than all elements of each respective
                     // side being output in a single block.
                     if (distance % 2 == 0
@@ -199,14 +200,16 @@ pub(crate) fn edit_list<T: PartialEq + Copy>(
                 .filter(|p| p.expected_endpoint == expected.len())
                 .max_by(|p1, p2| p1.edits.len().cmp(&p2.edits.len()))
             {
-                // We've reached the end of the expected side but there could still be a
-                // corresponding line on the actual which we haven't picked up into the edit
+                // We've reached the end of the expected side but there could
+                // still be a corresponding line on the actual
+                // which we haven't picked up into the edit
                 // list. We'll just add it manually to the edit list. There's no
                 // real harm doing so -- worst case is that there's an
                 // additional line when there didn't have to be.
                 if let Some(Edit::ExtraExpected(_)) = path.edits.last() {
                     if path.actual_endpoint < actual.len() {
-                        // The edits from the actual should come before the corresponding one from
+                        // The edits from the actual should come before the
+                        // corresponding one from
                         // the expected, so we insert rather than push.
                         path.edits.insert(
                             path.edits.len() - 1,

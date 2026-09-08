@@ -337,8 +337,8 @@ mod tests {
     #[test]
     fn eq_multi_line_string_debug_diff() -> Result<()> {
         let result = verify_that!("One\nTwo\nThree", eq("One\nSix\nThree"));
-        // TODO: b/257454450 - Make this more useful, by potentially unescaping the
-        // line return.
+        // TODO: b/257454450 - Make this more useful, by potentially unescaping
+        // the line return.
         verify_that!(
             result,
             err(displays_as(contains_substring(indoc! {

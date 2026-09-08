@@ -326,8 +326,8 @@ pub mod internal {
 
     pub use ::googletest_macro::__googletest_macro_matches_pattern;
 
-    // Specialized implementation of the `predicate` matcher to support ref binding
-    // mode for `matches_pattern`.
+    // Specialized implementation of the `predicate` matcher to support ref
+    // binding mode for `matches_pattern`.
     pub fn pattern_only<T>(
         matcher_function: fn(&T) -> bool,
         match_description: &'static str,

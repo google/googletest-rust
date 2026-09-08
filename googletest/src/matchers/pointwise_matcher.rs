@@ -185,9 +185,9 @@ pub mod internal {
         }
 
         fn explain_match(&self, actual: ContainerT) -> Description {
-            // TODO(b/260819741) This code duplicates elements_are_matcher.rs. Consider
-            // extract as a separate library. (or implement pointwise! with
-            // elements_are)
+            // TODO(b/260819741) This code duplicates elements_are_matcher.rs.
+            // Consider extract as a separate library. (or implement
+            // pointwise! with elements_are)
             let actual_iterator = actual.into_iter();
             let mut zipped_iterator = zip(actual_iterator, self.matchers.iter());
             let mut mismatches = Vec::new();

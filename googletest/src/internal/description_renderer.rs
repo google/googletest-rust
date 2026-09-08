@@ -142,7 +142,8 @@ impl List {
                 if self.0.len() > 1 {
                     ((self.0.len() - 1) as f64).log10().floor() as usize + 1
                 } else {
-                    // Avoid negative logarithm when there is only 0 or 1 element.
+                    // Avoid negative logarithm when there is only 0 or 1
+                    // element.
                     1
                 }
             }

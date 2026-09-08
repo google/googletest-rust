@@ -34,8 +34,8 @@ pub(crate) fn create_diff(
     diff_mode: edit_distance::Mode,
 ) -> Cow<'static, str> {
     if actual_debug.lines().count() < 2 {
-        // If the actual debug is only one line, then there is no point in doing a
-        // line-by-line diff.
+        // If the actual debug is only one line, then there is no point in doing
+        // a line-by-line diff.
         return "".into();
     }
 
@@ -80,8 +80,8 @@ pub(crate) fn create_diff_reversed(
     diff_mode: edit_distance::Mode,
 ) -> Cow<'static, str> {
     if actual_debug.lines().count() < 2 {
-        // If the actual debug is only one line, then there is no point in doing a
-        // line-by-line diff.
+        // If the actual debug is only one line, then there is no point in doing
+        // a line-by-line diff.
         return "".into();
     }
     let mut actual_lines_reversed = actual_debug.lines().collect::<Vec<_>>();
@@ -189,8 +189,8 @@ impl<'a> BufferedSummary<'a> {
                         expected_summary.push_expected_with_match(*c);
                     }
                     edit_distance::Edit::AdditionalActual => {
-                        // Calling edit_distance::edit_list(_, _, Mode::Exact) should never return
-                        // this enum
+                        // Calling edit_distance::edit_list(_, _, Mode::Exact)
+                        // should never return this enum
                         panic!("This should not happen. This is a bug in gtest_rust")
                     }
                 }
@@ -483,8 +483,8 @@ mod tests {
             Expected@one
             Expected@two
             suffix"};
-        // TODO: It would be better to have all the Actual together followed by all the
-        // Expected together.
+        // TODO: It would be better to have all the Actual together followed by
+        // all the Expected together.
         verify_that!(
             create_diff(expected, actual, Mode::Exact),
             eq(indoc!(

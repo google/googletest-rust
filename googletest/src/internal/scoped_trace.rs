@@ -48,7 +48,8 @@ impl ScopedTraceGuard {
         let caller = std::panic::Location::caller();
         let id = NEXT_TRACE_ID.fetch_add(1, Ordering::Relaxed);
         TRACE_STACK.with(|stack| {
-            // Use try_borrow_mut to avoid double panic if called during unwinding.
+            // Use try_borrow_mut to avoid double panic if called during
+            // unwinding.
             if let Ok(mut s) = stack.try_borrow_mut() {
                 s.push(TraceInfo { id, file: caller.file(), line: caller.line(), message });
             }
@@ -60,7 +61,8 @@ impl ScopedTraceGuard {
 impl Drop for ScopedTraceGuard {
     fn drop(&mut self) {
         TRACE_STACK.with(|stack| {
-            // Use try_borrow_mut to avoid double panic if called during unwinding.
+            // Use try_borrow_mut to avoid double panic if called during
+            // unwinding.
             if let Ok(mut s) = stack.try_borrow_mut() {
                 if let Some(pos) = s.iter().rposition(|t| t.id == self.id) {
                     s.remove(pos);

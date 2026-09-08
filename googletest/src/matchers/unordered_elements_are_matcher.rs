@@ -424,12 +424,14 @@ pub mod internal {
         }
     }
 
-    // This matcher performs the checks in three different steps in both `matches`
-    // and `explain_match`. This is useful for performance but also to produce
-    // an actionable error message.
-    // 1. `UnorderedElementsAreMatcher` verifies that both collections have the same
+    // This matcher performs the checks in three different steps in both
+    // `matches` and `explain_match`. This is useful for performance but
+    // also to produce an actionable error message.
+    // 1. `UnorderedElementsAreMatcher` verifies that both collections have the
+    // same
     // size
-    // 2. `UnorderedElementsAreMatcher` verifies that each actual element matches at
+    // 2. `UnorderedElementsAreMatcher` verifies that each actual element
+    // matches at
     // least one expected element and vice versa.
     // 3. `UnorderedElementsAreMatcher` verifies that a perfect matching exists
     // using Ford-Fulkerson.
@@ -494,11 +496,12 @@ mod tests {
 
     #[test]
     fn has_correct_description_for_map() -> googletest::Result<()> {
-        // UnorderedElementsAreMatcher maintains references to the matchers, so the
-        // constituent matchers must live longer. Inside a verify_that! macro, the
-        // compiler takes care of that, but when the matcher is created separately,
-        // we must create the constitute matchers separately so that they
-        // aren't dropped too early.
+        // UnorderedElementsAreMatcher maintains references to the matchers, so
+        // the constituent matchers must live longer. Inside a
+        // verify_that! macro, the compiler takes care of that, but when
+        // the matcher is created separately, we must create the
+        // constitute matchers separately so that they aren't dropped
+        // too early.
         let matchers = ((eq(&2), eq(&"Two")), (eq(&1), eq(&"One")), (eq(&3), eq(&"Three")));
         let matcher = unordered_elements_are![
             (matchers.0 .0, matchers.0 .1),
@@ -525,11 +528,12 @@ mod tests {
 
     #[test]
     fn unordered_elements_are_description_no_full_match_with_map() -> googletest::Result<()> {
-        // UnorderedElementsAreMatcher maintains references to the matchers, so the
-        // constituent matchers must live longer. Inside a verify_that! macro, the
-        // compiler takes care of that, but when the matcher is created separately,
-        // we must create the constitute matchers separately so that they
-        // aren't dropped too early.
+        // UnorderedElementsAreMatcher maintains references to the matchers, so
+        // the constituent matchers must live longer. Inside a
+        // verify_that! macro, the compiler takes care of that, but when
+        // the matcher is created separately, we must create the
+        // constitute matchers separately so that they aren't dropped
+        // too early.
         let value: HashMap<u32, u32> = HashMap::from_iter([(0, 1), (1, 1), (2, 2)]);
         let matchers = ((anything(), eq(&1)), (anything(), eq(&2)), (anything(), eq(&2)));
         let matcher = unordered_elements_are![
@@ -559,9 +563,9 @@ mod tests {
     // Vec with the same type and lifetimes then this fails to compile.
     #[test]
     fn works_with_inner_matcher_that_modifies_the_input() -> googletest::Result<()> {
-        // A custom matcher that applies an operation to the input hashmap (filtering
-        // out any keys present in `to_filter`) and then applies the inner
-        // matcher to the modified input.
+        // A custom matcher that applies an operation to the input hashmap
+        // (filtering out any keys present in `to_filter`) and then
+        // applies the inner matcher to the modified input.
         fn matches_filtered<'a, M>(
             to_filter: &'a HashSet<i32>,
             inner: M,

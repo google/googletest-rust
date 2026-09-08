@@ -45,21 +45,23 @@ impl AccumulatePartsState {
     /// of the input expression with parts of it potentially replaced by the
     /// intermediate variables.
     fn accumulate_parts(&mut self, expr: Expr) -> Expr {
-        // Literals don't need to be printed or stored in intermediate variables.
+        // Literals don't need to be printed or stored in intermediate
+        // variables.
         if is_literal(&expr) {
             return expr;
         }
         let expr_string = expr_to_string(&expr);
         let new_expr = match expr {
             Expr::Group(mut group) => {
-                // This is an invisible group added for correct precedence in the AST. Just pass
-                // through without having a separate printing result.
+                // This is an invisible group added for correct precedence in
+                // the AST. Just pass through without having a
+                // separate printing result.
                 *group.expr = self.accumulate_parts(*group.expr);
                 return Expr::Group(group);
             }
             Expr::Field(mut field) => {
-                // Don't assign field access to an intermediate variable to avoid moving out of
-                // non-`Copy` fields.
+                // Don't assign field access to an intermediate variable to
+                // avoid moving out of non-`Copy` fields.
                 *field.base = self.accumulate_parts(*field.base);
                 Expr::Field(field)
             }
@@ -165,7 +167,8 @@ pub fn verify_pred_impl(input: proc_macro::TokenStream) -> proc_macro::TokenStre
     let pred_value = state.accumulate_parts(parsed);
     let AccumulatePartsState { error_message_ident, mut statements, .. } = state;
 
-    let _ = statements.pop(); // The last statement prints the full expression itself.
+    let _ = statements.pop(); // The last statement prints the full expression
+                              // itself.
     quote! {
         {
             let mut #error_message_ident = #error_message.to_string();

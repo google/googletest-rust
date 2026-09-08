@@ -1987,9 +1987,9 @@ mod tests {
     #[should_panic]
     fn should_panic_when_expect_that_runs_without_attribute_macro_after_another_test() {
         // The boilerplate in the attribute gtest should reset the test
-        // context when the test has finished running. If it fails to do so, then the
-        // expect_that! call will see a test context and *not* panic, causing the test
-        // to fail.
+        // context when the test has finished running. If it fails to do so,
+        // then the expect_that! call will see a test context and *not*
+        // panic, causing the test to fail.
         let _ = should_just_pass();
         expect_that!(123, eq(123));
     }

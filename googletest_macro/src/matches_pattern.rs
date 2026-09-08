@@ -53,25 +53,27 @@ impl Parse for ParsedMatchPattern {
         let mut struct_name: Vec<TokenTree> = vec![];
         let mut group: Option<Group> = None;
 
-        // Use a TT-muncher (as opposed to parsing `Expr` or `Pat` or such) since:
-        // - The `struct_name` can be a struct/enum type or literal value (`true`, `1`,
-        //   `&"test"`).
-        // - The braced part supports syntax that is not valid rust like `&Foo { a: ref
-        //   eq(1) }`.
+        // Use a TT-muncher (as opposed to parsing `Expr` or `Pat` or such)
+        // since:
+        // - The `struct_name` can be a struct/enum type or literal value
+        //   (`true`, `1`, `&"test"`).
+        // - The braced part supports syntax that is not valid rust like `&Foo {
+        //   a: ref eq(1) }`.
         input.step(|cursor| {
             let mut rest = *cursor;
 
             while let Some((tt, next)) = rest.token_tree() {
-                // If we reached a group (`{...}` or `(...)`), that should be the end of the
-                // pattern. Other groups (`[...]`) are not supported in struct names, but that's
+                // If we reached a group (`{...}` or `(...)`), that should be
+                // the end of the pattern. Other groups
+                // (`[...]`) are not supported in struct names, but that's
                 // checked later.
                 if let TokenTree::Group(g) = tt {
                     group = Some(g);
                     return Ok(((), next));
                 }
 
-                // Everything before the group is the struct/enum name, possibly prefixed with
-                // `&`.
+                // Everything before the group is the struct/enum name, possibly
+                // prefixed with `&`.
                 struct_name.push(tt);
                 rest = next;
             }
@@ -94,11 +96,11 @@ impl Parse for ParsedMatchPattern {
 impl ParsedMatchPattern {
     fn into_matcher_expr(self) -> TokenStream {
         let Self { struct_name, group } = self;
-        // `matcher_pattern` supports both its custom (not necessarily valid rust)
-        // syntax and also native match pattern (like `Struct { .. }` and
-        // `Struct(_)`). So we need to speculatively attempt the first and then
-        // fall back to the latter if the first fails. If both fail, we return
-        // the error from the first attempt.
+        // `matcher_pattern` supports both its custom (not necessarily valid
+        // rust) syntax and also native match pattern (like `Struct { ..
+        // }` and `Struct(_)`). So we need to speculatively attempt the
+        // first and then fall back to the latter if the first fails. If
+        // both fail, we return the error from the first attempt.
         let mut first_err = None;
 
         // `matcher_pattern` special syntax.
@@ -125,9 +127,9 @@ impl ParsedMatchPattern {
 /// Returns a pattern match expression as long as `stream` is a valid pattern.
 /// Otherwise, returns failure.
 fn into_match_pattern_expr(stream: TokenStream) -> syn::Result<TokenStream> {
-    // Only produce if stream successfully parses as a pattern. Otherwise, return
-    // failure so that we can instead return the error due to failing to parse
-    // the `matcher_pattern` custom syntax.
+    // Only produce if stream successfully parses as a pattern. Otherwise,
+    // return failure so that we can instead return the error due to failing
+    // to parse the `matcher_pattern` custom syntax.
     Pat::parse_multi.parse2(stream.clone())?;
     Ok(quote! {
         googletest::matchers::__internal_unstable_do_not_depend_on_these::pattern_only(
@@ -178,8 +180,8 @@ fn parse_tuple_pattern_args(
         .collect();
 
     if field_patterns.is_empty() {
-        // It is possible that the logic above didn't generate any field matchers
-        // (e.g., for patterns like `Some(_)`).
+        // It is possible that the logic above didn't generate any field
+        // matchers (e.g., for patterns like `Some(_)`).
         // In this case we verify that the enum has the correct case, but don't
         // verify the payload.
         #[allow(clippy::manual_repeat_n)]
@@ -197,9 +199,9 @@ fn parse_tuple_pattern_args(
             )
         })
     } else {
-        // We have created at least one field matcher. Each field matcher will verify
-        // not only its part of the payload, but also that the enum has the
-        // correct case.
+        // We have created at least one field matcher. Each field matcher will
+        // verify not only its part of the payload, but also that the
+        // enum has the correct case.
         let matcher = quote! {
             googletest::matchers::__internal_unstable_do_not_depend_on_these::is(
                 stringify!(#struct_name),
@@ -244,8 +246,8 @@ enum FieldOrMethod {
 impl Parse for FieldOrMethod {
     /// Parses the field name or method call along with the `:` that follows it.
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        // If the ident is followed by a single `:` and not a `::`, then it's a field
-        // match and not a method call match.
+        // If the ident is followed by a single `:` and not a `::`, then it's a
+        // field match and not a method call match.
         let value = if input.peek2(Token![:]) && !input.peek2(Token![::]) {
             input.parse().map(FieldOrMethod::Field)
         } else {
@@ -311,10 +313,10 @@ fn parse_braced_pattern_args(
         .collect();
 
     if field_patterns.is_empty() {
-        // It is possible that the logic above didn't generate any field matchers
-        // (e.g., for patterns like `AnEnum::Foo { a_field : _ }`).
-        // In this case we verify that the enum has the correct case, but don't
-        // verify the payload.
+        // It is possible that the logic above didn't generate any field
+        // matchers (e.g., for patterns like `AnEnum::Foo { a_field : _
+        // }`). In this case we verify that the enum has the correct
+        // case, but don't verify the payload.
         let full_pattern = quote! { #struct_name { #(#field_names: _,)* #dot_dot}};
 
         Ok(quote! {
@@ -325,9 +327,9 @@ fn parse_braced_pattern_args(
             )
         })
     } else {
-        // We have created at least one field matcher. Each field matcher will verify
-        // not only its part of the payload, but also that the enum has the
-        // correct case.
+        // We have created at least one field matcher. Each field matcher will
+        // verify not only its part of the payload, but also that the
+        // enum has the correct case.
         let matcher = quote! {
             googletest::matchers::__internal_unstable_do_not_depend_on_these::is(
                 stringify!(#struct_name),
@@ -336,20 +338,21 @@ fn parse_braced_pattern_args(
         };
 
         // Do a match to ensure:
-        // - Fields are exhaustively listed unless the pattern ended with `..` and has
-        //   any fields in the pattern.
+        // - Fields are exhaustively listed unless the pattern ended with `..`
+        //   and has any fields in the pattern.
         // - `UNDEFINED_SYMBOL { .. }` fails to compile.
         //
         // The requisite that some fields are in the pattern is there because
-        // `matches_pattern!` also uses the brace notation for tuple structs when
-        // asserting on method calls on tuple structs. i.e.
+        // `matches_pattern!` also uses the brace notation for tuple structs
+        // when asserting on method calls on tuple structs. i.e.
         //
         // ```
         // struct Struct(u32);
         // ...
         // matches_pattern!(foo, Struct { bar(): eq(1) })
         // ```
-        // and we can't emit an exhaustiveness check based on the `matches_pattern!`.
+        // and we can't emit an exhaustiveness check based on the
+        // `matches_pattern!`.
         if field_names.is_empty() && dot_dot.is_none() &&
             // If there are no fields, then this check means that there are method patterns, and we can
             // no longer be confident that this is a braced struct rather than a tuple struct.

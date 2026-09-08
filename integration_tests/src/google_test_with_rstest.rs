@@ -22,9 +22,9 @@ mod tests {
     use googletest::prelude::*;
     use rstest::rstest;
 
-    // The following tests use `#[googletest::test]` instead of `#[gtest]` because
-    // `#[rstest]` requires a third-party testing attribute to be called
-    // literally `test`.
+    // The following tests use `#[googletest::test]` instead of `#[gtest]`
+    // because `#[rstest]` requires a third-party testing attribute to be
+    // called literally `test`.
     #[rstest]
     #[googletest::test]
     fn test_should_work_with_rstest_first() -> Result<()> {

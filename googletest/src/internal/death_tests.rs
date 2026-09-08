@@ -89,10 +89,10 @@ pub struct DeathTestSentinel;
 
 impl Drop for DeathTestSentinel {
     fn drop(&mut self) {
-        // If control leaves the expression without exiting the process, the Sentinel is
-        // dropped. This indicates the death test failed to die.
-        // We ignore panics, as they will cause the child to exit non-zero via the
-        // harness.
+        // If control leaves the expression without exiting the process, the
+        // Sentinel is dropped. This indicates the death test failed to
+        // die. We ignore panics, as they will cause the child to exit
+        // non-zero via the harness.
         if !std::thread::panicking() {
             use std::io::Write;
             let mut stderr = std::io::stderr();

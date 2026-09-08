@@ -84,8 +84,8 @@ pub fn gtest(
         use std::hash::{Hash, Hasher};
         let mut h = DefaultHasher::new();
 
-        // Only consider attrs and name for stability. Changing the function body should
-        // not affect the test case distribution.
+        // Only consider attrs and name for stability. Changing the function
+        // body should not affect the test case distribution.
         attrs.hash(&mut h);
         sig_ident.hash(&mut h);
         h.finish()
@@ -130,8 +130,8 @@ pub fn gtest(
     let maybe_async = is_async.then(|| quote! { async });
     let maybe_await = is_async.then(|| quote! { .await });
     let invocation = if is_rstest_enabled {
-        // Rstest may refer in block to its fixtures. Hence, we only wrap it in a
-        // closure to capture them.
+        // Rstest may refer in block to its fixtures. Hence, we only wrap it in
+        // a closure to capture them.
         let result_type = output_type.clone().unwrap_or_else(|| quote! {()});
         let mut invocation = quote! {
             (#maybe_async move || -> #result_type {
@@ -148,8 +148,9 @@ pub fn gtest(
             Err(e) => return e.into_compile_error().into(),
         };
 
-        // In the sync case, the ? operator returns from the surrounding function. So
-        // we redeclare the original test function internally.
+        // In the sync case, the ? operator returns from the surrounding
+        // function. So we redeclare the original test function
+        // internally.
         let result_type = output_type.unwrap_or_else(|| quote! {googletest::Result<()>});
         quote! {
             (#maybe_async move || -> #result_type {

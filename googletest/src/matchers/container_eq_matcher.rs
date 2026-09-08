@@ -192,8 +192,8 @@ where
     }
 
     fn explain_match(&self, actual: ActualContainerT) -> Description {
-        // We need to materialize the collections in order to have reliable iteration
-        // order when generating our reports.
+        // We need to materialize the collections in order to have reliable
+        // iteration order when generating our reports.
         let expected_items: Vec<&ExpectedElementT> = self.expected.into_iter().collect();
         let actual_items: Vec<ActualElementT> = actual.into_iter().collect();
 
@@ -205,8 +205,8 @@ where
 
         let best_match = match_matrix.find_best_match();
 
-        // Since we are doing equality checks, we can generate a slightly less verbose
-        // message than BestMatch::get_explanation.
+        // Since we are doing equality checks, we can generate a slightly less
+        // verbose message than BestMatch::get_explanation.
         let matches = best_match.get_matches().map(|(actual_idx, expected_idx)|{
             Description::new().text(
                 format!(
