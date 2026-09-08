@@ -20,6 +20,9 @@ use std::fmt::Debug;
 
 /// Matches a `Result` containing `Ok` with a value matched by `inner`.
 ///
+/// Prefer importing and using [`is_ok`] instead of `ok` in order to avoid
+/// conflicts with `status::ok`.
+///
 /// ```
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> googletest::Result<()> {
@@ -41,6 +44,12 @@ use std::fmt::Debug;
 pub fn ok<InnerMatcherT>(inner: InnerMatcherT) -> OkMatcher<InnerMatcherT> {
     OkMatcher { inner }
 }
+
+/// An alias for [`ok`].
+///
+/// Prefer importing and using `is_ok` instead of [`ok`] in order to avoid
+/// conflicts with `status::ok`.
+pub use ok as is_ok;
 
 #[derive(MatcherBase)]
 pub struct OkMatcher<InnerMatcherT> {

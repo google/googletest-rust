@@ -20,6 +20,9 @@ use std::fmt::Debug;
 
 /// Matches a `Result` containing `Err` with a value matched by `inner`.
 ///
+/// Prefer importing and using [`is_err`] instead of `err` in order to avoid
+/// conflicts with `status::err`.
+///
 /// ```
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> googletest::Result<()> {
@@ -41,6 +44,12 @@ use std::fmt::Debug;
 pub fn err<Inner>(inner: Inner) -> ErrMatcher<Inner> {
     ErrMatcher { inner }
 }
+
+/// An alias for [`err`].
+///
+/// Prefer importing and using `is_err` instead of [`err`] in order to avoid
+/// conflicts with `status::err`.
+pub use err as is_err;
 
 #[derive(MatcherBase)]
 pub struct ErrMatcher<InnerMatcherT> {
