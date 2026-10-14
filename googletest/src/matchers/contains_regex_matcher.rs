@@ -85,12 +85,11 @@ use std::ops::Deref;
 ///
 /// If you need to inspect the exact byte or character positions of all matches
 /// of a substring in a string containing multiple occurrences, you can use
-/// [`regex::Regex::find_iter`] combined with container matchers such as
-/// [`elements_are!`][crate::matchers::elements_are]:
+/// [`regex_positions`][crate::matchers::regex_positions] or
+/// [`substring_positions`][crate::matchers::substring_positions]:
 ///
 /// ```
 /// # use googletest::prelude::*;
-/// # use regex::Regex;
 /// # fn multiple_occurrences_example() -> Result<()> {
 /// let text = "token at index 0, token at index 18, token at index 37";
 ///
@@ -98,19 +97,23 @@ use std::ops::Deref;
 /// verify_that!(text, contains_regex("(?s)(?:.*token){3}"))?;
 ///
 /// // Extract and verify the exact byte positions of all matches of the substring:
-/// let re = Regex::new("token").unwrap();
-/// let positions: Vec<usize> = re.find_iter(text).map(|m| m.start()).collect();
-/// verify_that!(positions, elements_are![eq(&0), eq(&18), eq(&37)])?;
+/// verify_that!(text, regex_positions("token", elements_are![eq(0), eq(18), eq(37)]))?;
 /// #     Ok(())
 /// # }
 /// # multiple_occurrences_example().unwrap();
 /// ```
 ///
+/// You can also manually use [`regex::Regex::find_iter`] combined with
+/// container matchers such as [`elements_are!`][crate::matchers::elements_are]
+/// if needed.
+///
 /// Panics if the given `pattern` is not a syntactically valid regular
 /// expression.
 #[track_caller]
 pub fn contains_regex<PatternT: Deref<Target = str>>(pattern: PatternT) -> ContainsRegexMatcher {
-    ContainsRegexMatcher { regex: Regex::new(pattern.deref()).unwrap() }
+    ContainsRegexMatcher {
+        regex: Regex::new(pattern.deref()).expect("pattern should be a valid regular expression"),
+    }
 }
 
 /// A matcher matching a string-like type containing a substring matching a
@@ -216,5 +219,11 @@ mod tests {
             "token at index 0, token at index 18, token at index 37",
             contains_regex("(?s)(?:.*token){3}")
         )
+    }
+
+    #[test]
+    #[should_panic(expected = "pattern should be a valid regular expression")]
+    fn contains_regex_panics_on_invalid_regex() {
+        let _ = contains_regex("(");
     }
 }

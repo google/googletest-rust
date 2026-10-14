@@ -159,9 +159,11 @@ The following matchers are provided in GoogleTest Rust:
 | [`points_to`]        | A reference `&` which points to a value that the argument matches.       |
 | [`pointwise!`]       | A container whose contents the arguments match in a pointwise fashion.   |
 | [`predicate`]        | A value on which the given predicate returns true.                       |
+| [`regex_positions`]  | A string whose regular expression match byte positions match the argument.|
 | [`some`]             | An [`Option`] containing `Some` whose value the argument matches.        |
 | [`starts_with`]      | A string starting with the given prefix.                                 |
 | [`subset_of`]        | A container all of whose elements are contained in the argument.         |
+| [`substring_positions`]| A string whose literal substring match byte positions match the argument.|
 | [`superset_of`]      | A container containing all elements of the argument.                     |
 | [`unordered_elements_are!`] | A container whose elements the arguments match, in any order.     |
 
@@ -196,19 +198,21 @@ The following matchers are provided in GoogleTest Rust:
 [`le`]: matchers::le
 [`len`]: matchers::len
 [`lt`]: matchers::lt
-[`matches_regex`]: matchers::matches_regex
 [`matches_pattern!`]: matchers::matches_pattern
+[`matches_regex`]: matchers::matches_regex
 [`near`]: matchers::near
 [`none`]: matchers::none
 [`not`]: matchers::not
-[`pat!`]: matchers::pat
 [`ok`]: matchers::ok
+[`pat!`]: matchers::pat
 [`points_to`]: matchers::points_to
 [`pointwise!`]: matchers::pointwise
 [`predicate`]: matchers::predicate
+[`regex_positions`]: matchers::regex_positions
 [`some`]: matchers::some
 [`starts_with`]: matchers::starts_with
 [`subset_of`]: matchers::subset_of
+[`substring_positions`]: matchers::substring_positions
 [`superset_of`]: matchers::superset_of
 [`unordered_elements_are!`]: matchers::unordered_elements_are
 [`Deref`]: std::ops::Deref
