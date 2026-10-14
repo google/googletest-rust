@@ -41,8 +41,8 @@ pub struct DerefsTo<InnerT> {
 
 impl<'a, ActualT, ExpectedT, Inner> Matcher<&'a ActualT> for DerefsTo<Inner>
 where
-    ActualT: Deref<Target = ExpectedT> + Debug,
-    ExpectedT: Copy + Debug + 'a,
+    ActualT: ?Sized + Deref<Target = ExpectedT> + Debug,
+    ExpectedT: ?Sized + Debug + 'a,
     Inner: Matcher<&'a ExpectedT>,
 {
     fn matches(&self, actual: &'a ActualT) -> MatcherResult {
@@ -60,6 +60,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Cow;
+    use std::path::Path;
     use std::rc::Rc;
 
     use crate::prelude::*;
@@ -70,6 +72,12 @@ mod tests {
     fn deref_to_matches_box_of_int_with_int() -> Result<()> {
         let actual = Box::new(123);
         verify_that!(actual, derefs_to(eq(&123)))
+    }
+
+    #[test]
+    fn deref_to_matches_cow_of_path_with_path() -> Result<()> {
+        let actual = Cow::Borrowed(Path::new("foo/goo"));
+        verify_that!(actual, derefs_to(eq(Path::new("foo/goo"))))
     }
 
     #[test]
