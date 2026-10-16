@@ -18,6 +18,7 @@ fn main() {}
 mod tests {
     use googletest::prelude::*;
     use indoc::indoc;
+    use std::path::Path;
     use std::process::Command;
 
     #[gtest]
@@ -2095,10 +2096,11 @@ mod tests {
     }
 
     fn run_external_process(name: &'static str) -> Command {
-        let command_path = format!(
-            "./{}/debug/{name}",
-            std::env::var("CARGO_TARGET_DIR").unwrap_or_else(|_| "target".into())
-        );
+        let command_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("target")
+            .join("debug")
+            .join(name);
         let mut command = Command::new(command_path);
         // For test hermeticity, clear the env.  Integration testing
         // depends on implicit output capturing (RUST_TEST_NOCAPTURE
