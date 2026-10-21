@@ -145,3 +145,21 @@ fn elements_are_implicitly_called() -> Result<()> {
 fn elements_are_with_auto_eq() -> Result<()> {
     verify_that!(vec![1, 2, 3], [&1, &2, lt(&43)])
 }
+
+#[test]
+fn elements_are_matches_repeat_n_iterator() -> Result<()> {
+    verify_that!(std::iter::repeat_n("taco", 2), elements_are![&"taco", &"taco"])
+}
+
+#[test]
+fn elements_are_matches_slice_iter() -> Result<()> {
+    let value = [1, 2, 3];
+    verify_that!(value.iter(), elements_are![&&1, &&2, &&3])
+}
+
+#[test]
+fn elements_are_matches_filter_iterator() -> Result<()> {
+    let value = vec![1, 2, 3, 4];
+    let iter = value.into_iter().filter(|x| x % 2 == 0);
+    verify_that!(iter, elements_are![&2, &4])
+}

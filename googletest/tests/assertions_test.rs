@@ -427,3 +427,151 @@ mod verify_pred {
         )
     }
 }
+
+mod verify_that_iterator_subjects {
+    use googletest::description::Description;
+    use googletest::matcher::{Matcher, MatcherBase, MatcherResult};
+    use googletest::prelude::*;
+    use googletest::Result;
+    use std::fmt::Debug;
+    use std::ops::Range;
+
+    /// An iterator whose fields tests may want to inspect directly.
+    #[derive(Clone, Debug)]
+    struct Lexer {
+        pos: usize,
+    }
+
+    impl Iterator for Lexer {
+        type Item = char;
+
+        fn next(&mut self) -> Option<char> {
+            None
+        }
+    }
+
+    /// Matches any value whose `Debug` output equals the given string.
+    #[derive(MatcherBase)]
+    struct DebugEq(&'static str);
+
+    impl<T: Debug + Copy> Matcher<T> for DebugEq {
+        fn matches(&self, actual: T) -> MatcherResult {
+            (format!("{actual:?}") == self.0).into()
+        }
+
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
+            match matcher_result {
+                MatcherResult::Match => format!("has Debug output {:?}", self.0).into(),
+                MatcherResult::NoMatch => format!("doesn't have Debug output {:?}", self.0).into(),
+            }
+        }
+    }
+
+    // Iterator subjects are passed by reference, as before iterator support was
+    // added, whenever the matcher accepts them.
+
+    #[test]
+    fn range_is_still_matched_by_equality() -> Result<()> {
+        verify_that!(0..3, eq(&(0..3)))
+    }
+
+    #[test]
+    fn iterator_struct_is_still_matched_by_field() -> Result<()> {
+        verify_that!(Lexer { pos: 3 }, field!(&Lexer.pos, eq(3)))
+    }
+
+    #[test]
+    fn iterator_struct_is_still_matched_by_pattern() -> Result<()> {
+        verify_that!(Lexer { pos: 3 }, matches_pattern!(&Lexer { pos: eq(3) }))
+    }
+
+    #[test]
+    fn iterator_is_still_matched_by_predicate() -> Result<()> {
+        verify_that!(0..3, predicate(|r: &Range<i32>| r.start == 0))
+    }
+
+    #[test]
+    fn chars_iterator_is_still_matched_by_predicate() -> Result<()> {
+        verify_that!("abc".chars(), predicate(|c: &std::str::Chars| c.as_str() == "abc"))
+    }
+
+    #[test]
+    fn generic_matcher_still_sees_the_iterator_itself() -> Result<()> {
+        verify_that!(0..3, DebugEq("0..3"))
+    }
+
+    #[test]
+    fn failure_message_still_shows_the_iterator_itself() -> Result<()> {
+        let result = verify_that!(0..3, not(anything()));
+        verify_that!(result, err(displays_as(contains_substring("Actual: 0..3,"))))
+    }
+
+    #[test]
+    fn infinite_iterator_is_not_collected_for_anything() -> Result<()> {
+        verify_that!(0.., anything())
+    }
+
+    // Iterators are collected only when the matcher cannot take them as-is.
+
+    #[test]
+    fn mapped_iterator_is_collected_for_elements_are() -> Result<()> {
+        verify_that!((1..4).map(|x| x * 2), elements_are![&2, &4, &6])
+    }
+
+    #[test]
+    fn mapped_iterator_is_collected_for_contains() -> Result<()> {
+        verify_that!((1..4).map(|x| x * 2), contains(eq(&4)))
+    }
+}
+
+mod verify_that_deref_subjects {
+    use googletest::prelude::*;
+    use googletest::Result;
+    use std::ops::Deref;
+
+    /// A byte buffer that is neither `Copy`, `Debug` nor an iterator, but
+    /// dereferences to `[u8]`.
+    struct Bytes(Box<[u8]>);
+
+    impl Deref for Bytes {
+        type Target = [u8];
+
+        fn deref(&self) -> &[u8] {
+            &self.0
+        }
+    }
+
+    fn bytes(value: &[u8]) -> Bytes {
+        Bytes(value.into())
+    }
+
+    // Such subjects are matched through `Deref`, as before iterator support
+    // was added.
+
+    #[test]
+    fn non_debug_subject_is_matched_through_deref() -> Result<()> {
+        verify_that!(bytes(b"abc"), eq(b"abc"))
+    }
+
+    #[test]
+    fn reference_to_non_debug_subject_is_matched_through_deref() -> Result<()> {
+        let value = bytes(b"abc");
+        verify_that!(&value, eq(b"abc"))
+    }
+
+    #[test]
+    fn boxed_non_debug_subject_is_matched_through_deref() -> Result<()> {
+        verify_that!(Box::new(bytes(b"abc")), eq(b"abc"))
+    }
+
+    #[gtest]
+    fn expect_that_matches_non_debug_subject_through_deref() {
+        expect_that!(bytes(b"abc"), eq(b"abc"));
+    }
+
+    #[test]
+    fn failure_message_shows_the_dereferenced_subject() -> Result<()> {
+        let result = verify_that!(bytes(b"abc"), eq(b"xyz"));
+        verify_that!(result, err(displays_as(contains_substring("Actual: [97, 98, 99],"))))
+    }
+}

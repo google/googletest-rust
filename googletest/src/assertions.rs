@@ -67,6 +67,35 @@
 ///   * `verify_that!(actual, {m1, m2, ...})` is equivalent to
 ///     `verify_that!(actual, unordered_elements_are![m1, m2, ...])`
 ///
+/// ## Matching against iterators
+///
+/// Matchers for containers, such as
+/// [`elements_are!`][crate::matchers::elements_are] or
+/// [`contains`][crate::matchers::contains], can also be used on an
+/// [`Iterator`] that implements [`Clone`]. If the matcher does not accept the
+/// iterator itself, this macro collects a clone of the iterator into a [`Vec`]
+/// and matches against a reference to that `Vec`, so the elements are matched
+/// as references to the items. The iterator must be finite. It is not
+/// advanced.
+///
+/// ```
+/// # use googletest::prelude::*;
+/// # fn should_pass() -> Result<()> {
+/// let vector = vec![1, 2, 3];
+/// verify_that!(vector.iter().map(|x| x * 10), elements_are![eq(&10), eq(&20), eq(&30)])?;
+/// verify_that!(vector.iter(), contains(eq(&&2)))?; // `vector.iter()` yields `&i32`.
+/// #     Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// ```
+///
+/// Matchers that accept the iterator itself are applied to the iterator, not
+/// to the collected items. For example, `verify_that!(0..3, eq(&(0..3)))`
+/// compares two ranges, and `verify_that!(0.., anything())` does not try to
+/// collect an infinite range. Iterators nested inside the actual value, for
+/// example in a struct field, are not collected. [`assert_that!`] and
+/// [`expect_that!`] behave the same way.
+///
 /// ## Matching against tuples
 ///
 /// One can match against a tuple by constructing a tuple of matchers as
@@ -126,34 +155,43 @@
 macro_rules! verify_that {
     // specialized to sequences:
     ($actual:expr, [$($expecteds:expr),+ $(,)?]) => {
-        {
-            use $crate::assertions::internal::Subject as _;
-            $actual.check(
-                $crate::matchers::elements_are![$($expecteds),+],
-                stringify!($actual),
-            )
-        }
+        $crate::verify_that!(
+            $actual,
+            $crate::matchers::elements_are![$($expecteds),+]
+        )
     };
 
     // specialized to unordered sequences:
     ($actual:expr, {$($expecteds:expr),+ $(,)?}) => {
-        {
-            use $crate::assertions::internal::Subject as  _;
-            $actual.check(
-                $crate::matchers::unordered_elements_are![$($expecteds),+],
-                stringify!($actual),
-            )
-        }
+        $crate::verify_that!(
+            $actual,
+            $crate::matchers::unordered_elements_are![$($expecteds),+]
+        )
     };
 
     // general case:
     ($actual:expr, $expected:expr $(,)?) => {
-        {
-            use $crate::assertions::internal::Subject as  _;
-            $actual.check(
-                $expected,
-                stringify!($actual),
-            )
+        // Nested matches (rather than one tuple) keep `$actual` evaluated
+        // before `$expected` and keep temporaries alive for the whole
+        // assertion, while moving the matcher as a whole, so no temporary
+        // holding it outlives the caller's locals.
+        match &$actual {
+            actual => match $expected {
+                expected => {
+                    #[allow(unused_imports)]
+                    use $crate::assertions::internal::{
+                        AcceptedByRefSubject as _, AutoderefSubject as _, ByValueSubject as _,
+                        CollectedSubject as _, SubjectWrapper,
+                    };
+                    // Three `&`s = tiers 1 to 3; method lookup peels one per
+                    // step, then reaches tier 4 through `SubjectWrapper`'s
+                    // `Deref`. Each tier returns a type with a `check` method
+                    // that runs the matcher. See `SubjectWrapper` for details.
+                    (&&&SubjectWrapper::new(actual, &expected))
+                        .into_subject()
+                        .check(expected, stringify!($actual))
+                }
+            },
         }
     };
 }
@@ -1883,8 +1921,257 @@ pub mod internal {
         matcher::{create_assertion_failure, Matcher, MatcherResult},
     };
     use std::fmt::Debug;
+    use std::marker::PhantomData;
+    use std::ops::Deref;
 
     pub use ::googletest_macro::__googletest_macro_verify_pred;
+
+    /// Borrowed assertion subject plus the *type* of the matcher it will be
+    /// checked against. `verify_that!` uses it to decide, at compile time, how
+    /// the subject is passed to the matcher.
+    ///
+    /// ## Subject conversion in `verify_that!`
+    ///
+    /// `verify_that!(actual, matcher)` (and therefore `assert_that!` and
+    /// `expect_that!`, which delegate to it) never moves `actual`. It borrows
+    /// it and picks one of four ways to hand it to the matcher. The tiers are
+    /// tried in this order, and the first one whose bounds hold wins:
+    ///
+    /// 1. `ByValueSubject`: `actual` is `Copy` and `Debug`, so it is passed by
+    ///    value. This is the long-standing behavior for integers, `&T`,
+    ///    `Option<T>`, arrays, etc.
+    /// 2. `AcceptedByRefSubject`: the matcher accepts `&actual`, so `&actual`
+    ///    is passed. This is the long-standing behavior for non-`Copy`
+    ///    subjects, and it guarantees that assertions which compiled before
+    ///    iterator support was added keep their meaning.
+    /// 3. `CollectedSubject`: the matcher does not accept `&actual`, but
+    ///    `actual` is a cloneable iterator. A clone is collected into a
+    ///    `Vec<Item>`, so the caller's iterator is not advanced. Like any
+    ///    non-`Copy` subject, the `Vec` is passed by reference, so sequence
+    ///    matchers see the elements as `&Item`. This lets users write
+    ///    `verify_that!(slice.iter(), elements_are![...])` without
+    ///    `.collect::<Vec<_>>()` (b/521650618).
+    /// 4. `AutoderefSubject`: the first `Copy + Debug` type among `actual`,
+    ///    `&actual`, `*actual`, `&*actual`, `**actual`, and so on is passed,
+    ///    whether or not the matcher accepts it. This is how the subject was
+    ///    chosen before iterator support was added, so assertions on a type
+    ///    that is not `Debug` but dereferences to a `Debug` type keep
+    ///    compiling. For example, such a type that dereferences to `[u8]` is
+    ///    matched as `&[u8]`.
+    ///
+    /// If no tier applies, or the matcher does not accept what tier 4 picks,
+    /// the assertion does not compile. Such assertions did not compile before
+    /// iterator support was added either.
+    ///
+    /// `into_subject` returns a `Passed` (tiers 1, 2 and 4) or a `Collected`
+    /// (tier 3). Both have a `check` method that runs the matcher, so the
+    /// macro expansion is the same whichever tier is chosen.
+    ///
+    /// ## How the tier is chosen
+    ///
+    /// Stable Rust has no impl specialization, and a single trait with
+    /// blanket impls for these overlapping cases is rejected (E0119). Instead,
+    /// this uses the "autoref specialization" pattern, see
+    /// <https://github.com/dtolnay/case-studies/tree/master/autoref-specialization>.
+    /// Tiers 1 to 3 are implemented for a different number of `&`s on
+    /// `SubjectWrapper`, and tier 4 for any `Copy + Debug` type:
+    ///
+    /// | Receiver type             | Trait (tier)               | Bounds                       |
+    /// | :------------------------ | :------------------------- | :--------------------------- |
+    /// | `&&&SubjectWrapper<T, M>` | `ByValueSubject` (1)       | `T: Copy + Debug`            |
+    /// | `&&SubjectWrapper<T, M>`  | `AcceptedByRefSubject` (2) | `T: Debug`, `M: Matcher<&T>` |
+    /// | `&SubjectWrapper<T, M>`   | `CollectedSubject` (3)     | `T: Clone + Iterator`        |
+    /// | `S`                       | `AutoderefSubject` (4)     | `S: Copy + Debug`            |
+    ///
+    /// The macro calls
+    /// `(&&&SubjectWrapper::new(&actual, &matcher)).into_subject()`. For a
+    /// method call `recv.into_subject()` with `recv: R`, rustc tries the
+    /// receiver types `R`, `&R`, `&mut R`, then `*R`, `&*R`, `&mut *R`, then
+    /// `**R`, and so on. It uses the first one for which a trait in scope has
+    /// an impl whose bounds hold. Each dereference removes one `&`, so tier 1
+    /// is tried first, then tier 2, then tier 3. Tier 4 does not apply to any
+    /// of these receivers, because `SubjectWrapper` is not `Debug`. The next
+    /// dereference uses the `Deref` impl of `SubjectWrapper`, which yields
+    /// `actual`, so rustc goes on with `actual`, `&actual`, `*actual`,
+    /// `&*actual`, and so on, where only tier 4 applies. All four traits must
+    /// be in scope at the call site, which is why the macro imports them as
+    /// `_`.
+    ///
+    /// Like all autoref specialization, this resolves on the concrete types at
+    /// the macro call site. Inside generic code, where `actual` has a type
+    /// parameter `T`, only the bounds declared for `T` are used.
+    ///
+    /// ## Worked examples
+    ///
+    /// Here `vec` is a `Vec<i32>`, `slice` is a `&[i32]`, and `bytes` has a
+    /// type that is not `Debug` but implements `Deref<Target = [u8]>`:
+    ///
+    /// | `actual`         | Matcher             | Tier | Matcher receives  |
+    /// | :--------------- | :------------------ | :--- | :---------------- |
+    /// | `42`             | `eq(42)`            | 1    | `i32`             |
+    /// | `&vec`           | `elements_are![..]` | 1    | `&Vec<i32>`       |
+    /// | `vec`            | `elements_are![..]` | 2    | `&Vec<i32>`       |
+    /// | `0..3`           | `eq(&(0..3))`       | 2    | `&Range<i32>`     |
+    /// | `0..`            | `anything()`        | 2    | `&RangeFrom<i32>` |
+    /// | `0..3`           | `elements_are![..]` | 3    | `&Vec<i32>`       |
+    /// | `slice.iter()`   | `elements_are![..]` | 3    | `&Vec<&i32>`      |
+    /// | `slice.iter()`   | `contains(..)`      | 3    | `&Vec<&i32>`      |
+    /// | `bytes`          | `eq(b"abc")`        | 4    | `&[u8]`           |
+    /// | `vec.iter_mut()` | `elements_are![..]` | 4    | does not compile  |
+    ///
+    /// The two `0..3` rows show that the tier depends on the matcher:
+    /// `eq(&(0..3))` accepts `&Range<i32>`, but `elements_are!` does not
+    /// (`&Range<i32>` is not `IntoIterator`), so the range is collected.
+    /// `bytes` is neither `Debug` nor an iterator, so tiers 1 to 3 do not
+    /// apply, and tier 4 finds `&[u8]` by dereferencing it. `vec.iter_mut()`
+    /// cannot be collected, since `IterMut` is not `Clone`, so tier 4 picks
+    /// `&IterMut<i32>`, which `elements_are!` does not accept.
+    ///
+    /// **For internal use only. API stability is not guaranteed!**
+    pub struct SubjectWrapper<'a, T: ?Sized, M>(&'a T, PhantomData<fn() -> M>);
+
+    impl<'a, T: ?Sized, M> SubjectWrapper<'a, T, M> {
+        /// Factory only intended for use in `verify_that!`. `_matcher` is only
+        /// used to infer `M`; it is not borrowed beyond this call.
+        ///
+        /// **For internal use only. API stability is not guaranteed!**
+        #[inline]
+        pub fn new(actual: &'a T, _matcher: &M) -> Self {
+            SubjectWrapper(actual, PhantomData)
+        }
+    }
+
+    // Lets method lookup in `verify_that!` continue from the wrapper to
+    // `actual` and the types it dereferences to, where tier 4 applies.
+    impl<T: ?Sized, M> Deref for SubjectWrapper<'_, T, M> {
+        type Target = T;
+        #[inline]
+        fn deref(&self) -> &T {
+            self.0
+        }
+    }
+
+    /// Tier 1: `Copy + Debug` subjects are passed by value.
+    ///
+    /// **For internal use only. API stability is not guaranteed!**
+    pub trait ByValueSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<T: Copy + Debug, M> ByValueSubject for &&&SubjectWrapper<'_, T, M> {
+        type Output = Passed<T>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            Passed(*self.0)
+        }
+    }
+
+    /// Tier 2: if the matcher accepts `&T`, `&T` is passed.
+    ///
+    /// **For internal use only. API stability is not guaranteed!**
+    pub trait AcceptedByRefSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<'a, T, M> AcceptedByRefSubject for &&SubjectWrapper<'a, T, M>
+    where
+        T: Debug + ?Sized,
+        M: Matcher<&'a T>,
+    {
+        type Output = Passed<&'a T>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            Passed(self.0)
+        }
+    }
+
+    /// Tier 3: cloneable iterators that the matcher does not accept by
+    /// reference are cloned and collected into a `Vec`.
+    ///
+    /// **For internal use only. API stability is not guaranteed!**
+    pub trait CollectedSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<I: Clone + Iterator, M> CollectedSubject for &SubjectWrapper<'_, I, M> {
+        type Output = Collected<I::Item>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            Collected(I::clone(self.0).collect())
+        }
+    }
+
+    /// Tier 4: the first `Copy + Debug` type among `actual`, `&actual`,
+    /// `*actual`, `&*actual`, and so on is passed, as before iterator support
+    /// was added. Method lookup reaches these receivers through the `Deref`
+    /// impl of `SubjectWrapper`. `SubjectWrapper` must not implement `Debug`,
+    /// or this tier would apply to the wrapper itself.
+    ///
+    /// **For internal use only. API stability is not guaranteed!**
+    pub trait AutoderefSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<S: Copy + Debug> AutoderefSubject for S {
+        type Output = Passed<S>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            Passed(self)
+        }
+    }
+
+    /// Returned by tiers 1, 2 and 4 of `SubjectWrapper`: a `Copy` value
+    /// (`actual`, `&actual`, or what tier 4 finds by dereferencing `actual`)
+    /// that is handed to the matcher as is.
+    ///
+    /// **For internal use only. API stability is not guaranteed!**
+    pub struct Passed<S>(S);
+
+    impl<S: Copy + Debug> Passed<S> {
+        /// Checks whether the matcher `expected` matches the subject.
+        ///
+        /// Returns `Ok(())` if the value matches and `Err(_)`, with a test
+        /// failure report, if it does not match.
+        ///
+        /// **For internal use only. API stability is not guaranteed!**
+        #[must_use = "The assertion result must be evaluated to affect the test result."]
+        #[track_caller]
+        pub fn check(
+            self,
+            expected: impl Matcher<S>,
+            actual_expr: &'static str,
+        ) -> Result<(), TestAssertionFailure> {
+            Subject::check(self.0, expected, actual_expr)
+        }
+    }
+
+    /// Returned by tier 3 of `SubjectWrapper`: the items of a clone of the
+    /// `actual` iterator. The matcher sees them as `&Vec<T>`.
+    ///
+    /// **For internal use only. API stability is not guaranteed!**
+    pub struct Collected<T>(Vec<T>);
+
+    impl<T: Debug> Collected<T> {
+        /// Checks whether the matcher `expected` matches the collected items.
+        ///
+        /// Returns `Ok(())` if they match and `Err(_)`, with a test failure
+        /// report, if they do not match.
+        ///
+        /// **For internal use only. API stability is not guaranteed!**
+        #[must_use = "The assertion result must be evaluated to affect the test result."]
+        #[track_caller]
+        pub fn check<'s>(
+            &'s self,
+            expected: impl Matcher<&'s Vec<T>>,
+            actual_expr: &'static str,
+        ) -> Result<(), TestAssertionFailure> {
+            Subject::check(&self.0, expected, actual_expr)
+        }
+    }
 
     /// Extension trait to perform autoref through method lookup in the
     /// assertion macros. With this trait, the subject can be either a value
