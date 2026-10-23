@@ -87,11 +87,11 @@ impl AccumulatePartsState {
                 *unary.expr = self.accumulate_parts(*unary.expr);
                 Expr::Unary(unary)
             }
-            // A path expression doesn't need to be stored in an intermediate variable.
-            // This avoids moving out of an existing variable.
+            // A path expression doesn't need to be stored in an intermediate
+            // variable. This avoids moving out of an existing variable.
             Expr::Path(_) => expr,
-            // By default, assume it's some expression that needs to be cached to avoid
-            // double-evaluation.
+            // By default, assume it's some expression that needs to be cached
+            // to avoid double-evaluation.
             _ => self.define_variable(&expr),
         };
         let error_message_ident = &self.error_message_ident;

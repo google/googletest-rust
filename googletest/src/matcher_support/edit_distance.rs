@@ -132,8 +132,8 @@ pub(crate) fn edit_list<T: PartialEq + Copy>(
                     actual.get(path_k_minus_1.actual_endpoint).copied().map(Edit::ExtraActual),
                 ),
 
-                // k is strictly between -distance and distance. Both parent paths were set in the
-                // last iteration.
+                // k is strictly between -distance and distance. Both parent
+                // paths were set in the last iteration.
                 (Some(path_k_minus_1), Some(path_k_plus_1)) => {
                     // This decides whether the algorithm prefers to add an edit
                     // from the actual or from the expected when the rows

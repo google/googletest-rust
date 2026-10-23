@@ -123,7 +123,8 @@ where
 
 fn build_explanation<T: Debug, U: Debug>(missing: Vec<T>, unexpected: Vec<U>) -> String {
     match (missing.len(), unexpected.len()) {
-        // TODO(b/261175849) add more data here (out of order elements, duplicated elements, etc...)
+        // TODO(b/261175849) add more data here (out of order elements,
+        // duplicated elements, etc...)
         (0, 0) => "which contains all the elements".to_string(),
         (0, 1) => format!("which contains the unexpected element {:?}", unexpected[0]),
         (0, _) => format!("which contains the unexpected elements {unexpected:?}",),
