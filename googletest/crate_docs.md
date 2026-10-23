@@ -444,6 +444,18 @@ fn always_fails() -> Result<()> {
 # always_fails().unwrap_err();
 ```
 
+## Death tests
+
+GoogleTest Rust provides macros to assert that an expression terminates the
+current process:
+
+*   [`verify_exit!`] and [`expect_exit!`] assert that an expression terminates
+    the process with an exit status matching a given matcher and stderr matching
+    a string matcher.
+*   [`verify_death!`] and [`expect_death!`] assert that an expression causes the
+    process to die (exiting unsuccessfully, either with a non-zero exit code or
+    by a signal), with stderr matching a string matcher.
+
 ## Conversion from `Result::Err` and `Option::None`
 
 To simplify error management during a test arrangement, [`Result<T>`]
