@@ -493,7 +493,18 @@ pub mod __internal_macro_support {
     impl<T: Fixture> Drop for FixtureTearDownOnDrop<T> {
         fn drop(&mut self) {
             if let Some(fixture) = self.fixture.take() {
-                fixture.tear_down().unwrap();
+                let result = fixture.tear_down();
+                if std::thread::panicking() {
+                    // The test is already unwinding from a panic. Panicking
+                    // again here would abort the whole test binary, so report
+                    // the teardown failure and let the original panic
+                    // propagate.
+                    if let Err(e) = result {
+                        eprintln!("Fixture teardown failed while unwinding from a panic: {e:?}");
+                    }
+                } else {
+                    result.unwrap();
+                }
             }
         }
     }
