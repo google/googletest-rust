@@ -1770,8 +1770,8 @@ mod tests {
         let result = should_display_error_correctly_without_google_test_macro();
 
         verify_that!(
-            // We hereby assume that the Rust test harness uses std::fmt::Debug to output the Err
-            // variant of a Result.
+            // We hereby assume that the Rust test harness uses std::fmt::Debug
+            // to output the Err variant of a Result.
             format!("{:?}", result.unwrap_err()),
             contains_substring(indoc! {"
                 Value of: 1
