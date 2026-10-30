@@ -60,10 +60,11 @@ pub mod prelude {
     pub use super::{
         add_failure, add_failure_at, assert_false, assert_ok, assert_pred, assert_that,
         assert_true, expect_death, expect_eq, expect_exit, expect_false, expect_float_eq,
-        expect_ge, expect_gt, expect_le, expect_lt, expect_ne, expect_near, expect_ok, expect_pred,
-        expect_that, expect_true, fail, succeed, verify_death, verify_eq, verify_exit,
-        verify_false, verify_float_eq, verify_ge, verify_gt, verify_le, verify_lt, verify_ne,
-        verify_near, verify_ok, verify_pred, verify_that, verify_true,
+        expect_ge, expect_gt, expect_le, expect_lt, expect_ne, expect_near, expect_ok,
+        expect_panic, expect_pred, expect_that, expect_true, fail, succeed, verify_death,
+        verify_eq, verify_exit, verify_false, verify_float_eq, verify_ge, verify_gt, verify_le,
+        verify_lt, verify_ne, verify_near, verify_ok, verify_panic, verify_pred, verify_that,
+        verify_true,
     };
 }
 
@@ -83,8 +84,7 @@ pub mod prelude {
 ///
 /// * A plain string literal: `scoped_trace!("checking default config");`
 /// * Positional arguments: `scoped_trace!("case {} with input {:?}", i, x);`
-/// * Named or inline captured arguments: `scoped_trace!("case {i}:
-///   input={x:?}");`
+/// * Named or inline captured arguments: `scoped_trace!("case {i}: input={x:?}");`
 ///
 /// # Usage and Scope
 ///

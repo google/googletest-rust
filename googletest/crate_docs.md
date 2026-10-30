@@ -426,6 +426,22 @@ The `verify_pred!` invocation evaluates to a [`Result<()>`] just like
 [`verify_that!`]. There is also a macro [`expect_pred!`] to make a non-fatal
 predicaticate assertion.
 
+## Panic assertions
+
+The macros [`verify_panic!`] and [`expect_panic!`] assert that an expression
+panics (via unwinding), optionally matching the panic message against a
+[`Matcher`] as follows:
+
+```
+# use googletest::prelude::*;
+# fn should_pass() -> Result<()> {
+verify_panic!(panic!("something went wrong"))?;
+verify_panic!(panic!("something went wrong"), contains_substring("went wrong"))?;
+# Ok(())
+# }
+# should_pass().unwrap();
+```
+
 ## Unconditionally generating a test failure
 
 The macro [`fail!`] unconditionally evaluates to a `Result` indicating a
