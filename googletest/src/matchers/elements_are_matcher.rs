@@ -149,7 +149,11 @@ pub mod internal {
             let mut mismatches = Vec::new();
             for (idx, (a, e)) in zipped_iterator.by_ref().enumerate() {
                 if e.matches(a).is_no_match() {
-                    mismatches.push(format!("element #{idx} is {a:?}, {}", e.explain_match(a)));
+                    mismatches.push(format!(
+                        "element #{idx} is {}, {}",
+                        e.format_actual(a),
+                        e.explain_match(a)
+                    ));
                 }
             }
             if mismatches.is_empty() {
@@ -180,6 +184,24 @@ pub mod internal {
                     .indent()
             )
             .into()
+        }
+
+        fn format_actual(&self, actual: ContainerT) -> String {
+            format!(
+                "[{}]",
+                actual
+                    .into_iter()
+                    .enumerate()
+                    .map(|(i, element)| {
+                        if let Some(matcher) = self.elements.get(i) {
+                            matcher.format_actual(element)
+                        } else {
+                            format!("{element:?}")
+                        }
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
         }
     }
 }

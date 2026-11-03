@@ -116,7 +116,10 @@ pub mod internal {
         fn explain_match(&self, actual: I) -> Description {
             let actual_result = (self.callable)(actual);
             Description::new()
-                .text(format!("which, results into {actual_result:?}",))
+                .text(format!(
+                    "which, results into {}",
+                    self.inner_matcher.format_actual(actual_result)
+                ))
                 .nested(self.describe(self.matches(actual)))
         }
     }
@@ -155,7 +158,10 @@ pub mod internal {
         fn explain_match(&self, actual: I) -> Description {
             let actual_result = (self.callable)(actual);
             Description::new()
-                .text(format!("which, results into {actual_result:?}",))
+                .text(format!(
+                    "which, results into {}",
+                    self.inner_matcher.format_actual(&actual_result)
+                ))
                 .nested(self.describe(self.matches(actual)))
         }
     }

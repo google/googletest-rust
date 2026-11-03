@@ -73,6 +73,13 @@ impl<T: Debug + Copy, InnerMatcherT: Matcher<T>> Matcher<Option<T>> for SomeMatc
             .into(),
         }
     }
+
+    fn format_actual(&self, actual: Option<T>) -> String {
+        match actual {
+            Some(t) => format!("Some({})", self.inner.format_actual(t)),
+            None => "None".into(),
+        }
+    }
 }
 
 impl<'a, T: Debug, InnerMatcherT: Matcher<&'a T>> Matcher<&'a Option<T>>
@@ -101,6 +108,13 @@ impl<'a, T: Debug, InnerMatcherT: Matcher<&'a T>> Matcher<&'a Option<T>>
                 self.inner.describe(MatcherResult::NoMatch)
             )
             .into(),
+        }
+    }
+
+    fn format_actual(&self, actual: &'a Option<T>) -> String {
+        match actual {
+            Some(t) => format!("Some({})", self.inner.format_actual(t)),
+            None => "None".into(),
         }
     }
 }

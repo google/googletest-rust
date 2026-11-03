@@ -58,6 +58,10 @@ where
     fn describe(&self, matcher_result: MatcherResult) -> Description {
         self.expected.describe(matcher_result)
     }
+
+    fn format_actual(&self, actual: &'a ExpectedT) -> String {
+        self.expected.format_actual(*actual)
+    }
 }
 
 #[cfg(test)]

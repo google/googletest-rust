@@ -414,6 +414,10 @@ pub mod internal {
         fn explain_match(&self, actual: &'a T) -> crate::description::Description {
             self.matcher.explain_match(actual)
         }
+
+        fn format_actual(&self, actual: &'a T) -> String {
+            self.matcher.format_actual(actual)
+        }
     }
 
     impl<T: Debug + Copy, M> Matcher<T> for CompileAssertAndMatch<T, M>
@@ -433,6 +437,10 @@ pub mod internal {
 
         fn explain_match(&self, actual: T) -> crate::description::Description {
             self.matcher.explain_match(actual)
+        }
+
+        fn format_actual(&self, actual: T) -> String {
+            self.matcher.format_actual(actual)
         }
     }
 }
