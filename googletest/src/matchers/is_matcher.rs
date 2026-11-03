@@ -62,4 +62,8 @@ impl<ActualT: Debug + Copy, InnerMatcherT: Matcher<ActualT>> Matcher<ActualT>
     fn explain_match(&self, actual: ActualT) -> Description {
         self.inner.explain_match(actual)
     }
+
+    fn format_actual(&self, actual: ActualT) -> String {
+        self.inner.format_actual(actual)
+    }
 }

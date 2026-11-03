@@ -93,6 +93,13 @@ impl<T: Debug + Copy, M1: Matcher<T>, M2: Matcher<T>> Matcher<T> for Disjunction
                 .disjunction_description()
         }
     }
+
+    fn format_actual(&self, actual: T) -> String {
+        match (self.m1.matches(actual), self.m2.matches(actual)) {
+            (MatcherResult::Match, MatcherResult::NoMatch) => self.m2.format_actual(actual),
+            _ => self.m1.format_actual(actual),
+        }
+    }
 }
 
 #[cfg(test)]

@@ -56,6 +56,10 @@ where
     fn explain_match(&self, actual: &'a ActualT) -> Description {
         self.inner.explain_match(actual.deref())
     }
+
+    fn format_actual(&self, actual: &'a ActualT) -> String {
+        self.inner.format_actual(actual.deref())
+    }
 }
 
 #[cfg(test)]

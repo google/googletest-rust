@@ -137,6 +137,17 @@ where
             }
         }
     }
+
+    fn format_actual(&self, actual: ContainerT) -> String {
+        format!(
+            "[{}]",
+            actual
+                .into_iter()
+                .map(|element| self.inner.format_actual(element))
+                .collect::<Vec<_>>()
+                .join(", ")
+        )
+    }
 }
 
 impl<InnerMatcherT> ContainsMatcher<InnerMatcherT> {

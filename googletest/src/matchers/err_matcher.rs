@@ -84,6 +84,13 @@ impl<T: Debug + Copy, E: Debug + Copy, InnerMatcherT: Matcher<E>> Matcher<std::r
             .into(),
         }
     }
+
+    fn format_actual(&self, actual: std::result::Result<T, E>) -> String {
+        match actual {
+            Err(e) => format!("Err({})", self.inner.format_actual(e)),
+            Ok(o) => format!("Ok({o:?})"),
+        }
+    }
 }
 
 impl<'a, T: Debug, E: Debug, InnerMatcherT: Matcher<&'a E>> Matcher<&'a std::result::Result<T, E>>
@@ -112,6 +119,13 @@ impl<'a, T: Debug, E: Debug, InnerMatcherT: Matcher<&'a E>> Matcher<&'a std::res
                 self.inner.describe(MatcherResult::NoMatch)
             )
             .into(),
+        }
+    }
+
+    fn format_actual(&self, actual: &'a std::result::Result<T, E>) -> String {
+        match actual {
+            Err(e) => format!("Err({})", self.inner.format_actual(e)),
+            Ok(o) => format!("Ok({o:?})"),
         }
     }
 }

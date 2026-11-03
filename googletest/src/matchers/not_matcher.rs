@@ -61,6 +61,10 @@ impl<T: Debug + Copy, InnerMatcherT: Matcher<T>> Matcher<T> for NotMatcher<Inner
             MatcherResult::Match
         })
     }
+
+    fn format_actual(&self, actual: T) -> String {
+        self.inner.format_actual(actual)
+    }
 }
 
 #[cfg(test)]

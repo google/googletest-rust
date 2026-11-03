@@ -287,9 +287,9 @@ pub mod internal {
         fn explain_match(&self, actual: OuterT) -> Description {
             let actual_inner = (self.extractor)(&actual);
             format!(
-                "whose property `{}` is `{:#?}`, {}",
+                "whose property `{}` is `{}`, {}",
                 self.property_desc,
-                actual_inner,
+                self.inner.format_actual(actual_inner),
                 self.inner.explain_match(actual_inner)
             )
             .into()
@@ -318,9 +318,9 @@ pub mod internal {
         fn explain_match(&self, actual: &'a OuterT) -> Description {
             let actual_inner = (self.extractor)(actual);
             format!(
-                "whose property `{}` is `{:#?}`, {}",
+                "whose property `{}` is `{}`, {}",
                 self.property_desc,
-                actual_inner,
+                self.inner.format_actual(&actual_inner),
                 self.inner.explain_match(&actual_inner)
             )
             .into()
@@ -373,9 +373,9 @@ pub mod internal {
         fn explain_match(&self, actual: OuterT) -> Description {
             let actual_inner = (self.extractor)(actual);
             format!(
-                "whose property `{}` is `{:#?}`, {}",
+                "whose property `{}` is `{}`, {}",
                 self.property_desc,
-                actual_inner,
+                self.inner.format_actual(&actual_inner),
                 self.inner.explain_match(&actual_inner)
             )
             .into()

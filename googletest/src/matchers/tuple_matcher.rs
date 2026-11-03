@@ -83,8 +83,8 @@ pub mod internal {
                         MatcherResult::Match => {},
                         MatcherResult::NoMatch => {
                             explanation = explanation
-                                .text(format!(concat!("Element #", $field_number, " is {:?},"),
-                                    actual.$field_number))
+                                .text(format!(concat!("Element #", $field_number, " is {},"),
+                                    self.$field_number.format_actual(actual.$field_number)))
                                 .nested(self.$field_number.explain_match(actual.$field_number));
                         }
                     })*
@@ -107,6 +107,15 @@ pub mod internal {
                                 self.$field_number.describe(MatcherResult::Match));)*
                             description
                         }
+                    }
+                }
+
+                fn format_actual(&self, actual: ($($field_type,)*)) -> String {
+                    let fields = [$(self.$field_number.format_actual(actual.$field_number)),*];
+                    if fields.len() == 1 {
+                        format!("({},)", fields[0])
+                    } else {
+                        format!("({})", fields.join(", "))
                     }
                 }
             }
@@ -137,8 +146,8 @@ pub mod internal {
                                     concat!(
                                         "Element #",
                                         $field_number,
-                                        " is {:?},"),
-                                        actual.$field_number))
+                                        " is {},"),
+                                        self.$field_number.format_actual(&actual.$field_number)))
                                 .nested(self.$field_number.explain_match(&actual.$field_number));
                         }
                     })*
@@ -161,6 +170,15 @@ pub mod internal {
                                 self.$field_number.describe(MatcherResult::Match));)*
                             description
                         }
+                    }
+                }
+
+                fn format_actual(&self, actual: &'a ($($field_type,)*)) -> String {
+                    let fields = [$(self.$field_number.format_actual(&actual.$field_number)),*];
+                    if fields.len() == 1 {
+                        format!("({},)", fields[0])
+                    } else {
+                        format!("({})", fields.join(", "))
                     }
                 }
             }

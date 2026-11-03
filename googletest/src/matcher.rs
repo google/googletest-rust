@@ -151,6 +151,13 @@ pub trait Matcher<ActualT: Debug + Copy>: MatcherBase {
     fn explain_match(&self, actual: ActualT) -> Description {
         format!("which {}", self.describe(self.matches(actual))).into()
     }
+
+    /// Formats `actual` for display in assertion failure messages.
+    ///
+    /// By default, this formats `actual` using its [`Debug`] implementation.
+    fn format_actual(&self, actual: ActualT) -> String {
+        format!("{actual:?}")
+    }
 }
 
 /// Base trait for matchers. Any type implementing `Matcher` must implement
@@ -239,7 +246,7 @@ pub(crate) fn create_assertion_failure<T: Debug + Copy>(
     actual: T,
     actual_expr: &'static str,
 ) -> TestAssertionFailure {
-    let actual_formatted = format!("{actual:?}");
+    let actual_formatted = matcher.format_actual(actual);
     let actual_formatted = if actual_formatted.len() > PRETTY_PRINT_LENGTH_THRESHOLD {
         format!("{actual:#?}")
     } else {
@@ -308,6 +315,10 @@ impl<T: Debug + Copy, M: Matcher<T>> Matcher<T> for &M {
 
     fn explain_match(&self, actual: T) -> Description {
         (*self).explain_match(actual)
+    }
+
+    fn format_actual(&self, actual: T) -> String {
+        (*self).format_actual(actual)
     }
 }
 
