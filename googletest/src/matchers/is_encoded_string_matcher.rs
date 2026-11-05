@@ -89,7 +89,8 @@ where
     fn explain_match(&self, actual: ActualT) -> Description {
         match std::str::from_utf8(actual.as_ref()) {
             Ok(s) => {
-                format!("which is a UTF-8 encoded string {}", self.inner.explain_match(s)).into()
+                format!("which is a UTF-8 encoded string {s:?}, {}", self.inner.explain_match(s))
+                    .into()
             }
             Err(e) => format!("which is not a UTF-8 encoded string: {e}").into(),
         }
@@ -101,6 +102,7 @@ mod tests {
     use crate::matcher::MatcherResult;
     use crate::prelude::*;
     use crate::Result;
+    use indoc::indoc;
 
     #[test]
     fn matches_string_as_byte_slice() -> Result<()> {
@@ -153,7 +155,9 @@ mod tests {
 
         verify_that!(
             explanation,
-            displays_as(eq("which is a UTF-8 encoded string which is equal to \"A string\""))
+            displays_as(eq(
+                "which is a UTF-8 encoded string \"A string\", which is equal to \"A string\""
+            ))
         )
     }
 
@@ -170,7 +174,42 @@ mod tests {
 
         verify_that!(
             explanation,
-            displays_as(eq("which is a UTF-8 encoded string which isn't equal to \"A string\""))
+            displays_as(eq(
+                "which is a UTF-8 encoded string \"Another string\", which isn't equal to \"A string\""
+            ))
+        )
+    }
+
+    #[test]
+    fn has_correct_failure_message_for_valid_utf8() -> Result<()> {
+        let result = verify_that!("Hello".as_bytes(), is_utf8_string(eq("World")));
+
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: \"Hello\".as_bytes()
+                Expected: is a UTF-8 encoded string which is equal to \"World\"
+                Actual: [72, 101, 108, 108, 111],
+                  which is a UTF-8 encoded string \"Hello\", which isn't equal to \"World\"
+                "
+            ))))
+        )
+    }
+
+    #[test]
+    fn has_correct_failure_message_for_invalid_utf8() -> Result<()> {
+        let result = verify_that!(&[192u8, 128, 0, 64], is_utf8_string(eq("World")));
+
+        verify_that!(
+            result,
+            err(displays_as(contains_substring(indoc!(
+                "
+                Value of: &[192u8, 128, 0, 64]
+                Expected: is a UTF-8 encoded string which is equal to \"World\"
+                Actual: [192, 128, 0, 64],
+                  which is not a UTF-8 encoded string: "
+            ))))
         )
     }
 }
