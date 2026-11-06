@@ -55,7 +55,7 @@ pub fn current_test_name() -> Option<String> {
 }
 
 /// Stores the name of the current test and resets the death test count.
-/// Called by `#[gtest]` and test runners before running each test.
+/// Called by test runners before running each test.
 ///
 /// Returns a [`CurrentTestNameGuard`] that restores the previous test name and
 /// death test count when dropped. The guard must be kept alive for the whole
@@ -64,6 +64,17 @@ pub fn set_current_test_name(name: &str) -> CurrentTestNameGuard {
     let previous_name = CURRENT_TEST_NAME.with(|n| n.borrow_mut().replace(name.to_string()));
     let previous_count = DEATH_TEST_COUNT.with(|c| c.replace(0));
     CurrentTestNameGuard { previous_name, previous_count }
+}
+
+/// Like [`set_current_test_name`], but without a guard. Called by `#[gtest]`.
+/// Nothing restores the previous state; the next test overwrites it.
+///
+/// A guard held by the `#[gtest]` wrapper adds an unwind landing pad, which
+/// causes false positives on ARM HWASan for `#[should_panic]` tests.
+// TODO(b/569580929): Remove once `#[gtest]` can hold the guard again.
+pub fn set_current_test_name_unguarded(name: &str) {
+    CURRENT_TEST_NAME.with(|n| *n.borrow_mut() = Some(name.to_string()));
+    DEATH_TEST_COUNT.with(|c| c.set(0));
 }
 
 fn increment_death_test_count() -> usize {
@@ -268,6 +279,19 @@ mod tests {
             assert_eq!(current_test_name().as_deref(), Some("test_name_guard_clears_on_drop"));
         }
         assert_eq!(current_test_name(), None);
+    }
+
+    #[test]
+    fn test_set_current_test_name_unguarded_overwrites_name_and_resets_count() {
+        // The guard restores the clean state when it is dropped.
+        let _guard = set_current_test_name("guarded_test");
+        increment_death_test_count();
+        assert_eq!(death_test_count(), 1);
+
+        set_current_test_name_unguarded("unguarded_test");
+
+        assert_eq!(current_test_name().as_deref(), Some("unguarded_test"));
+        assert_eq!(death_test_count(), 0);
     }
 
     #[test]

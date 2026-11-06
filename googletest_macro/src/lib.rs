@@ -186,7 +186,9 @@ pub fn gtest(
             } else if googletest::internal::test_sharding::test_should_run(#test_case_hash) {
                 use googletest::internal::test_outcome::TestOutcome;
                 TestOutcome::init_current_test_outcome();
-                let _death_test_guard = googletest::internal::death_tests::set_current_test_name(concat!(module_path!(), "::", stringify!(#sig_ident)));
+                // TODO(b/569580929): Use `set_current_test_name` guard once the LLVM fix ships. A
+                // guard here causes false positives on ARM HWASan.
+                googletest::internal::death_tests::set_current_test_name_unguarded(concat!(module_path!(), "::", stringify!(#sig_ident)));
                 TestOutcome::close_current_test_outcome(#invocation)
             } else {
                 #skipped_test_result
