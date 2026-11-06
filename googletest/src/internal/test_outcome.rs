@@ -129,6 +129,12 @@ impl TestOutcome {
     /// Records that the currently running test has failed.
     fn fail_current_test() {
         TestOutcome::with_current_test_outcome(|mut outcome| {
+            if FAILURE_REPORTER_HOOK.get().is_some() {
+                if let Some(outcome) = outcome.as_mut() {
+                    *outcome = TestOutcome::Failure;
+                }
+                return;
+            }
             let outcome = outcome
                 .as_mut()
                 .expect("No test context found. This indicates a bug in GoogleTest.");
@@ -263,7 +269,6 @@ impl TestAssertionFailure {
         println!("{self}");
         if let Some(capture_fn) = FAILURE_REPORTER_HOOK.get() {
             capture_fn(self);
-            return;
         }
         TestOutcome::fail_current_test();
     }
