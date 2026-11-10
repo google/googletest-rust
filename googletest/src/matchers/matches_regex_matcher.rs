@@ -89,9 +89,9 @@ pub struct MatchesRegexMatcher<PatternT: Deref<Target = str>> {
 impl<PatternT, ActualT> Matcher<ActualT> for MatchesRegexMatcher<PatternT>
 where
     PatternT: Deref<Target = str>,
-    ActualT: AsRef<str> + Debug + Copy,
+    ActualT: AsRef<str> + Debug + ?Sized,
 {
-    fn matches(&self, actual: ActualT) -> MatcherResult {
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
         self.regex.is_match(actual.as_ref()).into()
     }
 

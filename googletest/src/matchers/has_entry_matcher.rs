@@ -67,10 +67,10 @@ pub struct HasEntryMatcher<KeyT, MatcherT> {
     inner: MatcherT,
 }
 
-impl<'a, KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<&'a ValueT>>
-    Matcher<&'a HashMap<KeyT, ValueT>> for HasEntryMatcher<KeyT, MatcherT>
+impl<KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<ValueT>>
+    Matcher<HashMap<KeyT, ValueT>> for HasEntryMatcher<KeyT, MatcherT>
 {
-    fn matches(&self, actual: &'a HashMap<KeyT, ValueT>) -> MatcherResult {
+    fn matches(&self, actual: &HashMap<KeyT, ValueT>) -> MatcherResult {
         if let Some(value) = actual.get(&self.key) {
             self.inner.matches(value)
         } else {
@@ -78,13 +78,57 @@ impl<'a, KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<&'a ValueT>>
         }
     }
 
-    fn explain_match(&self, actual: &'a HashMap<KeyT, ValueT>) -> Description {
+    fn explain_match(&self, actual: &HashMap<KeyT, ValueT>) -> Description {
         if let Some(value) = actual.get(&self.key) {
             format!(
                 "which contains key {:?}, but is mapped to value {:#?}, {}",
                 self.key,
                 value,
                 self.inner.explain_match(value)
+            )
+            .into()
+        } else {
+            format!("which doesn't contain key {:?}", self.key).into()
+        }
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
+        match matcher_result {
+            MatcherResult::Match => format!(
+                "contains key {:?}, which value {}",
+                self.key,
+                self.inner.describe(MatcherResult::Match)
+            )
+            .into(),
+            MatcherResult::NoMatch => format!(
+                "doesn't contain key {:?} or contains key {:?}, which value {}",
+                self.key,
+                self.key,
+                self.inner.describe(MatcherResult::NoMatch)
+            )
+            .into(),
+        }
+    }
+}
+
+impl<'a, KeyT: Debug + Eq + Hash, ValueT: Debug, MatcherT: Matcher<&'a ValueT>>
+    Matcher<&'a HashMap<KeyT, ValueT>> for HasEntryMatcher<KeyT, MatcherT>
+{
+    fn matches(&self, actual: &&'a HashMap<KeyT, ValueT>) -> MatcherResult {
+        if let Some(value) = actual.get(&self.key) {
+            self.inner.matches(&value)
+        } else {
+            MatcherResult::NoMatch
+        }
+    }
+
+    fn explain_match(&self, actual: &&'a HashMap<KeyT, ValueT>) -> Description {
+        if let Some(value) = actual.get(&self.key) {
+            format!(
+                "which contains key {:?}, but is mapped to value {:#?}, {}",
+                self.key,
+                value,
+                self.inner.explain_match(&value)
             )
             .into()
         } else {

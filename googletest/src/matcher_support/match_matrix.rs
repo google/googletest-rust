@@ -41,7 +41,7 @@ pub mod internal {
     }
 
     impl Requirements {
-        pub fn explain_size_mismatch<ContainerT: IntoIterator + Copy>(
+        pub fn explain_size_mismatch<ContainerT: IntoIterator>(
             &self,
             actual: ContainerT,
             expected_size: usize,
@@ -90,8 +90,8 @@ pub mod internal {
     }
 
     impl MatchMatrix {
-        pub(crate) fn generate<'a, T: Debug + Copy + 'a>(
-            actual: impl IntoIterator<Item = T>,
+        pub(crate) fn generate<'a, T: Debug + ?Sized + 'a>(
+            actual: impl IntoIterator<Item = &'a T>,
             expected: &[Box<dyn Matcher<T> + 'a>],
         ) -> Self {
             let expected_len = expected.len();
@@ -101,6 +101,23 @@ pub mod internal {
                     expected
                         .iter()
                         .map(|expected_matcher| expected_matcher.matches(actual))
+                        .collect()
+                })
+                .collect();
+            MatchMatrix { graph, expected_len }
+        }
+
+        pub(crate) fn generate_owned<'a, T: Debug + 'a>(
+            actual: impl IntoIterator<Item = T>,
+            expected: &[Box<dyn Matcher<T> + 'a>],
+        ) -> Self {
+            let expected_len = expected.len();
+            let graph = actual
+                .into_iter()
+                .map(|actual| {
+                    expected
+                        .iter()
+                        .map(|expected_matcher| expected_matcher.matches(&actual))
                         .collect()
                 })
                 .collect();
@@ -187,19 +204,17 @@ pub mod internal {
         // flow graph has the following edges:
         //   - An edge from source to each actual element node
         //   - An edge from each expected element node to sink
-        //   - An edge from each actual element node to each expected element
-        //     node, if the actual element matches the expected element, i.e.
+        //   - An edge from each actual element node to each expected element node, if the actual
+        //     element matches the expected element, i.e.
         //     `matches!(self.graph[actual_id][expected_id], Matches)`
         //
         // When the `try_augment(...)` method adds a flow, it sets
         // `actual_match[l] = Some(r)` for some nodes l and r. This
         // induces the following changes:
-        //   - The edges (source, l), (l, r), and (r, sink) are added to the
-        //     flow graph.
+        //   - The edges (source, l), (l, r), and (r, sink) are added to the flow graph.
         //   - The same three edges are removed from the residual flow graph.
-        //   - The reverse edges (l, source), (r, l), and (sink, r) are added to
-        //     the residual flow graph, which is a directional graph
-        //     representing unused flow capacity.
+        //   - The reverse edges (l, source), (r, l), and (sink, r) are added to the residual flow
+        //     graph, which is a directional graph representing unused flow capacity.
         //
         // When the method augments a flow (changing `actual_match[l]` from
         // `Some(r1)` to `Some(r2)`), this can be thought of as
@@ -456,9 +471,9 @@ pub mod internal {
                 .collect()
         }
 
-        pub(crate) fn get_explanation<'a, T: Debug + Copy>(
+        pub(crate) fn get_explanation<'a, ItemT: Debug, T: Debug + ?Sized + 'a>(
             &self,
-            actual: impl IntoIterator<Item = T>,
+            actual: impl IntoIterator<Item = ItemT>,
             expected: &[Box<dyn Matcher<T> + 'a>],
             requirements: Requirements,
         ) -> Option<Description> {
@@ -511,7 +526,7 @@ pub mod internal {
             let actual = vec![1, 2, 3, 4];
             let expected: Vec<Box<dyn Matcher<i32>>> =
                 vec![Box::new(eq(1)), Box::new(eq(2)), Box::new(eq(3))];
-            let matrix = MatchMatrix::generate(actual, &expected);
+            let matrix = MatchMatrix::generate(&actual, &expected);
 
             assert_eq!(
                 matrix.graph,

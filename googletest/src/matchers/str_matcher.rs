@@ -309,9 +309,9 @@ pub struct StrMatcher<ExpectedT> {
 impl<ExpectedT, ActualT> Matcher<ActualT> for StrMatcher<ExpectedT>
 where
     ExpectedT: Deref<Target = str> + Debug,
-    ActualT: AsRef<str> + Debug + Copy,
+    ActualT: AsRef<str> + Debug + ?Sized,
 {
-    fn matches(&self, actual: ActualT) -> MatcherResult {
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
         self.configuration.do_strings_match(self.expected.deref(), actual.as_ref()).into()
     }
 
@@ -319,7 +319,7 @@ where
         self.configuration.describe(matcher_result, self.expected.deref())
     }
 
-    fn explain_match(&self, actual: ActualT) -> Description {
+    fn explain_match(&self, actual: &ActualT) -> Description {
         self.configuration.explain_match(self.expected.deref(), actual.as_ref())
     }
 }
@@ -480,7 +480,7 @@ impl Configuration {
             // Split returns an iterator over the "boundaries" left and right of
             // the substring to be matched, of which there is one
             // more than the number of substrings.
-            matches!(times.matches(actual.split(expected).count() - 1), MatcherResult::Match)
+            matches!(times.matches(&(actual.split(expected).count() - 1)), MatcherResult::Match)
         } else {
             actual.contains(expected)
         }

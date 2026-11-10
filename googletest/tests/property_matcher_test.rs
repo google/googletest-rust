@@ -394,3 +394,53 @@ fn matches_property_auto_eq() -> Result<()> {
 
     verify_that!(Struct, property!(Struct.property(), "something"))
 }
+
+#[test]
+fn matches_by_ref_property_nested_in_pattern_on_non_copy_enum() -> Result<()> {
+    #[derive(Debug, PartialEq, Clone, Copy)]
+    enum Kind {
+        A,
+    }
+    #[derive(Debug)]
+    struct Inner(#[allow(dead_code)] String);
+    impl Inner {
+        fn kind(&self) -> Kind {
+            Kind::A
+        }
+    }
+    #[derive(Debug)]
+    enum Outer {
+        Io(Inner),
+    }
+
+    let value: std::result::Result<(), Outer> = Err(Outer::Io(Inner("x".into())));
+
+    verify_that!(value, err(matches_pattern!(Outer::Io(property!(Inner.kind(), eq(&Kind::A))))))
+}
+
+#[test]
+fn explains_mismatch_of_by_ref_property_nested_in_pattern_on_non_copy_enum() -> Result<()> {
+    #[derive(Debug, PartialEq, Clone, Copy)]
+    enum Kind {
+        A,
+        B,
+    }
+    #[derive(Debug)]
+    struct Inner(#[allow(dead_code)] String);
+    impl Inner {
+        fn kind(&self) -> Kind {
+            Kind::B
+        }
+    }
+    #[derive(Debug)]
+    enum Outer {
+        Io(Inner),
+    }
+
+    let value: std::result::Result<(), Outer> = Err(Outer::Io(Inner("x".into())));
+
+    verify_that!(
+        value,
+        not(err(matches_pattern!(Outer::Io(property!(Inner.kind(), eq(&Kind::A))))))
+    )
+}

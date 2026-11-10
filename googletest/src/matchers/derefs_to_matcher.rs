@@ -39,22 +39,22 @@ pub struct DerefsTo<InnerT> {
     pub(crate) inner: InnerT,
 }
 
-impl<'a, ActualT, ExpectedT, Inner> Matcher<&'a ActualT> for DerefsTo<Inner>
+impl<ActualT, ExpectedT, Inner> Matcher<ActualT> for DerefsTo<Inner>
 where
-    ActualT: Deref<Target = ExpectedT> + Debug,
-    ExpectedT: Copy + Debug + 'a,
-    Inner: Matcher<&'a ExpectedT>,
+    ActualT: Deref<Target = ExpectedT> + Debug + ?Sized,
+    ExpectedT: Debug + ?Sized,
+    Inner: for<'a> Matcher<&'a ExpectedT>,
 {
-    fn matches(&self, actual: &'a ActualT) -> MatcherResult {
-        self.inner.matches(actual.deref())
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
+        self.inner.matches(&actual.deref())
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
         self.inner.describe(matcher_result)
     }
 
-    fn explain_match(&self, actual: &'a ActualT) -> Description {
-        self.inner.explain_match(actual.deref())
+    fn explain_match(&self, actual: &ActualT) -> Description {
+        self.inner.explain_match(&actual.deref())
     }
 }
 

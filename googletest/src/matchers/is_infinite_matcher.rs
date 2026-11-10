@@ -27,8 +27,8 @@ pub fn is_infinite() -> IsInfiniteMatcher {
 #[derive(MatcherBase)]
 pub struct IsInfiniteMatcher;
 
-impl<T: Float + Debug + Copy> Matcher<T> for IsInfiniteMatcher {
-    fn matches(&self, actual: T) -> MatcherResult {
+impl<T: Float + Debug> Matcher<T> for IsInfiniteMatcher {
+    fn matches(&self, actual: &T) -> MatcherResult {
         actual.is_infinite().into()
     }
 

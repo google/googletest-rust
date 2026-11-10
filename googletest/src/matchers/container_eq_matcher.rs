@@ -66,22 +66,88 @@ pub struct ContainerEqMatcher<ExpectedContainerT> {
     expected: ExpectedContainerT,
 }
 
-impl<ActualElementT, ActualContainerT, ExpectedElementT, ExpectedContainerT>
-    Matcher<ActualContainerT> for ContainerEqMatcher<ExpectedContainerT>
+macro_rules! impl_container_eq_matcher {
+    ($( ( [$($generics:tt)*] $ty:ty ) ),* $(,)?) => {
+        $(
+            impl<ActualElementT, ExpectedElementT, ExpectedContainerT, $($generics)*>
+                Matcher<$ty> for ContainerEqMatcher<ExpectedContainerT>
+            where
+                ActualElementT: PartialEq<ExpectedElementT> + Debug,
+                $ty: PartialEq<ExpectedContainerT> + Debug,
+                ExpectedElementT: Debug,
+                ExpectedContainerT: Debug,
+                for<'a> &'a $ty: IntoIterator<Item = &'a ActualElementT>,
+                for<'a> &'a ExpectedContainerT: IntoIterator<Item = &'a ExpectedElementT>,
+            {
+                fn matches(&self, actual: &$ty) -> MatcherResult {
+                    (actual == &self.expected).into()
+                }
+
+                fn explain_match(&self, actual: &$ty) -> Description {
+                    build_explanation(self.get_missing_items(actual), self.get_unexpected_items(actual)).into()
+                }
+
+                fn describe(&self, matcher_result: MatcherResult) -> Description {
+                    match matcher_result {
+                        MatcherResult::Match => format!("is equal to {:?}", self.expected).into(),
+                        MatcherResult::NoMatch => format!("isn't equal to {:?}", self.expected).into(),
+                    }
+                }
+            }
+
+            impl<ActualElementT, ExpectedElementT, ExpectedContainerT, $($generics)*>
+                Matcher<$ty> for IgnoringOrder<ExpectedContainerT>
+            where
+                ActualElementT: Debug + PartialEq<ExpectedElementT>,
+                $ty: Debug,
+                ExpectedElementT: Debug,
+                for<'a> &'a $ty: IntoIterator<Item = &'a ActualElementT>,
+                for<'a> &'a ExpectedContainerT: IntoIterator<Item = &'a ExpectedElementT>,
+            {
+                fn matches(&self, actual: &$ty) -> MatcherResult {
+                    self.matches_impl(actual)
+                }
+
+                fn explain_match(&self, actual: &$ty) -> Description {
+                    self.explain_match_impl(actual)
+                }
+
+                fn describe(&self, matcher_result: MatcherResult) -> Description {
+                    self.describe_impl(matcher_result)
+                }
+            }
+        )*
+    };
+}
+
+impl_container_eq_matcher!(
+    ([] [ActualElementT]),
+    ([const N: usize] [ActualElementT; N]),
+    ([] Vec<ActualElementT>),
+    ([] std::collections::VecDeque<ActualElementT>),
+    ([] std::collections::LinkedList<ActualElementT>),
+    ([] std::collections::BTreeSet<ActualElementT>),
+    ([] std::collections::BinaryHeap<ActualElementT>),
+    ([S: Debug] std::collections::HashSet<ActualElementT, S>),
+);
+
+impl<'b, ActualElementT, ActualContainerT, ExpectedElementT, ExpectedContainerT>
+    Matcher<&'b ActualContainerT> for ContainerEqMatcher<ExpectedContainerT>
 where
-    ActualElementT: for<'a> PartialEq<&'a ExpectedElementT> + Debug + Copy,
-    ActualContainerT: for<'a> PartialEq<&'a ExpectedContainerT> + Debug + Copy,
+    ActualElementT: PartialEq<ExpectedElementT> + Debug + 'b,
+    ActualContainerT: PartialEq<ExpectedContainerT> + Debug + ?Sized,
     ExpectedElementT: Debug,
     ExpectedContainerT: Debug,
-    ActualContainerT: IntoIterator<Item = ActualElementT>,
+    &'b ActualContainerT: IntoIterator<Item = &'b ActualElementT>,
     for<'a> &'a ExpectedContainerT: IntoIterator<Item = &'a ExpectedElementT>,
 {
-    fn matches(&self, actual: ActualContainerT) -> MatcherResult {
-        (actual == &self.expected).into()
+    fn matches(&self, actual: &&'b ActualContainerT) -> MatcherResult {
+        (*actual == &self.expected).into()
     }
 
-    fn explain_match(&self, actual: ActualContainerT) -> Description {
-        build_explanation(self.get_missing_items(actual), self.get_unexpected_items(actual)).into()
+    fn explain_match(&self, actual: &&'b ActualContainerT) -> Description {
+        build_explanation(self.get_missing_items(*actual), self.get_unexpected_items(*actual))
+            .into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -96,28 +162,26 @@ impl<ExpectedElementT, ExpectedContainerT> ContainerEqMatcher<ExpectedContainerT
 where
     for<'a> &'a ExpectedContainerT: IntoIterator<Item = &'a ExpectedElementT>,
 {
-    fn get_missing_items<ActualElementT, ActualContainerT>(
+    fn get_missing_items<'a, ActualElementT, ActualContainerT>(
         &self,
         actual: ActualContainerT,
-    ) -> Vec<&'_ ExpectedElementT>
+    ) -> Vec<&ExpectedElementT>
     where
-        ActualElementT: for<'a> PartialEq<&'a ExpectedElementT> + Copy,
-        ActualContainerT: for<'a> PartialEq<&'a ExpectedContainerT> + Copy,
-        ActualContainerT: IntoIterator<Item = ActualElementT>,
+        ActualElementT: PartialEq<ExpectedElementT> + 'a,
+        ActualContainerT: IntoIterator<Item = &'a ActualElementT> + Copy,
     {
         self.expected.into_iter().filter(|i| !actual.into_iter().any(|j| j == *i)).collect()
     }
 
-    fn get_unexpected_items<ActualElementT, ActualContainerT>(
+    fn get_unexpected_items<'a, ActualElementT, ActualContainerT>(
         &self,
         actual: ActualContainerT,
-    ) -> Vec<ActualElementT>
+    ) -> Vec<&'a ActualElementT>
     where
-        ActualElementT: for<'a> PartialEq<&'a ExpectedElementT> + Copy,
-        ActualContainerT: for<'a> PartialEq<&'a ExpectedContainerT> + Copy,
-        ActualContainerT: IntoIterator<Item = ActualElementT>,
+        ActualElementT: PartialEq<ExpectedElementT> + 'a,
+        ActualContainerT: IntoIterator<Item = &'a ActualElementT>,
     {
-        actual.into_iter().filter(|i| !self.expected.into_iter().any(|j| i == &j)).collect()
+        actual.into_iter().filter(|i| !self.expected.into_iter().any(|j| *i == j)).collect()
     }
 }
 
@@ -169,40 +233,70 @@ pub struct IgnoringOrder<ExpectedContainerT> {
 }
 
 /// Implements a matcher that ignores the relative order of the elements.
-impl<ActualElementT, ActualContainerT, ExpectedElementT, ExpectedContainerT>
-    Matcher<ActualContainerT> for IgnoringOrder<ExpectedContainerT>
+impl<'b, ActualElementT, ActualContainerT, ExpectedElementT, ExpectedContainerT>
+    Matcher<&'b ActualContainerT> for IgnoringOrder<ExpectedContainerT>
 where
-    ActualElementT: Debug + Copy + for<'a> PartialEq<&'a ExpectedElementT>,
-    ActualContainerT: Debug + Copy + IntoIterator<Item = ActualElementT>,
+    ActualElementT: Debug + PartialEq<ExpectedElementT> + 'b,
+    ActualContainerT: Debug + ?Sized,
+    ExpectedElementT: Debug,
+    &'b ActualContainerT: IntoIterator<Item = &'b ActualElementT>,
+    for<'a> &'a ExpectedContainerT: IntoIterator<Item = &'a ExpectedElementT>,
+{
+    fn matches(&self, actual: &&'b ActualContainerT) -> MatcherResult {
+        self.matches_impl(*actual)
+    }
+
+    fn explain_match(&self, actual: &&'b ActualContainerT) -> Description {
+        self.explain_match_impl(*actual)
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
+        self.describe_impl(matcher_result)
+    }
+}
+
+impl<ExpectedElementT, ExpectedContainerT> IgnoringOrder<ExpectedContainerT>
+where
     ExpectedElementT: Debug,
     for<'a> &'a ExpectedContainerT: IntoIterator<Item = &'a ExpectedElementT>,
 {
-    fn matches(&self, actual: ActualContainerT) -> MatcherResult {
-        let expected: Vec<Box<dyn Matcher<ActualElementT>>> = self
+    fn matches_impl<'a, ActualElementT, ActualContainerT>(
+        &self,
+        actual: ActualContainerT,
+    ) -> MatcherResult
+    where
+        ActualElementT: Debug + PartialEq<ExpectedElementT> + 'a,
+        ActualContainerT: IntoIterator<Item = &'a ActualElementT>,
+    {
+        let expected: Vec<Box<dyn Matcher<&ActualElementT> + '_>> = self
             .expected
             .into_iter()
-            .map(|x| Box::new(eq(x)) as Box<dyn Matcher<ActualElementT>>)
+            .map(|x| Box::new(eq(x)) as Box<dyn Matcher<&ActualElementT> + '_>)
             .collect();
-        let match_matrix = MatchMatrix::generate(actual, &expected);
-        // TODO: investigate why Requirements::PerfectMatch and
-        // match_matrix.is_full_match is not doing what we expect
-        // here.
+        let match_matrix = MatchMatrix::generate_owned(actual, &expected);
         (match_matrix.is_match_for(Requirements::Subset)
             && match_matrix.is_match_for(Requirements::Superset))
         .into()
     }
 
-    fn explain_match(&self, actual: ActualContainerT) -> Description {
+    fn explain_match_impl<'a, ActualElementT, ActualContainerT>(
+        &self,
+        actual: ActualContainerT,
+    ) -> Description
+    where
+        ActualElementT: Debug + PartialEq<ExpectedElementT> + 'a,
+        ActualContainerT: IntoIterator<Item = &'a ActualElementT>,
+    {
         // We need to materialize the collections in order to have reliable
         // iteration order when generating our reports.
         let expected_items: Vec<&ExpectedElementT> = self.expected.into_iter().collect();
-        let actual_items: Vec<ActualElementT> = actual.into_iter().collect();
+        let actual_items: Vec<&ActualElementT> = actual.into_iter().collect();
 
-        let expected_matchers: Vec<_> = expected_items
+        let expected_matchers: Vec<Box<dyn Matcher<&ActualElementT> + '_>> = expected_items
             .iter()
-            .map(|&x| Box::new(eq(x)) as Box<dyn Matcher<ActualElementT>>)
+            .map(|&x| Box::new(eq(x)) as Box<dyn Matcher<&ActualElementT> + '_>)
             .collect();
-        let match_matrix = MatchMatrix::generate(actual_items.iter().copied(), &expected_matchers);
+        let match_matrix = MatchMatrix::generate(&actual_items, &expected_matchers);
 
         let best_match = match_matrix.find_best_match();
 
@@ -236,7 +330,7 @@ where
             .collect(matches.chain(unmatched_actual).chain(unmatched_expected))
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> Description {
+    fn describe_impl(&self, matcher_result: MatcherResult) -> Description {
         Description::new()
             .text(format!(
                 "{} all elements matching in any order:",

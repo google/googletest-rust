@@ -202,9 +202,9 @@ struct MyEqMatcher<T> {
     expected: T,
 }
 
-impl<T: PartialEq + Debug + Copy> Matcher<T> for MyEqMatcher<T> {
-    fn matches(&self, actual: T) -> MatcherResult {
-         (self.expected == actual).into()
+impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
+    fn matches(&self, actual: &T) -> MatcherResult {
+         (self.expected == *actual).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> String {
@@ -236,6 +236,40 @@ fn should_be_equal_by_my_definition() {
     expect_that!(10, eq_my_way(10));
 }
 ```
+
+### Matching both values and references
+
+`Matcher::matches` receives the actual value by reference, so the actual type
+need not be `Copy`. Note that `Matcher<T>` and `Matcher<&T>` are distinct
+traits. A matcher which is generic over its actual type, such as `MyEqMatcher`
+above, covers both with one implementation. A matcher which names a concrete
+type and delegates to an inner matcher must, in some cases, implement the trait
+twice, once for the value and once for the reference:
+
+```rust
+impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<Wrapper<T>>
+    for WrapsMatcher<InnerMatcherT>
+{
+    fn matches(&self, actual: &Wrapper<T>) -> MatcherResult {
+        self.inner.matches(&actual.0)
+    }
+    // ...
+}
+
+impl<'a, T: Debug, InnerMatcherT: Matcher<&'a T>> Matcher<&'a Wrapper<T>>
+    for WrapsMatcher<InnerMatcherT>
+{
+    fn matches(&self, actual: &&'a Wrapper<T>) -> MatcherResult {
+        self.inner.matches(&&actual.0)
+    }
+    // ...
+}
+```
+
+Without the second implementation, the matcher fails to compile when it is
+applied to a reference or nested inside a matcher such as `matches_pattern!`,
+which hands its inner matchers a reference when the matched type is not `Copy`.
+See the crate documentation for the complete example.
 
 ## Non-fatal assertions
 

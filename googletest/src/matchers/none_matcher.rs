@@ -38,8 +38,8 @@ pub fn none() -> NoneMatcher {
 #[derive(MatcherBase)]
 pub struct NoneMatcher;
 
-impl<T: Debug + Copy> Matcher<Option<T>> for NoneMatcher {
-    fn matches(&self, actual: Option<T>) -> MatcherResult {
+impl<T: Debug> Matcher<Option<T>> for NoneMatcher {
+    fn matches(&self, actual: &Option<T>) -> MatcherResult {
         actual.is_none().into()
     }
 
@@ -52,7 +52,7 @@ impl<T: Debug + Copy> Matcher<Option<T>> for NoneMatcher {
 }
 
 impl<'a, T: Debug> Matcher<&'a Option<T>> for NoneMatcher {
-    fn matches(&self, actual: &'a Option<T>) -> MatcherResult {
+    fn matches(&self, actual: &&'a Option<T>) -> MatcherResult {
         actual.is_none().into()
     }
 
@@ -74,7 +74,7 @@ mod tests {
     fn none_matches_option_with_none() -> Result<()> {
         let matcher = none();
 
-        let result = matcher.matches(None::<i32>);
+        let result = matcher.matches(&None::<i32>);
 
         verify_that!(result, eq(MatcherResult::Match))
     }
@@ -83,7 +83,7 @@ mod tests {
     fn none_does_not_match_option_with_value() -> Result<()> {
         let matcher = none();
 
-        let result = matcher.matches(Some(0));
+        let result = matcher.matches(&Some(0));
 
         verify_that!(result, eq(MatcherResult::NoMatch))
     }

@@ -230,10 +230,22 @@ macro_rules! property_internal {
 
     (@self_dot struct_type: [$struct_ty:ty]
                [$($method:tt)*] [$($argument:expr),*] [$m:expr]) => {{
-        $crate::matchers::__internal_unstable_do_not_depend_on_these::property_matcher(
-            |o: &$struct_ty| o.$($method)* ($($argument),*),
-            &stringify!($($method)* ($($argument),*)),
-            $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($m))
+        match $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!($m) {
+            inner => {
+                #[allow(unused_imports)]
+                use $crate::matchers::__internal_unstable_do_not_depend_on_these::{
+                    PropertyByRef as _, PropertyByValue as _, PropertyFallback as _,
+                    PropertyModeSelector,
+                };
+                (&&PropertyModeSelector::new(
+                    |o: &$struct_ty| o.$($method)* ($($argument),*),
+                    &stringify!($($method)* ($($argument),*)),
+                    &inner,
+                ))
+                    .select_mode()
+                    .build(inner)
+            }
+        }
     }};
 }
 
@@ -247,6 +259,35 @@ pub mod internal {
         matcher::{Matcher, MatcherBase, MatcherResult},
     };
     use std::fmt::Debug;
+    use std::marker::PhantomData;
+
+    #[doc(hidden)]
+    pub struct ByValueMode;
+
+    #[doc(hidden)]
+    pub struct ByRefMode;
+
+    #[doc(hidden)]
+    pub struct PropertyBuilder<OuterT, InnerT, Mode> {
+        extractor: fn(&OuterT) -> InnerT,
+        property_desc: &'static str,
+        mode: PhantomData<Mode>,
+    }
+
+    impl<OuterT, InnerT, Mode> PropertyBuilder<OuterT, InnerT, Mode> {
+        #[inline]
+        pub fn build<MatcherT>(
+            self,
+            inner: MatcherT,
+        ) -> PropertyMatcher<OuterT, InnerT, MatcherT, Mode> {
+            PropertyMatcher {
+                extractor: self.extractor,
+                property_desc: self.property_desc,
+                inner,
+                mode: PhantomData,
+            }
+        }
+    }
 
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
@@ -254,55 +295,98 @@ pub mod internal {
         extractor: fn(&OuterT) -> InnerT,
         property_desc: &'static str,
         inner: MatcherT,
-    ) -> PropertyMatcher<OuterT, InnerT, MatcherT> {
-        PropertyMatcher { extractor, property_desc, inner }
+    ) -> PropertyMatcher<OuterT, InnerT, MatcherT, ByValueMode> {
+        PropertyMatcher { extractor, property_desc, inner, mode: PhantomData }
+    }
+
+    #[doc(hidden)]
+    pub struct PropertyModeSelector<OuterT, InnerT, MatcherT> {
+        extractor: fn(&OuterT) -> InnerT,
+        property_desc: &'static str,
+        _marker: PhantomData<fn() -> MatcherT>,
+    }
+
+    impl<OuterT, InnerT, MatcherT> PropertyModeSelector<OuterT, InnerT, MatcherT> {
+        #[inline]
+        pub fn new(
+            extractor: fn(&OuterT) -> InnerT,
+            property_desc: &'static str,
+            _inner: &MatcherT,
+        ) -> Self {
+            Self { extractor, property_desc, _marker: PhantomData }
+        }
+    }
+
+    #[doc(hidden)]
+    pub trait PropertyByValue<OuterT, InnerT> {
+        fn select_mode(self) -> PropertyBuilder<OuterT, InnerT, ByValueMode>;
+    }
+
+    impl<OuterT, InnerT: Debug, MatcherT: Matcher<InnerT>> PropertyByValue<OuterT, InnerT>
+        for &&PropertyModeSelector<OuterT, InnerT, MatcherT>
+    {
+        #[inline]
+        fn select_mode(self) -> PropertyBuilder<OuterT, InnerT, ByValueMode> {
+            PropertyBuilder {
+                extractor: self.extractor,
+                property_desc: self.property_desc,
+                mode: PhantomData,
+            }
+        }
+    }
+
+    #[doc(hidden)]
+    pub trait PropertyByRef<OuterT, InnerT> {
+        fn select_mode(self) -> PropertyBuilder<OuterT, InnerT, ByRefMode>;
+    }
+
+    impl<OuterT, InnerT: Debug, MatcherT: for<'b> Matcher<&'b InnerT>> PropertyByRef<OuterT, InnerT>
+        for &PropertyModeSelector<OuterT, InnerT, MatcherT>
+    {
+        #[inline]
+        fn select_mode(self) -> PropertyBuilder<OuterT, InnerT, ByRefMode> {
+            PropertyBuilder {
+                extractor: self.extractor,
+                property_desc: self.property_desc,
+                mode: PhantomData,
+            }
+        }
+    }
+
+    #[doc(hidden)]
+    pub trait PropertyFallback<OuterT, InnerT> {
+        fn select_mode(self) -> PropertyBuilder<OuterT, InnerT, ByValueMode>;
+    }
+
+    impl<OuterT, InnerT, MatcherT> PropertyFallback<OuterT, InnerT>
+        for PropertyModeSelector<OuterT, InnerT, MatcherT>
+    {
+        #[inline]
+        fn select_mode(self) -> PropertyBuilder<OuterT, InnerT, ByValueMode> {
+            PropertyBuilder {
+                extractor: self.extractor,
+                property_desc: self.property_desc,
+                mode: PhantomData,
+            }
+        }
     }
 
     #[derive(MatcherBase)]
-    pub struct PropertyMatcher<OuterT, InnerT, MatcherT> {
+    pub struct PropertyMatcher<OuterT, InnerT, MatcherT, Mode = ByValueMode> {
         extractor: fn(&OuterT) -> InnerT,
         property_desc: &'static str,
         inner: MatcherT,
+        mode: PhantomData<Mode>,
     }
 
-    impl<InnerT, OuterT, MatcherT> Matcher<OuterT> for PropertyMatcher<OuterT, InnerT, MatcherT>
-    where
-        InnerT: Debug + Copy,
-        OuterT: Debug + Copy,
-        MatcherT: Matcher<InnerT>,
-    {
-        fn matches(&self, actual: OuterT) -> MatcherResult {
-            self.inner.matches((self.extractor)(&actual))
-        }
-
-        fn describe(&self, matcher_result: MatcherResult) -> Description {
-            format!(
-                "has property `{}`, which {}",
-                self.property_desc,
-                self.inner.describe(matcher_result)
-            )
-            .into()
-        }
-
-        fn explain_match(&self, actual: OuterT) -> Description {
-            let actual_inner = (self.extractor)(&actual);
-            format!(
-                "whose property `{}` is `{:#?}`, {}",
-                self.property_desc,
-                actual_inner,
-                self.inner.explain_match(actual_inner)
-            )
-            .into()
-        }
-    }
-
-    impl<'a, InnerT, OuterT, MatcherT> Matcher<&'a OuterT> for PropertyMatcher<OuterT, InnerT, MatcherT>
+    impl<InnerT, OuterT, MatcherT> Matcher<OuterT>
+        for PropertyMatcher<OuterT, InnerT, MatcherT, ByValueMode>
     where
         InnerT: Debug,
         OuterT: Debug,
-        MatcherT: for<'b> Matcher<&'b InnerT>,
+        MatcherT: Matcher<InnerT>,
     {
-        fn matches(&self, actual: &'a OuterT) -> MatcherResult {
+        fn matches(&self, actual: &OuterT) -> MatcherResult {
             self.inner.matches(&(self.extractor)(actual))
         }
 
@@ -315,13 +399,113 @@ pub mod internal {
             .into()
         }
 
-        fn explain_match(&self, actual: &'a OuterT) -> Description {
+        fn explain_match(&self, actual: &OuterT) -> Description {
             let actual_inner = (self.extractor)(actual);
             format!(
                 "whose property `{}` is `{:#?}`, {}",
                 self.property_desc,
                 actual_inner,
                 self.inner.explain_match(&actual_inner)
+            )
+            .into()
+        }
+    }
+
+    impl<'a, InnerT, OuterT, MatcherT> Matcher<&'a OuterT>
+        for PropertyMatcher<OuterT, InnerT, MatcherT, ByValueMode>
+    where
+        InnerT: Debug,
+        OuterT: Debug,
+        MatcherT: for<'b> Matcher<&'b InnerT>,
+    {
+        fn matches(&self, actual: &&'a OuterT) -> MatcherResult {
+            self.inner.matches(&&(self.extractor)(*actual))
+        }
+
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
+            format!(
+                "has property `{}`, which {}",
+                self.property_desc,
+                self.inner.describe(matcher_result)
+            )
+            .into()
+        }
+
+        fn explain_match(&self, actual: &&'a OuterT) -> Description {
+            let actual_inner = (self.extractor)(*actual);
+            format!(
+                "whose property `{}` is `{:#?}`, {}",
+                self.property_desc,
+                actual_inner,
+                self.inner.explain_match(&&actual_inner)
+            )
+            .into()
+        }
+    }
+
+    impl<InnerT, OuterT, MatcherT> Matcher<OuterT>
+        for PropertyMatcher<OuterT, InnerT, MatcherT, ByRefMode>
+    where
+        InnerT: Debug,
+        OuterT: Debug,
+        MatcherT: for<'b> Matcher<&'b InnerT>,
+    {
+        fn matches(&self, actual: &OuterT) -> MatcherResult {
+            self.inner.matches(&&(self.extractor)(actual))
+        }
+
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
+            format!(
+                "has property `{}`, which {}",
+                self.property_desc,
+                self.inner.describe(matcher_result)
+            )
+            .into()
+        }
+
+        fn explain_match(&self, actual: &OuterT) -> Description {
+            let actual_inner = (self.extractor)(actual);
+            format!(
+                "whose property `{}` is `{:#?}`, {}",
+                self.property_desc,
+                actual_inner,
+                self.inner.explain_match(&&actual_inner)
+            )
+            .into()
+        }
+    }
+
+    // `Matcher<OuterT>` and `Matcher<&OuterT>` are distinct traits, so the
+    // by-reference mode needs its own impl for `&OuterT`. Without it, the
+    // matcher cannot be nested under a matcher which hands it a reference, such
+    // as `matches_pattern!` on a type which is not `Copy`.
+    impl<'a, InnerT, OuterT, MatcherT> Matcher<&'a OuterT>
+        for PropertyMatcher<OuterT, InnerT, MatcherT, ByRefMode>
+    where
+        InnerT: Debug,
+        OuterT: Debug,
+        MatcherT: for<'b> Matcher<&'b InnerT>,
+    {
+        fn matches(&self, actual: &&'a OuterT) -> MatcherResult {
+            self.inner.matches(&&(self.extractor)(*actual))
+        }
+
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
+            format!(
+                "has property `{}`, which {}",
+                self.property_desc,
+                self.inner.describe(matcher_result)
+            )
+            .into()
+        }
+
+        fn explain_match(&self, actual: &&'a OuterT) -> Description {
+            let actual_inner = (self.extractor)(*actual);
+            format!(
+                "whose property `{}` is `{:#?}`, {}",
+                self.property_desc,
+                actual_inner,
+                self.inner.explain_match(&&actual_inner)
             )
             .into()
         }
@@ -357,8 +541,8 @@ pub mod internal {
             ExtractorT: Fn(OuterT) -> InnerT,
         > Matcher<OuterT> for PropertyRefMatcher<ExtractorT, MatcherT>
     {
-        fn matches(&self, actual: OuterT) -> MatcherResult {
-            self.inner.matches(&(self.extractor)(actual))
+        fn matches(&self, actual: &OuterT) -> MatcherResult {
+            self.inner.matches(&&(self.extractor)(*actual))
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -370,13 +554,13 @@ pub mod internal {
             .into()
         }
 
-        fn explain_match(&self, actual: OuterT) -> Description {
-            let actual_inner = (self.extractor)(actual);
+        fn explain_match(&self, actual: &OuterT) -> Description {
+            let actual_inner = (self.extractor)(*actual);
             format!(
                 "whose property `{}` is `{:#?}`, {}",
                 self.property_desc,
                 actual_inner,
-                self.inner.explain_match(&actual_inner)
+                self.inner.explain_match(&&actual_inner)
             )
             .into()
         }

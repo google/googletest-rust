@@ -83,11 +83,11 @@ pub struct LeMatcher<ExpectedT> {
     expected: ExpectedT,
 }
 
-impl<ActualT: Debug + PartialOrd<ExpectedT> + Copy, ExpectedT: Debug> Matcher<ActualT>
+impl<ActualT: Debug + PartialOrd<ExpectedT> + ?Sized, ExpectedT: Debug> Matcher<ActualT>
     for LeMatcher<ExpectedT>
 {
-    fn matches(&self, actual: ActualT) -> MatcherResult {
-        (actual <= self.expected).into()
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
+        (actual <= &self.expected).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn le_does_not_match_bigger_i32() -> Result<()> {
         let matcher = le(0);
-        let result = matcher.matches(1);
+        let result = matcher.matches(&1);
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn le_does_not_match_bigger_str() -> Result<()> {
         let matcher = le("a");
-        let result = matcher.matches("z");
+        let result = matcher.matches(&"z");
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
