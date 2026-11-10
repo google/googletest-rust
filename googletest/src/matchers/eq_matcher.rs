@@ -53,7 +53,7 @@ use std::fmt::Debug;
 /// ```
 ///
 /// In most cases however, one must convert one of the arguments explicitly.
-/// This can be surprising when comparing integer types or references.
+/// This can be surprising when comparing different integer types.
 ///
 /// ```compile_fail
 /// verify_that!(123u32, eq(123u64))?; // Does not compile
@@ -63,8 +63,8 @@ use std::fmt::Debug;
 /// ```ignore
 /// let actual: &T = ...;
 /// let expected: T = T{...};
-/// verify_that(actual, eq(expected))?; // Does not compile
-/// verify_that(actual, eq(&expected))?; // Compiles
+/// verify_that!(actual, eq(expected))?; // Compiles
+/// verify_that!(actual, eq(&expected))?; // Compiles
 /// ```
 ///
 /// When matching with string types (`&str` and `String`), one can set more
@@ -83,9 +83,9 @@ pub struct EqMatcher<T> {
     pub(crate) expected: T,
 }
 
-impl<T: Debug, A: Debug + Copy + PartialEq<T>> Matcher<A> for EqMatcher<T> {
-    fn matches(&self, actual: A) -> MatcherResult {
-        (actual == self.expected).into()
+impl<T: Debug, A: Debug + ?Sized + PartialEq<T>> Matcher<A> for EqMatcher<T> {
+    fn matches(&self, actual: &A) -> MatcherResult {
+        (actual == &self.expected).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -95,7 +95,7 @@ impl<T: Debug, A: Debug + Copy + PartialEq<T>> Matcher<A> for EqMatcher<T> {
         }
     }
 
-    fn explain_match(&self, actual: A) -> Description {
+    fn explain_match(&self, actual: &A) -> Description {
         let expected_debug = format!("{:#?}", self.expected);
         let actual_debug = format!("{actual:#?}");
         let description = Matcher::<A>::describe(self, self.matches(actual));

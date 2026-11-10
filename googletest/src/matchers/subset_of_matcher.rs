@@ -80,14 +80,70 @@ pub struct SubsetOfMatcher<ExpectedT> {
     superset: ExpectedT,
 }
 
-impl<ElementT: Debug + PartialEq + Copy, ActualT: Debug + Copy, ExpectedT: Debug> Matcher<ActualT>
-    for SubsetOfMatcher<ExpectedT>
+macro_rules! impl_subset_of_matcher {
+    ($( ( [$($generics:tt)*] $ty:ty ) ),* $(,)?) => {
+        $(
+            impl<ElementT: Debug + PartialEq, ExpectedT: Debug, $($generics)*> Matcher<$ty>
+                for SubsetOfMatcher<ExpectedT>
+            where
+                for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
+            {
+                fn matches(&self, actual: &$ty) -> MatcherResult {
+                    for actual_item in actual {
+                        if self.expected_is_missing(actual_item) {
+                            return MatcherResult::NoMatch;
+                        }
+                    }
+                    MatcherResult::Match
+                }
+
+                fn explain_match(&self, actual: &$ty) -> Description {
+                    let unexpected_elements = actual
+                        .into_iter()
+                        .enumerate()
+                        .filter(|item| self.expected_is_missing(item.1))
+                        .map(|(idx, actual_item)| format!("{actual_item:#?} at #{idx}"))
+                        .collect::<Vec<_>>();
+
+                    match unexpected_elements.len() {
+                        0 => "which no element is unexpected".into(),
+                        1 => format!("whose element {} is unexpected", &unexpected_elements[0]).into(),
+                        _ => format!("whose elements {} are unexpected", unexpected_elements.join(", ")).into(),
+                    }
+                }
+
+                fn describe(&self, matcher_result: MatcherResult) -> Description {
+                    match matcher_result {
+                        MatcherResult::Match => format!("is a subset of {:#?}", self.superset).into(),
+                        MatcherResult::NoMatch => format!("isn't a subset of {:#?}", self.superset).into(),
+                    }
+                }
+            }
+        )*
+    };
+}
+
+impl_subset_of_matcher!(
+    ([] [ElementT]),
+    ([const N: usize] [ElementT; N]),
+    ([] Vec<ElementT>),
+    ([] std::collections::VecDeque<ElementT>),
+    ([] std::collections::LinkedList<ElementT>),
+    ([] std::collections::BTreeSet<ElementT>),
+    ([] std::collections::BinaryHeap<ElementT>),
+    ([S: Debug] std::collections::HashSet<ElementT, S>),
+    ([] Option<ElementT>),
+    ([E: Debug] Result<ElementT, E>),
+);
+
+impl<'b, ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug>
+    Matcher<&'b ActualT> for SubsetOfMatcher<ExpectedT>
 where
-    ActualT: IntoIterator<Item = ElementT>,
+    &'b ActualT: IntoIterator<Item = ElementT>,
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
 {
-    fn matches(&self, actual: ActualT) -> MatcherResult {
-        for actual_item in actual {
+    fn matches(&self, actual: &&'b ActualT) -> MatcherResult {
+        for actual_item in *actual {
             if self.expected_is_missing(&actual_item) {
                 return MatcherResult::NoMatch;
             }
@@ -95,8 +151,8 @@ where
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: ActualT) -> Description {
-        let unexpected_elements = actual
+    fn explain_match(&self, actual: &&'b ActualT) -> Description {
+        let unexpected_elements = (*actual)
             .into_iter()
             .enumerate()
             .filter(|item| self.expected_is_missing(&item.1))
@@ -105,7 +161,7 @@ where
 
         match unexpected_elements.len() {
             0 => "which no element is unexpected".into(),
-            1 => format!("whose element {} is unexpected", &unexpected_elements[0]).into(),
+            1 => format!("whose element {} is unexpected", unexpected_elements[0]).into(),
             _ => format!("whose elements {} are unexpected", unexpected_elements.join(", ")).into(),
         }
     }

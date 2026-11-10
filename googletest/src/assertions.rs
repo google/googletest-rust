@@ -125,36 +125,37 @@
 macro_rules! verify_that {
     // specialized to sequences:
     ($actual:expr, [$($expecteds:expr),+ $(,)?]) => {
-        {
-            use $crate::assertions::internal::Subject as _;
-            $actual.check(
-                $crate::matchers::elements_are![$($expecteds),+],
-                stringify!($actual),
-            )
-        }
+        $crate::verify_that!(
+            $actual,
+            $crate::matchers::elements_are![$($expecteds),+]
+        )
     };
 
     // specialized to unordered sequences:
     ($actual:expr, {$($expecteds:expr),+ $(,)?}) => {
-        {
-            use $crate::assertions::internal::Subject as  _;
-            $actual.check(
-                $crate::matchers::unordered_elements_are![$($expecteds),+],
-                stringify!($actual),
-            )
-        }
+        $crate::verify_that!(
+            $actual,
+            $crate::matchers::unordered_elements_are![$($expecteds),+]
+        )
     };
 
     // general case:
-    ($actual:expr, $expected:expr $(,)?) => {
-        {
-            use $crate::assertions::internal::Subject as  _;
-            $actual.check(
-                $expected,
-                stringify!($actual),
-            )
+    ($actual:expr, $expected:expr $(,)?) => {{
+        #[allow(unused_imports)]
+        use $crate::assertions::internal::{
+            ArraySliceSubject as _, CopySubject as _, Deref2RefSubject as _, Deref2Subject as _,
+            DerefRefSubject as _, DerefSubject as _, DirectSubject as _, FallbackSubject as _,
+            IteratorDerefRefSubject as _, IteratorDerefSubject as _, IteratorRefSubject as _,
+            IteratorSubject as _, RefSubject as _, SliceSubject as _, SubjectWrapper,
+        };
+        match ($actual).into_copy_subject() {
+            ref actual => match $expected {
+                expected => (&&&&&&&&&&&&SubjectWrapper::new(actual, &expected))
+                    .into_subject()
+                    .check(expected, stringify!($actual)),
+            },
         }
-    };
+    }};
 }
 pub use verify_that;
 
@@ -461,8 +462,7 @@ pub use add_failure_at;
 #[macro_export]
 macro_rules! verify_true {
     ($condition:expr) => {{
-        use $crate::assertions::internal::Subject as _;
-        ($condition).check($crate::matchers::eq(true), stringify!($condition))
+        $crate::verify_that!($condition, $crate::matchers::eq(true))
     }};
 }
 pub use verify_true;
@@ -610,8 +610,7 @@ pub use assert_true;
 #[macro_export]
 macro_rules! verify_false {
     ($condition:expr) => {{
-        use $crate::assertions::internal::Subject as _;
-        ($condition).check($crate::matchers::eq(false), stringify!($condition))
+        $crate::verify_that!($condition, $crate::matchers::eq(false))
     }};
 }
 pub use verify_false;
@@ -1872,47 +1871,322 @@ pub mod internal {
         matcher::{create_assertion_failure, Matcher, MatcherResult},
     };
     use std::fmt::Debug;
+    use std::marker::PhantomData;
+    use std::ops::Deref;
 
     pub use ::googletest_macro::__googletest_macro_verify_pred;
 
-    /// Extension trait to perform autoref through method lookup in the
-    /// assertion macros. With this trait, the subject can be either a value
-    /// or a reference. For example, this trait makes the following code
-    /// compile and work:
-    /// ```
-    /// # use googletest::prelude::*;
-    /// # fn would_not_compile_without_autoref() -> Result<()> {
-    /// let not_copyable = vec![1,2,3];
-    /// verify_that!(not_copyable, is_empty())?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    /// See [Method Lookup](https://rustc-dev-guide.rust-lang.org/method-lookup.html)
-    pub trait Subject: Copy + Debug {
-        /// Checks whether the matcher `expected` matches the `Subject `self`,
-        /// adding a test failure report if it does not match.
-        ///
-        /// Returns `Ok(())` if the value matches and `Err(_)` if it does not
-        /// match.
-        ///
-        /// **For internal use only. API stablility is not guaranteed!**
+    pub trait CopySubject: Copy {
+        #[inline]
+        fn into_copy_subject(self) -> Self {
+            self
+        }
+    }
+
+    impl<T: Copy> CopySubject for T {}
+
+    /// Borrowed assertion subject plus the matcher type it is checked against.
+    /// `verify_that!` uses autoref on `SubjectWrapper` to pass the subject:
+    ///
+    /// 1. `DirectSubject` (12 refs): `M: Matcher<T>`, passes `actual: &T`.
+    /// 2. `RefSubject` (11 refs): `M: Matcher<&'a T>`, passes `&&'a T`.
+    /// 3. `DerefSubject` / `DerefRefSubject` (10/9 refs): `T: Deref`.
+    /// 4. `Deref2Subject` / `Deref2RefSubject` (8/7 refs): `T::Target: Deref`.
+    /// 5. `SliceSubject` / `ArraySliceSubject` (6/5 refs): array as `[U]`.
+    /// 6. `IteratorSubject` / `IteratorRefSubject` (4/3 refs): `Clone + Iter`.
+    /// 7. `IteratorDeref*` (2/1 refs): `&'a I` where `I: Clone + Iterator`.
+    /// 8. `FallbackSubject` (0 refs): fallback giving a `M: Matcher<T>` error.
+    pub struct SubjectWrapper<'a, T: ?Sized, M>(&'a T, PhantomData<fn() -> M>);
+
+    impl<'a, T: ?Sized, M> SubjectWrapper<'a, T, M> {
+        #[inline]
+        pub fn new(actual: &'a T, _matcher: &M) -> Self {
+            SubjectWrapper(actual, PhantomData)
+        }
+    }
+
+    pub struct Passed<'a, T: ?Sized>(&'a T);
+
+    impl<'a, T: Debug + ?Sized> Passed<'a, T> {
         #[must_use = "The assertion result must be evaluated to affect the test result."]
         #[track_caller]
-        fn check(
+        pub fn check(
             self,
-            expected: impl Matcher<Self>,
+            expected: impl Matcher<T>,
             actual_expr: &'static str,
         ) -> Result<(), TestAssertionFailure> {
-            match expected.matches(self) {
+            match expected.matches(self.0) {
                 MatcherResult::Match => Ok(()),
                 MatcherResult::NoMatch => {
-                    Err(create_assertion_failure(&expected, self, actual_expr))
+                    Err(create_assertion_failure(&expected, self.0, actual_expr))
                 }
             }
         }
     }
 
-    impl<T: Copy + Debug> Subject for T {}
+    pub struct PassedRef<'a, T: ?Sized>(&'a T);
+
+    impl<'a, T: Debug + ?Sized> PassedRef<'a, T> {
+        #[must_use = "The assertion result must be evaluated to affect the test result."]
+        #[track_caller]
+        pub fn check(
+            self,
+            expected: impl Matcher<&'a T>,
+            actual_expr: &'static str,
+        ) -> Result<(), TestAssertionFailure> {
+            match expected.matches(&self.0) {
+                MatcherResult::Match => Ok(()),
+                MatcherResult::NoMatch => {
+                    Err(create_assertion_failure(&expected, &self.0, actual_expr))
+                }
+            }
+        }
+    }
+
+    pub struct Collected<T>(Vec<T>);
+
+    impl<T: Debug> Collected<T> {
+        #[must_use = "The assertion result must be evaluated to affect the test result."]
+        #[track_caller]
+        pub fn check(
+            self,
+            expected: impl Matcher<Vec<T>>,
+            actual_expr: &'static str,
+        ) -> Result<(), TestAssertionFailure> {
+            match expected.matches(&self.0) {
+                MatcherResult::Match => Ok(()),
+                MatcherResult::NoMatch => {
+                    Err(create_assertion_failure(&expected, &self.0, actual_expr))
+                }
+            }
+        }
+    }
+
+    pub struct CollectedRef<T>(Vec<T>);
+
+    impl<T: Debug> CollectedRef<T> {
+        #[must_use = "The assertion result must be evaluated to affect the test result."]
+        #[track_caller]
+        pub fn check<'s>(
+            &'s self,
+            expected: impl Matcher<&'s Vec<T>>,
+            actual_expr: &'static str,
+        ) -> Result<(), TestAssertionFailure> {
+            match expected.matches(&&self.0) {
+                MatcherResult::Match => Ok(()),
+                MatcherResult::NoMatch => {
+                    Err(create_assertion_failure(&expected, &&self.0, actual_expr))
+                }
+            }
+        }
+    }
+
+    pub trait DirectSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<'a, T: Debug + ?Sized, M: Matcher<T>> DirectSubject for &&&&&&&&&&&&SubjectWrapper<'a, T, M> {
+        type Output = Passed<'a, T>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            Passed(self.0)
+        }
+    }
+
+    pub trait RefSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<'a, T: Debug + ?Sized, M: Matcher<&'a T>> RefSubject for &&&&&&&&&&&SubjectWrapper<'a, T, M> {
+        type Output = PassedRef<'a, T>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            PassedRef(self.0)
+        }
+    }
+
+    pub trait DerefSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<'a, T: Deref, M: Matcher<T::Target>> DerefSubject for &&&&&&&&&&SubjectWrapper<'a, T, M>
+    where
+        T::Target: Debug,
+    {
+        type Output = Passed<'a, T::Target>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            Passed(&**self.0)
+        }
+    }
+
+    pub trait DerefRefSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<'a, T: Deref, M: Matcher<&'a T::Target>> DerefRefSubject for &&&&&&&&&SubjectWrapper<'a, T, M>
+    where
+        T::Target: Debug,
+    {
+        type Output = PassedRef<'a, T::Target>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            PassedRef(&**self.0)
+        }
+    }
+
+    pub trait Deref2Subject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<'a, T, M> Deref2Subject for &&&&&&&&SubjectWrapper<'a, T, M>
+    where
+        T: Deref,
+        T::Target: Deref,
+        <T::Target as Deref>::Target: Debug,
+        M: Matcher<<T::Target as Deref>::Target>,
+    {
+        type Output = Passed<'a, <T::Target as Deref>::Target>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            Passed(&***self.0)
+        }
+    }
+
+    pub trait Deref2RefSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<'a, T, M> Deref2RefSubject for &&&&&&&SubjectWrapper<'a, T, M>
+    where
+        T: Deref,
+        T::Target: Deref,
+        <T::Target as Deref>::Target: Debug,
+        M: Matcher<&'a <T::Target as Deref>::Target>,
+    {
+        type Output = PassedRef<'a, <T::Target as Deref>::Target>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            PassedRef(&***self.0)
+        }
+    }
+
+    pub trait SliceSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<'a, U: Debug, const N: usize, M: Matcher<[U]>> SliceSubject
+        for &&&&&&SubjectWrapper<'_, &'a [U; N], M>
+    {
+        type Output = Passed<'a, [U]>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            Passed(self.0.as_slice())
+        }
+    }
+
+    pub trait ArraySliceSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<'a, U: Debug, const N: usize, M: Matcher<[U]>> ArraySliceSubject
+        for &&&&&SubjectWrapper<'a, [U; N], M>
+    {
+        type Output = Passed<'a, [U]>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            Passed(self.0.as_slice())
+        }
+    }
+
+    pub trait IteratorSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<I: Clone + Iterator, M> IteratorSubject for &&&&SubjectWrapper<'_, I, M>
+    where
+        I::Item: Debug,
+        M: Matcher<Vec<I::Item>>,
+    {
+        type Output = Collected<I::Item>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            Collected(I::clone(self.0).collect())
+        }
+    }
+
+    pub trait IteratorRefSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<I: Clone + Iterator, M> IteratorRefSubject for &&&SubjectWrapper<'_, I, M>
+    where
+        I::Item: Debug,
+        M: for<'v> Matcher<&'v Vec<I::Item>>,
+    {
+        type Output = CollectedRef<I::Item>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            CollectedRef(I::clone(self.0).collect())
+        }
+    }
+
+    pub trait IteratorDerefSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<I: Clone + Iterator, M> IteratorDerefSubject for &&SubjectWrapper<'_, &I, M>
+    where
+        I::Item: Debug,
+        M: Matcher<Vec<I::Item>>,
+    {
+        type Output = Collected<I::Item>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            Collected(I::clone(self.0).collect())
+        }
+    }
+
+    pub trait IteratorDerefRefSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<I: Clone + Iterator, M> IteratorDerefRefSubject for &SubjectWrapper<'_, &I, M>
+    where
+        I::Item: Debug,
+        M: for<'v> Matcher<&'v Vec<I::Item>>,
+    {
+        type Output = CollectedRef<I::Item>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            CollectedRef(I::clone(self.0).collect())
+        }
+    }
+
+    pub trait FallbackSubject {
+        type Output;
+        fn into_subject(self) -> Self::Output;
+    }
+
+    impl<'a, T: Debug + ?Sized, M> FallbackSubject for SubjectWrapper<'a, T, M> {
+        type Output = Passed<'a, T>;
+        #[inline]
+        fn into_subject(self) -> Self::Output {
+            Passed(self.0)
+        }
+    }
 
     /// Creates a failure at specified location.
     ///

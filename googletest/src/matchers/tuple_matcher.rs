@@ -33,7 +33,7 @@ pub mod internal {
     // trivial. The only actual value which can be supplied is (), which
     // must match.
     impl Matcher<()> for () {
-        fn matches(&self, _: ()) -> MatcherResult {
+        fn matches(&self, _: &()) -> MatcherResult {
             MatcherResult::Match
         }
 
@@ -46,7 +46,7 @@ pub mod internal {
     }
 
     impl Matcher<&()> for () {
-        fn matches(&self, _: &()) -> MatcherResult {
+        fn matches(&self, _: &&()) -> MatcherResult {
             MatcherResult::Match
         }
 
@@ -63,11 +63,11 @@ pub mod internal {
         ($([$field_number:tt, $matcher_type:ident, $field_type:ident]),*) => {
             impl<$($matcher_type: MatcherBase),*> MatcherBase for ($($matcher_type,)*){}
 
-            impl<$($field_type: Debug + Copy, $matcher_type: Matcher<$field_type>),*>
+            impl<$($field_type: Debug, $matcher_type: Matcher<$field_type>),*>
                 Matcher<($($field_type,)*)> for ($($matcher_type,)*)
             {
-                fn matches(&self, actual:  ($($field_type,)*)) -> MatcherResult {
-                    $(match self.$field_number.matches(actual.$field_number) {
+                fn matches(&self, actual: &($($field_type,)*)) -> MatcherResult {
+                    $(match self.$field_number.matches(&actual.$field_number) {
                         MatcherResult::Match => {},
                         MatcherResult::NoMatch => {
                             return MatcherResult::NoMatch;
@@ -76,16 +76,16 @@ pub mod internal {
                     MatcherResult::Match
                 }
 
-                fn explain_match(&self, actual:  ($($field_type,)*)) -> Description  {
+                fn explain_match(&self, actual: &($($field_type,)*)) -> Description  {
                     let mut explanation = Description::new().text("which").nested(
-                        self.describe(self.matches(actual)));
-                    $(match self.$field_number.matches(actual.$field_number) {
+                        Matcher::<($($field_type,)*)>::describe(self, self.matches(actual)));
+                    $(match self.$field_number.matches(&actual.$field_number) {
                         MatcherResult::Match => {},
                         MatcherResult::NoMatch => {
                             explanation = explanation
                                 .text(format!(concat!("Element #", $field_number, " is {:?},"),
                                     actual.$field_number))
-                                .nested(self.$field_number.explain_match(actual.$field_number));
+                                .nested(self.$field_number.explain_match(&actual.$field_number));
                         }
                     })*
                     explanation
@@ -113,8 +113,8 @@ pub mod internal {
             impl<'a, $($field_type: Debug, $matcher_type: Matcher<&'a $field_type>),*>
                 Matcher<&'a ($($field_type,)*)> for ($($matcher_type,)*)
             {
-                fn matches(&self, actual:  &'a ($($field_type,)*)) -> MatcherResult {
-                    $(match self.$field_number.matches(&actual.$field_number) {
+                fn matches(&self, actual: &&'a ($($field_type,)*)) -> MatcherResult {
+                    $(match self.$field_number.matches(&&actual.$field_number) {
                         MatcherResult::Match => {},
                         MatcherResult::NoMatch => {
                             return MatcherResult::NoMatch;
@@ -123,13 +123,13 @@ pub mod internal {
                     MatcherResult::Match
                 }
 
-                fn explain_match(&self, actual:  &'a ($($field_type,)*)) -> Description  {
+                fn explain_match(&self, actual: &&'a ($($field_type,)*)) -> Description  {
                     let mut explanation = Description::new()
                         .text("which")
                         .nested(
                             Matcher::<&'a ($($field_type,)*)>::describe(
                                 self, self.matches(actual)));
-                    $(match self.$field_number.matches(&actual.$field_number) {
+                    $(match self.$field_number.matches(&&actual.$field_number) {
                         MatcherResult::Match => {},
                         MatcherResult::NoMatch => {
                             explanation = explanation
@@ -139,7 +139,7 @@ pub mod internal {
                                         $field_number,
                                         " is {:?},"),
                                         actual.$field_number))
-                                .nested(self.$field_number.explain_match(&actual.$field_number));
+                                .nested(self.$field_number.explain_match(&&actual.$field_number));
                         }
                     })*
                     explanation

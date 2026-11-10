@@ -42,9 +42,9 @@ pub struct NEMatcher<T> {
     expected: T,
 }
 
-impl<T: Debug, A: Debug + Copy + PartialEq<T>> Matcher<A> for NEMatcher<T> {
-    fn matches(&self, actual: A) -> MatcherResult {
-        (actual != self.expected).into()
+impl<T: Debug, A: Debug + ?Sized + PartialEq<T>> Matcher<A> for NEMatcher<T> {
+    fn matches(&self, actual: &A) -> MatcherResult {
+        (actual != &self.expected).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {

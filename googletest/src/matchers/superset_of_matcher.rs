@@ -81,31 +81,86 @@ pub struct SupersetOfMatcher<ExpectedT> {
     subset: ExpectedT,
 }
 
-impl<ElementT: Debug + Copy + PartialEq, ActualT: Debug + Copy, ExpectedT: Debug> Matcher<ActualT>
-    for SupersetOfMatcher<ExpectedT>
+macro_rules! impl_superset_of_matcher {
+    ($( ( [$($generics:tt)*] $ty:ty ) ),* $(,)?) => {
+        $(
+            impl<ElementT: Debug + PartialEq, ExpectedT: Debug, $($generics)*> Matcher<$ty>
+                for SupersetOfMatcher<ExpectedT>
+            where
+                for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
+            {
+                fn matches(&self, actual: &$ty) -> MatcherResult {
+                    for expected_item in &self.subset {
+                        if !actual.iter().any(|item| item == expected_item) {
+                            return MatcherResult::NoMatch;
+                        }
+                    }
+                    MatcherResult::Match
+                }
+
+                fn explain_match(&self, actual: &$ty) -> Description {
+                    let missing_items: Vec<_> = self
+                        .subset
+                        .into_iter()
+                        .filter(|expected_item| !actual.iter().any(|item| item == *expected_item))
+                        .map(|expected_item| format!("{expected_item:#?}"))
+                        .collect();
+                    match missing_items.len() {
+                        0 => "whose no element is missing".into(),
+                        1 => format!("whose element {} is missing", &missing_items[0]).into(),
+                        _ => format!("whose elements {} are missing", missing_items.join(", ")).into(),
+                    }
+                }
+
+                fn describe(&self, matcher_result: MatcherResult) -> Description {
+                    match matcher_result {
+                        MatcherResult::Match => format!("is a superset of {:#?}", self.subset).into(),
+                        MatcherResult::NoMatch => format!("isn't a superset of {:#?}", self.subset).into(),
+                    }
+                }
+            }
+        )*
+    };
+}
+
+impl_superset_of_matcher!(
+    ([] [ElementT]),
+    ([const N: usize] [ElementT; N]),
+    ([] Vec<ElementT>),
+    ([] std::collections::VecDeque<ElementT>),
+    ([] std::collections::LinkedList<ElementT>),
+    ([] std::collections::BTreeSet<ElementT>),
+    ([] std::collections::BinaryHeap<ElementT>),
+    ([S: Debug] std::collections::HashSet<ElementT, S>),
+    ([] Option<ElementT>),
+    ([E: Debug] Result<ElementT, E>),
+);
+
+impl<'b, ElementT: Debug + PartialEq, ActualT: Debug + ?Sized, ExpectedT: Debug>
+    Matcher<&'b ActualT> for SupersetOfMatcher<ExpectedT>
 where
-    ActualT: IntoIterator<Item = ElementT>,
+    &'b ActualT: IntoIterator<Item = ElementT>,
     for<'a> &'a ExpectedT: IntoIterator<Item = &'a ElementT>,
 {
-    fn matches(&self, actual: ActualT) -> MatcherResult {
+    fn matches(&self, actual: &&'b ActualT) -> MatcherResult {
         for expected_item in &self.subset {
-            if actual_is_missing(actual, expected_item) {
+            if actual_is_missing(*actual, expected_item) {
                 return MatcherResult::NoMatch;
             }
         }
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: ActualT) -> Description {
+    fn explain_match(&self, actual: &&'b ActualT) -> Description {
         let missing_items: Vec<_> = self
             .subset
             .into_iter()
-            .filter(|expected_item| actual_is_missing(actual, *expected_item))
+            .filter(|expected_item| actual_is_missing(*actual, *expected_item))
             .map(|expected_item| format!("{expected_item:#?}"))
             .collect();
         match missing_items.len() {
             0 => "whose no element is missing".into(),
-            1 => format!("whose element {} is missing", &missing_items[0]).into(),
+            1 => format!("whose element {} is missing", missing_items[0]).into(),
             _ => format!("whose elements {} are missing", missing_items.join(", ")).into(),
         }
     }

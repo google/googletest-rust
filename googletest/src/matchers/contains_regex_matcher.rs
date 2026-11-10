@@ -123,8 +123,8 @@ pub struct ContainsRegexMatcher {
     regex: Regex,
 }
 
-impl<ActualT: AsRef<str> + Debug + Copy> Matcher<ActualT> for ContainsRegexMatcher {
-    fn matches(&self, actual: ActualT) -> MatcherResult {
+impl<ActualT: AsRef<str> + Debug + ?Sized> Matcher<ActualT> for ContainsRegexMatcher {
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
         self.regex.is_match(actual.as_ref()).into()
     }
 

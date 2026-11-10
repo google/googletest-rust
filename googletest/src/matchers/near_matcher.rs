@@ -168,8 +168,8 @@ impl<T: Debug> NearMatcher<T> {
     }
 }
 
-impl<T: Borrow<F> + Debug + Copy, F: Debug + Float> Matcher<T> for NearMatcher<F> {
-    fn matches(&self, actual: T) -> MatcherResult {
+impl<T: Borrow<F> + Debug + ?Sized, F: Debug + Float> Matcher<T> for NearMatcher<F> {
+    fn matches(&self, actual: &T) -> MatcherResult {
         if self.nans_are_equal && self.expected.is_nan() && actual.borrow().is_nan() {
             return MatcherResult::Match;
         }
@@ -204,7 +204,7 @@ mod tests {
     fn matches_value_inside_range() -> Result<()> {
         let matcher = near(1.0f64, 0.1f64);
 
-        let result = matcher.matches(1.0f64);
+        let result = matcher.matches(&1.0f64);
 
         verify_that!(result, eq(MatcherResult::Match))
     }
@@ -213,7 +213,7 @@ mod tests {
     fn matches_value_at_low_end_of_range() -> Result<()> {
         let matcher = near(1.0f64, 0.1f64);
 
-        let result = matcher.matches(0.9f64);
+        let result = matcher.matches(&0.9f64);
 
         verify_that!(result, eq(MatcherResult::Match))
     }
@@ -222,7 +222,7 @@ mod tests {
     fn matches_value_at_high_end_of_range() -> Result<()> {
         let matcher = near(1.0f64, 0.25f64);
 
-        let result = matcher.matches(1.25f64);
+        let result = matcher.matches(&1.25f64);
 
         verify_that!(result, eq(MatcherResult::Match))
     }
@@ -231,7 +231,7 @@ mod tests {
     fn does_not_match_value_below_low_end_of_range() -> Result<()> {
         let matcher = near(1.0f64, 0.1f64);
 
-        let result = matcher.matches(0.899999f64);
+        let result = matcher.matches(&0.899999f64);
 
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
@@ -240,7 +240,7 @@ mod tests {
     fn does_not_match_value_above_high_end_of_range() -> Result<()> {
         let matcher = near(1.0f64, 0.1f64);
 
-        let result = matcher.matches(1.100001f64);
+        let result = matcher.matches(&1.100001f64);
 
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
@@ -249,7 +249,7 @@ mod tests {
     fn nan_is_not_near_a_number() -> Result<()> {
         let matcher = near(0.0f64, f64::MAX);
 
-        let result = matcher.matches(f64::NAN);
+        let result = matcher.matches(&f64::NAN);
 
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
@@ -283,7 +283,7 @@ mod tests {
     fn inf_is_not_near_inf() -> Result<()> {
         let matcher = near(f64::INFINITY, f64::MAX);
 
-        let result = matcher.matches(f64::INFINITY);
+        let result = matcher.matches(&f64::INFINITY);
 
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
@@ -292,7 +292,7 @@ mod tests {
     fn inf_is_not_near_a_number() -> Result<()> {
         let matcher = near(f64::INFINITY, f64::MAX);
 
-        let result = matcher.matches(f64::MIN);
+        let result = matcher.matches(&f64::MIN);
 
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
@@ -301,7 +301,7 @@ mod tests {
     fn any_two_numbers_are_within_inf_of_each_other() -> Result<()> {
         let matcher = near(f64::MIN, f64::INFINITY);
 
-        let result = matcher.matches(f64::MAX);
+        let result = matcher.matches(&f64::MAX);
 
         verify_that!(result, eq(MatcherResult::Match))
     }

@@ -165,15 +165,68 @@ pub mod internal {
         }
     }
 
-    impl<T: Debug + Copy, MatcherT: Matcher<T>, ContainerT: Copy + Debug> Matcher<ContainerT>
+    macro_rules! impl_pointwise_matcher {
+        ($( ( [$($generics:tt)*] $ty:ty ) ),* $(,)?) => {
+            $(
+                impl<T: Debug, MatcherT: Matcher<T>, $($generics)*> Matcher<$ty>
+                    for PointwiseMatcher<MatcherT>
+                {
+                    fn matches(&self, actual: &$ty) -> MatcherResult {
+                        let mut zipped_iterator = zip(actual.into_iter(), self.matchers.iter());
+                        for (element, matcher) in zipped_iterator.by_ref() {
+                            if matcher.matches(element).is_no_match() {
+                                return MatcherResult::NoMatch;
+                            }
+                        }
+                        if zipped_iterator.has_size_mismatch() {
+                            MatcherResult::NoMatch
+                        } else {
+                            MatcherResult::Match
+                        }
+                    }
+
+                    fn explain_match(&self, actual: &$ty) -> Description {
+                        let actual_iterator = actual.into_iter();
+                        let mut zipped_iterator = zip(actual_iterator, self.matchers.iter());
+                        let mut mismatches = Vec::new();
+                        for (idx, (a, e)) in zipped_iterator.by_ref().enumerate() {
+                            if e.matches(a).is_no_match() {
+                                mismatches.push(format!("element #{idx} is {a:?}, {}", e.explain_match(a)));
+                            }
+                        }
+                        self.format_explanation(mismatches, zipped_iterator)
+                    }
+
+                    fn describe(&self, matcher_result: MatcherResult) -> Description {
+                        self.describe_impl(matcher_result)
+                    }
+                }
+            )*
+        };
+    }
+
+    impl_pointwise_matcher!(
+        ([] [T]),
+        ([const N: usize] [T; N]),
+        ([] Vec<T>),
+        ([] std::collections::VecDeque<T>),
+        ([] std::collections::LinkedList<T>),
+        ([] std::collections::BTreeSet<T>),
+        ([] std::collections::BinaryHeap<T>),
+        ([S: Debug] std::collections::HashSet<T, S>),
+        ([] Option<T>),
+        ([E: Debug] Result<T, E>),
+    );
+
+    impl<'b, T: Debug, MatcherT: Matcher<T>, ContainerT: Debug + ?Sized> Matcher<&'b ContainerT>
         for PointwiseMatcher<MatcherT>
     where
-        ContainerT: IntoIterator<Item = T>,
+        &'b ContainerT: IntoIterator<Item = T>,
     {
-        fn matches(&self, actual: ContainerT) -> MatcherResult {
-            let mut zipped_iterator = zip(actual.into_iter(), self.matchers.iter());
+        fn matches(&self, actual: &&'b ContainerT) -> MatcherResult {
+            let mut zipped_iterator = zip((*actual).into_iter(), self.matchers.iter());
             for (element, matcher) in zipped_iterator.by_ref() {
-                if matcher.matches(element).is_no_match() {
+                if matcher.matches(&element).is_no_match() {
                     return MatcherResult::NoMatch;
                 }
             }
@@ -184,18 +237,29 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: ContainerT) -> Description {
-            // TODO(b/260819741) This code duplicates elements_are_matcher.rs.
-            // Consider extract as a separate library. (or implement
-            // pointwise! with elements_are)
-            let actual_iterator = actual.into_iter();
+        fn explain_match(&self, actual: &&'b ContainerT) -> Description {
+            let actual_iterator = (*actual).into_iter();
             let mut zipped_iterator = zip(actual_iterator, self.matchers.iter());
             let mut mismatches = Vec::new();
             for (idx, (a, e)) in zipped_iterator.by_ref().enumerate() {
-                if e.matches(a).is_no_match() {
-                    mismatches.push(format!("element #{idx} is {a:?}, {}", e.explain_match(a)));
+                if e.matches(&a).is_no_match() {
+                    mismatches.push(format!("element #{idx} is {a:?}, {}", e.explain_match(&a)));
                 }
             }
+            self.format_explanation(mismatches, zipped_iterator)
+        }
+
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
+            self.describe_impl(matcher_result)
+        }
+    }
+
+    impl<MatcherT> PointwiseMatcher<MatcherT> {
+        fn format_explanation<I1: Iterator, I2>(
+            &self,
+            mismatches: Vec<String>,
+            zipped_iterator: crate::matcher_support::zipped_iterator::ZippedIterator<I1, I2>,
+        ) -> Description {
             if mismatches.is_empty() {
                 if !zipped_iterator.has_size_mismatch() {
                     "which matches all elements".into()
@@ -215,7 +279,10 @@ pub mod internal {
             }
         }
 
-        fn describe(&self, matcher_result: MatcherResult) -> Description {
+        fn describe_impl<T: Debug + ?Sized>(&self, matcher_result: MatcherResult) -> Description
+        where
+            MatcherT: Matcher<T>,
+        {
             format!(
                 "{} elements satisfying respectively:\n{}",
                 if matcher_result.into() { "has" } else { "doesn't have" },

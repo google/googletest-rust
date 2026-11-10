@@ -38,9 +38,8 @@ use std::fmt::Debug;
 /// # should_fail().unwrap_err();
 /// ```
 ///
-/// In most cases the params neeed to be the same type or they need to be cast
-/// explicitly. This can be surprising when comparing integer types or
-/// references:
+/// In most cases the params need to be the same type or they need to be cast
+/// explicitly. This can be surprising when comparing different integer types:
 ///
 /// ```compile_fail
 /// # use googletest::prelude::*;
@@ -51,21 +50,14 @@ use std::fmt::Debug;
 /// # }
 /// ```
 ///
-/// ```compile_fail
-/// # use googletest::prelude::*;
-/// # fn should_not_compile() -> Result<()> {
-/// let actual: &u32 = &2;
-/// let expected: u32 = 70;
-/// verify_that!(actual, lt(expected))?; // Does not compile
-/// #     Ok(())
-/// # }
-/// ```
+/// References and values can be compared directly:
 ///
 /// ```
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let actual: &u32 = &2;
 /// let expected: u32 = 70;
+/// verify_that!(actual, lt(expected))?; // Compiles and passes
 /// verify_that!(actual, lt(&expected))?; // Compiles and passes
 /// #     Ok(())
 /// # }
@@ -83,11 +75,11 @@ pub struct LtMatcher<ExpectedT> {
     expected: ExpectedT,
 }
 
-impl<ActualT: Debug + PartialOrd<ExpectedT> + Copy, ExpectedT: Debug> Matcher<ActualT>
+impl<ActualT: Debug + PartialOrd<ExpectedT> + ?Sized, ExpectedT: Debug> Matcher<ActualT>
     for LtMatcher<ExpectedT>
 {
-    fn matches(&self, actual: ActualT) -> MatcherResult {
-        (actual < self.expected).into()
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
+        (actual < &self.expected).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -118,14 +110,14 @@ mod tests {
     #[test]
     fn lt_does_not_match_equal_i32() -> Result<()> {
         let matcher = lt(10);
-        let result = matcher.matches(10);
+        let result = matcher.matches(&10);
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
     #[test]
     fn lt_does_not_match_lower_i32() -> Result<()> {
         let matcher = lt(-50);
-        let result = matcher.matches(50);
+        let result = matcher.matches(&50);
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
@@ -137,7 +129,7 @@ mod tests {
     #[test]
     fn lt_does_not_match_bigger_str() -> Result<()> {
         let matcher = lt("ab");
-        let result = matcher.matches("az");
+        let result = matcher.matches(&"az");
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
