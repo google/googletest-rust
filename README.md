@@ -494,7 +494,7 @@ displayed, we recommend setting those variables in the personal
 
 ## Contributing Changes
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute
+Please read [CONTRIBUTING.md](https://github.com/google/googletest-rust/blob/main/CONTRIBUTING.md) for details on how to contribute
 to this project.
 
 [`add_failure!`]: https://docs.rs/googletest/*/googletest/macro.add_failure.html
