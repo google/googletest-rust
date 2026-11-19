@@ -64,7 +64,7 @@ pub fn died() -> DiedMatcher {
 pub struct DiedMatcher;
 
 impl Matcher<ExitStatus> for DiedMatcher {
-    fn matches(&self, actual: ExitStatus) -> MatcherResult {
+    fn matches(&self, actual: &ExitStatus) -> MatcherResult {
         (!actual.success()).into()
     }
 
@@ -77,7 +77,7 @@ impl Matcher<ExitStatus> for DiedMatcher {
 }
 
 impl Matcher<ExitStatus> for ExitedWithCodeMatcher {
-    fn matches(&self, actual: ExitStatus) -> MatcherResult {
+    fn matches(&self, actual: &ExitStatus) -> MatcherResult {
         match actual.code() {
             Some(c) if c == self.expected => MatcherResult::Match,
             _ => MatcherResult::NoMatch,

@@ -287,20 +287,20 @@ pub mod internal {
     impl<'a, OuterT: Debug + 'a, InnerT: Debug + 'a, InnerMatcher: Matcher<&'a InnerT>>
         Matcher<&'a OuterT> for FieldMatcher<OuterT, InnerT, InnerMatcher>
     {
-        fn matches(&self, actual: &'a OuterT) -> MatcherResult {
-            if let Some(value) = (self.field_accessor)(actual) {
-                self.inner.matches(value)
+        fn matches(&self, actual: &&'a OuterT) -> MatcherResult {
+            if let Some(value) = (self.field_accessor)(*actual) {
+                self.inner.matches(&value)
             } else {
                 MatcherResult::NoMatch
             }
         }
 
-        fn explain_match(&self, actual: &'a OuterT) -> Description {
-            if let Some(actual) = (self.field_accessor)(actual) {
+        fn explain_match(&self, actual: &&'a OuterT) -> Description {
+            if let Some(actual) = (self.field_accessor)(*actual) {
                 format!(
                     "which has field `{}`, {}",
                     self.field_path,
-                    self.inner.explain_match(actual)
+                    self.inner.explain_match(&actual)
                 )
                 .into()
             } else {
@@ -321,23 +321,23 @@ pub mod internal {
         }
     }
 
-    impl<OuterT: Debug + Copy, InnerT: Debug + Copy, InnerMatcher: Matcher<InnerT>> Matcher<OuterT>
+    impl<OuterT: Debug + Copy, InnerT: Debug, InnerMatcher: Matcher<InnerT>> Matcher<OuterT>
         for FieldMatcher<OuterT, InnerT, InnerMatcher>
     {
-        fn matches(&self, actual: OuterT) -> MatcherResult {
-            if let Some(value) = (self.field_accessor)(&actual) {
-                self.inner.matches(*value)
+        fn matches(&self, actual: &OuterT) -> MatcherResult {
+            if let Some(value) = (self.field_accessor)(actual) {
+                self.inner.matches(value)
             } else {
                 MatcherResult::NoMatch
             }
         }
 
-        fn explain_match(&self, actual: OuterT) -> Description {
-            if let Some(actual) = (self.field_accessor)(&actual) {
+        fn explain_match(&self, actual: &OuterT) -> Description {
+            if let Some(actual) = (self.field_accessor)(actual) {
                 format!(
                     "which has field `{}`, {}",
                     self.field_path,
-                    self.inner.explain_match(*actual)
+                    self.inner.explain_match(actual)
                 )
                 .into()
             } else {

@@ -60,14 +60,14 @@ pub struct IsEncodedStringMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
 }
 
-impl<ActualT: AsRef<[u8]> + Debug + Copy, InnerMatcherT> Matcher<ActualT>
+impl<ActualT: AsRef<[u8]> + Debug + ?Sized, InnerMatcherT> Matcher<ActualT>
     for IsEncodedStringMatcher<InnerMatcherT>
 where
     InnerMatcherT: for<'a> Matcher<&'a str>,
 {
-    fn matches(&self, actual: ActualT) -> MatcherResult {
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
         std::str::from_utf8(actual.as_ref())
-            .map(|s| self.inner.matches(s))
+            .map(|s| self.inner.matches(&s))
             .unwrap_or(MatcherResult::NoMatch)
     }
 
@@ -86,10 +86,10 @@ where
         }
     }
 
-    fn explain_match(&self, actual: ActualT) -> Description {
+    fn explain_match(&self, actual: &ActualT) -> Description {
         match std::str::from_utf8(actual.as_ref()) {
             Ok(s) => {
-                format!("which is a UTF-8 encoded string {s:?}, {}", self.inner.explain_match(s))
+                format!("which is a UTF-8 encoded string {s:?}, {}", self.inner.explain_match(&s))
                     .into()
             }
             Err(e) => format!("which is not a UTF-8 encoded string: {e}").into(),
@@ -163,7 +163,7 @@ mod tests {
 
     #[test]
     fn has_correct_explanation_when_byte_array_is_not_utf8_encoded() -> Result<()> {
-        let explanation = is_utf8_string(eq("A string")).explain_match([192, 128, 0, 64]);
+        let explanation = is_utf8_string(eq("A string")).explain_match(&[192, 128, 0, 64]);
 
         verify_that!(explanation, displays_as(starts_with("which is not a UTF-8 encoded string: ")))
     }

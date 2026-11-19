@@ -83,9 +83,9 @@ pub struct EqMatcher<T> {
     pub(crate) expected: T,
 }
 
-impl<T: Debug, A: Debug + Copy + PartialEq<T>> Matcher<A> for EqMatcher<T> {
-    fn matches(&self, actual: A) -> MatcherResult {
-        (actual == self.expected).into()
+impl<T: Debug, A: Debug + ?Sized + PartialEq<T>> Matcher<A> for EqMatcher<T> {
+    fn matches(&self, actual: &A) -> MatcherResult {
+        (actual == &self.expected).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -95,7 +95,7 @@ impl<T: Debug, A: Debug + Copy + PartialEq<T>> Matcher<A> for EqMatcher<T> {
         }
     }
 
-    fn explain_match(&self, actual: A) -> Description {
+    fn explain_match(&self, actual: &A) -> Description {
         let expected_debug = format!("{:#?}", self.expected);
         let actual_debug = format!("{actual:#?}");
         let description = Matcher::<A>::describe(self, self.matches(actual));

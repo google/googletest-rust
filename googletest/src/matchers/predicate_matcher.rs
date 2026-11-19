@@ -117,8 +117,8 @@ impl<T: Debug + Copy, P> Matcher<T> for PredicateMatcher<P, NoDescription, NoDes
 where
     P: Fn(T) -> bool,
 {
-    fn matches(&self, actual: T) -> MatcherResult {
-        (self.predicate)(actual).into()
+    fn matches(&self, actual: &T) -> MatcherResult {
+        (self.predicate)(*actual).into()
     }
 
     fn describe(&self, result: MatcherResult) -> Description {
@@ -134,8 +134,8 @@ impl<T: Debug + Copy, P, D1: PredicateDescription, D2: PredicateDescription> Mat
 where
     P: Fn(T) -> bool,
 {
-    fn matches(&self, actual: T) -> MatcherResult {
-        (self.predicate)(actual).into()
+    fn matches(&self, actual: &T) -> MatcherResult {
+        (self.predicate)(*actual).into()
     }
 
     fn describe(&self, result: MatcherResult) -> Description {
@@ -163,12 +163,12 @@ mod tests {
 
     #[test]
     fn predicate_matcher_odd_explain_match_matches() -> Result<()> {
-        verify_that!(is_odd().explain_match(1), displays_as(eq("which is odd")))
+        verify_that!(is_odd().explain_match(&1), displays_as(eq("which is odd")))
     }
 
     #[test]
     fn predicate_matcher_odd_explain_match_does_not_match() -> Result<()> {
-        verify_that!(is_odd().explain_match(2), displays_as(eq("which is even")))
+        verify_that!(is_odd().explain_match(&2), displays_as(eq("which is even")))
     }
 
     // Simple Matcher without description
@@ -183,12 +183,12 @@ mod tests {
 
     #[test]
     fn predicate_matcher_even_explain_match_matches() -> Result<()> {
-        verify_that!(is_even().explain_match(2), displays_as(eq("which matches")))
+        verify_that!(is_even().explain_match(&2), displays_as(eq("which matches")))
     }
 
     #[test]
     fn predicate_matcher_even_explain_match_does_not_match() -> Result<()> {
-        verify_that!(is_even().explain_match(1), displays_as(eq("which does not match")))
+        verify_that!(is_even().explain_match(&1), displays_as(eq("which does not match")))
     }
 
     #[test]

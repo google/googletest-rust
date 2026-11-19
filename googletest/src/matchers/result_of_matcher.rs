@@ -100,11 +100,11 @@ pub mod internal {
         callable_description: &'static str,
     }
 
-    impl<I: Copy + Debug, T: Debug + Copy, CallableT: Fn(I) -> T, InnerMatcherT: Matcher<T>>
-        Matcher<I> for ResultOfMatcher<CallableT, InnerMatcherT>
+    impl<I: Copy + Debug, T: Debug, CallableT: Fn(I) -> T, InnerMatcherT: Matcher<T>> Matcher<I>
+        for ResultOfMatcher<CallableT, InnerMatcherT>
     {
-        fn matches(&self, actual: I) -> MatcherResult {
-            self.inner_matcher.matches((self.callable)(actual))
+        fn matches(&self, actual: &I) -> MatcherResult {
+            self.inner_matcher.matches(&(self.callable)(*actual))
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -113,8 +113,8 @@ pub mod internal {
                 .nested(self.inner_matcher.describe(matcher_result))
         }
 
-        fn explain_match(&self, actual: I) -> Description {
-            let actual_result = (self.callable)(actual);
+        fn explain_match(&self, actual: &I) -> Description {
+            let actual_result = (self.callable)(*actual);
             Description::new()
                 .text(format!("which, results into {actual_result:?}",))
                 .nested(self.describe(self.matches(actual)))
@@ -142,8 +142,8 @@ pub mod internal {
             InnerMatcherT: for<'a> Matcher<&'a T>,
         > Matcher<I> for ResultOfRefMatcher<Callable, InnerMatcherT>
     {
-        fn matches(&self, actual: I) -> MatcherResult {
-            self.inner_matcher.matches(&(self.callable)(actual))
+        fn matches(&self, actual: &I) -> MatcherResult {
+            self.inner_matcher.matches(&&(self.callable)(*actual))
         }
 
         fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -152,8 +152,8 @@ pub mod internal {
                 .nested(self.inner_matcher.describe(matcher_result))
         }
 
-        fn explain_match(&self, actual: I) -> Description {
-            let actual_result = (self.callable)(actual);
+        fn explain_match(&self, actual: &I) -> Description {
+            let actual_result = (self.callable)(*actual);
             Description::new()
                 .text(format!("which, results into {actual_result:?}",))
                 .nested(self.describe(self.matches(actual)))
@@ -411,7 +411,7 @@ mod tests {
     #[test]
     fn test_describe_simple() -> Result<()> {
         let matcher = result_of!(|x| x + 1, eq(2));
-        let description = matcher.describe(matcher.matches(0));
+        let description = matcher.describe(matcher.matches(&0));
         verify_that!(
             description,
             displays_as(eq(indoc!(
@@ -428,7 +428,7 @@ mod tests {
             |s: &str| s.chars().collect::<Vec<_>>(),
             each(predicate(char::is_ascii_alphabetic))
         );
-        let description = matcher.describe(matcher.matches("A quick brown fox"));
+        let description = matcher.describe(matcher.matches(&"A quick brown fox"));
         verify_that!(
             description,
             displays_as(eq(indoc!(

@@ -206,11 +206,13 @@ The following matchers are provided in GoogleTest Rust:
 [`points_to`]: matchers::points_to
 [`pointwise!`]: matchers::pointwise
 [`predicate`]: matchers::predicate
+[`property!`]: matchers::property
 [`some`]: matchers::some
 [`starts_with`]: matchers::starts_with
 [`subset_of`]: matchers::subset_of
 [`superset_of`]: matchers::superset_of
 [`unordered_elements_are!`]: matchers::unordered_elements_are
+[`Copy`]: std::marker::Copy
 [`Deref`]: std::ops::Deref
 [`Display`]: std::fmt::Display
 [`HashMap`]: std::collections::HashMap
@@ -233,9 +235,9 @@ struct MyEqMatcher<T> {
     expected: T,
 }
 
-impl<T: PartialEq + Debug + Copy> Matcher<T> for MyEqMatcher<T> {
-    fn matches(&self, actual: T) -> MatcherResult {
-        if self.expected == actual {
+impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
+    fn matches(&self, actual: &T) -> MatcherResult {
+        if self.expected == *actual {
             MatcherResult::Match
         } else {
             MatcherResult::NoMatch
@@ -265,9 +267,9 @@ impl<T: PartialEq + Debug + Copy> Matcher<T> for MyEqMatcher<T> {
  #    expected: T,
  # }
  #
- # impl<T: PartialEq + Debug + Copy> Matcher<T> for MyEqMatcher<T> {
- #    fn matches(&self, actual: T) -> MatcherResult {
- #        if self.expected == actual {
+ # impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
+ #    fn matches(&self, actual: &T) -> MatcherResult {
+ #        if self.expected == *actual {
  #            MatcherResult::Match
  #        } else {
  #            MatcherResult::NoMatch
@@ -286,7 +288,7 @@ impl<T: PartialEq + Debug + Copy> Matcher<T> for MyEqMatcher<T> {
  #    }
  # }
  #
- pub fn eq_my_way<T: PartialEq + Debug + Copy>(expected: T) -> impl Matcher<T> {
+ pub fn eq_my_way<T: PartialEq + Debug>(expected: T) -> impl Matcher<T> {
     MyEqMatcher { expected }
  }
  ```
@@ -302,9 +304,9 @@ impl<T: PartialEq + Debug + Copy> Matcher<T> for MyEqMatcher<T> {
 #    expected: T,
 # }
 #
-# impl<T: PartialEq + Debug + Copy> Matcher<T> for MyEqMatcher<T> {
-#    fn matches(&self, actual: T) -> MatcherResult {
-#        if self.expected == actual {
+# impl<T: PartialEq + Debug> Matcher<T> for MyEqMatcher<T> {
+#    fn matches(&self, actual: &T) -> MatcherResult {
+#        if self.expected == *actual {
 #            MatcherResult::Match
 #        } else {
 #            MatcherResult::NoMatch
@@ -323,7 +325,7 @@ impl<T: PartialEq + Debug + Copy> Matcher<T> for MyEqMatcher<T> {
 #    }
 # }
 #
-# pub fn eq_my_way<T: PartialEq + Debug + Copy>(expected: T) -> impl Matcher<T> {
+# pub fn eq_my_way<T: PartialEq + Debug>(expected: T) -> impl Matcher<T> {
 #    MyEqMatcher { expected }
 # }
 # /* The attribute macro would prevent the function from being compiled in a doctest.
@@ -337,6 +339,96 @@ fn should_be_equal_by_my_definition() {
 }
 # should_be_equal_by_my_definition();
 ```
+
+### Matching both values and references
+
+[`Matcher::matches`] receives the actual value by reference, so a matcher does
+not need its actual type to be [`Copy`]. Note, however, that `Matcher<T>` and
+`Matcher<&T>` are two distinct traits. Which one an assertion needs depends on
+where the matcher is used:
+
+* `verify_that!(value, matcher)` needs `Matcher<T>` when `value` is a `T` and
+  `Matcher<&T>` when `value` is a `&T`.
+* A matcher nested inside another matcher is given whatever its parent hands to
+  it. Matchers such as [`matches_pattern!`], [`field!`] and [`property!`] hand
+  their inner matchers a reference when the type they destructure is not
+  `Copy`.
+
+A matcher which is generic over its actual type, such as `MyEqMatcher` above,
+works in both cases with a single implementation, since `T` can itself be a
+reference type.
+
+A matcher which names a concrete outer type and delegates to an inner matcher
+is different. In some cases one must implement [`Matcher`] twice: once for the
+value and once for the reference. Otherwise the matcher compiles when used at
+the top level of an assertion on an owned value but fails to compile, with an
+error such as ``the trait `Matcher<&Wrapper<_>>` is not implemented``, when it
+is used on a reference or nested inside a matcher which hands it a reference.
+
+```
+use googletest::prelude::*;
+use googletest::{description::Description, matcher::{Matcher, MatcherBase, MatcherResult}};
+use std::fmt::Debug;
+
+#[derive(Debug)]
+struct Wrapper<T>(T);
+
+#[derive(MatcherBase)]
+struct WrapsMatcher<InnerMatcherT> {
+    inner: InnerMatcherT,
+}
+
+// Matches a `Wrapper<T>`. The inner matcher must match a `T`.
+impl<T: Debug, InnerMatcherT: Matcher<T>> Matcher<Wrapper<T>> for WrapsMatcher<InnerMatcherT> {
+    fn matches(&self, actual: &Wrapper<T>) -> MatcherResult {
+        self.inner.matches(&actual.0)
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
+        format!("wraps a value which {}", self.inner.describe(matcher_result)).into()
+    }
+}
+
+// Matches a `&Wrapper<T>`. The inner matcher must match a `&T`.
+impl<'a, T: Debug, InnerMatcherT: Matcher<&'a T>> Matcher<&'a Wrapper<T>>
+    for WrapsMatcher<InnerMatcherT>
+{
+    fn matches(&self, actual: &&'a Wrapper<T>) -> MatcherResult {
+        self.inner.matches(&&actual.0)
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
+        format!("wraps a value which {}", self.inner.describe(matcher_result)).into()
+    }
+}
+
+fn wraps<InnerMatcherT>(inner: InnerMatcherT) -> WrapsMatcher<InnerMatcherT> {
+    WrapsMatcher { inner }
+}
+
+#[derive(Debug)]
+struct Holder {
+    wrapper: Wrapper<String>,
+}
+
+# fn should_pass() -> Result<()> {
+// Uses the implementation for `Wrapper<T>`.
+verify_that!(Wrapper(1), wraps(eq(1)))?;
+// Both of these use the implementation for `&Wrapper<T>`: the first is given a
+// reference directly, the second is handed one by `matches_pattern!` because
+// `Holder` is not `Copy`.
+verify_that!(&Wrapper(1), wraps(eq(&1)))?;
+verify_that!(
+    Holder { wrapper: Wrapper("a".to_string()) },
+    matches_pattern!(Holder { wrapper: wraps(eq("a")) })
+)?;
+#     Ok(())
+# }
+# should_pass().unwrap();
+```
+
+The matchers in this crate which wrap a concrete type, such as [`some`],
+[`ok`], [`err`], [`field!`] and [`property!`], are implemented in this way.
 
 ## Non-fatal assertions
 
@@ -557,4 +649,5 @@ through the `?` operator.
 [`and_log_failure()`]: GoogleTestSupport::and_log_failure
 [`or_fail()`]: OrFail::or_fail
 [`Matcher`]: matcher::Matcher
+[`Matcher::matches`]: matcher::Matcher::matches
 [`MatcherBase`]: matcher::MatcherBase

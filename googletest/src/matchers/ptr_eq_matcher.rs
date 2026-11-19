@@ -83,35 +83,63 @@ impl<'a, T: Debug + ?Sized> PtrEqMatcher<'a, T> {
 }
 
 impl<'a, 'b, T: Debug + ?Sized> Matcher<&'b T> for PtrEqMatcher<'a, T> {
-    fn matches(&self, actual: &'b T) -> MatcherResult {
-        std::ptr::eq(actual, self.expected).into()
+    fn matches(&self, actual: &&'b T) -> MatcherResult {
+        std::ptr::eq(*actual, self.expected).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
         self.describe_impl(matcher_result)
     }
 
-    fn explain_match(&self, actual: &'b T) -> Description {
-        self.explain_match_impl(actual as *const T)
+    fn explain_match(&self, actual: &&'b T) -> Description {
+        self.explain_match_impl(*actual as *const T)
+    }
+}
+
+impl<'a, 'b, T: Debug + ?Sized> Matcher<&'b mut T> for PtrEqMatcher<'a, T> {
+    fn matches(&self, actual: &&'b mut T) -> MatcherResult {
+        std::ptr::eq(&**actual, self.expected).into()
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
+        self.describe_impl(matcher_result)
+    }
+
+    fn explain_match(&self, actual: &&'b mut T) -> Description {
+        self.explain_match_impl(&**actual as *const T)
     }
 }
 
 impl<'a, 'b, 'c, T: Debug + ?Sized> Matcher<&'b &'c T> for PtrEqMatcher<'a, T> {
-    fn matches(&self, actual: &'b &'c T) -> MatcherResult {
-        std::ptr::eq(*actual, self.expected).into()
+    fn matches(&self, actual: &&'b &'c T) -> MatcherResult {
+        std::ptr::eq(**actual, self.expected).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
         self.describe_impl(matcher_result)
     }
 
-    fn explain_match(&self, actual: &'b &'c T) -> Description {
-        self.explain_match_impl(*actual as *const T)
+    fn explain_match(&self, actual: &&'b &'c T) -> Description {
+        self.explain_match_impl(**actual as *const T)
     }
 }
 
 impl<'a, 'b, 'c, T: Debug + ?Sized> Matcher<&'b &'c mut T> for PtrEqMatcher<'a, T> {
-    fn matches(&self, actual: &'b &'c mut T) -> MatcherResult {
+    fn matches(&self, actual: &&'b &'c mut T) -> MatcherResult {
+        std::ptr::eq(&***actual, self.expected).into()
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
+        self.describe_impl(matcher_result)
+    }
+
+    fn explain_match(&self, actual: &&'b &'c mut T) -> Description {
+        self.explain_match_impl(&***actual as *const T)
+    }
+}
+
+impl<'a, T: Debug + ?Sized> Matcher<*const T> for PtrEqMatcher<'a, T> {
+    fn matches(&self, actual: &*const T) -> MatcherResult {
         std::ptr::eq(*actual, self.expected).into()
     }
 
@@ -119,36 +147,22 @@ impl<'a, 'b, 'c, T: Debug + ?Sized> Matcher<&'b &'c mut T> for PtrEqMatcher<'a, 
         self.describe_impl(matcher_result)
     }
 
-    fn explain_match(&self, actual: &'b &'c mut T) -> Description {
-        self.explain_match_impl(*actual as *const T)
-    }
-}
-
-impl<'a, T: Debug + ?Sized> Matcher<*const T> for PtrEqMatcher<'a, T> {
-    fn matches(&self, actual: *const T) -> MatcherResult {
-        std::ptr::eq(actual, self.expected).into()
-    }
-
-    fn describe(&self, matcher_result: MatcherResult) -> Description {
-        self.describe_impl(matcher_result)
-    }
-
-    fn explain_match(&self, actual: *const T) -> Description {
-        self.explain_match_impl(actual)
+    fn explain_match(&self, actual: &*const T) -> Description {
+        self.explain_match_impl(*actual)
     }
 }
 
 impl<'a, T: Debug + ?Sized> Matcher<*mut T> for PtrEqMatcher<'a, T> {
-    fn matches(&self, actual: *mut T) -> MatcherResult {
-        std::ptr::eq(actual as *const T, self.expected as *const T).into()
+    fn matches(&self, actual: &*mut T) -> MatcherResult {
+        std::ptr::eq(*actual as *const T, self.expected as *const T).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
         self.describe_impl(matcher_result)
     }
 
-    fn explain_match(&self, actual: *mut T) -> Description {
-        self.explain_match_impl(actual as *const T)
+    fn explain_match(&self, actual: &*mut T) -> Description {
+        self.explain_match_impl(*actual as *const T)
     }
 }
 

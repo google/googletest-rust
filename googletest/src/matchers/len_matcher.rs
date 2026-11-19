@@ -57,15 +57,8 @@ pub struct LenMatcher<E> {
     expected: E,
 }
 
-impl<T: Debug + Copy, E: Matcher<usize>> Matcher<T> for LenMatcher<E>
-where
-    T: IntoIterator,
-{
-    fn matches(&self, actual: T) -> MatcherResult {
-        self.expected.matches(count_elements(actual))
-    }
-
-    fn describe(&self, matcher_result: MatcherResult) -> Description {
+impl<E: Matcher<usize>> LenMatcher<E> {
+    fn describe_impl(&self, matcher_result: MatcherResult) -> Description {
         match matcher_result {
             MatcherResult::Match => {
                 format!("has length, which {}", self.expected.describe(MatcherResult::Match)).into()
@@ -76,10 +69,64 @@ where
             }
         }
     }
+}
 
-    fn explain_match(&self, actual: T) -> Description {
-        let actual_size = count_elements(actual);
-        format!("which has length {}, {}", actual_size, self.expected.explain_match(actual_size))
+macro_rules! impl_len_matcher {
+    ($( ( [$($generics:tt)*] $ty:ty ) ),* $(,)?) => {
+        $(
+            impl<E: Matcher<usize>, $($generics)*> Matcher<$ty> for LenMatcher<E> {
+                fn matches(&self, actual: &$ty) -> MatcherResult {
+                    self.expected.matches(&count_elements(actual))
+                }
+
+                fn describe(&self, matcher_result: MatcherResult) -> Description {
+                    self.describe_impl(matcher_result)
+                }
+
+                fn explain_match(&self, actual: &$ty) -> Description {
+                    let actual_size = count_elements(actual);
+                    format!(
+                        "which has length {}, {}",
+                        actual_size,
+                        self.expected.explain_match(&actual_size)
+                    )
+                    .into()
+                }
+            }
+        )*
+    };
+}
+
+impl_len_matcher!(
+    ([T: Debug] [T]),
+    ([T: Debug, const N: usize] [T; N]),
+    ([T: Debug] Vec<T>),
+    ([T: Debug] std::collections::VecDeque<T>),
+    ([T: Debug] std::collections::LinkedList<T>),
+    ([T: Debug] std::collections::BTreeSet<T>),
+    ([T: Debug] std::collections::BinaryHeap<T>),
+    ([T: Debug, S: Debug] std::collections::HashSet<T, S>),
+    ([K: Debug, V: Debug] std::collections::BTreeMap<K, V>),
+    ([K: Debug, V: Debug, S: Debug] std::collections::HashMap<K, V, S>),
+    ([T: Debug] Option<T>),
+    ([T: Debug, ErrT: Debug] Result<T, ErrT>),
+);
+
+impl<'a, T: Debug + ?Sized, E: Matcher<usize>> Matcher<&'a T> for LenMatcher<E>
+where
+    &'a T: IntoIterator,
+{
+    fn matches(&self, actual: &&'a T) -> MatcherResult {
+        self.expected.matches(&count_elements(*actual))
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
+        self.describe_impl(matcher_result)
+    }
+
+    fn explain_match(&self, actual: &&'a T) -> Description {
+        let actual_size = count_elements(*actual);
+        format!("which has length {}, {}", actual_size, self.expected.explain_match(&actual_size))
             .into()
     }
 }
@@ -173,8 +220,8 @@ mod tests {
     fn len_matcher_explain_match() -> Result<()> {
         #[derive(MatcherBase)]
         struct TestMatcher;
-        impl<T: Debug + Copy> Matcher<T> for TestMatcher {
-            fn matches(&self, _: T) -> MatcherResult {
+        impl<T: Debug + ?Sized> Matcher<T> for TestMatcher {
+            fn matches(&self, _: &T) -> MatcherResult {
                 false.into()
             }
 
@@ -182,12 +229,12 @@ mod tests {
                 "called described".into()
             }
 
-            fn explain_match(&self, _: T) -> Description {
+            fn explain_match(&self, _: &T) -> Description {
                 "called explain_match".into()
             }
         }
         verify_that!(
-            len(TestMatcher).explain_match([1, 2, 3]),
+            len(TestMatcher).explain_match(&[1, 2, 3]),
             displays_as(eq("which has length 3, called explain_match"))
         )
     }

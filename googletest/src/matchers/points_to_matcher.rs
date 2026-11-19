@@ -44,14 +44,14 @@ pub struct PointsToMatcher<MatcherT> {
 
 impl<'a, ExpectedT, MatcherT> Matcher<&'a ExpectedT> for PointsToMatcher<MatcherT>
 where
-    ExpectedT: Debug + Copy,
+    ExpectedT: Debug + ?Sized + 'a,
     MatcherT: Matcher<ExpectedT>,
 {
-    fn matches(&self, actual: &'a ExpectedT) -> MatcherResult {
+    fn matches(&self, actual: &&'a ExpectedT) -> MatcherResult {
         self.expected.matches(*actual)
     }
 
-    fn explain_match(&self, actual: &'a ExpectedT) -> Description {
+    fn explain_match(&self, actual: &&'a ExpectedT) -> Description {
         self.expected.explain_match(*actual)
     }
 

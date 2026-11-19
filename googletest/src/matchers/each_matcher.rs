@@ -58,28 +58,91 @@ pub struct EachMatcher<MatcherT> {
     inner: MatcherT,
 }
 
-impl<ElementT: Debug + Copy, ActualT: Debug + Copy, MatcherT> Matcher<ActualT>
+macro_rules! impl_each_matcher {
+    ($( ( [$($generics:tt)*] $ty:ty ) ),* $(,)?) => {
+        $(
+            impl<ElementT: Debug, MatcherT: Matcher<ElementT>, $($generics)*> Matcher<$ty>
+                for EachMatcher<MatcherT>
+            {
+                fn matches(&self, actual: &$ty) -> MatcherResult {
+                    for element in actual {
+                        if self.inner.matches(element).is_no_match() {
+                            return MatcherResult::NoMatch;
+                        }
+                    }
+                    MatcherResult::Match
+                }
+
+                fn explain_match(&self, actual: &$ty) -> Description {
+                    let mut non_matching_elements = Vec::new();
+                    for (index, element) in actual.into_iter().enumerate() {
+                        if self.inner.matches(element).is_no_match() {
+                            non_matching_elements.push((index, element, self.inner.explain_match(element)));
+                        }
+                    }
+                    self.format_explanation(non_matching_elements)
+                }
+
+                fn describe(&self, matcher_result: MatcherResult) -> Description {
+                    self.describe_impl(matcher_result)
+                }
+            }
+        )*
+    };
+}
+
+impl_each_matcher!(
+    ([] [ElementT]),
+    ([const N: usize] [ElementT; N]),
+    ([] Vec<ElementT>),
+    ([] std::collections::VecDeque<ElementT>),
+    ([] std::collections::LinkedList<ElementT>),
+    ([] std::collections::BTreeSet<ElementT>),
+    ([] std::collections::BinaryHeap<ElementT>),
+    ([S: Debug] std::collections::HashSet<ElementT, S>),
+    ([] Option<ElementT>),
+    ([E: Debug] Result<ElementT, E>),
+);
+
+impl<'b, ElementT: Debug, ActualT: Debug + ?Sized, MatcherT> Matcher<&'b ActualT>
     for EachMatcher<MatcherT>
 where
-    ActualT: IntoIterator<Item = ElementT>,
+    &'b ActualT: IntoIterator<Item = ElementT>,
     MatcherT: Matcher<ElementT>,
 {
-    fn matches(&self, actual: ActualT) -> MatcherResult {
-        for element in actual {
-            if self.inner.matches(element).is_no_match() {
+    fn matches(&self, actual: &&'b ActualT) -> MatcherResult {
+        for element in *actual {
+            if self.inner.matches(&element).is_no_match() {
                 return MatcherResult::NoMatch;
             }
         }
         MatcherResult::Match
     }
 
-    fn explain_match(&self, actual: ActualT) -> Description {
+    fn explain_match(&self, actual: &&'b ActualT) -> Description {
         let mut non_matching_elements = Vec::new();
-        for (index, element) in actual.into_iter().enumerate() {
-            if self.inner.matches(element).is_no_match() {
-                non_matching_elements.push((index, element, self.inner.explain_match(element)));
+        for (index, element) in (*actual).into_iter().enumerate() {
+            if self.inner.matches(&element).is_no_match() {
+                let explanation = self.inner.explain_match(&element);
+                non_matching_elements.push((index, element, explanation));
             }
         }
+        self.format_explanation(non_matching_elements)
+    }
+
+    fn describe(&self, matcher_result: MatcherResult) -> Description {
+        self.describe_impl(matcher_result)
+    }
+}
+
+impl<MatcherT> EachMatcher<MatcherT> {
+    fn format_explanation<ElementT: Debug, TargetT: Debug + ?Sized>(
+        &self,
+        mut non_matching_elements: Vec<(usize, ElementT, Description)>,
+    ) -> Description
+    where
+        MatcherT: Matcher<TargetT>,
+    {
         if non_matching_elements.is_empty() {
             return format!("whose each element {}", self.inner.describe(MatcherResult::Match))
                 .into();
@@ -96,13 +159,16 @@ where
             .join(", ");
         let element_explanations = non_matching_elements
             .iter()
-            .map(|&(_, element, ref explanation)| format!("{element:?}, {explanation}"))
+            .map(|(_, element, explanation)| format!("{element:?}, {explanation}"))
             .collect::<Description>()
             .indent();
         format!("whose elements {failed_indexes} don't match\n{element_explanations}").into()
     }
 
-    fn describe(&self, matcher_result: MatcherResult) -> Description {
+    fn describe_impl<ElementT: Debug + ?Sized>(&self, matcher_result: MatcherResult) -> Description
+    where
+        MatcherT: Matcher<ElementT>,
+    {
         match matcher_result {
             MatcherResult::Match => {
                 format!("only contains elements that {}", self.inner.describe(MatcherResult::Match))

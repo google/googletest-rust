@@ -228,10 +228,10 @@ where
     }
 
     // Verify the exit status
-    match status_matcher.matches(output.status) {
+    match status_matcher.matches(&output.status) {
         crate::matcher::MatcherResult::Match => {
             // Status matched. Now check the output.
-            match output_matcher.matches(&raw_stderr) {
+            match output_matcher.matches(&&*raw_stderr) {
                 crate::matcher::MatcherResult::Match => Ok(()),
                 crate::matcher::MatcherResult::NoMatch => {
                     let mut msg = "Death test died but output did not match.\n".to_string();

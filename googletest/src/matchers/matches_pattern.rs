@@ -345,8 +345,8 @@ pub mod internal {
     }
 
     impl<'a, T: Debug> Matcher<&'a T> for PatternOnlyMatcher<T> {
-        fn matches(&self, actual: &'a T) -> crate::matcher::MatcherResult {
-            (self.matcher_function)(actual).into()
+        fn matches(&self, actual: &&'a T) -> crate::matcher::MatcherResult {
+            (self.matcher_function)(*actual).into()
         }
 
         fn describe(
@@ -360,9 +360,9 @@ pub mod internal {
         }
     }
 
-    impl<T: Debug + Copy> Matcher<T> for PatternOnlyMatcher<T> {
-        fn matches(&self, actual: T) -> crate::matcher::MatcherResult {
-            (self.matcher_function)(&actual).into()
+    impl<T: Debug> Matcher<T> for PatternOnlyMatcher<T> {
+        fn matches(&self, actual: &T) -> crate::matcher::MatcherResult {
+            (self.matcher_function)(actual).into()
         }
 
         fn describe(
@@ -400,7 +400,7 @@ pub mod internal {
     where
         M: Matcher<&'a T>,
     {
-        fn matches(&self, actual: &'a T) -> crate::matcher::MatcherResult {
+        fn matches(&self, actual: &&'a T) -> crate::matcher::MatcherResult {
             self.matcher.matches(actual)
         }
 
@@ -411,16 +411,16 @@ pub mod internal {
             self.matcher.describe(matcher_result)
         }
 
-        fn explain_match(&self, actual: &'a T) -> crate::description::Description {
+        fn explain_match(&self, actual: &&'a T) -> crate::description::Description {
             self.matcher.explain_match(actual)
         }
     }
 
-    impl<T: Debug + Copy, M> Matcher<T> for CompileAssertAndMatch<T, M>
+    impl<T: Debug, M> Matcher<T> for CompileAssertAndMatch<T, M>
     where
         M: Matcher<T>,
     {
-        fn matches(&self, actual: T) -> crate::matcher::MatcherResult {
+        fn matches(&self, actual: &T) -> crate::matcher::MatcherResult {
             self.matcher.matches(actual)
         }
 
@@ -431,7 +431,7 @@ pub mod internal {
             self.matcher.describe(matcher_result)
         }
 
-        fn explain_match(&self, actual: T) -> crate::description::Description {
+        fn explain_match(&self, actual: &T) -> crate::description::Description {
             self.matcher.explain_match(actual)
         }
     }
