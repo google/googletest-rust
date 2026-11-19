@@ -14,9 +14,8 @@
 
 use std::{
     any::{Any, TypeId},
-    collections::HashMap,
     ops::{Deref, DerefMut},
-    sync::{Mutex, OnceLock},
+    sync::Mutex,
 };
 
 /// Interface for structure to be set up and torn down as part of a test.
@@ -114,20 +113,99 @@ pub trait StaticFixture: Sized + Sync + Send {
     /// using this fixture. If this method returns an `Err(...)`, then every
     /// test case using this fixture is not evaluated and automatically fails.
     fn set_up_once() -> crate::Result<Self>;
+
+    /// Clean up method of the `StaticFixture`.
+    ///
+    /// This method is called at most once, when the test harness calls
+    /// `tear_down_static_fixtures` after the last test case. It is not
+    /// called if `set_up_once` returned an `Err(...)`.
+    ///
+    /// To report a failure, use a non-fatal assertion such as `expect_that!`
+    /// or [`and_log_failure`](crate::GoogleTestSupport::and_log_failure). A
+    /// panic is not caught.
+    ///
+    /// The fixture is not dropped, since test cases hold `&'static`
+    /// references to it.
+    ///
+    /// Test harnesses which never call `tear_down_static_fixtures`, such as
+    /// the default Rust test harness, never call this method.
+    fn tear_down_once(&self) {}
+}
+
+/// A `StaticFixture` which has been set up, with its type erased.
+struct StaticFixtureEntry {
+    type_id: TypeId,
+    /// The leaked `crate::Result<F>` returned by `F::set_up_once`.
+    set_up_result: &'static (dyn Any + Sync + Send),
+    /// Calls `F::tear_down_once` on `set_up_result`.
+    tear_down_once: fn(&'static (dyn Any + Sync + Send)),
+}
+
+/// The `StaticFixture`s which have been set up, in the order of their set-up.
+static STATIC_FIXTURES: Mutex<Vec<StaticFixtureEntry>> = Mutex::new(Vec::new());
+
+fn downcast_static_fixture<F: StaticFixture + 'static>(
+    set_up_result: &'static (dyn Any + Sync + Send),
+) -> &'static crate::Result<F> {
+    set_up_result
+        .downcast_ref::<crate::Result<F>>()
+        .expect("Downcast failed. This is a bug in GoogleTest Rust")
+}
+
+fn tear_down_static_fixture<F: StaticFixture + 'static>(
+    set_up_result: &'static (dyn Any + Sync + Send),
+) {
+    // A fixture whose set-up failed has nothing to tear down.
+    if let Ok(fixture) = downcast_static_fixture::<F>(set_up_result) {
+        fixture.tear_down_once();
+    }
+}
+
+/// Calls [`StaticFixture::tear_down_once`] on every `StaticFixture` which has
+/// been set up, in the reverse order of their set-up.
+///
+/// This is intended for test harnesses, which should call it once after the
+/// last test case. The harness must be able to record non-fatal assertion
+/// failures outside of a test case, since that is how `tear_down_once` reports
+/// a failure.
+///
+/// The fixtures are forgotten afterwards: a test case which uses a
+/// `StaticFixture` after this call sets up a new instance.
+///
+/// A poisoned fixture list is not supported: this function panics if a
+/// `set_up_once` panicked.
+///
+/// **For internal use only. API stability is not guaranteed!**
+#[doc(hidden)]
+pub fn tear_down_static_fixtures() {
+    // The lock is released before the fixtures are torn down, so that
+    // `tear_down_once` may itself use a `StaticFixture`.
+    let fixtures = std::mem::take(&mut *STATIC_FIXTURES.lock().expect("no `set_up_once` panicked"));
+    for entry in fixtures.into_iter().rev() {
+        (entry.tear_down_once)(entry.set_up_result);
+    }
 }
 
 impl<F: StaticFixture + 'static> Fixture for &'static F {
     fn set_up() -> crate::Result<Self> {
-        static ONCE_FIXTURE_REPO: OnceLock<
-            Mutex<HashMap<TypeId, &'static (dyn Any + Sync + Send)>>,
-        > = OnceLock::new();
-        let mut map = ONCE_FIXTURE_REPO.get_or_init(|| Mutex::new(HashMap::new())).lock()?;
-        let any =
-            map.entry(TypeId::of::<F>()).or_insert_with(|| Box::leak(Box::new(F::set_up_once())));
-        match any.downcast_ref::<crate::Result<F>>() {
-            Some(Ok(fixture)) => Ok(fixture),
-            Some(Err(e)) => Err(e.clone()),
-            None => panic!("Downcast failed. This is a bug in GoogleTest Rust"),
+        let mut fixtures = STATIC_FIXTURES.lock()?;
+        let type_id = TypeId::of::<F>();
+        let set_up_result = match fixtures.iter().find(|entry| entry.type_id == type_id) {
+            Some(entry) => entry.set_up_result,
+            None => {
+                let set_up_result: &'static (dyn Any + Sync + Send) =
+                    Box::leak(Box::new(F::set_up_once()));
+                fixtures.push(StaticFixtureEntry {
+                    type_id,
+                    set_up_result,
+                    tear_down_once: tear_down_static_fixture::<F>,
+                });
+                set_up_result
+            }
+        };
+        match downcast_static_fixture::<F>(set_up_result) {
+            Ok(fixture) => Ok(fixture),
+            Err(e) => Err(e.clone()),
         }
     }
 
