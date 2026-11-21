@@ -83,7 +83,7 @@ pub mod internal {
                         MatcherResult::Match => {},
                         MatcherResult::NoMatch => {
                             explanation = explanation
-                                .text(format!(concat!("Element #", $field_number, " is {:?},"),
+                                .text(::core::format!(concat!("Element #", $field_number, " is {:?},"),
                                     actual.$field_number))
                                 .nested(self.$field_number.explain_match(actual.$field_number));
                         }
@@ -133,7 +133,7 @@ pub mod internal {
                         MatcherResult::Match => {},
                         MatcherResult::NoMatch => {
                             explanation = explanation
-                                .text(format!(
+                                .text(::core::format!(
                                     concat!(
                                         "Element #",
                                         $field_number,
