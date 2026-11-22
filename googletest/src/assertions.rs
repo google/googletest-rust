@@ -23,10 +23,9 @@
 /// `Result::Err(TestAssertionFailure)` if it does not. The caller must then
 /// decide how to handle the `Err` variant. It has a few options:
 ///
-///  * Abort the current function with the `?` operator. This requires that the
-///    function return a suitable `Result`.
-///  * Log the test failure and continue by calling the method
-///    `and_log_failure`.
+///  * Abort the current function with the `?` operator. This requires that the function return a
+///    suitable `Result`.
+///  * Log the test failure and continue by calling the method `and_log_failure`.
 ///
 /// Of course, one can also use all other standard methods on `Result`.
 ///
@@ -62,10 +61,10 @@
 /// ```
 ///
 /// This macro has special support for matching against container. Namely:
-///   * `verify_that!(actual, [m1, m2, ...])` is equivalent to
-///     `verify_that!(actual, elements_are![m1, m2, ...])`
-///   * `verify_that!(actual, {m1, m2, ...})` is equivalent to
-///     `verify_that!(actual, unordered_elements_are![m1, m2, ...])`
+///   * `verify_that!(actual, [m1, m2, ...])` is equivalent to `verify_that!(actual,
+///     elements_are![m1, m2, ...])`
+///   * `verify_that!(actual, {m1, m2, ...})` is equivalent to `verify_that!(actual,
+///     unordered_elements_are![m1, m2, ...])`
 ///
 /// ## Matching against tuples
 ///
@@ -440,8 +439,8 @@ pub use add_failure_at;
 /// Evaluates to `Result::Ok(())` if the condition is true and
 /// `Result::Err(TestAssertionFailure)` if it evaluates to false. The caller
 /// must then decide how to handle the `Err` variant. It has a few options:
-///   * Abort the current function with the `?` operator. This requires that the
-///     function return a suitable `Result`.
+///   * Abort the current function with the `?` operator. This requires that the function return a
+///     suitable `Result`.
 ///   * Log the failure and continue by calling the method `and_log_failure`.
 ///
 /// Of course, one can also use all other standard methods on `Result`.
@@ -589,8 +588,8 @@ pub use assert_true;
 /// Evaluates to `Result::Ok(())` if the condition is false and
 /// `Result::Err(TestAssertionFailure)` if it evaluates to true. The caller
 /// must then decide how to handle the `Err` variant. It has a few options:
-///   * Abort the current function with the `?` operator. This requires that the
-///     function return a suitable `Result`.
+///   * Abort the current function with the `?` operator. This requires that the function return a
+///     suitable `Result`.
 ///   * Log the failure and continue by calling the method `and_log_failure`.
 ///
 /// Of course, one can also use all other standard methods on `Result`.
@@ -737,10 +736,9 @@ pub use assert_false;
 /// Evaluates to `Result::Ok(())` if they are equal and
 /// `Result::Err(TestAssertionFailure)` if they are not. The caller must then
 /// decide how to handle the `Err` variant. It has a few options:
-///  * Abort the current function with the `?` operator. This requires that the
-///    function return a suitable `Result`.
-///  * Log the test failure and continue by calling the method
-///    `and_log_failure`.
+///  * Abort the current function with the `?` operator. This requires that the function return a
+///    suitable `Result`.
+///  * Log the test failure and continue by calling the method `and_log_failure`.
 ///
 /// Of course, one can also use all other standard methods on `Result`.
 ///
@@ -759,10 +757,10 @@ pub use assert_false;
 /// ```
 ///
 /// This macro has special support for matching against container. Namely:
-///  * `verify_eq!(actual, [e1, e2, ...])` is equivalent to
-///    `verify_that!(actual, elements_are![eq(e1), eq(e2), ...])`
-///  * `verify_eq!(actual, {e1, e2, ...})` is equivalent to
-///    `verify_that!(actual, unordered_elements_are![eq(e1), eq(e2), ...])`
+///  * `verify_eq!(actual, [e1, e2, ...])` is equivalent to `verify_that!(actual,
+///    elements_are![eq(e1), eq(e2), ...])`
+///  * `verify_eq!(actual, {e1, e2, ...})` is equivalent to `verify_that!(actual,
+///    unordered_elements_are![eq(e1), eq(e2), ...])`
 #[macro_export]
 macro_rules! verify_eq {
     // Specialization for ordered sequences of tuples:
@@ -832,10 +830,8 @@ pub use verify_eq;
 /// ```
 ///
 /// This macro has special support for matching against container. Namely:
-///  * `expect_eq!(actual, [e1, e2, ...])` for checking actual contains "e1, e2,
-///    ..." in order.
-///  * `expect_eq!(actual, {e1, e2, ...})` for checking actual contains "e1, e2,
-///    ..." in any order.
+///  * `expect_eq!(actual, [e1, e2, ...])` for checking actual contains "e1, e2, ..." in order.
+///  * `expect_eq!(actual, {e1, e2, ...})` for checking actual contains "e1, e2, ..." in any order.
 ///
 /// One may include formatted arguments in the failure message:
 ///```ignore
@@ -882,8 +878,8 @@ pub use expect_eq;
 /// Evaluates to `Result::Ok(())` if the result is Ok and
 /// `Result::Err(TestAssertionFailure)` if it evaluates to Err. The caller
 /// must then decide how to handle the `Err` variant. It has a few options:
-///   * Abort the current function with the `?` operator. This requires that the
-///     function return a suitable `Result`.
+///   * Abort the current function with the `?` operator. This requires that the function return a
+///     suitable `Result`.
 ///   * Log the failure and continue by calling the method `and_log_failure`.
 ///
 /// Of course, one can also use all other standard methods on `Result`.
@@ -989,10 +985,9 @@ pub use assert_ok;
 /// Evaluates to `Result::Ok(())` if they are not equal and
 /// `Result::Err(TestAssertionFailure)` if they are equal. The caller must then
 /// decide how to handle the `Err` variant. It has a few options:
-///  * Abort the current function with the `?` operator. This requires that the
-///    function return a suitable `Result`.
-///  * Log the test failure and continue by calling the method
-///    `and_log_failure`.
+///  * Abort the current function with the `?` operator. This requires that the function return a
+///    suitable `Result`.
+///  * Log the test failure and continue by calling the method `and_log_failure`.
 ///
 /// Of course, one can also use all other standard methods on `Result`.
 ///
@@ -1068,10 +1063,9 @@ pub use expect_ne;
 /// and `Result::Err(TestAssertionFailure)` if it is greater or equal. The
 /// caller must then decide how to handle the `Err` variant. It has a few
 /// options:
-///  * Abort the current function with the `?` operator. This requires that the
-///    function return a suitable `Result`.
-///  * Log the test failure and continue by calling the method
-///    `and_log_failure`.
+///  * Abort the current function with the `?` operator. This requires that the function return a
+///    suitable `Result`.
+///  * Log the test failure and continue by calling the method `and_log_failure`.
 ///
 /// Of course, one can also use all other standard methods on `Result`.
 ///
@@ -1147,10 +1141,9 @@ pub use expect_lt;
 /// the second and `Result::Err(TestAssertionFailure)` if it is greater. The
 /// caller must then decide how to handle the `Err` variant. It has a few
 /// options:
-///  * Abort the current function with the `?` operator. This requires that the
-///    function return a suitable `Result`.
-///  * Log the test failure and continue by calling the method
-///    `and_log_failure`.
+///  * Abort the current function with the `?` operator. This requires that the function return a
+///    suitable `Result`.
+///  * Log the test failure and continue by calling the method `and_log_failure`.
 ///
 /// Of course, one can also use all other standard methods on `Result`.
 ///
@@ -1225,10 +1218,9 @@ pub use expect_le;
 /// the second and `Result::Err(TestAssertionFailure)` if it is not. The
 /// caller must then decide how to handle the `Err` variant. It has a few
 /// options:
-///  * Abort the current function with the `?` operator. This requires that the
-///    function return a suitable `Result`.
-///  * Log the test failure and continue by calling the method
-///    `and_log_failure`.
+///  * Abort the current function with the `?` operator. This requires that the function return a
+///    suitable `Result`.
+///  * Log the test failure and continue by calling the method `and_log_failure`.
 ///
 /// Of course, one can also use all other standard methods on `Result`.
 ///
@@ -1304,10 +1296,9 @@ pub use expect_gt;
 /// to the second and `Result::Err(TestAssertionFailure)` if it is not. The
 /// caller must then decide how to handle the `Err` variant. It has a few
 /// options:
-///  * Abort the current function with the `?` operator. This requires that the
-///    function return a suitable `Result`.
-///  * Log the test failure and continue by calling the method
-///    `and_log_failure`.
+///  * Abort the current function with the `?` operator. This requires that the function return a
+///    suitable `Result`.
+///  * Log the test failure and continue by calling the method `and_log_failure`.
 ///
 /// Of course, one can also use all other standard methods on `Result`.
 ///
@@ -1391,10 +1382,9 @@ pub use expect_ge;
 /// to the second and `Result::Err(TestAssertionFailure)` if it is not. The
 /// caller must then decide how to handle the `Err` variant. It has a few
 /// options:
-///  * Abort the current function with the `?` operator. This requires that the
-///    function return a suitable `Result`.
-///  * Log the test failure and continue by calling the method
-///    `and_log_failure`.
+///  * Abort the current function with the `?` operator. This requires that the function return a
+///    suitable `Result`.
+///  * Log the test failure and continue by calling the method `and_log_failure`.
 ///
 /// Of course, one can also use all other standard methods on `Result`.
 ///
@@ -1479,10 +1469,9 @@ pub use expect_float_eq;
 /// to the second and `Result::Err(TestAssertionFailure)` if it is not. The
 /// caller must then decide how to handle the `Err` variant. It has a few
 /// options:
-///  * Abort the current function with the `?` operator. This requires that the
-///    function return a suitable `Result`.
-///  * Log the test failure and continue by calling the method
-///    `and_log_failure`.
+///  * Abort the current function with the `?` operator. This requires that the function return a
+///    suitable `Result`.
+///  * Log the test failure and continue by calling the method `and_log_failure`.
 ///
 /// Of course, one can also use all other standard methods on `Result`.
 ///
@@ -1933,6 +1922,80 @@ pub mod internal {
     pub fn create_fail_result(message: String) -> crate::Result<()> {
         Err(crate::internal::test_outcome::TestAssertionFailure::create(message))
     }
+
+    /// Checks that `result` (from `std::panic::catch_unwind`) is `Err(_)`,
+    /// returning a [`TestAssertionFailure`] if the expression did not panic.
+    ///
+    /// **For internal use only. API stability is not guaranteed!**
+    #[must_use = "The assertion result must be evaluated to affect the test result."]
+    #[track_caller]
+    pub fn check_panic(
+        result: std::thread::Result<()>,
+        actual_expr: &'static str,
+    ) -> crate::Result<()> {
+        match result {
+            Ok(()) => Err(TestAssertionFailure::create(format!(
+                "\
+Value of: {actual_expr}
+Expected: panics
+Actual: did not panic"
+            ))),
+            Err(_) => Ok(()),
+        }
+    }
+
+    /// Checks that `result` (from `std::panic::catch_unwind`) is `Err(payload)`
+    /// with a `&'static str` or `String` message matching `message_matcher`.
+    ///
+    /// **For internal use only. API stability is not guaranteed!**
+    #[must_use = "The assertion result must be evaluated to affect the test result."]
+    #[track_caller]
+    pub fn check_panic_with_message<M>(
+        result: std::thread::Result<()>,
+        message_matcher: M,
+        actual_expr: &'static str,
+    ) -> crate::Result<()>
+    where
+        for<'a> M: Matcher<&'a str>,
+    {
+        match result {
+            Ok(()) => Err(TestAssertionFailure::create(format!(
+                "\
+Value of: {actual_expr}
+Expected: panics with message which {}
+Actual: did not panic",
+                message_matcher.describe(MatcherResult::Match)
+            ))),
+            Err(payload) => {
+                let msg = if let Some(s) = payload.downcast_ref::<&'static str>() {
+                    Some(*s)
+                } else {
+                    payload.downcast_ref::<String>().map(String::as_str)
+                };
+                match msg {
+                    Some(msg) => match message_matcher.matches(msg) {
+                        MatcherResult::Match => Ok(()),
+                        MatcherResult::NoMatch => Err(TestAssertionFailure::create(format!(
+                            "\
+Value of: {actual_expr}
+Expected: panics with message which {}
+Actual: panicked with {msg:?},
+{}",
+                            message_matcher.describe(MatcherResult::Match),
+                            message_matcher.explain_match(msg).indent(),
+                        ))),
+                    },
+                    None => Err(TestAssertionFailure::create(format!(
+                        "\
+Value of: {actual_expr}
+Expected: panics with message which {}
+Actual: panicked with a non-string payload",
+                        message_matcher.describe(MatcherResult::Match)
+                    ))),
+                }
+            }
+        }
+    }
 }
 
 /// Asserts that `expr` causes the process to exit, with the exit status
@@ -1961,11 +2024,11 @@ pub mod internal {
 ///
 /// The macro tracks which test is currently running and which death test
 /// expression to execute via thread-local state. Therefore:
-/// * **Spawned threads:** Running `verify_exit!` inside a spawned thread is not
-///   supported and will fail to find the test name, resulting in an error.
-/// * **Nested death tests:** Only the outer `verify_exit!` matches and executes
-///   its block in the spawned child process. Any nested `verify_exit!`
-///   expressions inside the outer block will be skipped.
+/// * **Spawned threads:** Running `verify_exit!` inside a spawned thread is not supported and will
+///   fail to find the test name, resulting in an error.
+/// * **Nested death tests:** Only the outer `verify_exit!` matches and executes its block in the
+///   spawned child process. Any nested `verify_exit!` expressions inside the outer block will be
+///   skipped.
 ///
 /// Example:
 /// ```
@@ -2095,6 +2158,100 @@ macro_rules! expect_death {
     };
 }
 pub use expect_death;
+
+/// Asserts that `expr` panics (via unwinding), optionally checking that the
+/// panic message matches `message_matcher`.
+///
+/// Evaluates to `Result::Ok(())` if satisfied and
+/// `Result::Err(TestAssertionFailure)` otherwise.
+///
+/// Note that this macro catches unwinding panics via [`std::panic::catch_unwind`]
+/// (wrapped in [`std::panic::AssertUnwindSafe`]). It cannot catch process aborts
+/// (such as when compiled with `panic = "abort"` or `std::process::abort()`);
+/// use [`verify_death!`] for subprocess death tests instead.
+///
+/// Example:
+/// ```
+/// # use googletest::prelude::*;
+/// # fn should_pass() -> Result<()> {
+/// verify_panic!(panic!("something went wrong"))?;
+/// verify_panic!(panic!("something went wrong"), contains_substring("went wrong"))?;
+/// # Ok(())
+/// # }
+/// # should_pass().unwrap();
+/// ```
+#[macro_export]
+macro_rules! verify_panic {
+    ($expr:expr $(,)?) => {{
+        $crate::assertions::internal::check_panic(
+            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                #[allow(unreachable_code)]
+                #[allow(clippy::diverging_sub_expression)]
+                {
+                    let _ = { $expr };
+                }
+            })),
+            stringify!($expr),
+        )
+    }};
+    ($expr:expr, $message_matcher:expr $(,)?) => {{
+        $crate::assertions::internal::check_panic_with_message(
+            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                #[allow(unreachable_code)]
+                #[allow(clippy::diverging_sub_expression)]
+                {
+                    let _ = { $expr };
+                }
+            })),
+            $message_matcher,
+            stringify!($expr),
+        )
+    }};
+    ($expr:expr, $message_matcher:expr, $($format_args:expr),+ $(,)?) => {
+        $crate::GoogleTestSupport::with_failure_message(
+            $crate::verify_panic!($expr, $message_matcher),
+            || format!($($format_args),*),
+        )
+    };
+}
+pub use verify_panic;
+
+/// Like [`verify_panic!`], but logs the failure and continues execution.
+///
+/// This is a **non-fatal** failure. The test continues execution even after the
+/// macro execution.
+///
+/// This can only be invoked inside tests with the
+/// [`gtest`][crate::gtest] attribute. The failure must be generated
+/// in the same thread as that running the test itself.
+///
+/// Example:
+/// ```
+/// # use googletest::prelude::*;
+/// # /* Must be run inside a #[gtest] context
+/// #[gtest]
+/// fn test() {
+///     expect_panic!(panic!("something went wrong"));
+///     expect_panic!(panic!("something went wrong"), contains_substring("went wrong"));
+/// }
+/// # */
+/// ```
+#[macro_export]
+macro_rules! expect_panic {
+    ($expr:expr $(,)?) => {
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_panic!($expr))
+    };
+    ($expr:expr, $message_matcher:expr $(,)?) => {
+        $crate::GoogleTestSupport::and_log_failure($crate::verify_panic!($expr, $message_matcher))
+    };
+    ($expr:expr, $message_matcher:expr, $($format_args:expr),+ $(,)?) => {
+        $crate::GoogleTestSupport::and_log_failure_with_message(
+            $crate::verify_panic!($expr, $message_matcher),
+            || format!($($format_args),*),
+        )
+    };
+}
+pub use expect_panic;
 
 #[cfg(test)]
 mod tests {

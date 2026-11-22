@@ -427,3 +427,160 @@ mod verify_pred {
         )
     }
 }
+
+mod panic_assertions {
+    use googletest::internal::test_outcome::TestOutcome;
+    use googletest::prelude::*;
+    use indoc::indoc;
+
+    #[test]
+    fn verify_panic_one_arg_passes_on_static_str_panic() -> Result<()> {
+        verify_panic!(panic!("something went wrong"))
+    }
+
+    #[test]
+    fn verify_panic_one_arg_passes_on_string_panic() -> Result<()> {
+        verify_panic!(panic!("something went wrong: {}", 42))
+    }
+
+    #[test]
+    fn verify_panic_one_arg_passes_on_non_string_panic() -> Result<()> {
+        verify_panic!(std::panic::panic_any(12345))
+    }
+
+    #[test]
+    fn verify_panic_one_arg_supports_trailing_comma() -> Result<()> {
+        verify_panic!(panic!("trailing comma"),)
+    }
+
+    #[test]
+    fn verify_panic_one_arg_fails_when_expr_does_not_panic() -> Result<()> {
+        let res = verify_panic!(1 + 1);
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {"
+                Value of: 1 + 1
+                Expected: panics
+                Actual: did not panic
+                  at"
+            })))
+        )
+    }
+
+    #[test]
+    fn verify_panic_two_args_matches_static_str_panic() -> Result<()> {
+        verify_panic!(panic!("taco"), eq("taco"))?;
+        verify_panic!(panic!("spicy taco"), contains_substring("taco"),)
+    }
+
+    #[test]
+    fn verify_panic_two_args_matches_string_panic() -> Result<()> {
+        let count = 3;
+        verify_panic!(panic!("ate {count} tacos"), contains_substring("3 tacos"))
+    }
+
+    #[test]
+    fn verify_panic_two_args_fails_when_expr_does_not_panic() -> Result<()> {
+        let res = verify_panic!(1 + 1, contains_substring("taco"));
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {r#"
+                Value of: 1 + 1
+                Expected: panics with message which contains a substring "taco"
+                Actual: did not panic
+                  at"#
+            })))
+        )
+    }
+
+    #[test]
+    fn verify_panic_two_args_fails_when_message_does_not_match() -> Result<()> {
+        let res = verify_panic!(panic!("burrito"), contains_substring("taco"));
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {r#"
+                Value of: panic!("burrito")
+                Expected: panics with message which contains a substring "taco"
+                Actual: panicked with "burrito",
+                  which does not contain a substring "taco"
+                  at"#
+            })))
+        )
+    }
+
+    #[test]
+    fn verify_panic_two_args_fails_when_payload_is_not_string() -> Result<()> {
+        let res = verify_panic!(std::panic::panic_any(42), anything());
+        verify_that!(
+            res,
+            err(displays_as(contains_substring(indoc! {"
+                Value of: std::panic::panic_any(42)
+                Expected: panics with message which is anything
+                Actual: panicked with a non-string payload
+                  at"
+            })))
+        )
+    }
+
+    #[test]
+    fn verify_panic_allows_non_unwind_safe_mut_capture() -> Result<()> {
+        let mut counter = 0;
+        let mut cell = std::cell::RefCell::new(10);
+        verify_panic!(
+            {
+                counter += 1;
+                *cell.borrow_mut() += 5;
+                panic!("failed after mutating to {counter}");
+            },
+            contains_substring("mutating to 1")
+        )?;
+        verify_eq!(counter, 1)?;
+        verify_eq!(*cell.borrow(), 15)
+    }
+
+    #[test]
+    fn verify_panic_supports_custom_failure_message() -> Result<()> {
+        let res = verify_panic!(1 + 1, contains_substring("taco"), "extra context: {}", 99);
+        verify_that!(
+            res,
+            err(displays_as(all![
+                contains_substring("Actual: did not panic"),
+                contains_substring("extra context: 99"),
+            ]))
+        )
+    }
+
+    #[gtest]
+    fn expect_panic_passes_when_expr_panics() {
+        expect_panic!(panic!("expected panic"));
+        expect_panic!(panic!("expected panic with taco"), contains_substring("taco"));
+        expect_panic!(
+            panic!("expected panic with custom msg"),
+            contains_substring("custom msg"),
+            "should not fail: {}",
+            123,
+        );
+    }
+
+    #[test]
+    fn expect_panic_logs_failure_and_continues_on_no_panic() -> Result<()> {
+        TestOutcome::init_current_test_outcome();
+        let mut continued = false;
+        expect_panic!(1 + 1);
+        continued = true;
+        let outcome = TestOutcome::close_current_test_outcome::<&str>(Ok(()));
+        verify_true!(continued)?;
+        verify_that!(outcome, err(anything()))
+    }
+
+    #[test]
+    fn expect_panic_with_custom_format_args_logs_failure_and_continues() -> Result<()> {
+        TestOutcome::init_current_test_outcome();
+        let mut continued = false;
+        expect_panic!(panic!("burrito"), contains_substring("taco"), "custom failure: {}", 42);
+        continued = true;
+        let outcome = TestOutcome::close_current_test_outcome::<&str>(Ok(()));
+        verify_true!(continued)?;
+        verify_that!(outcome, err(anything()))
+    }
+}
