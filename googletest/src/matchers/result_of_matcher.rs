@@ -115,9 +115,11 @@ pub mod internal {
 
         fn explain_match(&self, actual: I) -> Description {
             let actual_result = (self.callable)(actual);
-            Description::new()
-                .text(format!("which, results into {actual_result:?}",))
-                .nested(self.describe(self.matches(actual)))
+            Description::new().text(format!("which, results into {actual_result:?}")).nested(
+                Description::new()
+                    .text(format!("by applying {},", self.callable_description))
+                    .nested(self.inner_matcher.explain_match(actual_result)),
+            )
         }
     }
 
@@ -154,9 +156,11 @@ pub mod internal {
 
         fn explain_match(&self, actual: I) -> Description {
             let actual_result = (self.callable)(actual);
-            Description::new()
-                .text(format!("which, results into {actual_result:?}",))
-                .nested(self.describe(self.matches(actual)))
+            Description::new().text(format!("which, results into {actual_result:?}")).nested(
+                Description::new()
+                    .text(format!("by applying {},", self.callable_description))
+                    .nested(self.inner_matcher.explain_match(&actual_result)),
+            )
         }
     }
 }
@@ -193,7 +197,7 @@ mod tests {
                 Actual: 0,
                   which, results into -1
                     by applying |value| value - 1,
-                      isn't equal to 2
+                      which isn't equal to 2
                 "
             ))))
         )
@@ -212,7 +216,7 @@ mod tests {
                 Actual: 0,
                   which, results into -1
                     by applying |value| { value - 1 },
-                      isn't equal to 2
+                      which isn't equal to 2
                 "
             ))))
         )
@@ -241,7 +245,7 @@ mod tests {
                 Actual: 0,
                   which, results into -2
                     by applying |value| { let dec = value - 1; let inc = dec + 1; inc - 2 },
-                      isn't equal to 2
+                      which isn't equal to 2
                 "
             ))))
         )
@@ -263,7 +267,7 @@ mod tests {
                 Actual: 0,
                   which, results into -1
                     by applying dec_by_one,
-                      isn't equal to 2
+                      which isn't equal to 2
                 "
             ))))
         )
@@ -300,7 +304,7 @@ mod tests {
                 Actual: "world",
                   which, results into "WORLD"
                     by applying |s: &str| s.to_uppercase(),
-                      isn't equal to "HELLO""#
+                      which isn't equal to "HELLO""#
             ))))
         )
     }
@@ -319,7 +323,7 @@ mod tests {
             Actual: "world",
               which, results into "WORLD"
                 by applying |s: &str| { s.to_uppercase() },
-                  isn't equal to "HELLO"
+                  which isn't equal to "HELLO"
             "#
             ))))
         )
@@ -341,7 +345,7 @@ mod tests {
             Actual: "world",
               which, results into "WORLD"
                 by applying to_upper_case,
-                  isn't equal to "HELLO"
+                  which isn't equal to "HELLO"
             "#
             ))))
         )
@@ -361,7 +365,7 @@ mod tests {
                 Actual: "world",
                   which, results into "WORLD"
                     by applying to_upper_case,
-                      isn't equal to "HELLO"
+                      which isn't equal to "HELLO"
             "#
             ))))
         )
@@ -380,7 +384,7 @@ mod tests {
                 Actual: "world",
                   which, results into "WORLD"
                     by applying str::to_uppercase,
-                      isn't equal to "HELLO"
+                      which isn't equal to "HELLO"
             "#
             ))))
         )
@@ -402,7 +406,7 @@ mod tests {
             Actual: "world",
               which, results into "WORLD"
                 by applying upper_case(),
-                  isn't equal to "HELLO"
+                  which isn't equal to "HELLO"
             "#
             ))))
         )
