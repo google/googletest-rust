@@ -314,4 +314,17 @@ mod tests {
     #[test]
     #[should_panic(expected = "See failure output above")]
     fn failing_teardown_causes_test_failure(_: &FailingTearDown) {}
+
+    #[test]
+    fn failing_teardown_while_unwinding_keeps_original_panic() -> Result<()> {
+        // Before the fix, the teardown error panicked a second time while
+        // unwinding, which aborts the whole test binary.
+        let panic = std::panic::catch_unwind(|| {
+            let _fixture =
+                crate::__internal_macro_support::FixtureTearDownOnDrop::new(FailingTearDown);
+            panic!("test body panicked");
+        })
+        .unwrap_err();
+        verify_eq!(panic.downcast_ref::<&str>().copied(), Some("test body panicked"))
+    }
 }
