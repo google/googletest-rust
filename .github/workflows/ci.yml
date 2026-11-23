@@ -20,9 +20,6 @@ jobs:
   clippy:
     runs-on: ubuntu-latest
     name: clippy / ${{ matrix.toolchain }}
-    permissions:
-      contents: read
-      checks: write
     strategy:
       fail-fast: false
       matrix:
@@ -35,10 +32,7 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
       - name: cargo clippy
-        uses: actions-rs/clippy-check@b5b5f21f4797c02da247df37026fcd0a5024aa4d # v1.0.7
-        with:
-          args: --all-targets --all-features
-          token: ${{ secrets.GITHUB_TOKEN }}
+        run: cargo clippy --all-targets --all-features
 
   test-latest-deps:
     runs-on: ubuntu-latest
