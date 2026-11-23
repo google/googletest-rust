@@ -83,8 +83,7 @@ pub mod prelude {
 ///
 /// * A plain string literal: `scoped_trace!("checking default config");`
 /// * Positional arguments: `scoped_trace!("case {} with input {:?}", i, x);`
-/// * Named or inline captured arguments: `scoped_trace!("case {i}:
-///   input={x:?}");`
+/// * Named or inline captured arguments: `scoped_trace!("case {i}: input={x:?}");`
 ///
 /// # Usage and Scope
 ///

@@ -133,11 +133,11 @@ pub fn get_scoped_traces() -> Vec<TraceInfo> {
 /// yields `Poll::Pending`, or unwinds from a panic.
 ///
 /// This ensures that:
-/// 1. Any [`ScopedTraceGuard`] created or dropped during `poll()` (even after
-///    the task migrates across threads between `.await` points) operates on the
-///    task's own trace stack in the current thread's `TRACE_STACK`.
-/// 2. The outer/executor thread's prior `TRACE_STACK` is always restored as
-///    soon as `poll()` yields, returns, or panics.
+/// 1. Any [`ScopedTraceGuard`] created or dropped during `poll()` (even after the task migrates
+///    across threads between `.await` points) operates on the task's own trace stack in the current
+///    thread's `TRACE_STACK`.
+/// 2. The outer/executor thread's prior `TRACE_STACK` is always restored as soon as `poll()`
+///    yields, returns, or panics.
 struct TraceSwapGuard<'a>(&'a mut Option<Arc<TraceNode>>);
 
 impl<'a> TraceSwapGuard<'a> {
@@ -274,8 +274,7 @@ mod tests {
         let handle = std::thread::spawn(move || block_on(future));
         let traces_on_thread_b = handle.join().unwrap();
 
-        // 5. Assert that the trace from Thread A was successfully propagated to
-        //    Thread B.
+        // 5. Assert that the trace from Thread A was successfully propagated to Thread B.
         assert_eq!(traces_on_thread_b.len(), 1);
         assert_eq!(traces_on_thread_b[0].message, "Trace from Thread A");
     }
@@ -311,14 +310,12 @@ mod tests {
             (traces_during_resume, traces_after_guard_drop)
         }));
 
-        // 1. Poll once on Thread A: creates `_guard` and yields
-        //    `Poll::Pending`.
+        // 1. Poll once on Thread A: creates `_guard` and yields `Poll::Pending`.
         let mut cx = Context::from_waker(Waker::noop());
         assert!(matches!(fut.as_mut().poll(&mut cx), Poll::Pending));
         assert!(get_scoped_traces().is_empty());
 
-        // 2. Move the suspended future to Thread B and poll it to completion
-        //    there.
+        // 2. Move the suspended future to Thread B and poll it to completion there.
         let (traces_during_resume, traces_after_guard_drop, traces_on_thread_b_after_poll) =
             std::thread::spawn(move || {
                 let (during, after_drop) = block_on(fut);

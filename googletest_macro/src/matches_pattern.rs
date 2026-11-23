@@ -55,10 +55,8 @@ impl Parse for ParsedMatchPattern {
 
         // Use a TT-muncher (as opposed to parsing `Expr` or `Pat` or such)
         // since:
-        // - The `struct_name` can be a struct/enum type or literal value
-        //   (`true`, `1`, `&"test"`).
-        // - The braced part supports syntax that is not valid rust like `&Foo {
-        //   a: ref eq(1) }`.
+        // - The `struct_name` can be a struct/enum type or literal value (`true`, `1`, `&"test"`).
+        // - The braced part supports syntax that is not valid rust like `&Foo { a: ref eq(1) }`.
         input.step(|cursor| {
             let mut rest = *cursor;
 
@@ -338,8 +336,8 @@ fn parse_braced_pattern_args(
         };
 
         // Do a match to ensure:
-        // - Fields are exhaustively listed unless the pattern ended with `..`
-        //   and has any fields in the pattern.
+        // - Fields are exhaustively listed unless the pattern ended with `..` and has any fields in
+        //   the pattern.
         // - `UNDEFINED_SYMBOL { .. }` fails to compile.
         //
         // The requisite that some fields are in the pattern is there because

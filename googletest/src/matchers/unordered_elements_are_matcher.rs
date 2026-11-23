@@ -84,21 +84,19 @@
 ///
 /// The matcher proceeds in three stages:
 ///
-/// 1. It first checks whether the actual value is of the right size to possibly
-///    be matched by each of the given matchers. If not, then it immediately
-///    fails explaining that the size is incorrect.
+/// 1. It first checks whether the actual value is of the right size to possibly be matched by each
+///    of the given matchers. If not, then it immediately fails explaining that the size is
+///    incorrect.
 ///
-/// 2. It then checks whether each matcher matches at least one corresponding
-///    element in the actual container and each element in the actual container
-///    is matched by at least one matcher. If not, it fails with a message
-///    indicating which matcher respectively container elements had no
+/// 2. It then checks whether each matcher matches at least one corresponding element in the actual
+///    container and each element in the actual container is matched by at least one matcher. If
+///    not, it fails with a message indicating which matcher respectively container elements had no
 ///    counterparts.
 ///
-/// 3. Finally, it checks whether the mapping of matchers to corresponding
-///    actual elements is a 1-1 correspondence and fails if that is not the
-///    case. The failure message then shows the best matching it could find,
-///    including which matchers did not have corresponding unique elements in
-///    the container and which container elements had no corresponding matchers.
+/// 3. Finally, it checks whether the mapping of matchers to corresponding actual elements is a 1-1
+///    correspondence and fails if that is not the case. The failure message then shows the best
+///    matching it could find, including which matchers did not have corresponding unique elements
+///    in the container and which container elements had no corresponding matchers.
 ///
 /// [`IntoIterator`]: std::iter::IntoIterator
 /// [`Iterator`]: std::iter::Iterator
@@ -179,18 +177,16 @@ macro_rules! __unordered_elements_are {
 ///
 /// The matcher proceeds in three stages:
 ///
-/// 1. It first checks whether the actual value is large enough to possibly be
-///    matched by each of the given matchers. If not, then it immediately fails
-///    explaining that the size is too small.
+/// 1. It first checks whether the actual value is large enough to possibly be matched by each of
+///    the given matchers. If not, then it immediately fails explaining that the size is too small.
 ///
-/// 2. It then checks whether each matcher matches at least one corresponding
-///    element in the actual container and fails if that is not the case. The
-///    failure message indicates which matcher had no corresponding element.
+/// 2. It then checks whether each matcher matches at least one corresponding element in the actual
+///    container and fails if that is not the case. The failure message indicates which matcher had
+///    no corresponding element.
 ///
-/// 3. Finally, it checks whether the mapping of matchers to corresponding
-///    actual elements is 1-1 and fails if that is not the case. The failure
-///    message then shows the best matching it could find, including which
-///    matchers did not have corresponding unique elements in the container.
+/// 3. Finally, it checks whether the mapping of matchers to corresponding actual elements is 1-1
+///    and fails if that is not the case. The failure message then shows the best matching it could
+///    find, including which matchers did not have corresponding unique elements in the container.
 ///
 /// [`IntoIterator`]: std::iter::IntoIterator
 /// [`Iterator`]: std::iter::Iterator
@@ -270,18 +266,16 @@ macro_rules! __contains_each {
 ///
 /// The matcher proceeds in three stages:
 ///
-/// 1. It first checks whether the actual value is too large to possibly be
-///    matched by each of the given matchers. If so, it immediately fails
-///    explaining that the size is too large.
+/// 1. It first checks whether the actual value is too large to possibly be matched by each of the
+///    given matchers. If so, it immediately fails explaining that the size is too large.
 ///
-/// 2. It then checks whether each actual container element is matched by at
-///    least one matcher and fails if that is not the case. The failure message
-///    indicates which element had no corresponding matcher.
+/// 2. It then checks whether each actual container element is matched by at least one matcher and
+///    fails if that is not the case. The failure message indicates which element had no
+///    corresponding matcher.
 ///
-/// 3. Finally, it checks whether the mapping of elements to corresponding
-///    matchers is 1-1 and fails if that is not the case. The failure message
-///    then shows the best matching it could find, including which container
-///    elements did not have corresponding matchers.
+/// 3. Finally, it checks whether the mapping of elements to corresponding matchers is 1-1 and fails
+///    if that is not the case. The failure message then shows the best matching it could find,
+///    including which container elements did not have corresponding matchers.
 ///
 /// [`IntoIterator`]: std::iter::IntoIterator
 /// [`Iterator`]: std::iter::Iterator

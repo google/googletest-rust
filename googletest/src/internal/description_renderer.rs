@@ -34,10 +34,10 @@ pub(crate) const INDENTATION_SIZE: usize = 2;
 ///
 ///   * [`Default::default()`] constructs an empty `List`.
 ///   * [`Iterator::collect()`] on an [`Iterator`] of [`Block`].
-///   * [`Iterator::collect()`] on an [`Iterator`] of `String`, which produces a
-///     [`Block::Literal`] for each `String`.
-///   * [`Iterator::collect()`] on an [`Iterator`] of `List`, which produces a
-///     [`Block::Nested`] for each `List`.
+///   * [`Iterator::collect()`] on an [`Iterator`] of `String`, which produces a [`Block::Literal`]
+///     for each `String`.
+///   * [`Iterator::collect()`] on an [`Iterator`] of `List`, which produces a [`Block::Nested`] for
+///     each `List`.
 #[derive(Debug, Default)]
 pub(crate) struct List(Vec<Block>, Decoration);
 

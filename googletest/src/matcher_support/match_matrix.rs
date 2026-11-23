@@ -187,19 +187,17 @@ pub mod internal {
         // flow graph has the following edges:
         //   - An edge from source to each actual element node
         //   - An edge from each expected element node to sink
-        //   - An edge from each actual element node to each expected element
-        //     node, if the actual element matches the expected element, i.e.
+        //   - An edge from each actual element node to each expected element node, if the actual
+        //     element matches the expected element, i.e.
         //     `matches!(self.graph[actual_id][expected_id], Matches)`
         //
         // When the `try_augment(...)` method adds a flow, it sets
         // `actual_match[l] = Some(r)` for some nodes l and r. This
         // induces the following changes:
-        //   - The edges (source, l), (l, r), and (r, sink) are added to the
-        //     flow graph.
+        //   - The edges (source, l), (l, r), and (r, sink) are added to the flow graph.
         //   - The same three edges are removed from the residual flow graph.
-        //   - The reverse edges (l, source), (r, l), and (sink, r) are added to
-        //     the residual flow graph, which is a directional graph
-        //     representing unused flow capacity.
+        //   - The reverse edges (l, source), (r, l), and (sink, r) are added to the residual flow
+        //     graph, which is a directional graph representing unused flow capacity.
         //
         // When the method augments a flow (changing `actual_match[l]` from
         // `Some(r1)` to `Some(r2)`), this can be thought of as
