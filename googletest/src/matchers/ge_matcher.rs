@@ -38,9 +38,8 @@ use std::fmt::Debug;
 /// # should_fail().unwrap_err();
 /// ```
 ///
-/// In most cases the params neeed to be the same type or they need to be cast
-/// explicitly. This can be surprising when comparing integer types or
-/// references:
+/// In most cases the params need to be the same type or they need to be cast
+/// explicitly. This can be surprising when comparing different integer types:
 ///
 /// ```compile_fail
 /// # use googletest::prelude::*;
@@ -51,21 +50,14 @@ use std::fmt::Debug;
 /// # }
 /// ```
 ///
-/// ```compile_fail
-/// # use googletest::prelude::*;
-/// # fn should_not_compile() -> Result<()> {
-/// let actual: &u32 = &2;
-/// let expected: u32 = 0;
-/// verify_that!(actual, ge(expected))?; // Does not compile
-/// #     Ok(())
-/// # }
-/// ```
+/// References and values can be compared directly:
 ///
 /// ```
 /// # use googletest::prelude::*;
 /// # fn should_pass() -> Result<()> {
 /// let actual: &u32 = &2;
 /// let expected: u32 = 0;
+/// verify_that!(actual, ge(expected))?; // Compiles and passes
 /// verify_that!(actual, ge(&expected))?; // Compiles and passes
 /// #     Ok(())
 /// # }
@@ -83,11 +75,11 @@ pub struct GeMatcher<ExpectedT> {
     expected: ExpectedT,
 }
 
-impl<ActualT: Debug + PartialOrd<ExpectedT> + Copy, ExpectedT: Debug> Matcher<ActualT>
+impl<ActualT: Debug + PartialOrd<ExpectedT> + ?Sized, ExpectedT: Debug> Matcher<ActualT>
     for GeMatcher<ExpectedT>
 {
-    fn matches(&self, actual: ActualT) -> MatcherResult {
-        (actual >= self.expected).into()
+    fn matches(&self, actual: &ActualT) -> MatcherResult {
+        (actual >= &self.expected).into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -118,7 +110,7 @@ mod tests {
     #[test]
     fn ge_does_not_match_smaller_i32() -> Result<()> {
         let matcher = ge(10);
-        let result = matcher.matches(9);
+        let result = matcher.matches(&9);
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 
@@ -130,7 +122,7 @@ mod tests {
     #[test]
     fn ge_does_not_match_lesser_str() -> Result<()> {
         let matcher = ge("z");
-        let result = matcher.matches("a");
+        let result = matcher.matches(&"a");
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
 

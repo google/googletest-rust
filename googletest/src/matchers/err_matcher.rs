@@ -56,14 +56,14 @@ pub struct ErrMatcher<InnerMatcherT> {
     inner: InnerMatcherT,
 }
 
-impl<T: Debug + Copy, E: Debug + Copy, InnerMatcherT: Matcher<E>> Matcher<std::result::Result<T, E>>
+impl<T: Debug, E: Debug, InnerMatcherT: Matcher<E>> Matcher<std::result::Result<T, E>>
     for ErrMatcher<InnerMatcherT>
 {
-    fn matches(&self, actual: std::result::Result<T, E>) -> MatcherResult {
-        actual.err().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
+    fn matches(&self, actual: &std::result::Result<T, E>) -> MatcherResult {
+        actual.as_ref().err().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match(&self, actual: std::result::Result<T, E>) -> Description {
+    fn explain_match(&self, actual: &std::result::Result<T, E>) -> Description {
         match actual {
             Err(e) => {
                 Description::new().text("which is an error").nested(self.inner.explain_match(e))
@@ -89,14 +89,14 @@ impl<T: Debug + Copy, E: Debug + Copy, InnerMatcherT: Matcher<E>> Matcher<std::r
 impl<'a, T: Debug, E: Debug, InnerMatcherT: Matcher<&'a E>> Matcher<&'a std::result::Result<T, E>>
     for ErrMatcher<InnerMatcherT>
 {
-    fn matches(&self, actual: &'a std::result::Result<T, E>) -> MatcherResult {
-        actual.as_ref().err().map(|v| self.inner.matches(v)).unwrap_or(MatcherResult::NoMatch)
+    fn matches(&self, actual: &&'a std::result::Result<T, E>) -> MatcherResult {
+        actual.as_ref().err().map(|v| self.inner.matches(&v)).unwrap_or(MatcherResult::NoMatch)
     }
 
-    fn explain_match(&self, actual: &'a std::result::Result<T, E>) -> Description {
+    fn explain_match(&self, actual: &&'a std::result::Result<T, E>) -> Description {
         match actual {
             Err(e) => {
-                Description::new().text("which is an error").nested(self.inner.explain_match(e))
+                Description::new().text("which is an error").nested(self.inner.explain_match(&e))
             }
             Ok(_) => "which is a success".into(),
         }
@@ -128,7 +128,7 @@ mod tests {
         let matcher = err(eq(1));
         let value: std::result::Result<i32, i32> = Err(1);
 
-        let result = matcher.matches(value);
+        let result = matcher.matches(&value);
 
         verify_that!(result, eq(MatcherResult::Match))
     }
@@ -138,7 +138,7 @@ mod tests {
         let matcher = err(eq(1));
         let value: std::result::Result<i32, i32> = Err(0);
 
-        let result = matcher.matches(value);
+        let result = matcher.matches(&value);
 
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
@@ -148,7 +148,7 @@ mod tests {
         let matcher = err(eq(1));
         let value: std::result::Result<i32, i32> = Ok(1);
 
-        let result = matcher.matches(value);
+        let result = matcher.matches(&value);
 
         verify_that!(result, eq(MatcherResult::NoMatch))
     }
@@ -240,7 +240,7 @@ mod tests {
         let actual: std::result::Result<i32, i32> = Err(1);
         let matcher = err(eq(1));
         verify_that!(
-            matcher.explain_match(actual),
+            matcher.explain_match(&actual),
             displays_as(eq("which is an error\n  which is equal to 1"))
         )
     }
@@ -250,7 +250,7 @@ mod tests {
         let actual: std::result::Result<i32, i32> = Err(2);
         let matcher = err(eq(1));
         verify_that!(
-            matcher.explain_match(actual),
+            matcher.explain_match(&actual),
             displays_as(eq("which is an error\n  which isn't equal to 1"))
         )
     }
@@ -259,7 +259,7 @@ mod tests {
     fn err_explain_match_ok() -> Result<()> {
         let actual: std::result::Result<i32, i32> = Ok(1);
         let matcher = err(eq(1));
-        verify_that!(matcher.explain_match(actual), displays_as(eq("which is a success")))
+        verify_that!(matcher.explain_match(&actual), displays_as(eq("which is a success")))
     }
 
     #[test]

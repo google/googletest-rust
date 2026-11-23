@@ -88,11 +88,14 @@
 macro_rules! __elements_are {
     ($($matcher:expr),* $(,)?) => {{
         $crate::matchers::__internal_unstable_do_not_depend_on_these::ElementsAre::new(
-            vec![$(Box::new(
-                $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!(
-                    $matcher
-                )
-            )),*])
+            $crate::__googletest_matcher_tuple!(
+                $(
+                    $crate::matcher_support::__internal_unstable_do_not_depend_on_these::auto_eq!(
+                        $matcher
+                    )
+                ),*
+            )
+        )
     }}
 }
 
@@ -104,6 +107,7 @@ pub mod internal {
     use crate::description::Description;
     use crate::matcher::{Matcher, MatcherBase, MatcherResult};
     use crate::matcher_support::zipped_iterator::zip;
+    use crate::matchers::unordered_elements_are_matcher::internal::MatcherTuple;
     use std::fmt::Debug;
 
     /// This struct is meant to be used only by the macro `elements_are!`.
@@ -111,28 +115,85 @@ pub mod internal {
     /// **For internal use only. API stablility is not guaranteed!**
     #[doc(hidden)]
     #[derive(MatcherBase)]
-    pub struct ElementsAre<'a, T: Debug + Copy> {
-        elements: Vec<Box<dyn Matcher<T> + 'a>>,
+    pub struct ElementsAre<M> {
+        elements: M,
     }
 
-    impl<'a, T: Debug + Copy> ElementsAre<'a, T> {
+    impl<M> ElementsAre<M> {
         /// Factory only intended for use in the macro `elements_are!`.
         ///
         /// **For internal use only. API stablility is not guaranteed!**
         #[doc(hidden)]
-        pub fn new(elements: Vec<Box<dyn Matcher<T> + 'a>>) -> Self {
+        pub fn new(elements: M) -> Self {
             Self { elements }
         }
     }
 
-    impl<T: Debug + Copy, ContainerT: Debug + Copy> Matcher<ContainerT> for ElementsAre<'_, T>
+    macro_rules! impl_elements_are_matcher {
+        ($( ( [$($generics:tt)*] $ty:ty ) ),* $(,)?) => {
+            $(
+                impl<T: Debug, M: MatcherTuple<T>, $($generics)*> Matcher<$ty>
+                    for ElementsAre<M>
+                {
+                    fn matches(&self, actual: &$ty) -> MatcherResult {
+                        let elements = self.elements.to_matchers();
+                        let mut zipped_iterator = zip(actual.into_iter(), elements.iter());
+                        for (a, e) in zipped_iterator.by_ref() {
+                            if e.matches(a).is_no_match() {
+                                return MatcherResult::NoMatch;
+                            }
+                        }
+                        if !zipped_iterator.has_size_mismatch() {
+                            MatcherResult::Match
+                        } else {
+                            MatcherResult::NoMatch
+                        }
+                    }
+
+                    fn explain_match(&self, actual: &$ty) -> Description {
+                        let elements = self.elements.to_matchers();
+                        let actual_iterator = actual.into_iter();
+                        let mut zipped_iterator = zip(actual_iterator, elements.iter());
+                        let mut mismatches = Vec::new();
+                        for (idx, (a, e)) in zipped_iterator.by_ref().enumerate() {
+                            if e.matches(a).is_no_match() {
+                                mismatches.push(format!("element #{idx} is {a:?}, {}", e.explain_match(a)));
+                            }
+                        }
+                        self.format_explanation(mismatches, zipped_iterator)
+                    }
+
+                    fn describe(&self, matcher_result: MatcherResult) -> Description {
+                        self.describe_impl(matcher_result)
+                    }
+                }
+            )*
+        };
+    }
+
+    impl_elements_are_matcher!(
+        ([] [T]),
+        ([const N: usize] [T; N]),
+        ([] Vec<T>),
+        ([] std::collections::VecDeque<T>),
+        ([] std::collections::LinkedList<T>),
+        ([] std::collections::BTreeSet<T>),
+        ([] std::collections::BinaryHeap<T>),
+        ([S: Debug] std::collections::HashSet<T, S>),
+        ([] Option<T>),
+        ([E: Debug] Result<T, E>),
+    );
+
+    impl<'b, T: Debug, ContainerT: Debug + ?Sized, M: MatcherTuple<T>> Matcher<&'b ContainerT>
+        for ElementsAre<M>
     where
-        ContainerT: IntoIterator<Item = T>,
+        &'b ContainerT: IntoIterator<Item = T>,
     {
-        fn matches(&self, actual: ContainerT) -> MatcherResult {
-            let mut zipped_iterator = zip(actual.into_iter(), self.elements.iter());
+        fn matches(&self, actual: &&'b ContainerT) -> MatcherResult {
+            let elements = self.elements.to_matchers();
+            let mut zipped_iterator = zip((*actual).into_iter(), elements.iter());
             for (a, e) in zipped_iterator.by_ref() {
-                if e.matches(a).is_no_match() {
+                if e.matches(&a).is_no_match() {
                     return MatcherResult::NoMatch;
                 }
             }
@@ -143,15 +204,30 @@ pub mod internal {
             }
         }
 
-        fn explain_match(&self, actual: ContainerT) -> Description {
-            let actual_iterator = actual.into_iter();
-            let mut zipped_iterator = zip(actual_iterator, self.elements.iter());
+        fn explain_match(&self, actual: &&'b ContainerT) -> Description {
+            let elements = self.elements.to_matchers();
+            let actual_iterator = (*actual).into_iter();
+            let mut zipped_iterator = zip(actual_iterator, elements.iter());
             let mut mismatches = Vec::new();
             for (idx, (a, e)) in zipped_iterator.by_ref().enumerate() {
-                if e.matches(a).is_no_match() {
-                    mismatches.push(format!("element #{idx} is {a:?}, {}", e.explain_match(a)));
+                if e.matches(&a).is_no_match() {
+                    mismatches.push(format!("element #{idx} is {a:?}, {}", e.explain_match(&a)));
                 }
             }
+            self.format_explanation(mismatches, zipped_iterator)
+        }
+
+        fn describe(&self, matcher_result: MatcherResult) -> Description {
+            self.describe_impl(matcher_result)
+        }
+    }
+
+    impl<M> ElementsAre<M> {
+        fn format_explanation<I1: Iterator, I2>(
+            &self,
+            mismatches: Vec<String>,
+            zipped_iterator: crate::matcher_support::zipped_iterator::ZippedIterator<I1, I2>,
+        ) -> Description {
             if mismatches.is_empty() {
                 if !zipped_iterator.has_size_mismatch() {
                     "whose elements all match".into()
@@ -167,12 +243,15 @@ pub mod internal {
             }
         }
 
-        fn describe(&self, matcher_result: MatcherResult) -> Description {
+        fn describe_impl<T: Debug + ?Sized>(&self, matcher_result: MatcherResult) -> Description
+        where
+            M: MatcherTuple<T>,
+        {
+            let elements = self.elements.to_matchers();
             format!(
                 "{} elements:\n{}",
                 if matcher_result.into() { "has" } else { "doesn't have" },
-                &self
-                    .elements
+                elements
                     .iter()
                     .map(|matcher| matcher.describe(MatcherResult::Match))
                     .collect::<Description>()

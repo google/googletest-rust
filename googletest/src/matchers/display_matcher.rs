@@ -33,18 +33,18 @@ pub struct DisplayMatcher<InnerMatcher> {
     inner: InnerMatcher,
 }
 
-impl<T: Debug + Display + Copy, InnerMatcher: for<'a> Matcher<&'a str>> Matcher<T>
+impl<T: Debug + Display + ?Sized, InnerMatcher: for<'a> Matcher<&'a str>> Matcher<T>
     for DisplayMatcher<InnerMatcher>
 {
-    fn matches(&self, actual: T) -> MatcherResult {
-        self.inner.matches(&format!("{actual}"))
+    fn matches(&self, actual: &T) -> MatcherResult {
+        self.inner.matches(&format!("{actual}").as_str())
     }
 
-    fn explain_match(&self, actual: T) -> Description {
+    fn explain_match(&self, actual: &T) -> Description {
         format!(
             "which displays as {:?} {}",
             actual.to_string(),
-            self.inner.explain_match(&format!("{actual}"))
+            self.inner.explain_match(&format!("{actual}").as_str())
         )
         .into()
     }

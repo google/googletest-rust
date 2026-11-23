@@ -47,8 +47,8 @@ impl BoolMatcher {
 }
 
 impl Matcher<bool> for BoolMatcher {
-    fn matches(&self, actual: bool) -> MatcherResult {
-        self.matches(actual)
+    fn matches(&self, actual: &bool) -> MatcherResult {
+        self.matches(*actual)
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
@@ -57,8 +57,8 @@ impl Matcher<bool> for BoolMatcher {
 }
 
 impl<'a> Matcher<&'a bool> for BoolMatcher {
-    fn matches(&self, actual: &'a bool) -> MatcherResult {
-        self.matches(*actual)
+    fn matches(&self, actual: &&'a bool) -> MatcherResult {
+        self.matches(**actual)
     }
     fn describe(&self, matcher_result: MatcherResult) -> Description {
         self.describe(matcher_result)

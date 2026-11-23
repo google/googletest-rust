@@ -45,12 +45,43 @@ pub fn is_empty() -> EmptyMatcher {
 #[derive(MatcherBase)]
 pub struct EmptyMatcher;
 
-impl<T: Debug + Copy> Matcher<T> for EmptyMatcher
+macro_rules! impl_empty_matcher {
+    ($( ( [$($generics:tt)*] $ty:ty ) ),* $(,)?) => {
+        $(
+            impl<$($generics)*> Matcher<$ty> for EmptyMatcher {
+                fn matches(&self, actual: &$ty) -> MatcherResult {
+                    actual.into_iter().next().is_none().into()
+                }
+
+                fn describe(&self, matcher_result: MatcherResult) -> Description {
+                    if matcher_result.into() { "is empty" } else { "isn't empty" }.into()
+                }
+            }
+        )*
+    };
+}
+
+impl_empty_matcher!(
+    ([T: Debug] [T]),
+    ([T: Debug, const N: usize] [T; N]),
+    ([T: Debug] Vec<T>),
+    ([T: Debug] std::collections::VecDeque<T>),
+    ([T: Debug] std::collections::LinkedList<T>),
+    ([T: Debug] std::collections::BTreeSet<T>),
+    ([T: Debug] std::collections::BinaryHeap<T>),
+    ([T: Debug, S: Debug] std::collections::HashSet<T, S>),
+    ([K: Debug, V: Debug] std::collections::BTreeMap<K, V>),
+    ([K: Debug, V: Debug, S: Debug] std::collections::HashMap<K, V, S>),
+    ([T: Debug] Option<T>),
+    ([T: Debug, E: Debug] Result<T, E>),
+);
+
+impl<'a, T: Debug + ?Sized> Matcher<&'a T> for EmptyMatcher
 where
-    T: IntoIterator,
+    &'a T: IntoIterator,
 {
-    fn matches(&self, actual: T) -> MatcherResult {
-        actual.into_iter().next().is_none().into()
+    fn matches(&self, actual: &&'a T) -> MatcherResult {
+        (*actual).into_iter().next().is_none().into()
     }
 
     fn describe(&self, matcher_result: MatcherResult) -> Description {
