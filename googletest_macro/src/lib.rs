@@ -79,17 +79,6 @@ pub fn gtest(
     let ItemFn { mut attrs, sig, block, .. } = parse_macro_input!(input as ItemFn);
 
     let sig_ident = &sig.ident;
-    let test_case_hash: u64 = {
-        use std::collections::hash_map::DefaultHasher;
-        use std::hash::{Hash, Hasher};
-        let mut h = DefaultHasher::new();
-
-        // Only consider attrs and name for stability. Changing the function
-        // body should not affect the test case distribution.
-        attrs.hash(&mut h);
-        sig_ident.hash(&mut h);
-        h.finish()
-    };
 
     let (skipped_test_result, outer_return_type, trailer) = attrs
         .iter()
@@ -183,7 +172,7 @@ pub fn gtest(
         #outer_sig -> #outer_return_type {
             if !googletest::internal::test_filter::test_should_run(concat!(module_path!(), "::", stringify!(#sig_ident))) {
                 #skipped_test_result
-            } else if googletest::internal::test_sharding::test_should_run(#test_case_hash) {
+            } else if googletest::internal::test_sharding::test_should_run(concat!(module_path!(), "::", stringify!(#sig_ident))) {
                 use googletest::internal::test_outcome::TestOutcome;
                 TestOutcome::init_current_test_outcome();
                 // TODO(b/569580929): Use `set_current_test_name` guard once the LLVM fix ships. A

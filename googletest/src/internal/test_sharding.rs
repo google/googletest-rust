@@ -7,9 +7,11 @@
 ///
 /// See also <https://google.github.io/googletest/advanced.html>
 use std::cell::OnceCell;
+use std::collections::hash_map::DefaultHasher;
 use std::env::{var, var_os};
 use std::ffi::{OsStr, OsString};
 use std::fs::{self, File};
+use std::hash::{Hash, Hasher};
 use std::num::NonZeroU64;
 use std::path::{Path, PathBuf};
 
@@ -38,7 +40,10 @@ impl Default for Sharding {
     }
 }
 
-pub fn test_should_run(test_case_hash: u64) -> bool {
+pub fn test_should_run(test_name: &str) -> bool {
+    let mut hasher = DefaultHasher::new();
+    test_name.hash(&mut hasher);
+    let test_case_hash = hasher.finish();
     SHARDING.with(|sharding_cell| {
         sharding_cell.get_or_init(Sharding::from_environment).test_should_run(test_case_hash)
     })
